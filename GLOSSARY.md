@@ -14,6 +14,10 @@ _Avoid_: Strategy (when meaning one pattern), model, play
 One occurrence of a Setup's rules being met on live or historical bars.
 _Avoid_: Alert, trigger
 
+**Window**:
+A one-hour period of New York clock time (the Silver Bullet hour) inside which a Signal's fair value gap must form and its entry must fill.
+_Avoid_: Killzone (a wider, separate ICT period), session
+
 ### Execution
 
 **Bracket order**:
