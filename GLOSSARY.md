@@ -28,6 +28,14 @@ _Avoid_: OCO (that names only the two exit legs)
 The life of one position, from entry fill to final exit fill, opened in response to one Signal.
 _Avoid_: Position (the current holding), order
 
+**Halt**:
+The bot stopping itself after something it cannot account for: it opens no new Trades, leaves existing stop and target orders in place, and waits for a human to restart it.
+_Avoid_: Kill switch, pause
+
+**Stand-down**:
+The bot closing everything and opening no new Trades for the rest of the trading day, after a daily limit is hit; it resets on its own the next trading day.
+_Avoid_: Halt (that needs a human), pause
+
 **Paper account**:
 The IBKR simulated account the bot trades in; no real money moves.
 _Avoid_: Demo, sim
