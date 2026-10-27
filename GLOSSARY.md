@@ -42,6 +42,14 @@ _Avoid_: Pivot, fractal
 After a Liquidity sweep, a bar closing beyond the most recent Swing point on the other side, showing price has turned toward the Trade's direction.
 _Avoid_: Break of structure (BOS), CHoCH
 
+**Draw on liquidity**:
+The untaken Liquidity level on the Trade's side that a Signal aims at: the nearest one at least the Minimum framework away from the entry. A Liquidity level is untaken while no bar has reached it since its period ended.
+_Avoid_: Target (that is an exit order's price), objective, magnet
+
+**Minimum framework**:
+The least room, in points from the entry price to the Draw on liquidity, a Signal must have; without it there is no Signal.
+_Avoid_: Minimum target, room, range
+
 **Decision model**:
 A pretrained model that returns a probability for a question about market bars.
 _Avoid_: AI, LLM, predictor
