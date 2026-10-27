@@ -48,6 +48,10 @@ _Avoid_: Kill switch, pause
 The bot closing everything and opening no new Trades for the rest of the trading day, after a daily limit is hit; it resets on its own the next trading day.
 _Avoid_: Halt (that needs a human), pause
 
+**Trading capital**:
+The account size the bot sizes its Trades against, set by the user rather than read from the broker's balance, and grown or shrunk only by the bot's own realised profit and loss.
+_Avoid_: Balance, equity, net liquidation (the broker's figure)
+
 **Paper account**:
 The IBKR simulated account the bot trades in; no real money moves.
 _Avoid_: Demo, sim
