@@ -18,6 +18,14 @@ _Avoid_: Alert, trigger
 A one-hour period of New York clock time (the Silver Bullet hour) inside which a Signal's fair value gap must form and its entry must fill.
 _Avoid_: Killzone (a wider, separate ICT period), session
 
+**Fair value gap (FVG)**:
+A price range left untraded across three consecutive bars: in a bullish gap the third bar's low stays above the first bar's high, in a bearish gap the third bar's high stays below the first bar's low, and the middle bar closes in the gap's direction.
+_Avoid_: Imbalance, inefficiency, gap (alone)
+
+**Displacement**:
+A middle bar of a fair value gap that is large against the bars before it and mostly body, showing price moved with force rather than drifting.
+_Avoid_: Impulse, momentum candle
+
 **Decision model**:
 A pretrained model that returns a probability for a question about market bars.
 _Avoid_: AI, LLM, predictor
