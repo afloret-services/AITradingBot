@@ -18,6 +18,18 @@ _Avoid_: Alert, trigger
 A one-hour period of New York clock time (the Silver Bullet hour) inside which a Signal's fair value gap must form and its entry must fill.
 _Avoid_: Killzone (a wider, separate ICT period), session
 
+**Decision model**:
+A pretrained model that returns a probability for a question about market bars.
+_Avoid_: AI, LLM, predictor
+
+**Signal filter**:
+The step where a Decision model's probability decides whether a Signal becomes a Trade.
+_Avoid_: Gate, confirmation
+
+**Filtered Signal**:
+A Signal the Signal filter declined, so no Trade was opened.
+_Avoid_: Rejected, skipped trade
+
 ### Execution
 
 **Bracket order**:
