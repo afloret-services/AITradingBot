@@ -26,6 +26,22 @@ _Avoid_: Imbalance, inefficiency, gap (alone)
 A middle bar of a fair value gap that is large against the bars before it and mostly body, showing price moved with force rather than drifting.
 _Avoid_: Impulse, momentum candle
 
+**Liquidity level**:
+A named prior high or low where resting stops are expected: the previous trading day's, the Asia session's or the London session's high or low.
+_Avoid_: Liquidity pool, key level, swing (that is a Swing point)
+
+**Liquidity sweep**:
+Price trading at least one tick through a Liquidity level, taking the stops resting there, on the side opposite the Trade it may lead to.
+_Avoid_: Stop hunt, raid, grab
+
+**Swing point**:
+A bar whose high (or low) is beyond the highs (or lows) of a set number of bars on each side of it.
+_Avoid_: Pivot, fractal
+
+**Market structure shift (MSS)**:
+After a Liquidity sweep, a bar closing beyond the most recent Swing point on the other side, showing price has turned toward the Trade's direction.
+_Avoid_: Break of structure (BOS), CHoCH
+
 **Decision model**:
 A pretrained model that returns a probability for a question about market bars.
 _Avoid_: AI, LLM, predictor
