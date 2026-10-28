@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Silver Bullet Review</title>
+<style>
+  :root {
+    --bg: #fafaf9; --panel: #ffffff; --ink: #1c1917; --muted: #78716c; --line: #e7e5e4;
+    --accent: #2563eb; --accent-soft: #dbeafe;
+    --up: #0f766e; --down: #b91c1c; --stop: #dc2626; --tp: #15803d; --draw: #7c3aed;
+    --window: rgba(37, 99, 235, 0.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { padding: 18px 24px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  h1 { font-size: 19px; margin: 0 0 4px; }
+  .question { color: var(--muted); max-width: 980px; margin: 0; }
+  .proto { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .04em; color: #92400e; background: #fef3c7; border-radius: 4px; padding: 1px 6px; margin-left: 8px; vertical-align: 2px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+  button, .filebtn { font: inherit; font-size: 13px; padding: 5px 11px; border: 1px solid var(--line); background: var(--panel); border-radius: 6px; cursor: pointer; color: var(--ink); }
+  button:hover, .filebtn:hover { border-color: #a8a29e; }
+  button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary { border-color: var(--accent); color: var(--accent); }
+  .filebtn input { display: none; }
+  .datanote { color: var(--muted); font-size: 12px; }
+  main { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100vh - 120px); }
+  #days { border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; max-height: calc(100vh - 120px); }
+  .day { padding: 7px 14px; border-bottom: 1px solid var(--line); cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
+  .day:hover { background: #f5f5f4; }
+  .day.sel { background: var(--accent-soft); }
+  .day .d { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .day .s { color: var(--muted); font-size: 12px; grid-column: 1 / 3; }
+  .day .rv { font-size: 12px; }
+  .tag { font-size: 11px; padding: 0 6px; border-radius: 9px; background: #f5f5f4; color: var(--muted); }
+  .tag.trade { background: #dcfce7; color: #166534; }
+  .tag.loss { background: #fee2e2; color: #991b1b; }
+  .tag.skip { background: #fef3c7; color: #92400e; }
+  #detail { padding: 14px 20px 40px; min-width: 0; }
+  .chartbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .chartbar .sep { width: 12px; }
+  #chartwrap { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; height: 520px; }
+  #chart { width: 100%; height: 100%; display: block; cursor: grab; }
+  #tip { position: absolute; pointer-events: none; background: rgba(28,25,23,.9); color: #fff; font-size: 12px; padding: 4px 7px; border-radius: 4px; display: none; white-space: pre; font-variant-numeric: tabular-nums; }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-top: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .card h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  td, th { padding: 3px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; }
+  .ok { color: var(--up); } .bad { color: var(--down); }
+  .trace { font-size: 12.5px; max-height: 340px; overflow-y: auto; }
+  .trace div { padding: 2px 0; border-bottom: 1px dotted var(--line); }
+  .trace .t { color: var(--muted); font-variant-numeric: tabular-nums; display: inline-block; width: 44px; }
+  .trace .key { font-weight: 600; }
+  .kv { display: grid; grid-template-columns: 130px 1fr; gap: 2px 10px; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .kv .k { color: var(--muted); }
+  .review textarea { width: 100%; min-height: 54px; font: inherit; font-size: 13px; padding: 6px; border: 1px solid var(--line); border-radius: 6px; margin-top: 8px; }
+  .review .btns { display: flex; flex-wrap: wrap; gap: 6px; }
+  #settings { display: none; margin-top: 12px; }
+  #settings.open { display: block; }
+  #settings .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px 18px; }
+  #settings label { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; align-items: center; }
+  #settings input[type=text], #settings input[type=number] { width: 80px; font: inherit; font-size: 13px; padding: 2px 5px; border: 1px solid var(--line); border-radius: 4px; }
+  .empty { color: var(--muted); padding: 40px 0; max-width: 720px; }
+  .empty ol { padding-left: 20px; }
+  code { background: #f5f5f4; padding: 0 4px; border-radius: 3px; font-size: 12.5px; }
+  details.rules { margin-top: 14px; }
+  details.rules summary { cursor: pointer; color: var(--muted); }
+  details.rules ul { font-size: 13px; }
+  #exportbox { width: 100%; min-height: 160px; font: 12px ui-monospace, monospace; margin-top: 8px; display: none; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } #days { max-height: 220px; border-right: 0; border-bottom: 1px solid var(--line); } .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Silver Bullet review <span class="proto">PROTOTYPE · THROWAWAY</span></h1>
+  <p class="question"><b>Question:</b> do the written Silver Bullet rules pick out the same Setups you see on the chart? Load a few weeks of MNQ 1-minute bars. Every trading day is run through the agreed rules (Bias → sweep → MSS → FVG → draw → entry, stop and targets). For each day, check the chart and mark whether the rules got it right. Disagreements become rule changes.</p>
+  <div class="toolbar">
+    <label class="filebtn">Load CSV of 1-minute bars<input type="file" id="file" accept=".csv,.txt"></label>
+    <button id="demo">Load synthetic demo</button>
+    <button id="toggleSettings">Rule settings</button>
+    <button id="export" class="primary">Export review notes</button>
+    <span class="datanote" id="datanote">No data loaded.</span>
+  </div>
+  <div id="settings" class="card"><div class="fields" id="fields"></div>
+    <p class="datanote" style="margin:8px 0 0">These are the agreed starting values. Changing one re-runs every day at once, so you can see what a rule change would do. Your review marks are kept.</p></div>
+  <textarea id="exportbox" readonly></textarea>
+</header>
+<main>
+  <nav id="days"></nav>
+  <section id="detail">
+    <div class="empty" id="empty">
+      <p><b>Get the bars</b> (on your own machine; this page sends nothing anywhere):</p>
+      <ol>
+        <li><b>IBKR</b>: with IB Gateway running on the paper account, run <code>python fetch_ibkr.py --month 202612 --weeks 7</code>. It writes <code>mnq_1m.csv</code>.</li>
+        <li><b>or Databento</b>: <code>DATABENTO_API_KEY=… python fetch_databento.py --symbol MNQZ6 --start 2026-09-01 --end 2026-10-28</code>. It shows the cost and asks before downloading.</li>
+        <li>Click <b>Load CSV of 1-minute bars</b> and pick the file. Any CSV with a time column (ISO or epoch, UTC) and open/high/low/close works, including a raw Databento export.</li>
+      </ol>
+      <p>Load at least 3 weeks: the first days have no Bias until daily swing points exist. <b>Load synthetic demo</b> shows what the page draws using made-up prices. Its results mean nothing.</p>
+    </div>
+    <div id="dayview" style="display:none">
+      <div class="chartbar">
+        <b id="dtitle"></b><span class="sep"></span>
+        <span class="datanote">Timeframe</span>
+        <button data-tf="1">1m</button><button data-tf="5">5m</button><button data-tf="15">15m</button>
+        <span class="sep"></span><span class="datanote">Show</span>
+        <button data-span="focus">09:00–12:00</button><button data-span="rth">09:30–16:00</button><button data-span="day">Whole trading day</button>
+        <span class="sep"></span>
+        <button id="prevDay">◀ day</button><button id="nextDay">day ▶</button>
+      </div>
+      <div id="chartwrap"><canvas id="chart"></canvas><div id="tip"></div></div>
+      <p class="datanote" style="margin:4px 0 0">Drag to pan, scroll to zoom. Blue band: the Window. Grey lines: Liquidity levels, dotted from when price first reaches them. Boxes: FVGs in the Window (blue = the Signal's FVG, grey = rejected, hover for why).</p>
+      <div class="grid2">
+        <div>
+          <div class="card review">
+            <h3>Your review of this day</h3>
+            <div class="btns">
+              <button data-rv="match">Rules match what I see</button>
+              <button data-rv="false">False hit: no Setup here</button>
+              <button data-rv="missed">Missed: there is a Setup</button>
+              <button data-rv="wrong">Setup right, levels wrong</button>
+            </div>
+            <textarea id="note" placeholder="What did you see? e.g. 'I'd take the 10:12 FVG after the London low sweep; the rules wanted the MSS swing at 09:20'"></textarea>
+          </div>
+          <div class="card" style="margin-top:14px" id="sigcard"></div>
+          <div class="card" style="margin-top:14px"><h3>FVGs in the Window</h3><div id="fvgs"></div></div>
+        </div>
+        <div>
+          <div class="card"><h3>What the rules saw, step by step</h3><div class="trace" id="trace"></div></div>
+          <div class="card" style="margin-top:14px"><h3>Levels</h3><div id="levels"></div></div>
+        </div>
+      </div>
+      <details class="rules"><summary>The rules as this prototype implements them, and where it had to interpret them</summary>
+        <ul>
+          <li><b>Bars</b>: 5m, 15m and daily bars are built from the 1m bars. 5m and 15m are clock-aligned. A daily bar is a CME trading day, 18:00–17:00 New York.</li>
+          <li><b>Bias</b>: the direction of the most recent daily bar closing beyond the most recent confirmed daily Swing point (2 bars each side). No Bias means no Signals.</li>
+          <li><b>Levels</b>: previous trading day high/low, Asia high/low (20:00–00:00), London high/low (02:00–05:00).</li>
+          <li><b>Sweep</b>: a 5m bar opening from 09:30 whose wick is ≥1 tick through a level on the side opposite the Bias (lows for a long). <i>Interpretation:</i> a level that was already taken before the sweep still counts, as written. The trace flags it, and the "sweep only untaken levels" setting switches that off. A later sweep that doesn't go beyond the current extreme is ignored.</li>
+          <li><b>MSS</b>: a later 5m bar closing beyond the most recent confirmed 5m Swing point on the other side, found before the sweep's extreme and since 18:00. A 5m bar beyond the extreme moves the extreme there and re-measures the swing. <i>Interpretation:</i> the sweep bar itself can't be the MSS bar.</li>
+          <li><b>Void</b>: after the MSS, any 1m bar beyond the extreme voids the chain. This applies while waiting for the FVG, while the entry rests, and after a stop-out. A new sweep is then needed.</li>
+          <li><b>FVG</b>: 1m, gap ≥ 4 ticks, middle candle closing in the gap's direction, range ≥ 1.5× the average of the 20 bars before it, body ≥ 60%. The third candle must be in the Window. The last 15m bar closed before the third candle must not close against the Trade. <i>Interpretation of "at or after the MSS bar":</i> the middle candle opens at or after the 5m MSS bar opens, and the third candle closes at or after it closes.</li>
+          <li><b>Draw</b>: the nearest untaken level on the Trade's side at least the Minimum framework from the entry. None means no Signal; later FVGs in the Window are still checked.</li>
+          <li><b>Entry, stop, targets</b>: limit at the near edge, stop 2 ticks beyond the sweep extreme, reward-to-risk ≥ 1.0. TP1 halfway, rounded toward the entry. TP2 1 tick before the draw. 1 contract means a single leg at TP2. Contracts = floor(2% × $5,000 ÷ risk per contract), max 5. Break-even after TP1.</li>
+          <li><b>Simplifications</b>: fills are checked on 1m bars, not 1-second bars. A limit fills only when price trades 1 tick through it. A bar touching both the stop and a target counts as a stop ("ambiguous bar"). Stops get 1 tick of slippage. No costs, no daily compounding, no Stand-down, no news days. Unfilled entries are cancelled at 11:00 and open Trades are flattened at 15:50.</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+</main>
+
+<!-- ======================================================================
+     Detection logic: a pure module (no DOM). Input: 1-minute bars. Output: per-day results.
+     ====================================================================== -->
+<script id="sb-logic">
+const SB = (() => {
+  const TICK = 0.25, MIN = 60000, USD_PER_POINT = 2;
+
+  const DEFAULTS = {
+    windowStart: '10:00', windowEnd: '11:00', sweepFrom: '09:30', flatten: '15:50',
+    dispK: 1.5, dispN: 20, bodyPct: 60, minGapTicks: 4, swingN: 2,
+    minFrameworkPts: 10, minRR: 1.0, stopOffsetTicks: 2,
+    capital: 5000, riskPct: 2, maxContracts: 5, breakEven: true, sweepUntakenOnly: false,
+  };
+
+  // ---- New York time ----
+  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hourCycle: 'h23',
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const offCache = new Map();
+  function nyOffset(t) {
+    const h = Math.floor(t / 3600000);
+    let o = offCache.get(h);
+    if (o === undefined) {
+      const p = {};
+      for (const x of fmt.formatToParts(new Date(h * 3600000))) p[x.type] = x.value;
+      o = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute) - h * 3600000;
+      offCache.set(h, o);
+    }
+    return o;
+  }
+  const isoDate = d => d.toISOString().slice(0, 10);
+  function ny(t) { const d = new Date(t + nyOffset(t)); return { date: isoDate(d), min: d.getUTCHours() * 60 + d.getUTCMinutes() }; }
+  // CME trading day: 18:00 NY starts the next day's session.
+  const tradingDate = t => isoDate(new Date(t + nyOffset(t) + 6 * 3600000));
+  const hm = s => { const [h, m] = s.split(':').map(Number); return h * 60 + m; };
+  const fmtMin = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  const hhmm = t => fmtMin(ny(t).min);
+  const floorTick = x => Math.floor(x / TICK + 1e-9) * TICK;
+  const px = p => p == null ? '–' : p.toFixed(2);
+
+  // ---- Bars ----
+  function aggregate(bars1, minutes) {
+    const out = [], size = minutes * MIN;
+    let cur = null;
+    for (const b of bars1) {
+      const k = Math.floor(b.t / size) * size;
+      if (!cur || cur.t !== k) {
+        cur = { t: k, o: b.o, h: b.h, l: b.l, c: b.c, first: b.i, last: b.i, td: b.td };
+        out.push(cur);
+      } else { cur.h = Math.max(cur.h, b.h); cur.l = Math.min(cur.l, b.l); cur.c = b.c; cur.last = b.i; }
+    }
+    out.forEach((b, k) => { b.k = k; const n = ny(b.t); b.date = n.date; b.min = n.min; });
+    return out;
+  }
+
+  function prepare(rows) {
+    rows = rows.filter(r => isFinite(r.t) && isFinite(r.o) && isFinite(r.h) && isFinite(r.l) && isFinite(r.c))
+      .sort((a, b) => a.t - b.t).filter((r, i, a) => i === 0 || r.t !== a[i - 1].t);
+    const bars1 = rows.map((r, i) => { const n = ny(r.t); return { t: r.t, o: r.o, h: r.h, l: r.l, c: r.c, v: r.v || 0, i, date: n.date, min: n.min, td: tradingDate(r.t) }; });
+    const days = [];
+    for (const b of bars1) {
+      const d = days[days.length - 1];
+      if (!d || d.td !== b.td) days.push({ td: b.td, from: b.i, to: b.i, o: b.o, h: b.h, l: b.l, c: b.c });
+      else { d.to = b.i; d.h = Math.max(d.h, b.h); d.l = Math.min(d.l, b.l); d.c = b.c; }
+    }
+    // Drop weekend slivers (e.g. a few Sunday-evening bars labelled as a Saturday session).
+    const realDays = days.filter(d => new Date(d.td + 'T12:00:00Z').getUTCDay() % 6 !== 0);
+    const bars5 = aggregate(bars1, 5), bars15 = aggregate(bars1, 15);
+    const close5 = new Map(bars5.map(b => [b.last, b]));
+    const by15 = new Map(bars15.map(b => [b.t, b]));
+    return { bars1, bars5, bars15, days: realDays, close5, by15 };
+  }
+
+  // ---- Swing points ----
+  function isSwing(arr, j, n, side) {
+    if (j - n < 0 || j + n >= arr.length) return false;
+    for (let k = 1; k <= n; k++) {
+      if (side === 'high' ? !(arr[j - k].h < arr[j].h && arr[j + k].h < arr[j].h)
+                          : !(arr[j - k].l > arr[j].l && arr[j + k].l > arr[j].l)) return false;
+    }
+    return true;
+  }
+
+  // Bias from the daily bars that closed before day `di`.
+  function dailyBias(ctx, di, n) {
+    const d = ctx.days.slice(0, di);
+    let sh = null, sl = null, bias = null, why = null;
+    for (let i = 0; i < d.length; i++) {
+      const j = i - n; // a swing at j is confirmed once bars j+1..j+n have closed
+      if (j >= 0 && isSwing(d, j, n, 'high')) sh = d[j];
+      if (j >= 0 && isSwing(d, j, n, 'low')) sl = d[j];
+      if (sh && d[i].c > sh.h) { bias = 'bull'; why = `${d[i].td} closed ${px(d[i].c)} above the daily swing high ${px(sh.h)} (${sh.td})`; }
+      if (sl && d[i].c < sl.l) { bias = 'bear'; why = `${d[i].td} closed ${px(d[i].c)} below the daily swing low ${px(sl.l)} (${sl.td})`; }
+    }
+    if (!bias) why = d.length < 2 * n + 2 ? `only ${d.length} earlier daily bars loaded, not enough for daily swing points` : 'no daily close beyond a daily swing point yet';
+    return { bias, why };
+  }
+
+  // ---- FVG test on the 1m bars ending at index i (candle 3) ----
+  function evalFvg(ctx, i, dir, S) {
+    const b = ctx.bars1;
+    if (i < 2) return null;
+    const c1 = b[i - 2], c2 = b[i - 1], c3 = b[i];
+    if (c3.t - c1.t !== 2 * MIN) return null;
+    const lo = dir === 'long' ? c1.h : c3.h, hi = dir === 'long' ? c3.l : c1.l;
+    const gap = hi - lo;
+    if (gap <= 0) return null;
+    const range2 = c2.h - c2.l;
+    let sum = 0, cnt = 0;
+    for (let k = i - 1 - S.dispN; k < i - 1; k++) if (k >= 0) { sum += b[k].h - b[k].l; cnt++; }
+    const avg = cnt ? sum / cnt : 0;
+    const k15 = by15Before(ctx, c3.t);
+    const checks = {
+      size: gap >= S.minGapTicks * TICK - 1e-9,
+      dir2: dir === 'long' ? c2.c > c2.o : c2.c < c2.o,
+      disp: range2 >= S.dispK * avg,
+      body: range2 > 0 && Math.abs(c2.c - c2.o) >= S.bodyPct / 100 * range2 - 1e-9,
+      tf15: !k15 || (dir === 'long' ? k15.c >= k15.o : k15.c <= k15.o),
+    };
+    const why = [];
+    if (!checks.size) why.push(`gap ${px(gap)} < ${S.minGapTicks} ticks`);
+    if (!checks.dir2) why.push('middle candle closes the wrong way');
+    if (!checks.disp) why.push(`no displacement: range ${px(range2)} < ${S.dispK}× avg ${px(avg)}`);
+    if (!checks.body) why.push(`body ${range2 ? Math.round(100 * Math.abs(c2.c - c2.o) / range2) : 0}% < ${S.bodyPct}%`);
+    if (!checks.tf15) why.push(`15m bar ${hhmm(k15.t)} closed against`);
+    return { i, dir, t1: c1.t, t2: c2.t, t3: c3.t, lo, hi, gap, range2, avg, ok: why.length === 0, why, note: '' };
+  }
+  function by15Before(ctx, t) { const k = Math.floor(t / (15 * MIN)) * 15 * MIN - 15 * MIN; return ctx.by15.get(k) || null; }
+
+  // ---- One trading day through the rules ----
+  function runDay(ctx, di, S) {
+    const D = ctx.days[di], prev = ctx.days[di - 1], B = ctx.bars1;
+    const ws = hm(S.windowStart), we = hm(S.windowEnd), sf = hm(S.sweepFrom), fl = hm(S.flatten);
+    const out = { td: D.td, di, events: [], marks: [], candidates: [], signals: [], levels: [], bias: null };
+    const ev = (t, text, key) => out.events.push({ t, text, key: !!key });
+
+    const { bias, why } = dailyBias(ctx, di, S.swingN);
+    out.bias = bias; out.biasWhy = why;
+    ev(B[D.from].t, bias ? `Bias ${bias === 'bull' ? 'bullish' : 'bearish'}: ${why}` : `No Bias: ${why}`, true);
+
+    // Liquidity levels
+    const inDay = (f) => { const r = []; for (let i = D.from; i <= D.to; i++) if (f(B[i])) r.push(B[i]); return r; };
+    const lv = (name, side, bars, end) => { if (bars.length) out.levels.push({ name, side, price: side === 'high' ? Math.max(...bars.map(b => b.h)) : Math.min(...bars.map(b => b.l)), end }); };
+    if (prev) {
+      const pb = B.slice(prev.from, prev.to + 1);
+      lv('PDH', 'high', pb, B[prev.to].t + MIN); lv('PDL', 'low', pb, B[prev.to].t + MIN);
+    }
+    const asia = inDay(b => b.min >= 20 * 60 && b.date !== D.td);
+    const lon = inDay(b => b.date === D.td && b.min >= 120 && b.min < 300);
+    if (asia.length) { lv('Asia H', 'high', asia, asia[asia.length - 1].t + MIN); lv('Asia L', 'low', asia, asia[asia.length - 1].t + MIN); }
+    if (lon.length) { lv('London H', 'high', lon, lon[lon.length - 1].t + MIN); lv('London L', 'low', lon, lon[lon.length - 1].t + MIN); }
+    for (const L of out.levels) {
+      L.takenT = null;
+      for (let i = D.from; i <= D.to; i++) {
+        const b = B[i];
+        if (b.t < L.end) continue;
+        if (L.side === 'high' ? b.h >= L.price : b.l <= L.price) { L.takenT = b.t; break; }
+      }
+    }
+    const untakenAt = (L, t) => L.takenT == null || L.takenT > t;
+
+    // Candidate FVGs (both directions) whose third candle is in the Window, for the chart.
+    const candByKey = new Map();
+    for (let i = D.from + 2; i <= D.to; i++) {
+      const b = B[i];
+      if (b.date !== D.td || b.min < ws || b.min >= we) continue;
+      for (const dir of ['long', 'short']) {
+        const f = evalFvg(ctx, i, dir, S);
+        if (f) { out.candidates.push(f); candByKey.set(i + dir, f); }
+      }
+    }
+
+    if (!bias) { out.status = { kind: 'none', text: 'No Bias' }; return out; }
+    const dir = bias === 'bull' ? 'long' : 'short', sgn = dir === 'long' ? 1 : -1;
+    const sweepSide = dir === 'long' ? 'low' : 'high', drawSide = dir === 'long' ? 'high' : 'low';
+    const beyond = (p, ref) => dir === 'long' ? p < ref : p > ref; // past the extreme, against the Trade
+    const riskUSD = S.capital * S.riskPct / 100;
+
+    let st = 'seekSweep', chain = null, sig = null, blockUntil = -1, furthest = 'seekSweep';
+    const order = ['seekSweep', 'seekMSS', 'seekFVG', 'signal'];
+    const reach = s => { if (order.indexOf(s) > order.indexOf(furthest)) furthest = s; };
+
+    const findSwing = k => {
+      const side = dir === 'long' ? 'high' : 'low';
+      for (let j = Math.min(chain.extremeK - 1, k - S.swingN); j >= 0; j--) {
+        const b5 = ctx.bars5[j];
+        if (b5.td !== D.td) return null;
+        if (isSwing(ctx.bars5, j, S.swingN, side)) return { t: b5.t, price: side === 'high' ? b5.h : b5.l };
+      }
+      return null;
+    };
+
+    const closeSignal = (i, reason) => { sig.endIdx = i; blockUntil = i; };
+
+    for (let i = D.from; i <= D.to; i++) {
+      const b = B[i];
+      const today = b.date === D.td;
+
+      // 1) resting entry
+      if (st === 'pending') {
+        const filled = dir === 'long' ? b.l <= sig.entry - TICK : b.h >= sig.entry + TICK;
+        const drawHit = dir === 'long' ? b.h >= sig.draw : b.l <= sig.draw;
+        if (!today || b.min >= we) {
+          sig.status = 'cancelled'; sig.reason = `not filled by ${S.windowEnd}`; ev(b.t, `Entry not filled by ${S.windowEnd}: cancelled`, true);
+          closeSignal(i); st = 'seekFVG';
+        } else if (drawHit && !filled) {
+          sig.status = 'cancelled'; sig.reason = 'draw reached'; ev(b.t, `Price reached the draw ${px(sig.draw)} before the entry filled: cancelled`, true);
+          closeSignal(i); st = 'seekFVG';
+        } else if (filled) {
+          sig.status = 'filled'; sig.fillT = b.t; st = 'trade';
+          if (drawHit) sig.flags.push('draw touched in the fill bar');
+          ev(b.t, `Entry filled at ${px(sig.entry)}`, true);
+        } else if (beyond(dir === 'long' ? b.l : b.h, chain.extreme)) {
+          sig.status = 'cancelled'; sig.reason = 'chain void'; ev(b.t, 'Price went beyond the sweep extreme before the fill: chain void, cancelled', true);
+          closeSignal(i); st = 'seekSweep'; chain = null;
+        }
+      }
+
+      // 2) open Trade
+      if (st === 'trade') {
+        const open = sig.legs.filter(l => l.exit == null);
+        if (!today || b.min >= fl || i === D.to) {
+          for (const l of open) { l.exit = b.o; l.exitT = b.t; l.how = `flatten ${S.flatten}`; }
+          ev(b.t, `Flattened at ${px(b.o)} (${S.flatten})`, true);
+        } else {
+          const stopHit = dir === 'long' ? b.l <= sig.stopNow : b.h >= sig.stopNow;
+          const tps = open.filter(l => dir === 'long' ? b.h >= l.tp + TICK : b.l <= l.tp - TICK);
+          if (stopHit) {
+            const gapThrough = dir === 'long' ? b.o < sig.stopNow : b.o > sig.stopNow;
+            const p = (gapThrough ? b.o : sig.stopNow) - sgn * TICK;
+            if (tps.length || (sig.fillT === b.t)) sig.flags.push(`ambiguous bar ${hhmm(b.t)}: stop and ${tps.length ? 'target' : 'fill'} in the same 1m bar, stop assumed first`);
+            for (const l of open) { l.exit = p; l.exitT = b.t; l.how = sig.stopNow === sig.entry ? 'break-even stop' : 'stop'; }
+            ev(b.t, `Stopped out at ${px(p)}`, true);
+          } else if (tps.length) {
+            for (const l of tps) { l.exit = l.tp; l.exitT = b.t; l.how = l.name; ev(b.t, `${l.name} filled at ${px(l.tp)}`, true); }
+            if (S.breakEven && sig.legs.length > 1 && sig.legs[0].exit != null && sig.stopNow !== sig.entry && sig.legs.some(l => l.exit == null)) {
+              sig.stopNow = sig.entry; ev(b.t, `Break-even: stop moved to ${px(sig.entry)} from the next bar`);
+            }
+          }
+        }
+        if (sig.legs.every(l => l.exit != null)) {
+          const pts = sig.legs.reduce((a, l) => a + (l.exit - sig.entry) * sgn * l.qty, 0);
+          sig.R = pts / (Math.abs(sig.entry - sig.stop) * sig.contracts);
+          sig.usd = pts * USD_PER_POINT; sig.status = 'closed'; sig.exitT = b.t;
+          ev(b.t, `Trade closed: ${sig.R >= 0 ? '+' : ''}${sig.R.toFixed(2)}R (${sig.usd >= 0 ? '+' : ''}$${sig.usd.toFixed(0)}, before costs)`, true);
+          closeSignal(i); st = 'seekFVG';
+        }
+      }
+
+      // 3) chain void while waiting for an FVG (also after a stop-out)
+      if (st === 'seekFVG' && chain && beyond(dir === 'long' ? b.l : b.h, chain.extreme)) {
+        ev(b.t, `Price went beyond the sweep extreme ${px(chain.extreme)}: chain void, a new sweep is needed`);
+        out.marks.push({ type: 'void', t: b.t, price: chain.extreme });
+        st = 'seekSweep'; chain = null;
+      }
+
+      // 4) a 5m bar closes with this 1m bar: sweep and MSS
+      const b5 = ctx.close5.get(i);
+      if (b5 && b5.date === D.td && b5.min >= sf && b5.min < we && (st === 'seekSweep' || st === 'seekMSS')) {
+        const swept = out.levels.filter(L => L.end <= b5.t && (L.side === 'low' ? b5.l <= L.price - TICK : b5.h >= L.price + TICK));
+        for (const L of swept.filter(L => L.side !== sweepSide)) ev(b5.t, `5m bar swept ${L.name} ${px(L.price)}: ignored, it's against the Bias`);
+        const agree = swept.filter(L => L.side === sweepSide && (!S.sweepUntakenOnly || untakenAt(L, b5.t - 1)));
+        const ext = dir === 'long' ? b5.l : b5.h;
+        if (st === 'seekSweep' && agree.length) {
+          chain = { extreme: ext, extremeK: b5.k, sweepT: b5.t, levels: agree.map(L => L.name) };
+          const taken = agree.filter(L => !untakenAt(L, b5.t - 1)).map(L => `${L.name} was already reached at ${hhmm(L.takenT)}`);
+          ev(b5.t, `Sweep: 5m bar ${hhmm(b5.t)} took ${agree.map(L => `${L.name} ${px(L.price)}`).join(', ')}; extreme ${px(ext)}${taken.length ? ` (note: ${taken.join('; ')})` : ''}`, true);
+          out.marks.push({ type: 'sweep', t: b5.t, price: ext, label: 'sweep ' + agree.map(L => L.name).join('+') });
+          st = 'seekMSS'; reach('seekMSS');
+        } else if (st === 'seekMSS') {
+          if (beyond(ext, chain.extreme)) {
+            chain.extreme = ext; chain.extremeK = b5.k;
+            ev(b5.t, `Extreme moves to ${px(ext)} (5m ${hhmm(b5.t)}); swing re-measured`);
+            out.marks.push({ type: 'extreme', t: b5.t, price: ext });
+          } else {
+            const sw = findSwing(b5.k);
+            if (sw && (dir === 'long' ? b5.c > sw.price : b5.c < sw.price)) {
+              chain.mss = { t: b5.t, closeT: b5.t + 5 * MIN, swing: sw };
+              ev(b5.t, `MSS: 5m bar ${hhmm(b5.t)} closed ${px(b5.c)} beyond the 5m swing ${dir === 'long' ? 'high' : 'low'} ${px(sw.price)} (${hhmm(sw.t)})`, true);
+              out.marks.push({ type: 'mss', t: b5.t, price: b5.c, swing: sw });
+              st = 'seekFVG'; reach('seekFVG');
+            }
+          }
+        }
+      }
+
+      // 5) FVG with this bar as candle 3
+      if (today && b.min >= ws && b.min < we) {
+        for (const d2 of ['long', 'short']) {
+          const f = candByKey.get(i + d2);
+          if (!f) continue;
+          if (d2 !== dir) { f.note = 'against the Bias'; continue; }
+          if (st === 'pending' || st === 'trade') { f.note = 'a Signal is already live'; continue; }
+          if (st !== 'seekFVG') { f.note = st === 'seekSweep' ? 'no sweep yet' : 'sweep but no MSS yet'; continue; }
+          if (i <= blockUntil) { f.note = 'formed while the last Signal was live'; continue; }
+          if (!(f.t2 >= chain.mss.t && f.t3 + MIN >= chain.mss.closeT)) { f.note = 'formed before the MSS'; continue; }
+          if (!f.ok) { f.note = 'fails: ' + f.why.join('; '); continue; }
+          // Draw on liquidity
+          const entry = dir === 'long' ? f.hi : f.lo;
+          const draws = out.levels.filter(L => L.side === drawSide && untakenAt(L, b.t) && (L.price - entry) * sgn >= S.minFrameworkPts)
+            .sort((a, c) => Math.abs(a.price - entry) - Math.abs(c.price - entry));
+          if (!draws.length) { f.note = `no untaken ${drawSide} ≥ ${S.minFrameworkPts} pts away: no draw, no Signal`; ev(b.t, `FVG ${hhmm(f.t1)}–${hhmm(f.t3)} qualifies but has no Draw on liquidity`); continue; }
+          const D0 = draws[0];
+          const stop = chain.extreme - sgn * S.stopOffsetTicks * TICK;
+          const risk = Math.abs(entry - stop), reward = Math.abs(D0.price - entry), rr = reward / risk;
+          const s = { dir, fvg: f, entry, stop, stopNow: stop, draw: D0.price, drawName: D0.name, rr, t: b.t, chain: { ...chain }, flags: [], status: 'pending' };
+          s.contracts = Math.min(S.maxContracts, Math.floor(riskUSD / (risk * USD_PER_POINT)));
+          s.tp1 = entry + sgn * floorTick(reward / 2);
+          s.tp2 = D0.price - sgn * TICK;
+          out.signals.push(s); reach('signal');
+          if (rr < S.minRR - 1e-9) { s.status = 'skipped'; s.reason = 'reward too small'; f.note = `Signal skipped: reward ${rr.toFixed(2)} < ${S.minRR}`; ev(b.t, `Signal skipped: reward too small (${rr.toFixed(2)}R to ${D0.name})`, true); continue; }
+          if (s.contracts < 1) { s.status = 'skipped'; s.reason = 'stop too wide'; f.note = 'Signal skipped: stop too wide'; ev(b.t, `Signal skipped: stop too wide (1 contract risks $${(risk * USD_PER_POINT).toFixed(0)} > $${riskUSD.toFixed(0)})`, true); continue; }
+          s.legs = s.contracts === 1 ? [{ name: 'TP', qty: 1, tp: s.tp2 }]
+            : [{ name: 'TP1', qty: Math.floor(s.contracts / 2), tp: s.tp1 }, { name: 'TP2', qty: Math.ceil(s.contracts / 2), tp: s.tp2 }];
+          f.note = 'SIGNAL';
+          ev(b.t, `Signal ${dir}: FVG ${hhmm(f.t1)}–${hhmm(f.t3)}, limit ${px(entry)}, stop ${px(stop)}, draw ${D0.name} ${px(D0.price)}, ${rr.toFixed(2)}R, ${s.contracts} MNQ`, true);
+          st = 'pending'; sig = s;
+        }
+      }
+    }
+    for (const s of out.signals) if (s.status === 'pending' || s.status === 'filled') { s.status = 'open at data end'; }
+
+    const live = out.signals.filter(s => s.status === 'closed');
+    if (live.length) {
+      const R = live.reduce((a, s) => a + s.R, 0);
+      out.status = { kind: R >= 0 ? 'trade' : 'loss', text: `${live.length} Trade${live.length > 1 ? 's' : ''} ${R >= 0 ? '+' : ''}${R.toFixed(2)}R` };
+    } else if (out.signals.length) {
+      const s = out.signals[out.signals.length - 1];
+      out.status = { kind: 'skip', text: `Signal ${s.status}: ${s.reason || ''}` };
+    } else {
+      out.status = { kind: 'none', text: { seekSweep: 'No Signal: no sweep', seekMSS: 'No Signal: sweep, no MSS', seekFVG: 'No Signal: MSS, no qualifying FVG' }[furthest] };
+    }
+    return out;
+  }
+
+  function run(ctx, settings) {
+    const S = { ...DEFAULTS, ...settings };
+    return ctx.days.map((d, di) => runDay(ctx, di, S));
+  }
+
+  // ---- CSV ----
+  function parseCsv(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    const head = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+    const col = names => head.findIndex(h => names.includes(h));
+    const ti = col(['ts', 'ts_event', 'timestamp', 'time', 'date', 'datetime']);
+    const oi = col(['open', 'o']), hi = col(['high', 'h']), li = col(['low', 'l']), ci = col(['close', 'c']), vi = col(['volume', 'v']), si = col(['symbol']);
+    if (ti < 0 || oi < 0 || hi < 0 || li < 0 || ci < 0) throw new Error('Need a time column (ts / ts_event / timestamp / date) and open, high, low, close columns. Found: ' + head.join(', '));
+    const parseT = s => {
+      s = s.replace(/"/g, '').trim();
+      if (/^\d+(\.\d+)?$/.test(s)) { const n = +s; return n > 1e17 ? n / 1e6 : n > 1e14 ? n / 1e3 : n > 1e11 ? n : n * 1000; }
+      return Date.parse(s.includes('T') || s.includes('Z') || /[+-]\d\d:?\d\d$/.test(s) ? s : s.replace(' ', 'T') + 'Z');
+    };
+    let rows = lines.slice(1).map(l => { const c = l.split(','); return { t: parseT(c[ti]), o: +c[oi], h: +c[hi], l: +c[li], c: +c[ci], v: vi >= 0 ? +c[vi] : 0, sym: si >= 0 ? c[si] : '' }; });
+    let note = '';
+    if (si >= 0) {
+      const counts = {}; rows.forEach(r => counts[r.sym] = (counts[r.sym] || 0) + 1);
+      const syms = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+      if (syms.length > 1) { rows = rows.filter(r => r.sym === syms[0]); note = `several symbols in the file; kept ${syms[0]} only`; }
+    }
+    if (rows.length && rows[0].o > 1e7) rows.forEach(r => { r.o /= 1e9; r.h /= 1e9; r.l /= 1e9; r.c /= 1e9; }); // Databento fixed-point prices
+    return { rows, note };
+  }
+
+  return { DEFAULTS, TICK, prepare, run, parseCsv, ny, hhmm, fmtMin, px, nyOffset };
+})();
+if (typeof module !== 'undefined') module.exports = SB;
+</script>
+
+<!-- ======================================================================
+     Synthetic demo data: made-up prices, only to show what the page draws.
+     ====================================================================== -->
+<script id="sb-demo">
+function syntheticBars() {
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const gauss = () => { let s = 0; for (let k = 0; k < 6; k++) s += rnd(); return s - 3; };
+  const T = 0.25, q = p => Math.round(p / T) * T;
+  const utcOf = (dateStr, min) => { const L = Date.parse(dateStr + 'T00:00:00Z') + min * 60000; return L - SB.nyOffset(L - SB.nyOffset(L)); };
+  const rows = [];
+  let price = 25000, day = new Date('2026-09-07T12:00:00Z'), n = 0;
+  const phases = [1, 1, 1, 1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1];
+  while (n < phases.length) {
+    day = new Date(day.getTime() + 86400000);
+    if (day.getUTCDay() === 0 || day.getUTCDay() === 6) continue;
+    const td = day.toISOString().slice(0, 10), ph = phases[n], scripted = n % 3 === 2, win = n % 2 === 0;
+    const prevDate = new Date(day.getTime() - 86400000).toISOString().slice(0, 10); // Monday's session opens Sunday 18:00
+    // minute m of the trading day: 0 = 18:00 the evening before
+    const at = m => m < 360 ? utcOf(prevDate, 1080 + m) : utcOf(td, m - 360);
+    const anchor = price, sg = scripted ? ph : 1;
+    const xs = []; // bars in "x-space": price = anchor + sg * x (lows/highs swap when sg = -1)
+    let x = 0, noise = 0;
+    const walk = (toM, target, sig) => {
+      const fromM = xs.length, fromX = x;
+      for (let m = fromM; m < toM; m++) {
+        const f = (m - fromM + 1) / (toM - fromM);
+        noise = 0.85 * noise + gauss() * sig;
+        const c = fromX + (target - fromX) * f + noise;
+        const o = x;
+        xs.push({ o, c, h: Math.max(o, c) + Math.abs(gauss()) * sig * 0.6, l: Math.min(o, c) - Math.abs(gauss()) * sig * 0.6 });
+        x = c;
+      }
+    };
+    const put = (o, h, l, c) => { xs.push({ o, h, l, c }); x = c; noise = 0; };
+    if (!scripted) {
+      let m = 0, tgt = 0;
+      while (m < 1380) { const step = 60 + Math.floor(rnd() * 90); tgt += gauss() * 30 + ph * 28; walk(Math.min(1380, m + step), tgt, 3); m += step; }
+    } else {
+      walk(120, -10, 2.5); walk(240, -30, 2.5); walk(360, -15, 2.5);          // Asia
+      walk(480, 0, 3); walk(600, 60, 3); walk(660, 50, 3);                     // London
+      const A = Math.min(...xs.slice(120, 360).map(b => b.l));                // Asia low, in x-space
+      walk(780, 10, 2.5); walk(930, A + 15, 2);                                // drift to 09:30
+      const closes = [17, 19, 21, 22, 24, 25, 23, 21, 20, 18, 15, 12, 10, 8, 4, 1, -2, 0, 3, 6, 8, 10, 12, 14, 17, 20, 23, 26, 28, 27, 28, 29];
+      x -= A; // script the morning relative to the Asia low
+      for (const c of closes) { const o = x; put(o, Math.max(o, c) + 0.75 + (c === 25 ? 0.75 : 0), Math.min(o, c) - 0.75 - (c === -2 ? 0.5 : 0), c); }
+      for (const b of xs.slice(-32)) { b.o += A; b.h += A; b.l += A; b.c += A; } x += A;
+      put(x, A + 30, x - 1, A + 29.5);                                           // candle 1 (10:02)
+      put(A + 29.5, A + 45, A + 29, A + 44);                                     // candle 2: displacement
+      put(A + 44, A + 47, A + 34, A + 45);                                       // candle 3: gap from c1 high to c3 low
+      walk(968, A + 45, 1.5); walk(973, A + 34.5, 1);                         // 10:13: pull back into the gap
+      if (win) { walk(1000, A + 52, 2); walk(1060, A + 95, 2.5); }             // to the draw by 11:40
+      else { walk(985, A + 25, 2); walk(1010, A - 12, 2); }                    // through the stop by 10:50
+      walk(1380, win ? A + 80 : A - 20, 3);                                    // afternoon
+    }
+    xs.length = 1380;
+    xs.forEach((b, m) => {
+      const o = anchor + sg * b.o, c = anchor + sg * b.c, h = anchor + sg * (sg > 0 ? b.h : b.l), l = anchor + sg * (sg > 0 ? b.l : b.h);
+      rows.push({ t: at(m), o: q(o), h: q(Math.max(h, o, c)), l: q(Math.min(l, o, c)), c: q(c), v: 100 });
+    });
+    price = rows[rows.length - 1].c; n++;
+  }
+  return rows;
+}
+if (typeof module !== 'undefined') module.exports.syntheticBars = syntheticBars;
+</script>
+
+<!-- ======================================================================
+     Page: thin shell over SB. Throwaway.
+     ====================================================================== -->
+<script>
+(() => {
+if (typeof document === 'undefined') return;
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+let ctx = null, results = [], sel = 0, datasetName = '', settings = { ...SB.DEFAULTS };
+const view = { tf: 1, span: 'focus', a: 0, b: 0 };
+const px = SB.px, hhmm = SB.hhmm;
+
+// ---- review notes (local to this browser) ----
+const rvKey = () => 'sb-review:' + datasetName;
+let reviews = {};
+const loadReviews = () => { try { reviews = JSON.parse(localStorage.getItem(rvKey()) || '{}'); } catch { reviews = {}; } };
+const saveReviews = () => { try { localStorage.setItem(rvKey(), JSON.stringify(reviews)); } catch {} };
+const RV = { match: '✓ match', false: '✗ false hit', missed: '✗ missed', wrong: '~ levels wrong' };
+
+// ---- settings form ----
+const FIELDS = [
+  ['windowStart', 'Window start (NY)', 'text'], ['windowEnd', 'Window end (NY)', 'text'], ['sweepFrom', 'Sweeps count from', 'text'], ['flatten', 'Flatten at', 'text'],
+  ['dispK', 'Displacement × avg range', 'number'], ['dispN', 'Bars in the average', 'number'], ['bodyPct', 'Min body %', 'number'], ['minGapTicks', 'Min FVG gap (ticks)', 'number'],
+  ['swingN', 'Swing bars each side', 'number'], ['minFrameworkPts', 'Minimum framework (pts)', 'number'], ['minRR', 'Min reward-to-risk', 'number'], ['stopOffsetTicks', 'Stop beyond extreme (ticks)', 'number'],
+  ['capital', 'Trading capital $', 'number'], ['riskPct', 'Risk per Trade %', 'number'], ['maxContracts', 'Max contracts', 'number'],
+  ['breakEven', 'Break-even after TP1', 'checkbox'], ['sweepUntakenOnly', 'Sweep only untaken levels', 'checkbox'],
+];
+$('#fields').innerHTML = FIELDS.map(([k, label, type]) => `<label>${label}<input type="${type}" data-k="${k}" ${type === 'number' ? 'step="any"' : ''}></label>`).join('');
+const syncForm = () => $$('#fields input').forEach(inp => { const v = settings[inp.dataset.k]; if (inp.type === 'checkbox') inp.checked = v; else inp.value = v; });
+syncForm();
+$('#fields').addEventListener('change', e => {
+  const inp = e.target, k = inp.dataset.k;
+  settings[k] = inp.type === 'checkbox' ? inp.checked : inp.type === 'number' ? +inp.value : inp.value;
+  rerun();
+});
+$('#toggleSettings').onclick = () => $('#settings').classList.toggle('open');
+
+// ---- data ----
+function useRows(rows, name, note) {
+  ctx = SB.prepare(rows); datasetName = name; loadReviews();
+  const d = ctx.days;
+  $('#datanote').textContent = `${name}: ${ctx.bars1.length.toLocaleString()} bars, ${d.length} trading days (${d[0]?.td} → ${d[d.length - 1]?.td})${note ? ' · ' + note : ''}`;
+  sel = Math.max(0, d.length - 1);
+  rerun();
+  // jump to the first day that has a Bias
+  const first = results.findIndex(r => r.bias); if (first >= 0) sel = first;
+  showDay(sel, true);
+}
+$('#file').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const { rows, note } = SB.parseCsv(await f.text()); if (!rows.length) throw new Error('no rows'); useRows(rows, f.name, note); }
+  catch (err) { alert('Could not read that file: ' + err.message); }
+};
+$('#demo').onclick = () => useRows(syntheticBars(), 'SYNTHETIC demo (made-up prices)', '');
+
+function rerun() {
+  if (!ctx) return;
+  results = SB.run(ctx, settings);
+  renderDays(); if (results.length) showDay(sel, false);
+}
+
+// ---- day list ----
+function renderDays() {
+  $('#days').innerHTML = results.map((r, k) => {
+    const rv = reviews[r.td];
+    return `<div class="day ${k === sel ? 'sel' : ''}" data-k="${k}"><span class="d">${r.td} ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(r.td + 'T12:00:00Z').getUTCDay()]}</span>
+      <span class="rv">${rv?.verdict ? RV[rv.verdict] : ''}</span>
+      <span class="s"><span class="tag ${r.status.kind}">${r.status.text}</span> ${r.bias ? (r.bias === 'bull' ? '· Bias ↑' : '· Bias ↓') : ''}</span></div>`;
+  }).join('');
+}
+$('#days').onclick = e => { const el = e.target.closest('.day'); if (el) showDay(+el.dataset.k, true); };
+$('#prevDay').onclick = () => showDay(Math.max(0, sel - 1), true);
+$('#nextDay').onclick = () => showDay(Math.min(results.length - 1, sel + 1), true);
+document.addEventListener('keydown', e => { if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return; if (e.key === 'ArrowLeft') $('#prevDay').click(); if (e.key === 'ArrowRight') $('#nextDay').click(); });
+
+// ---- one day ----
+function showDay(k, resetView) {
+  sel = k; const r = results[k]; if (!r) return;
+  $('#empty').style.display = 'none'; $('#dayview').style.display = '';
+  $$('.day').forEach(el => el.classList.toggle('sel', +el.dataset.k === k));
+  $('.day.sel')?.scrollIntoView({ block: 'nearest' });
+  $('#dtitle').textContent = `${r.td} · ${r.status.text}`;
+  if (resetView) setSpan(view.span);
+  renderReview(r); renderSignal(r); renderFvgs(r); renderTrace(r); renderLevels(r); draw();
+}
+
+function renderReview(r) {
+  const rv = reviews[r.td] || {};
+  $$('[data-rv]').forEach(b => b.classList.toggle('on', rv.verdict === b.dataset.rv));
+  $('#note').value = rv.note || '';
+}
+$$('[data-rv]').forEach(b => b.onclick = () => {
+  const r = results[sel], rv = reviews[r.td] || (reviews[r.td] = {});
+  rv.verdict = rv.verdict === b.dataset.rv ? null : b.dataset.rv; rv.status = r.status.text;
+  saveReviews(); renderReview(r); renderDays();
+});
+$('#note').oninput = () => { const r = results[sel], rv = reviews[r.td] || (reviews[r.td] = {}); rv.note = $('#note').value; rv.status = r.status.text; saveReviews(); };
+
+function renderSignal(r) {
+  if (!r.signals.length) { $('#sigcard').innerHTML = `<h3>Signal</h3><p class="datanote" style="margin:0">None. ${r.status.text}.</p>`; return; }
+  $('#sigcard').innerHTML = '<h3>Signal' + (r.signals.length > 1 ? 's' : '') + '</h3>' + r.signals.map(s => `
+    <div class="kv" style="margin-bottom:10px">
+      <span class="k">Direction</span><span>${s.dir} · FVG ${hhmm(s.fvg.t1)}–${hhmm(s.fvg.t3)} (${px(s.fvg.lo)}–${px(s.fvg.hi)})</span>
+      <span class="k">Chain</span><span>sweep ${s.chain.levels.join(' + ')} at ${hhmm(s.chain.sweepT)}, extreme ${px(s.chain.extreme)} · MSS ${hhmm(s.chain.mss.t)} over swing ${px(s.chain.mss.swing.price)} (${hhmm(s.chain.mss.swing.t)})</span>
+      <span class="k">Entry / stop</span><span>${px(s.entry)} / ${px(s.stop)} (${px(Math.abs(s.entry - s.stop))} pts)</span>
+      <span class="k">Draw</span><span>${s.drawName} ${px(s.draw)} · reward-to-risk <b class="${s.rr >= settings.minRR ? 'ok' : 'bad'}">${s.rr.toFixed(2)}</b></span>
+      <span class="k">Targets</span><span>${s.legs ? s.legs.map(l => `${l.name} ${px(l.tp)} ×${l.qty}`).join(', ') : `TP1 ${px(s.tp1)}, TP2 ${px(s.tp2)}`} · ${s.contracts} MNQ</span>
+      <span class="k">Outcome</span><span><b>${s.status}</b>${s.reason ? ': ' + s.reason : ''}${s.R != null ? ` · ${s.R >= 0 ? '+' : ''}${s.R.toFixed(2)}R ($${s.usd.toFixed(0)} before costs)` : ''}${s.legs && s.legs.some(l => l.exit != null) ? '<br>' + s.legs.map(l => `${l.name}: ${l.how} ${px(l.exit)} at ${hhmm(l.exitT)}`).join(' · ') : ''}</span>
+      ${s.flags.length ? `<span class="k">Flags</span><span class="bad">${s.flags.join('; ')}</span>` : ''}
+    </div>`).join('');
+}
+
+function renderFvgs(r) {
+  const tiny = r.candidates.filter(f => f.gap < settings.minGapTicks * SB.TICK).length;
+  r = { ...r, candidates: r.candidates.filter(f => f.gap >= settings.minGapTicks * SB.TICK) };
+  const foot = tiny ? `<p class="datanote" style="margin:6px 0 0">${tiny} more three-candle gap${tiny > 1 ? 's' : ''} under the ${settings.minGapTicks}-tick minimum not shown.</p>` : '';
+  if (!r.candidates.length) { $('#fvgs').innerHTML = '<p class="datanote" style="margin:0">No gaps of at least the minimum size with the third candle in the Window.</p>' + foot; return; }
+  $('#fvgs').innerHTML = `<table><tr><th>Candles</th><th>Dir</th><th>Gap</th><th>Displ.</th><th>Result</th></tr>` + r.candidates.map(f => `
+    <tr><td>${hhmm(f.t1)}–${hhmm(f.t3)}</td><td>${f.dir === 'long' ? '↑' : '↓'}</td><td>${px(f.gap)}</td><td>${(f.range2 / (f.avg || 1)).toFixed(1)}×</td>
+    <td class="${f.note === 'SIGNAL' ? 'ok' : ''}">${f.note === 'SIGNAL' ? '<b>Signal</b>' : (f.note || (f.ok ? 'passes the FVG tests' : 'fails: ' + f.why.join('; ')))}${f.note && f.note !== 'SIGNAL' && !f.ok && !f.note.startsWith('fails') ? `<br><span class="datanote">also fails: ${f.why.join('; ')}</span>` : ''}</td></tr>`).join('') + '</table>' + foot;
+}
+
+function renderTrace(r) {
+  $('#trace').innerHTML = r.events.map(e => `<div><span class="t">${hhmm(e.t)}</span><span class="${e.key ? 'key' : ''}">${e.text}</span></div>`).join('');
+}
+function renderLevels(r) {
+  $('#levels').innerHTML = '<table><tr><th>Level</th><th>Price</th><th>First reached after its period</th></tr>' +
+    r.levels.map(L => `<tr><td>${L.name}</td><td>${px(L.price)}</td><td>${L.takenT ? hhmm(L.takenT) : 'untaken all day'}</td></tr>`).join('') + '</table>';
+}
+
+// ---- export ----
+$('#export').onclick = () => {
+  const lines = [`## Silver Bullet review: ${datasetName}`, '', `Settings: ${Object.entries(settings).filter(([k, v]) => v !== SB.DEFAULTS[k]).map(([k, v]) => `${k}=${v}`).join(', ') || 'agreed defaults'}`, '',
+    '| Day | Rules said | Review | Note |', '|---|---|---|---|'];
+  const r0 = Object.fromEntries(results.map(r => [r.td, r]));
+  for (const td of Object.keys(reviews).sort()) { const rv = reviews[td]; if (!rv.verdict && !rv.note) continue; lines.push(`| ${td} | ${r0[td]?.status.text || rv.status} | ${rv.verdict ? RV[rv.verdict] : ''} | ${(rv.note || '').replace(/\n/g, ' ').replace(/\|/g, '/')} |`); }
+  const box = $('#exportbox'); box.style.display = 'block'; box.value = lines.join('\n'); box.select();
+  try { navigator.clipboard.writeText(box.value).catch(() => {}); } catch {}
+};
+
+// ---- chart ----
+const cv = $('#chart'), g = cv.getContext('2d');
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const tfBars = () => view.tf === 1 ? ctx.bars1 : view.tf === 5 ? ctx.bars5 : ctx.bars15;
+function dayRange() { // indices in the timeframe's bar array covering the selected trading day
+  const r = results[sel], D = ctx.days[r.di], arr = tfBars();
+  const t0 = ctx.bars1[D.from].t, t1 = ctx.bars1[D.to].t;
+  let a = lb(arr, t0), b = lb(arr, t1 + 1) - 1;
+  return [a, b];
+}
+function lb(arr, t) { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m].t < t) lo = m + 1; else hi = m; } return lo; }
+function setSpan(span) {
+  view.span = span; $$('[data-span]').forEach(b => b.classList.toggle('on', b.dataset.span === span));
+  $$('[data-tf]').forEach(b => b.classList.toggle('on', +b.dataset.tf === view.tf));
+  const [a, b] = dayRange(), arr = tfBars(), r = results[sel];
+  if (span === 'day') { view.a = a; view.b = b; return; }
+  const [m0, m1] = span === 'focus' ? [540, 720] : [570, 960];
+  let x = a, y = b;
+  for (let k = a; k <= b; k++) { if (arr[k].date === r.td && arr[k].min >= m0) { x = k; break; } }
+  for (let k = b; k >= a; k--) { if (arr[k].date === r.td && arr[k].min < m1) { y = k; break; } }
+  view.a = x; view.b = Math.max(x + 5, y);
+}
+$$('[data-span]').forEach(b => b.onclick = () => { setSpan(b.dataset.span); draw(); });
+$$('[data-tf]').forEach(b => b.onclick = () => { view.tf = +b.dataset.tf; setSpan(view.span); draw(); });
+
+let layout = null;
+function draw() {
+  if (!ctx || !results.length) return;
+  const r = results[sel], arr = tfBars();
+  const W = cv.clientWidth, H = cv.clientHeight, dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  const padL = 8, padR = 70, padT = 14, padB = 24, cw = W - padL - padR, ch = H - padT - padB;
+  const a = Math.max(0, view.a), b = Math.min(arr.length - 1, view.b), n = b - a + 1;
+  if (n <= 0) return;
+  let lo = Infinity, hi = -Infinity;
+  for (let k = a; k <= b; k++) { lo = Math.min(lo, arr[k].l); hi = Math.max(hi, arr[k].h); }
+  const pad = (hi - lo) * 0.08 || 5; lo -= pad; hi += pad;
+  const bw = cw / n;
+  const X = k => padL + (k - a + 0.5) * bw;
+  const Y = p => padT + (hi - p) / (hi - lo) * ch;
+  const XT = t => { const k = lb(arr, t); const kk = (k < arr.length && arr[k].t === t) ? k : k - 1 + Math.min(1, (t - (arr[k - 1]?.t ?? t)) / (view.tf * 60000)); return X(kk) - (arr[k]?.t === t ? 0 : 0); };
+  layout = { a, b, bw, padL, X, Y, lo, hi, arr };
+
+  // Window band
+  const ws = SB.fmtMin ? null : null;
+  const wsMin = hmToMin(settings.windowStart), weMin = hmToMin(settings.windowEnd);
+  let w0 = null, w1 = null;
+  for (let k = a; k <= b; k++) { const x = arr[k]; if (x.date === r.td && x.min >= wsMin && x.min < weMin) { if (w0 == null) w0 = k; w1 = k; } }
+  if (w0 != null) { g.fillStyle = css('--window'); g.fillRect(X(w0) - bw / 2, padT, (w1 - w0 + 1) * bw, ch); }
+
+  // price grid
+  g.font = '11px system-ui'; g.fillStyle = css('--muted'); g.strokeStyle = css('--line'); g.lineWidth = 1;
+  const step = niceStep((hi - lo) / 7);
+  for (let p = Math.ceil(lo / step) * step; p <= hi; p += step) { const y = Math.round(Y(p)) + .5; g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + cw, y); g.stroke(); g.fillText(p.toFixed(2), padL + cw + 6, y + 4); }
+  // time labels
+  const every = Math.max(1, Math.ceil(70 / bw));
+  for (let k = a; k <= b; k++) if (arr[k].min % (view.tf * every) === 0 || k === a) { const x = X(k); g.fillText(SB.fmtMin(arr[k].min), x - 14, H - 7); }
+
+  // levels
+  for (const L of r.levels) {
+    const y = Y(L.price); if (y < padT || y > padT + ch) { edgeLabel(L.name + ' ' + px(L.price), y < padT ? padT + 10 : padT + ch - 4, padL + cw); continue; }
+    const xs = Math.max(padL, XT(L.end)), xt = L.takenT ? Math.max(padL, XT(L.takenT)) : padL + cw;
+    g.strokeStyle = '#a8a29e'; g.lineWidth = 1;
+    g.setLineDash([]); if (xt > xs) { g.beginPath(); g.moveTo(xs, y); g.lineTo(Math.min(xt, padL + cw), y); g.stroke(); }
+    g.setLineDash([2, 3]); if (xt < padL + cw) { g.beginPath(); g.moveTo(Math.max(xt, xs), y); g.lineTo(padL + cw, y); g.stroke(); }
+    g.setLineDash([]); g.fillStyle = css('--muted'); g.fillText(`${L.name} ${px(L.price)}`, Math.max(padL + 4, Math.min(xs + 4, padL + cw - 120)), y - 3);
+  }
+
+  // FVG boxes
+  for (const f of r.candidates.filter(f => f.ok || f.note === 'SIGNAL' || f.gap >= settings.minGapTicks * SB.TICK)) {
+    const x0 = XT(f.t1), x1 = Math.min(padL + cw, XT(f.t3) + bw * 6), y0 = Y(f.hi), y1 = Y(f.lo);
+    if (x1 < padL || x0 > padL + cw) continue;
+    const isSig = f.note === 'SIGNAL';
+    g.fillStyle = isSig ? 'rgba(37,99,235,.22)' : 'rgba(120,113,108,.13)';
+    g.fillRect(Math.max(padL, x0), y0, x1 - Math.max(padL, x0), Math.max(1, y1 - y0));
+    if (isSig) { g.strokeStyle = css('--accent'); g.strokeRect(Math.max(padL, x0), y0, x1 - Math.max(padL, x0), Math.max(1, y1 - y0)); }
+  }
+
+  // candles
+  for (let k = a; k <= b; k++) {
+    const c = arr[k], x = X(k), up = c.c >= c.o;
+    g.strokeStyle = g.fillStyle = up ? css('--up') : css('--down');
+    g.beginPath(); g.moveTo(Math.round(x) + .5, Y(c.h)); g.lineTo(Math.round(x) + .5, Y(c.l)); g.stroke();
+    const yb = Y(Math.max(c.o, c.c)), hb = Math.max(1, Math.abs(Y(c.o) - Y(c.c))), wb = Math.max(1, bw * 0.7);
+    if (up) { g.fillStyle = '#fff'; g.fillRect(x - wb / 2, yb, wb, hb); g.strokeRect(x - wb / 2 + .5, yb + .5, wb - 1, hb - 1); } else g.fillRect(x - wb / 2, yb, wb, hb);
+  }
+
+  // chain marks
+  g.font = '11px system-ui';
+  for (const m of r.marks) {
+    const x = XT(m.t) + (view.tf === 1 && m.type !== 'void' ? 2 * bw : 0), y = Y(m.price);
+    if (x < padL || x > padL + cw) continue;
+    if (m.type === 'sweep' || m.type === 'extreme') { tri(x, y, r.bias === 'bull' ? 1 : -1, '#ea580c'); g.fillStyle = '#ea580c'; g.fillText(m.type === 'sweep' ? m.label : 'new extreme', x + 6, y + (r.bias === 'bull' ? 14 : -8)); }
+    if (m.type === 'mss') {
+      const xs = XT(m.swing.t), ys = Y(m.swing.price);
+      g.strokeStyle = '#ea580c'; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(xs, ys); g.lineTo(XT(m.t) + (view.tf === 1 ? 5 * bw : bw), ys); g.stroke(); g.setLineDash([]);
+      g.fillStyle = '#ea580c'; g.beginPath(); g.arc(xs, ys, 3, 0, 7); g.fill(); g.fillText('MSS', XT(m.t) + (view.tf === 1 ? 5 * bw : bw) + 3, ys + 4);
+    }
+    if (m.type === 'void') { g.fillStyle = css('--down'); g.fillText('✕ chain void', x + 4, y + 12); }
+  }
+
+  // signal lines
+  for (const s of r.signals) {
+    const x0 = XT(s.t), x1 = s.exitT ? XT(s.exitT) : s.fvg && results[sel] ? Math.min(padL + cw, x0 + bw * (s.status === 'closed' ? 30 : 15)) : padL + cw;
+    const hl = (p, col, label, dash) => { const y = Y(p); if (y < padT || y > padT + ch) return; g.strokeStyle = col; g.setLineDash(dash || []); g.beginPath(); g.moveTo(x0, y); g.lineTo(Math.max(x1, x0 + 40), y); g.stroke(); g.setLineDash([]); g.fillStyle = col; g.fillText(`${label} ${px(p)}`, Math.max(x1, x0 + 40) + 3, y + 4); };
+    const faded = s.status === 'skipped' || s.status === 'cancelled';
+    hl(s.entry, css('--accent'), 'entry', faded ? [3, 3] : null);
+    hl(s.stop, css('--stop'), 'stop', faded ? [3, 3] : null);
+    if (s.legs && s.legs.length > 1) hl(s.tp1, css('--tp'), 'TP1', faded ? [3, 3] : null);
+    hl(s.tp2, css('--tp'), s.legs && s.legs.length > 1 ? 'TP2' : 'TP', faded ? [3, 3] : null);
+    hl(s.draw, css('--draw'), 'draw', [5, 3]);
+    if (s.fillT) { g.fillStyle = css('--accent'); g.beginPath(); g.arc(XT(s.fillT), Y(s.entry), 4, 0, 7); g.fill(); }
+    if (s.legs) for (const l of s.legs) if (l.exitT) { g.fillStyle = l.how.startsWith('TP') ? css('--tp') : css('--stop'); g.beginPath(); g.arc(XT(l.exitT), Y(l.exit), 4, 0, 7); g.fill(); }
+    if (faded) { g.fillStyle = css('--muted'); g.fillText(`${s.status}: ${s.reason}`, x0, Y(s.entry) - 6); }
+  }
+}
+function hmToMin(s) { const [h, m] = s.split(':').map(Number); return h * 60 + m; }
+function niceStep(x) { const p = Math.pow(10, Math.floor(Math.log10(x))); const f = x / p; return (f < 1.5 ? 1 : f < 3.5 ? 2.5 : f < 7.5 ? 5 : 10) * p; }
+function tri(x, y, up, col) { g.fillStyle = col; g.beginPath(); const d = up > 0 ? 1 : -1; g.moveTo(x, y + 2 * d); g.lineTo(x - 5, y + 10 * d); g.lineTo(x + 5, y + 10 * d); g.closePath(); g.fill(); }
+function edgeLabel(t, y, x) { g.fillStyle = css('--muted'); g.fillText((y < 50 ? '↑ ' : '↓ ') + t, 12, y); }
+
+// pan / zoom / hover
+let drag = null;
+cv.addEventListener('mousedown', e => { drag = { x: e.clientX, a: view.a, b: view.b }; cv.style.cursor = 'grabbing'; });
+window.addEventListener('mouseup', () => { drag = null; cv.style.cursor = 'grab'; });
+window.addEventListener('mousemove', e => {
+  if (!layout) return;
+  if (drag) { const d = Math.round((drag.x - e.clientX) / layout.bw); const len = drag.b - drag.a; view.a = Math.max(0, Math.min(tfBars().length - 1 - len, drag.a + d)); view.b = view.a + len; draw(); return; }
+  const rect = cv.getBoundingClientRect(), mx = e.clientX - rect.left, my = e.clientY - rect.top, tip = $('#tip');
+  if (mx < 0 || my < 0 || mx > rect.width || my > rect.height) { tip.style.display = 'none'; return; }
+  const k = layout.a + Math.floor((mx - layout.padL) / layout.bw), c = layout.arr[k];
+  if (!c || k > layout.b) { tip.style.display = 'none'; return; }
+  let text = `${c.date} ${SB.fmtMin(c.min)} NY\nO ${px(c.o)}  H ${px(c.h)}\nL ${px(c.l)}  C ${px(c.c)}`;
+  const f = results[sel].candidates.find(f => c.t >= f.t1 && c.t <= f.t3 + (view.tf - 1) * 60000 && results[sel].candidates.length);
+  if (f) text += `\nFVG ${hhmm(f.t1)}–${hhmm(f.t3)} ${f.dir}: ${f.note === 'SIGNAL' ? 'Signal' : (f.note || (f.ok ? 'passes' : f.why.join('; ')))}`;
+  tip.textContent = text; tip.style.display = 'block';
+  tip.style.left = Math.min(mx + 14, rect.width - 260) + 'px'; tip.style.top = (my + 14) + 'px';
+});
+cv.addEventListener('wheel', e => {
+  e.preventDefault(); if (!layout) return;
+  const rect = cv.getBoundingClientRect(), mx = e.clientX - rect.left, f = (mx - layout.padL) / (rect.width - 78);
+  const len = view.b - view.a, nl = Math.max(10, Math.min(tfBars().length - 1, Math.round(len * (e.deltaY > 0 ? 1.15 : 0.87))));
+  const pivot = view.a + f * len; view.a = Math.max(0, Math.round(pivot - f * nl)); view.b = Math.min(tfBars().length - 1, view.a + nl); draw();
+}, { passive: false });
+window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
