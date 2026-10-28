@@ -69,8 +69,16 @@ _Avoid_: Rejected, skipped trade
 ### Execution
 
 **Bracket order**:
-An entry order sent together with its stop-loss and take-profit orders, so the position is never open without both exits attached.
+An entry order sent together with its stop-loss and take-profit orders, so the position is never open without both exits attached. A Trade with several Take-profit legs sends one Bracket order per leg.
 _Avoid_: OCO (that names only the two exit legs)
+
+**Take-profit leg**:
+One slice of a Trade's contracts with its own target, sent as its own Bracket order; a Trade's last leg always aims at the Draw on liquidity.
+_Avoid_: Partial (alone), scale-out, tranche
+
+**Break-even**:
+Moving the stops of a Trade's open legs to its entry price once it has moved far enough in its favour, so the rest of the Trade can no longer lose.
+_Avoid_: Scratch, risk-free
 
 **Trade**:
 The life of one position, from entry fill to final exit fill, opened in response to one Signal.
