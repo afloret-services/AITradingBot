@@ -42,6 +42,10 @@ _Avoid_: Pivot, fractal
 After a Liquidity sweep, a bar closing beyond the most recent Swing point on the other side, showing price has turned toward the Trade's direction.
 _Avoid_: Break of structure (BOS), CHoCH
 
+**Bias**:
+The one direction a trading day's Signals may take, set by the most recent daily bar closing beyond a daily Swing point: above a swing high is bullish, below a swing low is bearish. A day without one has no Signals.
+_Avoid_: Daily bias (alone), trend, sentiment
+
 **Draw on liquidity**:
 The untaken Liquidity level on the Trade's side that a Signal aims at: the nearest one at least the Minimum framework away from the entry. A Liquidity level is untaken while no bar has reached it since its period ended.
 _Avoid_: Target (that is an exit order's price), objective, magnet
