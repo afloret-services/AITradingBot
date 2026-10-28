@@ -102,6 +102,10 @@ _Avoid_: Demo, sim
 
 ### Markets
 
+**Trading day**:
+One CME trade date: from 18:00 New York the evening before to 17:00, including any holiday-morning trading that CME counts toward it. Every daily rule (Bias, previous-day levels, daily loss, Stand-down) counts in Trading days.
+_Avoid_: Session (that is Asia, London or the cash session), calendar day
+
 **Micro contract**:
 The 1/10-size index future (MES, MNQ) the first version trades; ES and NQ are the full-size versions of the same index.
 _Avoid_: Mini (that is ES/NQ)
