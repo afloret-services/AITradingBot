@@ -105,3 +105,15 @@ _Avoid_: Demo, sim
 **Micro contract**:
 The 1/10-size index future (MES, MNQ) the first version trades; ES and NQ are the full-size versions of the same index.
 _Avoid_: Mini (that is ES/NQ)
+
+**Active contract**:
+The one MNQ contract month whose bars the bot analyses and whose orders it sends for a given trading day.
+_Avoid_: Front month (in roll week that is still the expiring contract), continuous contract
+
+**Roll**:
+The change of Active contract from the expiring month to the next, taking effect from the first trading day on or after the Roll date.
+_Avoid_: Rollover (suggests carrying a position across)
+
+**Roll date**:
+The Thursday eight days before a contract's expiry on the third Friday of its month.
+_Avoid_: Expiry, roll week
