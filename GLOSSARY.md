@@ -121,3 +121,11 @@ _Avoid_: Rollover (suggests carrying a position across)
 **Roll date**:
 The Thursday eight days before a contract's expiry on the third Friday of its month.
 _Avoid_: Expiry, roll week
+
+**Economic release**:
+One publication of a US economic report or an FOMC statement, on the date and at the New York time it actually came out; a release that was scheduled but cancelled never happened.
+_Avoid_: News event, data print, red folder
+
+**News day**:
+A Trading day on which an Economic release of a type the user has switched on was published; the Signals it suppresses are logged but open no Trade.
+_Avoid_: Red-folder day, event day
