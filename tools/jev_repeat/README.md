@@ -19,7 +19,7 @@ Run every step from the repo root: `python tools/jev_repeat/jev_repeat.py <step>
 
 | # | Step | When | What to send back |
 |---|------|------|-------------------|
-| 1 | `models` | Once | The printed table: each model name and its `release_date`. Choose the newest **versioned** ID (not `jev-latest` or `jev-preview`). |
+| 1 | `models` | Once | The printed table: each model name and its `release_date`. On 2026-10-29 it listed only the moving aliases `jev-latest` and `jev-preview`. Versioned IDs such as `jev-1.14.0` and `jev-1.13.0` are accepted but not listed, so the version to pin is read from the `model` field of a response to `jev-latest`. |
 | 2 | `repeat --model <ID>` | **Day 1** | Nothing yet. This makes 5 rounds of 3 calls, 60 s apart (about 4 minutes). |
 | 3 | `repeat --model <ID>` | **Day 2**, a different calendar day, ideally a different time of day | Nothing yet. |
 | 4 | `report` | After day 2 | The full printout, plus `jev-results/calls.jsonl` if anything looks odd. |
