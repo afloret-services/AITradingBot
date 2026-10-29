@@ -2,6 +2,8 @@
 
 Collects the evidence for [Check ISM's past release dates, Census's live schedule and EODHD from the user's machine](https://github.com/afloret-services/AITradingBot/issues/28). The cloud session's proxy blocks the Wayback Machine, PR Newswire and `www.census.gov`, so this runs on your machine. Throwaway: this is not bot code.
 
+**Ran on 2026-10-29 from the cloud session**, after `www.census.gov` and `www.prnewswire.com` were allowed. `web.archive.org` still closes the connection from there, and `eodhd` wasn't needed. The results are in `results/`, and `python ism_dates.py` turns the PR Newswire pages into `results/ism/pmi-releases.csv`.
+
 The script only **collects**: it saves the pages it fetched to `results/` and prints a short summary. The dates are read out of the saved files in the next session.
 
 ## Setup

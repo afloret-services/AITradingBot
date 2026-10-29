@@ -1,6 +1,6 @@
 # News calendar: agency sources checked first-hand
 
-Resolves [Verify the agency sources for the News calendar](https://github.com/afloret-services/AITradingBot/issues/27). All requests made on 2026-10-28 from a Claude Code cloud session, with the User-Agent `AITradingBot research <contact email>`.
+Resolves [Verify the agency sources for the News calendar](https://github.com/afloret-services/AITradingBot/issues/27). All requests made on 2026-10-28 from a Claude Code cloud session, with the User-Agent `AITradingBot research <contact email>`. Census's live schedule and ISM's history were added on 2026-10-29 for [Check ISM's past release dates, Census's live schedule and EODHD from the user's machine](https://github.com/afloret-services/AITradingBot/issues/28), once the proxy allowed `www.census.gov` and `www.prnewswire.com`. The saved pages are in [`tools/news_sources_check/results/`](../../tools/news_sources_check/results/).
 
 ## Verdict
 
@@ -8,10 +8,10 @@ Resolves [Verify the agency sources for the News calendar](https://github.com/af
 | --- | --- | --- | --- |
 | BLS (Employment Situation, CPI, PPI, JOLTS) | `bls.ics` | archive pages | Yes |
 | BEA (GDP, Personal Income and Outlays) | `release_dates.json` | news archive | Yes |
-| Census (Advance Retail Sales) | not checked (`www.census.gov` blocked here) | `www2` PDFs | History yes, live unverified |
+| Census (Advance Retail Sales) | `calendar-listview-YYYY.html` | `www2` PDFs, and the same year pages back to 2024 | Yes |
 | Fed (FOMC statements) | `fomccalendars.htm` | `fomchistorical2019/2020.htm` + calendars page | Yes |
-| ISM (Manufacturing and Services PMI) | current-year calendar page | none found on ismworld.org | Live yes, history no |
-| EODHD | — | — | Not checked (needs a key) |
+| ISM (Manufacturing and Services PMI) | current-year calendar page | ISM's own releases on PR Newswire | Yes |
+| EODHD | — | — | Not needed; not checked |
 
 ## BLS
 
@@ -31,7 +31,11 @@ Resolves [Verify the agency sources for the News calendar](https://github.com/af
 
 - **`https://www2.census.gov/retail/releases/historical/marts/`:** 848 files, including `adv1901.pdf` through `adv2608.pdf` with no gaps. The file name is the **reference month**. The directory's timestamps are file mtimes, not release times (`adv2509.pdf` shows 08:45).
 - **Release date:** page 1 of every PDF opens with `FOR RELEASE AT 8:30 AM EST, THURSDAY, FEBRUARY 14, 2019`. All 93 files from `adv1812` to `adv2608` parsed with `pdftotext`, every one at 8:30. Shutdown delays show up (January 2019 data on 2019-03-11, September 2025 on 2025-11-25).
-- **Lag:** the folder's newest file is August 2026 data (released 2026-09-16), so it is no live schedule. `www.census.gov` (economic-indicator calendar, `marts_current.pdf`) was refused by this session's network proxy, so Census's forward schedule is **unverified**.
+- **Lag:** the folder's newest file is August 2026 data (released 2026-09-16), so it is no live schedule.
+- **Live schedule:** `https://www.census.gov/economic-indicators/calendar-listview.html` is an HTML table (Release, Release Date, Time, Reference period) for **next year** (2027 on 2026-10-29). `calendar-listview-YYYY.html` exists for 2024, 2025 and 2026; asking for 2019 returns the generic indicators page. Every Advance Monthly Sales for Retail and Food Services row is at 8:30 AM. 2027 has 12 rows, January 15 to December 15.
+- **Delays and cancellations:** the 2025 page lists actual dates. September 2025 data is on 2025-11-25, matching its PDF. There is no row released in October 2025, and October data is on 2025-12-16. So, as with BLS, a cancelled release is absent, not flagged. The 2026 page has 13 rows, including two in April (February data on April 1, March data on April 21), as the schedule caught up.
+- **No feed:** `indicator.xml` is an RSS feed of the latest released values, not a schedule. No ICS was found.
+- **Bot rule:** the pages warn that "excessive robot activity on Census websites is prohibited". One fetch per year page at start-up is enough.
 
 ## Federal Reserve
 
@@ -51,8 +55,14 @@ Resolves [Verify the agency sources for the News calendar](https://github.com/af
 
 - **Calendar page:** `https://www.ismworld.org/supply-management-news-and-reports/reports/rob-report-calendar/` shows **2026 only**: "Manufacturing PMI … first business day of the month at 10:00 a.m. (EST)", "Services PMI … third business day". The 2026 Manufacturing days are Jan 5, Feb 2, Mar 2, Apr 1, May 1, Jun 1, Jul 1, Aug 3, Sep 1, Oct 1, Nov 2, Dec 1.
 - **Rule check, 2026:** "first business day, 10:00 ET, unless the NYSE is closed" holds for 11 of 12 months. **January 2026 breaks it.** Friday 2026-01-02 was an NYSE trading day, but "The Manufacturing report will be released on January 5th due to ISM holiday."
-- **2019–2025:** not on ismworld.org. The Wayback Machine (`web.archive.org`) and PR Newswire were refused by this session's proxy. **Unverified.**
+- **History, 2017-10 to 2026-10, from PR Newswire:** ISM posts every report there. `https://www.prnewswire.com/news/institute-for-supply-management/?page=N&pagesize=100` lists each release as `<h3><small>Oct 01, 2026, 10:00 ET</small> <title></h3>`. Four pages reach back to 2017. Titles change form: `PMI® at 54.1%; December Manufacturing ISM® Report On Business®` (no year, to 2019), `NMI® … Non-Manufacturing` (Services, to July 2020), `… ISM® Manufacturing PMI® Report` (2026). Skip Hospital PMI and the January "Annual Adjustments to Seasonal Factors" notices. `tools/news_sources_check/ism_dates.py` parses them into `pmi-releases.csv`.
+- **Coverage:** both reports, every month from 2019-01 to 2026-10, none missing, every one at **10:00 ET**.
+- **The rule can't be computed; read the dates.** Against "first (Manufacturing) or third (Services) NYSE business day", 2019 onward:
+  - **Every January breaks it**, for both reports, every year. The release falls one business day later (Manufacturing on 2019-01-03, 2020-01-03, 2021-01-05, 2022-01-04, 2023-01-04, 2024-01-03, 2025-01-03, 2026-01-05). The January 2026 "ISM holiday" is the yearly pattern, not a one-off.
+  - **Good Friday is inconsistent.** Services came on 2021-04-05, counting Good Friday 2021-04-02 as a business day. In 2026 it came on 2026-04-06, skipping Good Friday 2026-04-03.
+  - Every other month matches.
+- **Wayback:** `web.archive.org` is allowed but closes the connection from the cloud session, so old snapshots of the calendar page weren't read. PR Newswire made them unnecessary.
 
 ## EODHD
 
-`economic-events` with the public `demo` token returns 403 "Forbidden". It needs the user's own free key; not checked.
+`economic-events` with the public `demo` token returns 403 "Forbidden". It needs the user's own free key. **Not checked, and not needed**: every release type now has a first-hand source for both live and history. It stays the fallback named in [News days: whether high-impact releases suppress Signals](https://github.com/afloret-services/AITradingBot/issues/24).
