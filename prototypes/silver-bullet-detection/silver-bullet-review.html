@@ -85,6 +85,7 @@
   </div>
   <div id="settings" class="card"><div class="fields" id="fields"></div>
     <p class="datanote" style="margin:8px 0 0">These are the agreed starting values. Changing one re-runs every day at once, so you can see what a rule change would do. Your review marks are kept.</p></div>
+  <div id="funnel" class="card" style="display:none"></div>
   <textarea id="exportbox" readonly></textarea>
 </header>
 <main>
@@ -93,7 +94,7 @@
     <div class="empty" id="empty">
       <p><b>Get the bars</b> (on your own machine; this page sends nothing anywhere):</p>
       <ol>
-        <li><b>IBKR</b>: with IB Gateway running on the paper account, run <code>python fetch_ibkr.py --month 202612 --weeks 7</code>. It writes <code>mnq_1m.csv</code>.</li>
+        <li><b>IBKR</b>: with IB Gateway running on the paper account, run <code>python fetch_ibkr.py --month 202612</code> (16 weeks). It writes <code>mnq_1m.csv</code>.</li>
         <li><b>or Databento</b>: <code>DATABENTO_API_KEY=… python fetch_databento.py --symbol MNQZ6 --start 2026-09-01 --end 2026-10-28</code>. It shows the cost and asks before downloading.</li>
         <li>Click <b>Load CSV of 1-minute bars</b> and pick the file. Any CSV with a time column (ISO or epoch, UTC) and open/high/low/close works, including a raw Databento export.</li>
       </ol>
@@ -165,7 +166,7 @@ const SB = (() => {
   const DEFAULTS = {
     windowStart: '10:00', windowEnd: '11:00', sweepFrom: '09:30', flatten: '15:50',
     dispK: 1.5, dispN: 20, bodyPct: 60, minGapTicks: 4, swingN: 2,
-    minFrameworkPts: 10, minRR: 1.0, stopOffsetTicks: 2, biasRule: 'swingLeg',
+    minFrameworkPts: 10, minRR: 1.0, stopOffsetTicks: 2, biasRule: 'swingLeg', entryModel: 'chain',
     capital: 5000, riskPct: 2, maxContracts: 5, breakEven: true, sweepUntakenOnly: false,
   };
 
@@ -351,7 +352,10 @@ const SB = (() => {
     const beyond = (p, ref) => dir === 'long' ? p < ref : p > ref; // past the extreme, against the Trade
     const riskUSD = S.capital * S.riskPct / 100;
 
-    let st = 'seekSweep', chain = null, sig = null, blockUntil = -1, furthest = 'seekSweep';
+    // entryModel 'chain': sweep -> MSS -> FVG (the agreed rules). 'fvg': ICT's core Silver Bullet, any qualifying
+    // FVG in the Window in the Bias direction toward a draw, stop beyond the FVG's first candle.
+    const fvgOnly = S.entryModel === 'fvg';
+    let st = fvgOnly ? 'seekFVG' : 'seekSweep', chain = null, sig = null, blockUntil = -1, furthest = st;
     const order = ['seekSweep', 'seekMSS', 'seekFVG', 'signal'];
     const reach = s => { if (order.indexOf(s) > order.indexOf(furthest)) furthest = s; };
 
@@ -385,7 +389,10 @@ const SB = (() => {
           sig.status = 'filled'; sig.fillT = b.t; st = 'trade';
           if (drawHit) sig.flags.push('draw touched in the fill bar');
           ev(b.t, `Entry filled at ${px(sig.entry)}`, true);
-        } else if (beyond(dir === 'long' ? b.l : b.h, chain.extreme)) {
+        } else if (!chain && beyond(dir === 'long' ? b.l : b.h, sig.stop)) {
+          sig.status = 'cancelled'; sig.reason = 'stop level hit before fill'; ev(b.t, 'Price reached the stop level before the entry filled: cancelled', true);
+          closeSignal(i); st = 'seekFVG';
+        } else if (chain && beyond(dir === 'long' ? b.l : b.h, chain.extreme)) {
           sig.status = 'cancelled'; sig.reason = 'chain void'; ev(b.t, 'Price went beyond the sweep extreme before the fill: chain void, cancelled', true);
           closeSignal(i); st = 'seekSweep'; chain = null;
         }
@@ -468,7 +475,7 @@ const SB = (() => {
           if (st === 'pending' || st === 'trade') { f.note = 'a Signal is already live'; continue; }
           if (st !== 'seekFVG') { f.note = st === 'seekSweep' ? 'no sweep yet' : 'sweep but no MSS yet'; continue; }
           if (i <= blockUntil) { f.note = 'formed while the last Signal was live'; continue; }
-          if (!(f.t2 >= chain.mss.t && f.t3 + MIN >= chain.mss.closeT)) { f.note = 'formed before the MSS'; continue; }
+          if (chain && !(f.t2 >= chain.mss.t && f.t3 + MIN >= chain.mss.closeT)) { f.note = 'formed before the MSS'; continue; }
           if (!f.ok) { f.note = 'fails: ' + f.why.join('; '); continue; }
           // Draw on liquidity
           const entry = dir === 'long' ? f.hi : f.lo;
@@ -476,9 +483,9 @@ const SB = (() => {
             .sort((a, c) => Math.abs(a.price - entry) - Math.abs(c.price - entry));
           if (!draws.length) { f.note = `no untaken ${drawSide} ≥ ${S.minFrameworkPts} pts away: no draw, no Signal`; ev(b.t, `FVG ${hhmm(f.t1)}–${hhmm(f.t3)} qualifies but has no Draw on liquidity`); continue; }
           const D0 = draws[0];
-          const stop = chain.extreme - sgn * S.stopOffsetTicks * TICK;
+          const stop = (chain ? chain.extreme : (dir === 'long' ? B[i - 2].l : B[i - 2].h)) - sgn * S.stopOffsetTicks * TICK;
           const risk = Math.abs(entry - stop), reward = Math.abs(D0.price - entry), rr = reward / risk;
-          const s = { dir, fvg: f, entry, stop, stopNow: stop, draw: D0.price, drawName: D0.name, rr, t: b.t, chain: { ...chain }, flags: [], status: 'pending' };
+          const s = { dir, fvg: f, entry, stop, stopNow: stop, draw: D0.price, drawName: D0.name, rr, t: b.t, chain: chain ? { ...chain } : null, flags: [], status: 'pending' };
           s.contracts = Math.min(S.maxContracts, Math.floor(riskUSD / (risk * USD_PER_POINT)));
           s.tp1 = entry + sgn * floorTick(reward / 2);
           s.tp2 = D0.price - sgn * TICK;
@@ -503,7 +510,7 @@ const SB = (() => {
       const s = out.signals[out.signals.length - 1];
       out.status = { kind: 'skip', text: `Signal ${s.status}: ${s.reason || ''}` };
     } else {
-      out.status = { kind: 'none', text: { seekSweep: 'No Signal: no sweep', seekMSS: 'No Signal: sweep, no MSS', seekFVG: 'No Signal: MSS, no qualifying FVG' }[furthest] };
+      out.status = { kind: 'none', text: { seekSweep: 'No Signal: no sweep', seekMSS: 'No Signal: sweep, no MSS', seekFVG: fvgOnly ? 'No Signal: no qualifying FVG' : 'No Signal: MSS, no qualifying FVG' }[furthest] };
     }
     return out;
   }
@@ -635,7 +642,7 @@ const FIELDS = [
   ['breakEven', 'Break-even after TP1', 'checkbox'], ['sweepUntakenOnly', 'Sweep only untaken levels', 'checkbox'],
 ];
 $('#fields').innerHTML = FIELDS.map(([k, label, type]) => `<label>${label}<input type="${type}" data-k="${k}" ${type === 'number' ? 'step="any"' : ''}></label>`).join('');
-$('#fields').insertAdjacentHTML('afterbegin', `<label>Bias rule<select data-k="biasRule"><option value="swingLeg">Swing + leg origin</option><option value="swing">Swing (original)</option><option value="prevDay">Previous-day break</option></select></label>`);
+$('#fields').insertAdjacentHTML('afterbegin', `<label>Bias rule<select data-k="biasRule"><option value="swingLeg">Swing + leg origin</option><option value="swing">Swing (original)</option><option value="prevDay">Previous-day break</option></select></label><label>Entry model<select data-k="entryModel"><option value="chain">Sweep → MSS → FVG (agreed)</option><option value="fvg">FVG in the Window only (ICT core)</option></select></label>`);
 const syncForm = () => $$('#fields input, #fields select').forEach(inp => { const v = settings[inp.dataset.k]; if (inp.type === 'checkbox') inp.checked = v; else inp.value = v; });
 syncForm();
 $('#fields').addEventListener('change', e => {
@@ -666,7 +673,32 @@ $('#demo').onclick = () => useRows(syntheticBars(), 'SYNTHETIC demo (made-up pri
 function rerun() {
   if (!ctx) return;
   results = SB.run(ctx, settings);
-  renderDays(); if (results.length) showDay(sel, false);
+  renderDays(); renderFunnel(); if (results.length) showDay(sel, false);
+}
+
+// ---- why no entry: where every day stopped, and why FVGs in the Window weren't taken ----
+function renderFunnel() {
+  const tally = (m, k) => m.set(k, (m.get(k) || 0) + 1);
+  const days = new Map(), fvgs = new Map();
+  let nFvg = 0;
+  for (const r of results) {
+    tally(days, r.status.text.replace(/^\d+ Trades? .*$/, 'Trade taken'));
+    if (!r.bias) continue;
+    for (const f of r.candidates) {
+      if (f.dir !== (r.bias === 'bull' ? 'long' : 'short') || !f.note) continue;
+      nFvg++;
+      if (f.note.startsWith('fails: ')) for (const w of f.why) tally(fvgs, w.replace(/^gap.*/, 'gap smaller than the minimum').replace(/^no displacement.*/, 'no displacement').replace(/^body.*/, 'body too small').replace(/^15m bar.*/, '15m bar closed against'));
+      else tally(fvgs, f.note.replace(/^no untaken.*/, 'no Draw on liquidity far enough').replace(/^Signal skipped: reward.*/, 'Signal skipped: reward too small'));
+    }
+  }
+  const rows = m => [...m].sort((a, b) => b[1] - a[1]).map(([k, n]) => `<tr><td>${k}</td><td style="text-align:right">${n}</td></tr>`).join('');
+  $('#funnel').style.display = '';
+  $('#funnel').innerHTML = `<h3>Why no entry (${results.length} days, current settings)</h3>
+    <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start">
+      <table><tr><th>Where each day stopped</th><th>Days</th></tr>${rows(days)}</table>
+      <table><tr><th>Bias-direction FVGs in the Window (${nFvg}): why not taken</th><th>FVGs</th></tr>${rows(fvgs)}</table>
+    </div>
+    <p class="datanote" style="margin:8px 0 0">An FVG can fail several checks, so the reasons can add up to more than the FVG count. Change a setting to see which rule removes the entries.</p>`;
 }
 
 // ---- day list ----
@@ -711,7 +743,7 @@ function renderSignal(r) {
   $('#sigcard').innerHTML = '<h3>Signal' + (r.signals.length > 1 ? 's' : '') + '</h3>' + r.signals.map(s => `
     <div class="kv" style="margin-bottom:10px">
       <span class="k">Direction</span><span>${s.dir} · FVG ${hhmm(s.fvg.t1)}–${hhmm(s.fvg.t3)} (${px(s.fvg.lo)}–${px(s.fvg.hi)})</span>
-      <span class="k">Chain</span><span>sweep ${s.chain.levels.join(' + ')} at ${hhmm(s.chain.sweepT)}, extreme ${px(s.chain.extreme)} · MSS ${hhmm(s.chain.mss.t)} over swing ${px(s.chain.mss.swing.price)} (${hhmm(s.chain.mss.swing.t)})</span>
+      <span class="k">Chain</span><span>${s.chain ? `sweep ${s.chain.levels.join(' + ')} at ${hhmm(s.chain.sweepT)}, extreme ${px(s.chain.extreme)} · MSS ${hhmm(s.chain.mss.t)} over swing ${px(s.chain.mss.swing.price)} (${hhmm(s.chain.mss.swing.t)})` : 'none: FVG-only entry model, stop beyond the FVG\'s first candle'}</span>
       <span class="k">Entry / stop</span><span>${px(s.entry)} / ${px(s.stop)} (${px(Math.abs(s.entry - s.stop))} pts)</span>
       <span class="k">Draw</span><span>${s.drawName} ${px(s.draw)} · reward-to-risk <b class="${s.rr >= settings.minRR ? 'ok' : 'bad'}">${s.rr.toFixed(2)}</b></span>
       <span class="k">Targets</span><span>${s.legs ? s.legs.map(l => `${l.name} ${px(l.tp)} ×${l.qty}`).join(', ') : `TP1 ${px(s.tp1)}, TP2 ${px(s.tp2)}`} · ${s.contracts} MNQ</span>
