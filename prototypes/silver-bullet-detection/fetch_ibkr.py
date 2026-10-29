@@ -3,7 +3,7 @@
 Run on the machine where IB Gateway is logged in to the paper account (port 4002):
 
     pip install ib_async
-    python fetch_ibkr.py --month 202612 --weeks 7
+    python fetch_ibkr.py --month 202612 --weeks 16
 
 Writes mnq_1m.csv with columns ts (UTC, ISO), open, high, low, close, volume.
 One contract month only: stay after the last roll, or the series jumps at the roll.
@@ -15,7 +15,7 @@ from ib_async import IB, Future
 
 p = argparse.ArgumentParser()
 p.add_argument("--month", default="202612", help="contract month, e.g. 202612 for MNQZ6")
-p.add_argument("--weeks", type=int, default=7, help="how far back to go (at least 3)")
+p.add_argument("--weeks", type=int, default=16, help="how far back to go; the weeks before the first reviewed day give the Bias its daily history")
 p.add_argument("--chunk", default="1 W", help="duration per request; try '2 D' if IBKR rejects '1 W'")
 p.add_argument("--port", type=int, default=4002)
 p.add_argument("--out", default="mnq_1m.csv")

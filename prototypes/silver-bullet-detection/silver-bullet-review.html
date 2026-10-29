@@ -97,7 +97,7 @@
         <li><b>or Databento</b>: <code>DATABENTO_API_KEY=… python fetch_databento.py --symbol MNQZ6 --start 2026-09-01 --end 2026-10-28</code>. It shows the cost and asks before downloading.</li>
         <li>Click <b>Load CSV of 1-minute bars</b> and pick the file. Any CSV with a time column (ISO or epoch, UTC) and open/high/low/close works, including a raw Databento export.</li>
       </ol>
-      <p>Load at least 3 weeks: the first days have no Bias until daily swing points exist. <b>Load synthetic demo</b> shows what the page draws using made-up prices. Its results mean nothing.</p>
+      <p>Load at least 3 weeks, and preferably a few more before the first day you review: the first days have no Bias until enough daily bars exist. <b>Load synthetic demo</b> shows what the page draws using made-up prices. Its results mean nothing.</p>
     </div>
     <div id="dayview" style="display:none">
       <div class="chartbar">
@@ -134,7 +134,13 @@
       <details class="rules"><summary>The rules as this prototype implements them, and where it had to interpret them</summary>
         <ul>
           <li><b>Bars</b>: 5m, 15m and daily bars are built from the 1m bars. 5m and 15m are clock-aligned. A daily bar is a CME trading day, 18:00–17:00 New York.</li>
-          <li><b>Bias</b>: the direction of the most recent daily bar closing beyond the most recent confirmed daily Swing point (2 bars each side). No Bias means no Signals.</li>
+          <li><b>Bias</b>: picked by the "Bias rule" setting. No Bias means no Signals.
+            <ul>
+              <li><b>Swing + leg origin</b> (default): a daily close beyond the most recent confirmed daily Swing point (2 bars each side), <i>or</i> a daily close beyond the low that started the leg up to the latest swing high (the lowest low of the 2 days before it) flips it bearish, and the mirror flips it bullish. Added because the swing rule alone found nothing in a steady fall: no daily swing low forms, so there is nothing to break.</li>
+              <li><b>Swing</b> (the original rule): only a close beyond the most recent confirmed daily Swing point. Can stay empty, or stale, for weeks after a top or bottom.</li>
+              <li><b>Previous-day break</b>: yesterday closed above the day before's high (bullish) or below its low (bearish); otherwise the last Bias stands. Fastest, but flips on one-day bounces.</li>
+            </ul>
+            The first days of a file have no Bias until enough daily bars exist, so fetch a few weeks before the first day you review.</li>
           <li><b>Levels</b>: previous trading day high/low, Asia high/low (20:00–00:00), London high/low (02:00–05:00).</li>
           <li><b>Sweep</b>: a 5m bar opening from 09:30 whose wick is ≥1 tick through a level on the side opposite the Bias (lows for a long). <i>Interpretation:</i> a level that was already taken before the sweep still counts, as written. The trace flags it, and the "sweep only untaken levels" setting switches that off. A later sweep that doesn't go beyond the current extreme is ignored.</li>
           <li><b>MSS</b>: a later 5m bar closing beyond the most recent confirmed 5m Swing point on the other side, found before the sweep's extreme and since 18:00. A 5m bar beyond the extreme moves the extreme there and re-measures the swing. <i>Interpretation:</i> the sweep bar itself can't be the MSS bar.</li>
@@ -159,7 +165,7 @@ const SB = (() => {
   const DEFAULTS = {
     windowStart: '10:00', windowEnd: '11:00', sweepFrom: '09:30', flatten: '15:50',
     dispK: 1.5, dispN: 20, bodyPct: 60, minGapTicks: 4, swingN: 2,
-    minFrameworkPts: 10, minRR: 1.0, stopOffsetTicks: 2,
+    minFrameworkPts: 10, minRR: 1.0, stopOffsetTicks: 2, biasRule: 'swingLeg',
     capital: 5000, riskPct: 2, maxContracts: 5, breakEven: true, sweepUntakenOnly: false,
   };
 
@@ -231,18 +237,37 @@ const SB = (() => {
     return true;
   }
 
-  // Bias from the daily bars that closed before day `di`.
-  function dailyBias(ctx, di, n) {
+  // Bias from the daily bars that closed before day `di`. Three rules, picked by S.biasRule:
+  //   swing     a daily close beyond the most recent confirmed daily swing point (the original rule)
+  //   swingLeg  as swing, plus a close beyond the leg origin: the lowest low of the n days before the
+  //             latest swing high flips the Bias bearish (mirror for bullish), so a one-way move that
+  //             forms no new swing on its own side still flips it
+  //   prevDay   yesterday closed above the day before's high (bull) or below its low (bear); else keep
+  function dailyBias(ctx, di, n, rule) {
     const d = ctx.days.slice(0, di);
-    let sh = null, sl = null, bias = null, why = null;
+    let sh = null, sl = null, legLow = null, legHigh = null, bias = null, why = null;
     for (let i = 0; i < d.length; i++) {
+      if (rule === 'prevDay') {
+        if (i >= 1 && d[i].c > d[i - 1].h) { bias = 'bull'; why = `${d[i].td} closed ${px(d[i].c)} above the previous day's high ${px(d[i - 1].h)} (${d[i - 1].td})`; }
+        if (i >= 1 && d[i].c < d[i - 1].l) { bias = 'bear'; why = `${d[i].td} closed ${px(d[i].c)} below the previous day's low ${px(d[i - 1].l)} (${d[i - 1].td})`; }
+        continue;
+      }
       const j = i - n; // a swing at j is confirmed once bars j+1..j+n have closed
-      if (j >= 0 && isSwing(d, j, n, 'high')) sh = d[j];
-      if (j >= 0 && isSwing(d, j, n, 'low')) sl = d[j];
+      if (j >= 0 && isSwing(d, j, n, 'high')) {
+        sh = d[j];
+        legLow = d.slice(j - n, j).reduce((a, b) => (b.l < a.l ? b : a));
+      }
+      if (j >= 0 && isSwing(d, j, n, 'low')) {
+        sl = d[j];
+        legHigh = d.slice(j - n, j).reduce((a, b) => (b.h > a.h ? b : a));
+      }
       if (sh && d[i].c > sh.h) { bias = 'bull'; why = `${d[i].td} closed ${px(d[i].c)} above the daily swing high ${px(sh.h)} (${sh.td})`; }
+      else if (rule === 'swingLeg' && bias !== 'bull' && legHigh && d[i].c > legHigh.h) { bias = 'bull'; why = `${d[i].td} closed ${px(d[i].c)} above ${px(legHigh.h)} (${legHigh.td}), the high that started the leg down to the swing low ${px(sl.l)} (${sl.td})`; }
       if (sl && d[i].c < sl.l) { bias = 'bear'; why = `${d[i].td} closed ${px(d[i].c)} below the daily swing low ${px(sl.l)} (${sl.td})`; }
+      else if (rule === 'swingLeg' && bias !== 'bear' && legLow && d[i].c < legLow.l) { bias = 'bear'; why = `${d[i].td} closed ${px(d[i].c)} below ${px(legLow.l)} (${legLow.td}), the low that started the leg up to the swing high ${px(sh.h)} (${sh.td})`; }
     }
-    if (!bias) why = d.length < 2 * n + 2 ? `only ${d.length} earlier daily bars loaded, not enough for daily swing points` : 'no daily close beyond a daily swing point yet';
+    if (!bias) why = rule === 'prevDay' ? (d.length < 2 ? `only ${d.length} earlier daily bars loaded` : 'no daily close beyond the previous day\'s range yet')
+      : d.length < 2 * n + 2 ? `only ${d.length} earlier daily bars loaded, not enough for daily swing points` : 'no daily close beyond a daily swing point yet';
     return { bias, why };
   }
 
@@ -284,7 +309,7 @@ const SB = (() => {
     const out = { td: D.td, di, events: [], marks: [], candidates: [], signals: [], levels: [], bias: null };
     const ev = (t, text, key) => out.events.push({ t, text, key: !!key });
 
-    const { bias, why } = dailyBias(ctx, di, S.swingN);
+    const { bias, why } = dailyBias(ctx, di, S.swingN, S.biasRule);
     out.bias = bias; out.biasWhy = why;
     ev(B[D.from].t, bias ? `Bias ${bias === 'bull' ? 'bullish' : 'bearish'}: ${why}` : `No Bias: ${why}`, true);
 
@@ -610,7 +635,8 @@ const FIELDS = [
   ['breakEven', 'Break-even after TP1', 'checkbox'], ['sweepUntakenOnly', 'Sweep only untaken levels', 'checkbox'],
 ];
 $('#fields').innerHTML = FIELDS.map(([k, label, type]) => `<label>${label}<input type="${type}" data-k="${k}" ${type === 'number' ? 'step="any"' : ''}></label>`).join('');
-const syncForm = () => $$('#fields input').forEach(inp => { const v = settings[inp.dataset.k]; if (inp.type === 'checkbox') inp.checked = v; else inp.value = v; });
+$('#fields').insertAdjacentHTML('afterbegin', `<label>Bias rule<select data-k="biasRule"><option value="swingLeg">Swing + leg origin</option><option value="swing">Swing (original)</option><option value="prevDay">Previous-day break</option></select></label>`);
+const syncForm = () => $$('#fields input, #fields select').forEach(inp => { const v = settings[inp.dataset.k]; if (inp.type === 'checkbox') inp.checked = v; else inp.value = v; });
 syncForm();
 $('#fields').addEventListener('change', e => {
   const inp = e.target, k = inp.dataset.k;
