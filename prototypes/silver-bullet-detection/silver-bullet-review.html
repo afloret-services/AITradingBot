@@ -967,11 +967,10 @@ function useRows(rows, name, note) {
   ctx = SB.prepare(rows); datasetName = name; loadReviews();
   const d = ctx.days;
   $('#datanote').textContent = `${name}: ${ctx.bars1.length.toLocaleString()} bars, ${d.length} trading days (${d[0]?.td} → ${d[d.length - 1]?.td})${note ? ' · ' + note : ''}`;
-  sel = Math.max(0, d.length - 1);
+  sel = Math.max(0, d.length - 1); // open on the most recent day, at the top of the list
   rerun();
-  // jump to the first day that has a Bias
-  const first = results.findIndex(r => r.bias); if (first >= 0) sel = first;
   showDay(sel, true);
+  $('#days').scrollTop = 0;
 }
 $('#file').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
@@ -1029,7 +1028,8 @@ function renderFunnel() {
 
 // ---- day list ----
 function renderDays() {
-  $('#days').innerHTML = results.map((r, k) => {
+  // most recent day first; data-k stays the day's index in date order
+  $('#days').innerHTML = results.map((r, k) => [r, k]).reverse().map(([r, k]) => {
     const rv = reviews[r.td];
     return `<div class="day ${k === sel ? 'sel' : ''}" data-k="${k}"><span class="d">${r.td} ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(r.td + 'T12:00:00Z').getUTCDay()]}</span>
       <span class="rv">${rv?.verdict ? RV[rv.verdict] : ''}</span>
