@@ -389,7 +389,14 @@ const SB = (() => {
 
     // Liquidity levels
     const inDay = (f) => { const r = []; for (let i = D.from; i <= D.to; i++) if (f(B[i])) r.push(B[i]); return r; };
-    const lv = (name, side, bars, end) => { if (bars.length) out.levels.push({ name, side, price: side === 'high' ? Math.max(...bars.map(b => b.h)) : Math.min(...bars.map(b => b.l)), end }); };
+    // a level: its price, the time of the bar that made it (where the chart line starts), and the session's end
+    // (the rules only count a sweep after the session has ended)
+    const lv = (name, side, bars, end) => {
+      if (!bars.length) return;
+      const price = side === 'high' ? Math.max(...bars.map(b => b.h)) : Math.min(...bars.map(b => b.l));
+      const at = bars.find(b => (side === 'high' ? b.h : b.l) === price).t;
+      out.levels.push({ name, side, price, at, end });
+    };
     if (prev) {
       const pb = B.slice(prev.from, prev.to + 1);
       lv('PDH', 'high', pb, B[prev.to].t + MIN); lv('PDL', 'low', pb, B[prev.to].t + MIN);
@@ -1175,11 +1182,16 @@ function draw() {
   // levels
   for (const L of r.levels) {
     const y = Y(L.price); if (y < padT || y > padT + ch) { edgeLabel(L.name + ' ' + px(L.price), y < padT ? padT + 10 : padT + ch - 4, padL + cw); continue; }
-    const xs = Math.max(padL, XT(L.end)), xt = L.takenT ? Math.max(padL, XT(L.takenT)) : padL + cw;
+    const xs = Math.max(padL, XT(L.at)), xt = L.takenT ? Math.max(padL, XT(L.takenT)) : padL + cw; // from the bar that made it
     g.strokeStyle = '#a8a29e'; g.lineWidth = 1;
     g.setLineDash([]); if (xt > xs) { g.beginPath(); g.moveTo(xs, y); g.lineTo(Math.min(xt, padL + cw), y); g.stroke(); }
     g.setLineDash([2, 3]); if (xt < padL + cw) { g.beginPath(); g.moveTo(Math.max(xt, xs), y); g.lineTo(padL + cw, y); g.stroke(); }
-    g.setLineDash([]); g.fillStyle = css('--muted'); g.fillText(`${L.name} ${px(L.price)}`, Math.max(padL + 4, Math.min(xs + 4, padL + cw - 120)), y - 3);
+    g.setLineDash([]);
+    // label on a light background so the candles it starts over don't hide it
+    const lt = `${L.name} ${px(L.price)}`, lx = Math.max(padL + 4, Math.min(xs + 4, padL + cw - 120));
+    g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(lx - 2, y - 13, g.measureText(lt).width + 4, 12);
+    g.fillStyle = css('--muted'); g.fillText(lt, lx, y - 3);
+    g.fillStyle = '#a8a29e'; g.beginPath(); g.arc(xs, y, 2.5, 0, 7); g.fill(); // where it was made
   }
 
   // FVG boxes
