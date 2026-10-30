@@ -81,6 +81,8 @@
     <button id="demo">Load synthetic demo</button>
     <label class="datanote">Strategy <select id="preset"></select></label>
     <label class="datanote"><input type="checkbox" id="showEm"> Show EMA 200 + MACD</label>
+    <label class="datanote"><input type="checkbox" id="showVwap"> VWAP <select id="vwapAnchor"><option value="td">from 18:00 (trading day)</option><option value="rth">from 09:30</option></select></label>
+    <label class="datanote"><input type="checkbox" id="showRsi"> RSI 14 pane</label>
     <label class="datanote">MACD pane <select id="macdPane"><option value="off">off</option><option value="chart">chart timeframe</option><option value="15m">15m (EMA·MACD strategy)</option></select></label>
     <button id="toggleSettings">Rule settings</button>
     <button id="export" class="primary">Export review notes</button>
@@ -154,6 +156,7 @@
           <li><b>Entry, stop, targets</b>: limit at the near edge, stop 2 ticks beyond the sweep extreme, reward-to-risk ≥ 1.0. TP1 halfway, rounded toward the entry. TP2 1 tick before the draw. 1 contract means a single leg at TP2. Contracts = floor(2% × $5,000 ÷ risk per contract), max 5. Break-even after TP1.</li>
           <li><b>Entry model</b> (setting; the user chose <b>FVG only</b> as the default): any FVG that passes the FVG checks, in the Bias direction, with its third candle in a Window and a Draw on liquidity. There is no sweep or MSS: the stop is 2 ticks beyond the FVG's first candle, and a resting entry is cancelled if price reaches that stop level first. <b>Sweep → MSS → FVG</b> is the first agreed chain; with it, the stop is beyond the sweep extreme.</li>
           <li><b>G · EMA 200 + MACD</b> (comparison row; "Show EMA 200 + MACD" draws the EMA 200, a MACD pane and its Trades on the chart, in teal, next to the Silver Bullet): the DAFT Trade documentation's strategy on 15m bars built from the 1m bars. Long: close above a rising EMA 200 (higher than 10 bars ago), ADX(14) &gt; 20, MACD histogram negative for ≥ 3 bars, then the MACD crosses above its signal with both lines below zero; market entry at the next 1m open. Stop at the pullback low − 0.25 × ATR(14), skipped if wider than 3 × ATR. Half at 1.5R and stop to entry, the rest at 3R or when the MACD crosses back; everything closed on a 15m close beyond the EMA 200. Mirror for shorts. <i>Interpretations:</i> entries only 09:45–12:00 and 13:30–15:50 NY, flattened at 15:50; the map's risk settings (2% of $5,000, max 5 MNQ) instead of the docs' 0.5–1%; no news rule. The EMA 200 needs 200 bars of 15m history (about 3 days) before the first Signal.</li>
+          <li><b>VWAP and RSI</b> (display only, no rule uses them; settings from the DAFT Trade documentation): <b>VWAP</b> = Σ(typical price × volume) ÷ Σ volume on the 1m bars, reset at 18:00 NY (the start of the Trading day) or at 09:30 NY (then shown 09:30–17:00 only); a 5m or 15m bar shows the VWAP at its last minute. It needs the file's volume column. <b>RSI 14</b> (Wilder) of the displayed bars in its own pane, with 70/30 lines.</li>
           <li><b>MACD pane</b> (display only, no rule uses it): MACD 12,26,9 under the chart. "Chart timeframe" uses the displayed 1m, 5m or 15m bars. "15m" is the EMA·MACD strategy's MACD; on 1m and 5m charts each bar shows the last 15m bar closed before it. Turning on "Show EMA 200 + MACD" switches the pane to 15m if it was off.</li>
           <li><b>Levers for more entries</b> (settings, and the <b>Strategy</b> presets A–F, compared side by side in "Compare strategies". Each preset builds on the one before, except F, which adds the fallback to D):
             <ul>
@@ -834,6 +837,7 @@ $('#toggleSettings').onclick = () => $('#settings').classList.toggle('open');
 const showEm = () => $('#showEm').checked;
 $('#showEm').onchange = () => { if (showEm() && $('#macdPane').value === 'off') $('#macdPane').value = '15m'; renderDays(); if (results.length) showDay(sel, false); };
 $('#macdPane').onchange = () => draw();
+['#showVwap', '#vwapAnchor', '#showRsi'].forEach(id => $(id).onchange = () => draw());
 $('#preset').innerHTML = SB.PRESETS.map(p => `<option value="${p.id}">${p.name}</option>`).join('') + '<option value="custom">Custom (settings changed by hand)</option>';
 $('#preset').value = 'fvg';
 $('#preset').onchange = () => { const p = SB.PRESETS.find(p => p.id === $('#preset').value); if (!p) return; Object.assign(settings, p.set); syncForm(); rerun(); };
@@ -1036,10 +1040,14 @@ let layout = null;
 function draw() {
   if (!ctx || !results.length) return;
   const r = results[sel], arr = tfBars();
+  // each pane adds its own height, so the price area keeps its size
+  const wantH = 520 + ($('#macdPane').value !== 'off' ? 100 : 0) + ($('#showRsi').checked ? 90 : 0);
+  if ($('#chartwrap').style.height !== wantH + 'px') $('#chartwrap').style.height = wantH + 'px';
   const W = cv.clientWidth, H = cv.clientHeight, dpr = window.devicePixelRatio || 1;
   cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
   const emOn = showEm() && emResults.series, pane = $('#macdPane').value, paneH = pane !== 'off' ? 90 : 0;
-  const padL = 8, padR = 70, padT = 14, padB = 24 + (paneH ? paneH + 10 : 0), cw = W - padL - padR, ch = H - padT - padB;
+  const rsiOn = $('#showRsi').checked, rsiH = rsiOn ? 80 : 0;
+  const padL = 8, padR = 70, padT = 14, padB = 24 + (paneH ? paneH + 10 : 0) + (rsiH ? rsiH + 10 : 0), cw = W - padL - padR, ch = H - padT - padB;
   const a = Math.max(0, view.a), b = Math.min(arr.length - 1, view.b), n = b - a + 1;
   if (n <= 0) return;
   let lo = Infinity, hi = -Infinity;
@@ -1137,6 +1145,8 @@ function draw() {
   }
 
   if (paneH) drawMacdPane({ a, b, arr, X, padL, cw, bw, paneTop: padT + ch + 10, paneH, pane });
+  if (rsiH) drawRsiPane({ a, b, arr, X, padL, cw, paneTop: padT + ch + 10 + (paneH ? paneH + 10 : 0), paneH: rsiH });
+  if ($('#showVwap').checked) drawVwap({ a, b, arr, X, Y, padL, padT, cw, ch });
   if (emOn) drawEm({ a, b, arr, X, Y, XT, padL, padT, cw, ch, bw, paneTop: padT + ch + 10, paneH });
 
   // signal lines
@@ -1221,6 +1231,63 @@ function drawMacdPane(L) {
   line(S.macd, YP, '#2563eb'); line(S.signal, YP, '#ea580c');
   g.fillStyle = css('--muted'); g.fillText(`MACD 12,26,9 (${pane === '15m' ? '15m' : view.tf + 'm'})`, padL + 4, paneTop + 12);
   g.fillStyle = '#2563eb'; g.fillText('MACD', padL + cw - 90, paneTop + 12); g.fillStyle = '#ea580c'; g.fillText('signal', padL + cw - 50, paneTop + 12);
+}
+// RSI 14 (Wilder) on the displayed bars, cached per bar array
+const rsiCache = new WeakMap();
+function rsiOf(arr, n = 14) {
+  let r = rsiCache.get(arr);
+  if (!r) {
+    r = new Array(arr.length).fill(null);
+    let ag = 0, al = 0;
+    for (let i = 1; i < arr.length; i++) {
+      const d = arr[i].c - arr[i - 1].c, gn = Math.max(d, 0), ls = Math.max(-d, 0);
+      if (i <= n) { ag += gn / n; al += ls / n; } else { ag = (ag * (n - 1) + gn) / n; al = (al * (n - 1) + ls) / n; }
+      if (i >= n) r[i] = al === 0 ? 100 : 100 - 100 / (1 + ag / al);
+    }
+    rsiCache.set(arr, r);
+  }
+  return r;
+}
+function drawRsiPane(L) {
+  const { a, b, arr, X, padL, cw, paneTop, paneH } = L, R = rsiOf(arr);
+  const YR = v => paneTop + 4 + (100 - v) / 100 * (paneH - 8);
+  g.strokeStyle = css('--line'); g.strokeRect(padL + .5, paneTop + .5, cw - 1, paneH - 1);
+  g.fillStyle = 'rgba(185,28,28,.07)'; g.fillRect(padL, YR(100), cw, YR(70) - YR(100));
+  g.fillStyle = 'rgba(15,118,110,.07)'; g.fillRect(padL, YR(30), cw, YR(0) - YR(30));
+  g.font = '11px system-ui';
+  for (const lv of [70, 50, 30]) { const y = Math.round(YR(lv)) + .5; g.strokeStyle = lv === 50 ? css('--line') : '#a8a29e'; g.setLineDash(lv === 50 ? [] : [4, 3]); g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + cw, y); g.stroke(); g.setLineDash([]); g.fillStyle = css('--muted'); g.fillText(String(lv), padL + cw + 6, y + 4); }
+  g.strokeStyle = '#7c3aed'; g.lineWidth = 1.3; g.beginPath(); let on = false;
+  for (let k = a; k <= b; k++) { const v = R[k]; if (v == null) { on = false; continue; } const y = YR(v); if (on) g.lineTo(X(k), y); else { g.moveTo(X(k), y); on = true; } }
+  g.stroke(); g.lineWidth = 1;
+  const last = R[b]; g.fillStyle = css('--muted'); g.fillText(`RSI 14 (${view.tf}m)${last != null ? ' · ' + last.toFixed(1) : ''}`, padL + 4, paneTop + 12);
+}
+// VWAP: Σ(typical price × volume) / Σ volume on the 1m bars, reset at the start of each trading day (18:00 NY)
+// or at 09:30 NY. A 5m or 15m bar shows the VWAP at its last 1m bar.
+const vwapCache = new Map();
+function vwapOf(anchor) {
+  const key = anchor, B = ctx.bars1;
+  if (vwapCache.get(key)?.B === B) return vwapCache.get(key).v;
+  const v = new Array(B.length).fill(null);
+  let pv = 0, vol = 0, cur = null;
+  for (let i = 0; i < B.length; i++) {
+    const b = B[i];
+    const seg = anchor === 'rth' ? (b.min >= 570 && b.min < 1020 ? b.date : null) : b.td;
+    if (seg == null) { cur = null; continue; }
+    if (seg !== cur) { cur = seg; pv = 0; vol = 0; }
+    pv += (b.h + b.l + b.c) / 3 * (b.v || 0); vol += b.v || 0;
+    v[i] = vol > 0 ? pv / vol : null;
+  }
+  vwapCache.set(key, { B, v });
+  return v;
+}
+function drawVwap(L) {
+  const { a, b, arr, X, Y, padL, padT, cw, ch } = L, V = vwapOf($('#vwapAnchor').value);
+  const at = k => V[view.tf === 1 ? k : arr[k].last];
+  g.save(); g.beginPath(); g.rect(padL, padT, cw, ch); g.clip();
+  g.strokeStyle = '#db2777'; g.lineWidth = 1.6; g.beginPath(); let on = false, any = false;
+  for (let k = a; k <= b; k++) { const v = at(k); if (v == null) { on = false; continue; } any = true; const y = Y(v); if (on) g.lineTo(X(k), y); else { g.moveTo(X(k), y); on = true; } }
+  g.stroke(); g.lineWidth = 1; g.restore();
+  g.fillStyle = '#db2777'; g.fillText(any ? 'VWAP' : 'VWAP: no volume in the file', padL + 4, padT + 38);
 }
 function hmToMin(s) { const [h, m] = s.split(':').map(Number); return h * 60 + m; }
 function niceStep(x) { const p = Math.pow(10, Math.floor(Math.log10(x))); const f = x / p; return (f < 1.5 ? 1 : f < 3.5 ? 2.5 : f < 7.5 ? 5 : 10) * p; }
