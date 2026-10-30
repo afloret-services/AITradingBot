@@ -84,6 +84,8 @@
     <label class="datanote"><input type="checkbox" id="showVwap"> VWAP <select id="vwapAnchor"><option value="td">from 18:00 (trading day)</option><option value="rth">from 09:30</option></select></label>
     <label class="datanote"><input type="checkbox" id="showBb"> Bollinger 20, 2</label>
     <label class="datanote"><input type="checkbox" id="showIchi"> Ichimoku 9, 26, 52</label>
+    <label class="datanote"><input type="checkbox" id="showSar"> Parabolic SAR</label>
+    <label class="datanote"><input type="checkbox" id="showSt"> Supertrend 10, 3</label>
     <label class="datanote"><input type="checkbox" id="showRsi"> RSI 14 pane</label>
     <label class="datanote"><input type="checkbox" id="showAdx"> ADX 14 pane</label>
     <label class="datanote"><input type="checkbox" id="showAtr"> ATR 14 pane</label>
@@ -164,6 +166,7 @@
           <li><b>G · EMA 200 + MACD</b> (comparison row; "Show EMA 200 + MACD" draws the EMA 200, a MACD pane and its Trades on the chart, in teal, next to the Silver Bullet): the DAFT Trade documentation's strategy on 15m bars built from the 1m bars. Long: close above a rising EMA 200 (higher than 10 bars ago), ADX(14) &gt; 20, MACD histogram negative for ≥ 3 bars, then the MACD crosses above its signal with both lines below zero; market entry at the next 1m open. Stop at the pullback low − 0.25 × ATR(14), skipped if wider than 3 × ATR. Half at 1.5R and stop to entry, the rest at 3R or when the MACD crosses back; everything closed on a 15m close beyond the EMA 200. Mirror for shorts. <i>Interpretations:</i> entries only 09:45–12:00 and 13:30–15:50 NY, flattened at 15:50; the map's risk settings (2% of $5,000, max 5 MNQ) instead of the docs' 0.5–1%; no news rule. The EMA 200 needs 200 bars of 15m history (about 3 days) before the first Signal.</li>
           <li><b>Stochastic and OBV panes</b> (display only; not in the DAFT Trade documentation's indicator pages, so standard definitions): slow Stochastic 14,3,3 of the displayed bars, %K blue and %D orange, with 80/20 lines. OBV adds a bar's volume when it closes above the previous close and subtracts it when below; it is cumulated from the start of the file, so read its slope, not its level. OBV needs the volume column.</li>
           <li><b>ADX and ATR panes</b> (display only): Wilder's ADX 14 with +DI (green) and −DI (red) of the displayed bars, lines at 20 and 25 and the area under 20 (no trend, per the DAFT Trade documentation) shaded; Wilder's ATR 14 in points, with its value per MNQ ($2 a point). Both match the ADX and ATR the EMA·MACD strategy uses on 15m.</li>
+          <li><b>Parabolic SAR and Supertrend</b> (display only; not in the DAFT Trade documentation, so standard settings): Wilder's Parabolic SAR with acceleration 0.02, +0.02 per new extreme, max 0.2, drawn as dots (green below price in an uptrend, red above in a downtrend). Supertrend 10, 3: (high + low) ÷ 2 ± 3 × ATR(10), the band only tightening while price stays on its side, green under price in an uptrend and red above in a downtrend, flipping when a close crosses it.</li>
           <li><b>Ichimoku</b> (display only; not in the DAFT Trade documentation, so the standard 9, 26, 52): Tenkan (mid of the 9-bar high-low range, blue), Kijun (26-bar, dark red), the cloud between Senkou A ((Tenkan + Kijun) ÷ 2) and Senkou B (mid of the 52-bar range), both shifted 26 bars forward, green when A is above B, and Chikou (the close shifted 26 bars back, dotted). Chikou shows the close 26 bars <i>later</i>, so it is hindsight, as on any Ichimoku chart.</li>
           <li><b>Bollinger Bands</b> (display only, from the DAFT Trade documentation): SMA 20 of the displayed bars' closes (dashed) ± 2 standard deviations, shaded between the bands.</li>
           <li><b>VWAP and RSI</b> (display only, no rule uses them; settings from the DAFT Trade documentation): <b>VWAP</b> = Σ(typical price × volume) ÷ Σ volume on the 1m bars, reset at 18:00 NY (the start of the Trading day) or at 09:30 NY (then shown 09:30–17:00 only); a 5m or 15m bar shows the VWAP at its last minute. It needs the file's volume column. <b>RSI 14</b> (Wilder) of the displayed bars in its own pane, with 70/30 lines.</li>
@@ -847,7 +850,7 @@ $('#toggleSettings').onclick = () => $('#settings').classList.toggle('open');
 const showEm = () => $('#showEm').checked;
 $('#showEm').onchange = () => { if (showEm() && $('#macdPane').value === 'off') $('#macdPane').value = '15m'; renderDays(); if (results.length) showDay(sel, false); };
 $('#macdPane').onchange = () => draw();
-['#showVwap', '#vwapAnchor', '#showRsi', '#showBb', '#showIchi', '#showAdx', '#showAtr', '#showStoch', '#showObv'].forEach(id => $(id).onchange = () => draw());
+['#showVwap', '#vwapAnchor', '#showRsi', '#showBb', '#showIchi', '#showSar', '#showSt', '#showAdx', '#showAtr', '#showStoch', '#showObv'].forEach(id => $(id).onchange = () => draw());
 $('#preset').innerHTML = SB.PRESETS.map(p => `<option value="${p.id}">${p.name}</option>`).join('') + '<option value="custom">Custom (settings changed by hand)</option>';
 $('#preset').value = 'fvg';
 $('#preset').onchange = () => { const p = SB.PRESETS.find(p => p.id === $('#preset').value); if (!p) return; Object.assign(settings, p.set); syncForm(); rerun(); };
@@ -1160,6 +1163,8 @@ function draw() {
   lowPanes.forEach(([, fn], j) => fn({ a, b, arr, X, padL, cw, paneTop: padT + ch + 10 + (paneH ? paneH + 10 : 0) + j * (lowH + 10), paneH: lowH }));
   if ($('#showIchi').checked) drawIchi({ a, b, X, Y, padL, padT, cw, ch, I: ichiOf(arr) });
   if ($('#showBb').checked) drawBb({ a, b, X, Y, padL, padT, cw, ch, B: bbOf(arr) });
+  if ($('#showSt').checked) drawSt({ a, b, X, Y, padL, padT, cw, ch, T: stOf(arr) });
+  if ($('#showSar').checked) drawSar({ a, b, X, Y, padL, padT, cw, ch, P: sarOf(arr) });
   if ($('#showVwap').checked) drawVwap({ a, b, arr, X, Y, padL, padT, cw, ch });
   if (emOn) drawEm({ a, b, arr, X, Y, XT, padL, padT, cw, ch, bw, paneTop: padT + ch + 10, paneH });
 
@@ -1425,6 +1430,83 @@ function drawIchi(L) {
   line(I.tenkan, '#2563eb', 1.2); line(I.kijun, '#991b1b', 1.4); line(I.chikou, '#65a30d', 1, [2, 2]);
   g.restore();
   g.fillStyle = '#991b1b'; g.fillText(`Ichimoku (${view.tf}m): Tenkan blue, Kijun dark red, cloud, Chikou dotted`, padL + 4, padT + 66);
+}
+// Parabolic SAR (Wilder): acceleration 0.02, +0.02 at each new extreme, max 0.2. sar[i] is the stop for bar i; on
+// a flip it restarts at the previous extreme point. up[i] is the trend after bar i. Cached per bar array.
+const sarCache = new WeakMap();
+function sarOf(arr, step = 0.02, maxAf = 0.2) {
+  let r = sarCache.get(arr);
+  if (!r) {
+    const L = arr.length, sar = new Array(L).fill(null), up = new Array(L).fill(null);
+    if (L > 2) {
+      let isUp = arr[1].c >= arr[0].c, af = step;
+      let ep = isUp ? Math.max(arr[0].h, arr[1].h) : Math.min(arr[0].l, arr[1].l);
+      let s = isUp ? Math.min(arr[0].l, arr[1].l) : Math.max(arr[0].h, arr[1].h);
+      sar[1] = s; up[1] = isUp;
+      for (let i = 2; i < L; i++) {
+        const b = arr[i];
+        s = s + af * (ep - s);
+        if (isUp) {
+          s = Math.min(s, arr[i - 1].l, arr[i - 2].l);
+          if (b.l < s) { isUp = false; s = ep; ep = b.l; af = step; }
+          else if (b.h > ep) { ep = b.h; af = Math.min(af + step, maxAf); }
+        } else {
+          s = Math.max(s, arr[i - 1].h, arr[i - 2].h);
+          if (b.h > s) { isUp = true; s = ep; ep = b.h; af = step; }
+          else if (b.l < ep) { ep = b.l; af = Math.min(af + step, maxAf); }
+        }
+        sar[i] = s; up[i] = isUp;
+      }
+    }
+    r = { sar, up }; sarCache.set(arr, r);
+  }
+  return r;
+}
+function drawSar(L) {
+  const { a, b, X, Y, padL, padT, cw, ch, P } = L;
+  g.save(); g.beginPath(); g.rect(padL, padT, cw, ch); g.clip();
+  for (let k = a; k <= b; k++) { const v = P.sar[k]; if (v == null) continue; g.fillStyle = P.up[k] ? '#15803d' : '#b91c1c'; g.beginPath(); g.arc(X(k), Y(v), 1.8, 0, 7); g.fill(); }
+  g.restore();
+  g.fillStyle = '#15803d'; g.fillText('Parabolic SAR 0.02, 0.2 (dots)', padL + 4, padT + 80);
+}
+// Supertrend 10, 3: bands at (high + low) / 2 ± 3 × ATR(10, Wilder), each band only tightens while price stays
+// on its side; the line follows the lower band in an uptrend and the upper band in a downtrend, and flips when
+// a close crosses it. Cached per bar array.
+const stCache = new WeakMap();
+function stOf(arr, n = 10, m = 3) {
+  let r = stCache.get(arr);
+  if (!r) {
+    const L = arr.length, line = new Array(L).fill(null), up = new Array(L).fill(null);
+    let atr = null, trSum = 0, fu = null, fl = null, prevSt = null;
+    for (let i = 1; i < L; i++) {
+      const b = arr[i], p = arr[i - 1];
+      const tr = Math.max(b.h - b.l, Math.abs(b.h - p.c), Math.abs(b.l - p.c));
+      if (i <= n) { trSum += tr; if (i === n) atr = trSum / n; else continue; } else atr = (atr * (n - 1) + tr) / n;
+      const hl2 = (b.h + b.l) / 2, ub = hl2 + m * atr, lb = hl2 - m * atr;
+      const nfu = fu == null || ub < fu || p.c > fu ? ub : fu;
+      const nfl = fl == null || lb > fl || p.c < fl ? lb : fl;
+      let isUp;
+      if (prevSt == null) isUp = b.c >= hl2;
+      else if (prevSt === fu) isUp = b.c > nfu;
+      else isUp = !(b.c < nfl);
+      fu = nfu; fl = nfl; prevSt = isUp ? fl : fu;
+      line[i] = prevSt; up[i] = isUp;
+    }
+    r = { line, up }; stCache.set(arr, r);
+  }
+  return r;
+}
+function drawSt(L) {
+  const { a, b, X, Y, padL, padT, cw, ch, T } = L;
+  g.save(); g.beginPath(); g.rect(padL, padT, cw, ch); g.clip();
+  g.lineWidth = 1.8;
+  for (let k = a + 1; k <= b; k++) {
+    if (T.line[k] == null || T.line[k - 1] == null || T.up[k] !== T.up[k - 1]) continue; // break the line at each flip
+    g.strokeStyle = T.up[k] ? '#16a34a' : '#dc2626';
+    g.beginPath(); g.moveTo(X(k - 1), Y(T.line[k - 1])); g.lineTo(X(k), Y(T.line[k])); g.stroke();
+  }
+  g.lineWidth = 1; g.restore();
+  g.fillStyle = '#16a34a'; g.fillText('Supertrend 10, 3 (green under price = up, red above = down)', padL + 4, padT + 94);
 }
 // Bollinger Bands: SMA(20) ± 2 standard deviations of the closes of the displayed bars, cached per bar array
 const bbCache = new WeakMap();
