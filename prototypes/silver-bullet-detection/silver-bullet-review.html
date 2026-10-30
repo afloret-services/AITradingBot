@@ -151,6 +151,7 @@
           <li><b>Draw</b>: the nearest untaken level on the Trade's side at least the Minimum framework from the entry. None means no Signal; later FVGs in the Window are still checked.</li>
           <li><b>Entry, stop, targets</b>: limit at the near edge, stop 2 ticks beyond the sweep extreme, reward-to-risk ≥ 1.0. TP1 halfway, rounded toward the entry. TP2 1 tick before the draw. 1 contract means a single leg at TP2. Contracts = floor(2% × $5,000 ÷ risk per contract), max 5. Break-even after TP1.</li>
           <li><b>Entry model</b> (setting; the user chose <b>FVG only</b> as the default): any FVG that passes the FVG checks, in the Bias direction, with its third candle in a Window and a Draw on liquidity. There is no sweep or MSS: the stop is 2 ticks beyond the FVG's first candle, and a resting entry is cancelled if price reaches that stop level first. <b>Sweep → MSS → FVG</b> is the first agreed chain; with it, the stop is beyond the sweep extreme.</li>
+          <li><b>G · EMA 200 + MACD</b> (comparison row only, not drawn on the chart): the DAFT Trade documentation's strategy on 15m bars built from the 1m bars. Long: close above a rising EMA 200 (higher than 10 bars ago), ADX(14) &gt; 20, MACD histogram negative for ≥ 3 bars, then the MACD crosses above its signal with both lines below zero; market entry at the next 1m open. Stop at the pullback low − 0.25 × ATR(14), skipped if wider than 3 × ATR. Half at 1.5R and stop to entry, the rest at 3R or when the MACD crosses back; everything closed on a 15m close beyond the EMA 200. Mirror for shorts. <i>Interpretations:</i> entries only 09:45–12:00 and 13:30–15:50 NY, flattened at 15:50; the map's risk settings (2% of $5,000, max 5 MNQ) instead of the docs' 0.5–1%; no news rule. The EMA 200 needs 200 bars of 15m history (about 3 days) before the first Signal.</li>
           <li><b>Levers for more entries</b> (settings, and the <b>Strategy</b> presets A–F, compared side by side in "Compare strategies". Each preset builds on the one before, except F, which adds the fallback to D):
             <ul>
               <li><b>PM Window</b>: a second Window, 14:00–15:00 NY, with the same rules. An unfilled entry is cancelled at the end of the Window it came from.</li>
@@ -589,6 +590,116 @@ const SB = (() => {
     return { rows, note };
   }
 
+  // ---- EMA 200 + MACD (DAFT Trade documentation, strategies/ema-200-macd), for comparison only ----
+  // On 15m bars built from the 1m bars. Fills on 1m bars like the Silver Bullet: market entry at the open of the
+  // first 1m bar after the crossover candle closes, stop exits with 1 tick of slippage, targets need a 1-tick
+  // trade-through. Uses the map's risk settings (capital, risk %, max contracts) and its 15:50 flatten.
+  // Interpretations: entries only 09:45–12:00 and 13:30–15:50 NY (the docs' 15-minute-chart times to avoid, and
+  // "close before the end of the session"); no news rule (the prototype has no News calendar); one Trade at a time.
+  const EM = { emaN: 200, slopeN: 10, adxN: 14, adxMin: 20, fast: 12, slow: 26, sig: 9, pullbackN: 3, atrN: 14,
+    stopAtr: 0.25, maxStopAtr: 3, tp1R: 1.5, tp2R: 3, entryFrom: '09:45', lunchFrom: '12:00', lunchTo: '13:30' };
+
+  function emaSeries(xs, n) {
+    const k = 2 / (n + 1), out = new Array(xs.length);
+    let e = null;
+    for (let i = 0; i < xs.length; i++) { e = e == null ? xs[i] : xs[i] * k + e * (1 - k); out[i] = e; }
+    return out;
+  }
+  // Wilder's ATR and ADX
+  function wilder(bars, n) {
+    const L = bars.length, atr = new Array(L).fill(null), adx = new Array(L).fill(null);
+    let trS = 0, pS = 0, mS = 0, dxS = 0, dxN = 0, adxV = null;
+    for (let i = 1; i < L; i++) {
+      const b = bars[i], p = bars[i - 1];
+      const tr = Math.max(b.h - b.l, Math.abs(b.h - p.c), Math.abs(b.l - p.c));
+      const up = b.h - p.h, dn = p.l - b.l;
+      const pdm = up > dn && up > 0 ? up : 0, mdm = dn > up && dn > 0 ? dn : 0;
+      if (i <= n) { trS += tr; pS += pdm; mS += mdm; } else { trS += tr - trS / n; pS += pdm - pS / n; mS += mdm - mS / n; }
+      if (i < n) continue;
+      atr[i] = trS / n;
+      const pdi = trS ? 100 * pS / trS : 0, mdi = trS ? 100 * mS / trS : 0;
+      const dx = pdi + mdi ? 100 * Math.abs(pdi - mdi) / (pdi + mdi) : 0;
+      if (adxV == null) { dxS += dx; dxN++; if (dxN === n) adxV = dxS / n; }
+      else adxV = (adxV * (n - 1) + dx) / n;
+      adx[i] = adxV;
+    }
+    return { atr, adx };
+  }
+
+  function runEmaMacd(ctx, settings) {
+    const S = { ...DEFAULTS, ...settings }, P = EM;
+    const B = ctx.bars1, Q = ctx.bars15, c = Q.map(b => b.c);
+    const ema = emaSeries(c, P.emaN), f = emaSeries(c, P.fast), s = emaSeries(c, P.slow);
+    const macd = f.map((x, i) => x - s[i]), signal = emaSeries(macd, P.sig), hist = macd.map((x, i) => x - signal[i]);
+    const { atr, adx } = wilder(Q, P.adxN);
+    const fl = hm(S.flatten), ef = hm(P.entryFrom), lf = hm(P.lunchFrom), lt = hm(P.lunchTo);
+    const riskUSD = S.capital * S.riskPct / 100;
+    const byDay = new Map(ctx.days.map(d => [d.td, { td: d.td, signals: [] }]));
+    let tr = null; // the open Trade
+
+    const exitAll = (p, t, how) => { for (const l of tr.legs.filter(l => l.exit == null)) { l.exit = p; l.exitT = t; l.how = how; } };
+    const settle = () => {
+      const sgn = tr.dir === 'long' ? 1 : -1;
+      const pts = tr.legs.reduce((a, l) => a + (l.exit - tr.entry) * sgn * l.qty, 0);
+      tr.R = pts / (Math.abs(tr.entry - tr.stop) * tr.contracts); tr.status = 'closed'; tr = null;
+    };
+
+    for (let q = P.emaN; q < Q.length; q++) {
+      const bq = Q[q], next = bq.last + 1;
+      // 1) manage the open Trade on the 1m bars of this 15m bar
+      if (tr) {
+        const sgn = tr.dir === 'long' ? 1 : -1;
+        for (let i = bq.first; i <= bq.last && tr; i++) {
+          const b = B[i];
+          if (i < tr.fromIdx) continue;
+          if (b.td !== tr.td || b.min >= fl) { exitAll(b.o, b.t, `flatten ${S.flatten}`); settle(); break; }
+          const stopHit = tr.dir === 'long' ? b.l <= tr.stopNow : b.h >= tr.stopNow;
+          if (stopHit) { const gap = tr.dir === 'long' ? b.o < tr.stopNow : b.o > tr.stopNow; exitAll((gap ? b.o : tr.stopNow) - sgn * TICK, b.t, 'stop'); settle(); break; }
+          for (const l of tr.legs) if (l.exit == null && (tr.dir === 'long' ? b.h >= l.tp + TICK : b.l <= l.tp - TICK)) { l.exit = l.tp; l.exitT = b.t; l.how = l.name; }
+          if (tr.legs[0].exit != null && tr.stopNow !== tr.entry) tr.stopNow = tr.entry; // after TP1: stop to entry
+          if (tr.legs.every(l => l.exit != null)) settle();
+        }
+        // at the 15m close: trend broken, or (after TP1) the MACD crosses back; exit at the next 1m open
+        if (tr && next < B.length) {
+          const broken = tr.dir === 'long' ? bq.c < ema[q] : bq.c > ema[q];
+          const crossBack = tr.legs[0].exit != null && (tr.dir === 'long' ? hist[q - 1] >= 0 && hist[q] < 0 : hist[q - 1] <= 0 && hist[q] > 0);
+          if (broken || crossBack) { exitAll(B[next].o, B[next].t, broken ? 'close beyond EMA 200' : 'MACD crossed back'); settle(); }
+        }
+      }
+      // 2) a new Signal at this 15m close
+      if (tr || next >= B.length || atr[q] == null || adx[q] == null) continue;
+      const nb = B[next];
+      if (nb.td !== bq.td || nb.min < ef || (nb.min >= lf && nb.min < lt) || nb.min >= fl) continue;
+      for (const dir of ['long', 'short']) {
+        const sgn = dir === 'long' ? 1 : -1;
+        if (!((bq.c - ema[q]) * sgn > 0 && (ema[q] - ema[q - P.slopeN]) * sgn > 0 && adx[q] > P.adxMin)) continue;
+        // pullback: histogram against the Trade for >= 3 candles, then the cross, with both lines beyond zero
+        let k = q - 1; while (k >= 0 && hist[k] * sgn < 0) k--;
+        if (q - 1 - k < P.pullbackN || hist[q] * sgn <= 0 || macd[q] * sgn >= 0 || signal[q] * sgn >= 0) continue;
+        let ext = dir === 'long' ? Infinity : -Infinity;
+        for (let j = k + 1; j <= q; j++) ext = dir === 'long' ? Math.min(ext, Q[j].l) : Math.max(ext, Q[j].h);
+        const raw = ext - sgn * P.stopAtr * atr[q];
+        const stop = dir === 'long' ? Math.floor(raw / TICK) * TICK : Math.ceil(raw / TICK) * TICK;
+        const entry = nb.o, risk = Math.abs(entry - stop);
+        const day = byDay.get(nb.td);
+        const sig = { dir, entry, stop, stopNow: stop, td: nb.td, t: nb.t, fromIdx: next, legs: [], status: 'pending', strategy: 'ema-macd' };
+        if (!day) break;
+        day.signals.push(sig);
+        if (risk <= 0 || risk > P.maxStopAtr * atr[q]) { sig.status = 'skipped'; sig.reason = 'stop wider than 3 × ATR'; break; }
+        sig.contracts = Math.min(S.maxContracts, Math.floor(riskUSD / (risk * USD_PER_POINT)));
+        if (sig.contracts < 1) { sig.status = 'skipped'; sig.reason = 'stop too wide'; break; }
+        const tp1 = entry + sgn * P.tp1R * risk, tp2 = entry + sgn * P.tp2R * risk;
+        const half = Math.ceil(sig.contracts / 2);
+        sig.legs = [{ name: 'TP1', qty: half, tp: tp1 }];
+        if (sig.contracts - half > 0) sig.legs.push({ name: '3R', qty: sig.contracts - half, tp: tp2 });
+        sig.status = 'filled'; tr = sig;
+        break;
+      }
+    }
+    if (tr) { tr.status = 'open at data end'; }
+    return ctx.days.map(d => byDay.get(d.td));
+  }
+
   // Strategy presets, cumulative from the agreed rules. Each only sets the fields it names.
   const LOOSE = { dispK: 1.0, minGapTicks: 2, use15m: false };
   const AGREED_FVG = { dispK: 1.5, minGapTicks: 4, use15m: true };
@@ -601,7 +712,7 @@ const SB = (() => {
     { id: 'fallback', name: 'F · D + fallback 15 min before each Window ends (agreed FVG checks)', set: { entryModel: 'fvg', pmWindow: true, noBias: 'both', fallback: true, ...AGREED_FVG } },
   ];
 
-  return { DEFAULTS, PRESETS, TICK, prepare, run, parseCsv, ny, hhmm, fmtMin, px, nyOffset };
+  return { DEFAULTS, PRESETS, EM, TICK, prepare, run, runEmaMacd, parseCsv, ny, hhmm, fmtMin, px, nyOffset };
 })();
 if (typeof module !== 'undefined') module.exports = SB;
 </script>
@@ -757,8 +868,10 @@ function renderFunnel() {
   const rows = m => [...m].sort((a, b) => b[1] - a[1]).map(([k, n]) => `<tr><td>${k}</td><td style="text-align:right">${n}</td></tr>`).join('');
   $('#funnel').style.display = '';
   // every preset on the same bars, keeping the other settings (Bias rule, risk, ...) as they are now
-  const cmp = SB.PRESETS.map(p => {
-    const rs = SB.run(ctx, { ...settings, ...p.set });
+  const strats = [...SB.PRESETS.map(p => ({ id: p.id, name: p.name, rs: SB.run(ctx, { ...settings, ...p.set }) })),
+    { id: 'emamacd', name: 'G · EMA 200 + MACD, 15m (DAFT docs; not a Silver Bullet, comparison only)', rs: SB.runEmaMacd(ctx, settings) }];
+  const cmp = strats.map(p => {
+    const rs = p.rs;
     const trades = rs.flatMap(r => r.signals.filter(s => s.status === 'closed'));
     const R = trades.reduce((a, s) => a + s.R, 0), wins = trades.filter(s => s.R > 0).length;
     const dayN = rs.filter(r => r.signals.some(s => s.status === 'closed')).length;
