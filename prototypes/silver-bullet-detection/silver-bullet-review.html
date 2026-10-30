@@ -1411,7 +1411,7 @@ function drawRenko(r, arr) {
   }
   g.fillStyle = css('--muted');
   const note = `Renko ${px(size)} pts from 1m ${fromHa ? 'Heikin Ashi closes' : 'closes'} · ${n} bricks in view · no time axis: sessions, overlays and panes are hidden`;
-  g.fillText(note, padL + cw - g.measureText(note).width - 6, padT + 12);
+  g.fillText(note, padL + cw - g.measureText(note).width - 6, padT - 9); // above the plot area
 }
 // ---- Point & Figure: its own view, columns instead of time ----
 // Close method on the selected day's 1m closes, prices on a grid of `box` points. An X column rises while closes reach
@@ -1503,7 +1503,7 @@ function drawPf(r, arr) {
   }
   g.fillStyle = css('--muted');
   const note = `Point & Figure ${px(box)} pts × ${rev}-box reversal, from 1m ${fromHa ? 'Heikin Ashi closes' : 'closes'} · ${n} columns · no time axis: sessions, overlays and panes are hidden`;
-  g.fillText(note, padL + cw - g.measureText(note).width - 6, padT + 12);
+  g.fillText(note, padL + cw - g.measureText(note).width - 6, padT - 9); // above the plot area
 }
 // ---- Kagi: its own view, a line that turns on reversals instead of time ----
 // From the selected day's 1m closes. The line extends while closes make new extremes in its direction and turns when
@@ -1584,7 +1584,7 @@ function drawKagi(r, arr) {
   }
   g.fillStyle = css('--muted');
   const note = `Kagi ${px(rev)}-pt reversal, from 1m closes · ${n} segments · thick green = yang, thin red = yin · no time axis: sessions, overlays and panes are hidden`;
-  g.fillText(note, padL + cw - g.measureText(note).width - 6, padT + 12);
+  g.fillText(note, padL + cw - g.measureText(note).width - 6, padT - 9); // above the plot area
 }
 // Heikin Ashi candles of the displayed bars: close = (O + H + L + C) / 4, open = midpoint of the previous HA candle's
 // open and close (the first: (O + C) / 2), high and low = the extremes of the real high/low and the HA open/close.
