@@ -94,6 +94,7 @@
       <div><h3>Strategy overlay</h3>
         <label><input type="checkbox" id="showEm"> EMA 200 + MACD Trades (row G)</label></div>
       <div><h3>On the price chart</h3>
+        <label>Candles <select id="candleType"><option value="real">regular</option><option value="ha">Heikin Ashi</option></select></label>
         <label><input type="checkbox" id="showVwap"> VWAP <select id="vwapAnchor"><option value="td">from 18:00 (trading day)</option><option value="rth">from 09:30</option></select></label>
         <label><input type="checkbox" id="showBb"> Bollinger 20, 2</label>
         <label><input type="checkbox" id="showKc"> Keltner 20, 2</label>
@@ -180,6 +181,7 @@
           <li><b>Entry, stop, targets</b>: limit at the near edge, stop 2 ticks beyond the sweep extreme, reward-to-risk ≥ 1.0. TP1 halfway, rounded toward the entry. TP2 1 tick before the draw. 1 contract means a single leg at TP2. Contracts = floor(2% × $5,000 ÷ risk per contract), max 5. Break-even after TP1.</li>
           <li><b>Entry model</b> (setting; the user chose <b>FVG only</b> as the default): any FVG that passes the FVG checks, in the Bias direction, with its third candle in a Window and a Draw on liquidity. There is no sweep or MSS: the stop is 2 ticks beyond the FVG's first candle, and a resting entry is cancelled if price reaches that stop level first. <b>Sweep → MSS → FVG</b> is the first agreed chain; with it, the stop is beyond the sweep extreme.</li>
           <li><b>G · EMA 200 + MACD</b> (comparison row; "Show EMA 200 + MACD" draws the EMA 200, a MACD pane and its Trades on the chart, in teal, next to the Silver Bullet): the DAFT Trade documentation's strategy on 15m bars built from the 1m bars. Long: close above a rising EMA 200 (higher than 10 bars ago), ADX(14) &gt; 20, MACD histogram negative for ≥ 3 bars, then the MACD crosses above its signal with both lines below zero; market entry at the next 1m open. Stop at the pullback low − 0.25 × ATR(14), skipped if wider than 3 × ATR. Half at 1.5R and stop to entry, the rest at 3R or when the MACD crosses back; everything closed on a 15m close beyond the EMA 200. Mirror for shorts. <i>Interpretations:</i> entries only 09:45–12:00 and 13:30–15:50 NY, flattened at 15:50; the map's risk settings (2% of $5,000, max 5 MNQ) instead of the docs' 0.5–1%; no news rule. The EMA 200 needs 200 bars of 15m history (about 3 days) before the first Signal.</li>
+          <li><b>Heikin Ashi candles</b> (display only; "Candles" in the Indicators panel): close = (open + high + low + close) ÷ 4, open = the midpoint of the previous Heikin Ashi candle's open and close, high and low = the extremes of the real high/low and those two. They smooth the trend but are not traded prices: every rule, level, FVG, entry, stop and indicator still uses the real bars, so lines may not touch the drawn candles. Hovering a bar shows both.</li>
           <li><b>Volume pane</b> (display only, as in the DAFT Trade documentation): contracts per displayed bar, green for up candles and red for down, darker when at least 1.5× the 20-bar average, which is drawn as a grey line. 5m and 15m bars carry the sum of their 1m bars' volume. Needs the volume column.</li>
           <li><b>Stochastic and OBV panes</b> (display only; not in the DAFT Trade documentation's indicator pages, so standard definitions): slow Stochastic 14,3,3 of the displayed bars, %K blue and %D orange, with 80/20 lines. OBV adds a bar's volume when it closes above the previous close and subtracts it when below; it is cumulated from the start of the file, so read its slope, not its level. OBV needs the volume column.</li>
           <li><b>ADX and ATR panes</b> (display only): Wilder's ADX 14 with +DI (green) and −DI (red) of the displayed bars, lines at 20 and 25 and the area under 20 (no trend, per the DAFT Trade documentation) shaded; Wilder's ATR 14 in points, with its value per MNQ ($2 a point). Both match the ADX and ATR the EMA·MACD strategy uses on 15m.</li>
@@ -870,8 +872,8 @@ $('#showEm').onchange = () => { if (showEm() && $('#macdPane').value === 'off') 
 $('#macdPane').onchange = () => { saveInd(); draw(); };
 // ---- indicators panel: on/off per indicator, remembered in this browser ----
 const IND_CHECKS = ['#showEm', '#showVwap', '#showBb', '#showKc', '#showDc', '#showIchi', '#showSar', '#showSt', '#showVol', '#showRsi', '#showStoch', '#showAdx', '#showAtr', '#showObv'];
-const IND_SELECTS = ['#vwapAnchor', '#macdPane'];
-function indCount() { return IND_CHECKS.filter(id => $(id).checked).length + ($('#macdPane').value !== 'off' ? 1 : 0); }
+const IND_SELECTS = ['#vwapAnchor', '#macdPane', '#candleType'];
+function indCount() { return IND_CHECKS.filter(id => $(id).checked).length + ($('#macdPane').value !== 'off' ? 1 : 0) + ($('#candleType').value === 'ha' ? 1 : 0); }
 function saveInd() {
   const st = {}; IND_CHECKS.forEach(id => st[id] = $(id).checked); IND_SELECTS.forEach(id => st[id] = $(id).value);
   try { localStorage.setItem('sb-indicators', JSON.stringify(st)); } catch {}
@@ -884,7 +886,7 @@ function loadInd() {
 }
 $('#toggleInd').onclick = () => $('#indicators').classList.toggle('open');
 [...IND_CHECKS, ...IND_SELECTS].filter(id => id !== '#showEm' && id !== '#macdPane').forEach(id => $(id).onchange = () => { saveInd(); draw(); });
-$('#indNone').onclick = () => { IND_CHECKS.forEach(id => $(id).checked = false); $('#macdPane').value = 'off'; saveInd(); renderDays(); if (results.length) showDay(sel, false); };
+$('#indNone').onclick = () => { IND_CHECKS.forEach(id => $(id).checked = false); $('#macdPane').value = 'off'; $('#candleType').value = 'real'; saveInd(); renderDays(); if (results.length) showDay(sel, false); };
 loadInd();
 $('#preset').innerHTML = SB.PRESETS.map(p => `<option value="${p.id}">${p.name}</option>`).join('') + '<option value="custom">Custom (settings changed by hand)</option>';
 $('#preset').value = 'fvg';
@@ -1101,7 +1103,8 @@ function draw() {
   const a = Math.max(0, view.a), b = Math.min(arr.length - 1, view.b), n = b - a + 1;
   if (n <= 0) return;
   let lo = Infinity, hi = -Infinity;
-  for (let k = a; k <= b; k++) { lo = Math.min(lo, arr[k].l); hi = Math.max(hi, arr[k].h); }
+  const HA = $('#candleType').value === 'ha' ? haOf(arr) : null, cs = k => HA ? HA[k] : arr[k]; // the candles drawn
+  for (let k = a; k <= b; k++) { lo = Math.min(lo, arr[k].l, cs(k).l); hi = Math.max(hi, arr[k].h, cs(k).h); }
   const pad = (hi - lo) * 0.08 || 5; lo -= pad; hi += pad;
   const bw = cw / n;
   const X = k => padL + (k - a + 0.5) * bw;
@@ -1173,12 +1176,14 @@ function draw() {
 
   // candles
   for (let k = a; k <= b; k++) {
-    const c = arr[k], x = X(k), up = c.c >= c.o;
+    const c = cs(k), x = X(k), up = c.c >= c.o;
     g.strokeStyle = g.fillStyle = up ? css('--up') : css('--down');
     g.beginPath(); g.moveTo(Math.round(x) + .5, Y(c.h)); g.lineTo(Math.round(x) + .5, Y(c.l)); g.stroke();
     const yb = Y(Math.max(c.o, c.c)), hb = Math.max(1, Math.abs(Y(c.o) - Y(c.c))), wb = Math.max(1, bw * 0.7);
     if (up) { g.fillStyle = '#fff'; g.fillRect(x - wb / 2, yb, wb, hb); g.strokeRect(x - wb / 2 + .5, yb + .5, wb - 1, hb - 1); } else g.fillRect(x - wb / 2, yb, wb, hb);
   }
+
+  if (HA) { g.font = '11px system-ui'; g.fillStyle = css('--muted'); const t = 'Heikin Ashi candles · rules, levels, entries and stops use real prices (hover a bar for both)'; g.fillText(t, padL + cw - g.measureText(t).width - 6, padT + 26); }
 
   // chain marks
   g.font = '11px system-ui';
@@ -1316,6 +1321,21 @@ function drawRsiPane(L) {
   for (let k = a; k <= b; k++) { const v = R[k]; if (v == null) { on = false; continue; } const y = YR(v); if (on) g.lineTo(X(k), y); else { g.moveTo(X(k), y); on = true; } }
   g.stroke(); g.lineWidth = 1;
   const last = R[b]; g.fillStyle = css('--muted'); g.fillText(`RSI 14 (${view.tf}m)${last != null ? ' · ' + last.toFixed(1) : ''}`, padL + 4, paneTop + 12);
+}
+// Heikin Ashi candles of the displayed bars: close = (O + H + L + C) / 4, open = midpoint of the previous HA candle's
+// open and close (the first: (O + C) / 2), high and low = the extremes of the real high/low and the HA open/close.
+const haCache = new WeakMap();
+function haOf(arr) {
+  let r = haCache.get(arr);
+  if (!r) {
+    r = new Array(arr.length);
+    for (let i = 0; i < arr.length; i++) {
+      const b = arr[i], c = (b.o + b.h + b.l + b.c) / 4, o = i ? (r[i - 1].o + r[i - 1].c) / 2 : (b.o + b.c) / 2;
+      r[i] = { o, c, h: Math.max(b.h, o, c), l: Math.min(b.l, o, c) };
+    }
+    haCache.set(arr, r);
+  }
+  return r;
 }
 // Volume histogram of the displayed bars (5m and 15m bars carry the summed 1m volume): green for up candles, red for
 // down, stronger at 1.5× the 20-bar average or more (high volume per the DAFT Trade documentation), with the average.
@@ -1703,6 +1723,7 @@ window.addEventListener('mousemove', e => {
   const k = layout.a + Math.floor((mx - layout.padL) / layout.bw), c = layout.arr[k];
   if (!c || k > layout.b) { tip.style.display = 'none'; return; }
   let text = `${c.date} ${SB.fmtMin(c.min)} NY\nO ${px(c.o)}  H ${px(c.h)}\nL ${px(c.l)}  C ${px(c.c)}`;
+  if ($('#candleType').value === 'ha') { const h = haOf(layout.arr)[k]; text += `\nHeikin Ashi: O ${px(h.o)}  H ${px(h.h)}  L ${px(h.l)}  C ${px(h.c)}`; }
   const f = results[sel].candidates.find(f => c.t >= f.t1 && c.t <= f.t3 + (view.tf - 1) * 60000 && results[sel].candidates.length);
   if (f) text += `\nFVG ${hhmm(f.t1)}–${hhmm(f.t3)} ${f.dir}: ${f.note === 'SIGNAL' ? 'Signal' : (f.note || (f.ok ? 'passes' : f.why.join('; ')))}`;
   tip.textContent = text; tip.style.display = 'block';
