@@ -26,11 +26,15 @@
   .datanote { color: var(--muted); font-size: 12px; }
   main { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100vh - 120px); }
   #days { border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; max-height: calc(100vh - 120px); }
-  .day { padding: 7px 14px; border-bottom: 1px solid var(--line); cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
+  .day { padding: 7px 14px; border-bottom: 1px solid var(--line); cursor: pointer; display: grid; grid-template-columns: 1fr auto auto; gap: 2px 8px; align-items: baseline; }
+  .day .res { text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .day .res b { font-size: 13px; }
+  .res.win { color: #15803d; } .res.loss { color: #b91c1c; } .res.be, .res.none { color: var(--muted); }
+  .daystotal { position: sticky; top: 0; z-index: 1; background: var(--panel); border-bottom: 1px solid var(--line); padding: 6px 14px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .day:hover { background: #f5f5f4; }
   .day.sel { background: var(--accent-soft); }
   .day .d { font-weight: 600; font-variant-numeric: tabular-nums; }
-  .day .s { color: var(--muted); font-size: 12px; grid-column: 1 / 3; }
+  .day .s { color: var(--muted); font-size: 12px; grid-column: 1 / 4; }
   .day .rv { font-size: 12px; }
   .tag { font-size: 11px; padding: 0 6px; border-radius: 9px; background: #f5f5f4; color: var(--muted); }
   .tag.trade { background: #dcfce7; color: #166534; }
@@ -1027,13 +1031,27 @@ function renderFunnel() {
 }
 
 // ---- day list ----
+// a day's result from its closed Trades: win, loss or break-even, total R and dollars before costs
+function dayResult(r) {
+  const tr = r.signals.filter(s => s.status === 'closed');
+  if (!tr.length) return { kind: 'none', html: r.signals.some(s => s.status === 'open at data end') ? 'open' : '–' };
+  const R = tr.reduce((a, s) => a + s.R, 0), usd = tr.reduce((a, s) => a + s.usd, 0);
+  const kind = R > 0.05 ? 'win' : R < -0.05 ? 'loss' : 'be', word = { win: 'Win', loss: 'Loss', be: 'Break-even' }[kind];
+  const sign = x => (x >= 0 ? '+' : '−') + Math.abs(x);
+  return { kind, R, usd, n: tr.length, html: `${tr.length > 1 ? tr.length + ' Trades · ' : ''}${word} <b>${sign(+R.toFixed(2))}R</b><br>${usd >= 0 ? '+' : '−'}$${Math.abs(usd).toFixed(0)}` };
+}
 function renderDays() {
+  // totals over every loaded day, for the current strategy and settings
+  const res = results.map(dayResult), closed = res.filter(x => x.n);
+  const totR = closed.reduce((a, x) => a + x.R, 0), totUsd = closed.reduce((a, x) => a + x.usd, 0), nTr = closed.reduce((a, x) => a + x.n, 0);
+  const wins = closed.filter(x => x.kind === 'win').length, losses = closed.filter(x => x.kind === 'loss').length;
+  const head = `<div class="daystotal">${results.length} days · ${nTr} Trade${nTr === 1 ? '' : 's'} on ${closed.length} days (${wins} won, ${losses} lost) · <b class="${totR > 0.05 ? 'res win' : totR < -0.05 ? 'res loss' : ''}">${totR >= 0 ? '+' : '−'}${Math.abs(totR).toFixed(2)}R</b> · ${totUsd >= 0 ? '+' : '−'}$${Math.abs(totUsd).toFixed(0)} before costs</div>`;
   // most recent day first; data-k stays the day's index in date order
-  $('#days').innerHTML = results.map((r, k) => [r, k]).reverse().map(([r, k]) => {
-    const rv = reviews[r.td];
+  $('#days').innerHTML = head + results.map((r, k) => [r, k]).reverse().map(([r, k]) => {
+    const rv = reviews[r.td], dr = res[k];
     return `<div class="day ${k === sel ? 'sel' : ''}" data-k="${k}"><span class="d">${r.td} ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(r.td + 'T12:00:00Z').getUTCDay()]}</span>
-      <span class="rv">${rv?.verdict ? RV[rv.verdict] : ''}</span>
-      <span class="s"><span class="tag ${r.status.kind}">${r.status.text}</span> ${r.bias ? (r.bias === 'bull' ? '· Bias ↑' : '· Bias ↓') : r.bothSides ? '· no Bias, both sides' : ''}${showEm() ? emTag(k) : ''}</span></div>`;
+      <span class="rv">${rv?.verdict ? RV[rv.verdict] : ''}</span><span class="res ${dr.kind}">${dr.html}</span>
+      <span class="s"><span class="tag ${r.status.kind}">${dr.n ? `${dr.n} Trade${dr.n > 1 ? 's' : ''}` : r.status.text}</span> ${r.bias ? (r.bias === 'bull' ? '· Bias ↑' : '· Bias ↓') : r.bothSides ? '· no Bias, both sides' : ''}${showEm() ? emTag(k) : ''}</span></div>`;
   }).join('');
 }
 $('#days').onclick = e => { const el = e.target.closest('.day'); if (el) showDay(+el.dataset.k, true); };
