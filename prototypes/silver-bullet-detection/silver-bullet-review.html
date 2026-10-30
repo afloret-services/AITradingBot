@@ -62,6 +62,11 @@
   #indicators .indgroups { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px 24px; }
   #indicators label { display: flex; gap: 6px; align-items: center; font-size: 13px; margin: 3px 0; }
   #indicators select { font: inherit; font-size: 12px; }
+  #indicators { margin: 8px 0; }
+  #indicators input[type=number] { font: inherit; font-size: 12px; padding: 1px 3px; border: 1px solid var(--line); border-radius: 4px; }
+  #indicators .indgroups { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+  #indSummary { margin: 4px 0; cursor: pointer; min-height: 16px; }
+  #indSummary b { color: var(--ink); font-weight: 600; }
   #settings.open { display: block; }
   #settings .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px 18px; }
   #settings label { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; align-items: center; }
@@ -84,42 +89,9 @@
     <label class="filebtn">Load CSV of 1-minute bars<input type="file" id="file" accept=".csv,.txt"></label>
     <button id="demo">Load synthetic demo</button>
     <label class="datanote">Strategy <select id="preset"></select></label>
-    <button id="toggleInd">Indicators</button>
     <button id="toggleSettings">Rule settings</button>
     <button id="export" class="primary">Export review notes</button>
     <span class="datanote" id="datanote">No data loaded.</span>
-  </div>
-  <div id="indicators" class="card">
-    <div class="indgroups">
-      <div><h3>Strategy overlay</h3>
-        <label><input type="checkbox" id="showEm"> EMA 200 + MACD Trades (row G)</label></div>
-      <div><h3>On the price chart</h3>
-        <label>Candles <select id="candleType"><option value="real">regular</option><option value="ha">Heikin Ashi</option><option value="line">Line (closes)</option><option value="area">Area (closes)</option><option value="renko">Renko (own view)</option><option value="pf">Point &amp; Figure (own view)</option><option value="kagi">Kagi (own view)</option></select></label>
-        <label><input type="checkbox" id="lineHa"> Line from Heikin Ashi closes</label>
-        <label><input type="checkbox" id="areaHa"> Area from Heikin Ashi closes</label>
-        <label>Renko brick <input type="number" id="renkoSize" value="5" min="0.25" step="0.25" style="width:60px"> pts</label>
-        <label><input type="checkbox" id="renkoHa"> Renko from Heikin Ashi closes</label>
-        <label>Kagi reversal <input type="number" id="kagiRev" value="10" min="0.25" step="0.25" style="width:60px"> pts</label>
-        <label><input type="checkbox" id="kagiHa"> Kagi from Heikin Ashi closes</label>
-        <label>P&amp;F box <input type="number" id="pfBox" value="5" min="0.25" step="0.25" style="width:60px"> pts, reversal <input type="number" id="pfRev" value="3" min="1" step="1" style="width:44px"> boxes</label>
-        <label><input type="checkbox" id="pfHa"> P&amp;F from Heikin Ashi closes</label>
-        <label><input type="checkbox" id="showVwap"> VWAP <select id="vwapAnchor"><option value="td">from 18:00 (trading day)</option><option value="rth">from 09:30</option></select></label>
-        <label><input type="checkbox" id="showBb"> Bollinger 20, 2</label>
-        <label><input type="checkbox" id="showKc"> Keltner 20, 2</label>
-        <label><input type="checkbox" id="showDc"> Donchian 20</label>
-        <label><input type="checkbox" id="showIchi"> Ichimoku 9, 26, 52</label>
-        <label><input type="checkbox" id="showSar"> Parabolic SAR</label>
-        <label><input type="checkbox" id="showSt"> Supertrend 10, 3</label></div>
-      <div><h3>Panes below the chart</h3>
-        <label>MACD <select id="macdPane"><option value="off">off</option><option value="chart">chart timeframe</option><option value="15m">15m (EMA·MACD strategy)</option></select></label>
-        <label><input type="checkbox" id="showVol"> Volume (20-bar average)</label>
-        <label><input type="checkbox" id="showRsi"> RSI 14</label>
-        <label><input type="checkbox" id="showStoch"> Stochastic 14,3,3</label>
-        <label><input type="checkbox" id="showAdx"> ADX 14</label>
-        <label><input type="checkbox" id="showAtr"> ATR 14</label>
-        <label><input type="checkbox" id="showObv"> OBV</label></div>
-    </div>
-    <p class="datanote" style="margin:8px 0 0">Display only: no Silver Bullet rule uses these, except that the EMA 200 + MACD overlay shows comparison row G. Indicators use the bars on screen (1m, 5m or 15m). Your choices are remembered in this browser. <button id="indNone" style="margin-left:8px">Turn all off</button></p>
   </div>
   <div id="settings" class="card"><div class="fields" id="fields"></div>
     <p class="datanote" style="margin:8px 0 0">These are the agreed starting values. Changing one re-runs every day at once, so you can see what a rule change would do. Your review marks are kept.</p></div>
@@ -147,7 +119,39 @@
         <button data-span="focus">09:00–12:00</button><button data-span="rth">09:30–16:00</button><button data-span="day">Whole trading day</button>
         <span class="sep"></span>
         <button id="prevDay">◀ day</button><button id="nextDay">day ▶</button>
+        <span class="sep"></span><button id="toggleInd">Indicators</button>
       </div>
+      <div id="indicators" class="card">
+        <div class="indgroups">
+          <div><h3>Chart type</h3>
+            <label>Candles <select id="candleType"><option value="real">regular</option><option value="ha">Heikin Ashi</option><option value="line">Line (closes)</option><option value="area">Area (closes)</option><option value="renko">Renko (own view)</option><option value="pf">Point &amp; Figure (own view)</option><option value="kagi">Kagi (own view)</option></select></label>
+            <label><input type="checkbox" id="lineHa"> Line from Heikin Ashi closes</label>
+            <label><input type="checkbox" id="areaHa"> Area from Heikin Ashi closes</label>
+            <label>Renko brick <input type="number" id="renkoSize" value="5" min="0.25" step="0.25" style="width:52px"> pts <input type="checkbox" id="renkoHa"> from HA</label>
+            <label>P&amp;F box <input type="number" id="pfBox" value="5" min="0.25" step="0.25" style="width:52px"> × <input type="number" id="pfRev" value="3" min="1" step="1" style="width:40px"> rev. <input type="checkbox" id="pfHa"> from HA</label>
+            <label>Kagi reversal <input type="number" id="kagiRev" value="10" min="0.25" step="0.25" style="width:52px"> pts <input type="checkbox" id="kagiHa"> from HA</label>
+            <h3 style="margin-top:10px">Strategy overlay</h3>
+            <label><input type="checkbox" id="showEm"> EMA 200 + MACD Trades (row G, fixed rules)</label></div>
+          <div><h3>On the price chart</h3>
+            <label><input type="checkbox" id="showVwap"> VWAP <select id="vwapAnchor"><option value="td">from 18:00</option><option value="rth">from 09:30</option></select></label>
+            <label><input type="checkbox" id="showBb"> Bollinger period <input type="number" data-p="bb.n" step="1" style="width:46px"> × SD <input type="number" data-p="bb.k" step="0.1" style="width:46px"></label>
+            <label><input type="checkbox" id="showKc"> Keltner EMA <input type="number" data-p="kc.n" step="1" style="width:46px"> ATR <input type="number" data-p="kc.atr" step="1" style="width:46px"> × <input type="number" data-p="kc.m" step="0.1" style="width:46px"></label>
+            <label><input type="checkbox" id="showDc"> Donchian period <input type="number" data-p="dc.n" step="1" style="width:46px"></label>
+            <label><input type="checkbox" id="showIchi"> Ichimoku <input type="number" data-p="ichi.t" step="1" style="width:40px"> <input type="number" data-p="ichi.k" step="1" style="width:40px"> <input type="number" data-p="ichi.s" step="1" style="width:40px"></label>
+            <label><input type="checkbox" id="showSar"> Parabolic SAR step <input type="number" data-p="sar.step" step="0.01" style="width:46px"> max <input type="number" data-p="sar.max" step="0.01" style="width:46px"></label>
+            <label><input type="checkbox" id="showSt"> Supertrend ATR <input type="number" data-p="st.n" step="1" style="width:46px"> × <input type="number" data-p="st.m" step="0.1" style="width:46px"></label></div>
+          <div><h3>Panes below the chart</h3>
+            <label>MACD <select id="macdPane"><option value="off">off</option><option value="chart">chart timeframe</option><option value="15m">15m (EMA·MACD, 12/26/9)</option></select> <input type="number" data-p="macd.f" step="1" style="width:40px"> <input type="number" data-p="macd.s" step="1" style="width:40px"> <input type="number" data-p="macd.g" step="1" style="width:40px"></label>
+            <label><input type="checkbox" id="showVol"> Volume average <input type="number" data-p="vol.n" step="1" style="width:46px"> high at × <input type="number" data-p="vol.hi" step="0.1" style="width:46px"></label>
+            <label><input type="checkbox" id="showRsi"> RSI period <input type="number" data-p="rsi.n" step="1" style="width:46px"> levels <input type="number" data-p="rsi.hi" step="1" style="width:40px"> / <input type="number" data-p="rsi.lo" step="1" style="width:40px"></label>
+            <label><input type="checkbox" id="showStoch"> Stochastic <input type="number" data-p="stoch.n" step="1" style="width:40px"> <input type="number" data-p="stoch.k" step="1" style="width:36px"> <input type="number" data-p="stoch.d" step="1" style="width:36px"> levels <input type="number" data-p="stoch.hi" step="1" style="width:40px"> / <input type="number" data-p="stoch.lo" step="1" style="width:40px"></label>
+            <label><input type="checkbox" id="showAdx"> ADX period <input type="number" data-p="adx.n" step="1" style="width:46px"> lines <input type="number" data-p="adx.lvl" step="1" style="width:40px"> / <input type="number" data-p="adx.strong" step="1" style="width:40px"></label>
+            <label><input type="checkbox" id="showAtr"> ATR period <input type="number" data-p="atr.n" step="1" style="width:46px"></label>
+            <label><input type="checkbox" id="showObv"> OBV</label></div>
+        </div>
+        <p class="datanote" style="margin:8px 0 0">Display only: no Silver Bullet rule uses these (the EMA 200 + MACD overlay shows comparison row G with its own fixed settings). Indicators use the bars on screen (1m, 5m or 15m). Values and choices are remembered in this browser. <button id="indDefaults" style="margin-left:8px">Default values</button> <button id="indNone">Turn all off</button></p>
+      </div>
+      <div id="indSummary" class="datanote" title="Click to change the indicators"></div>
       <div id="chartwrap"><canvas id="chart"></canvas><div id="tip"></div></div>
       <p class="datanote" style="margin:4px 0 0">Drag to pan, scroll to zoom. Blue band: the Window. Grey lines: Liquidity levels, dotted from when price first reaches them. Boxes: FVGs in the Window (blue = the Signal's FVG, grey = rejected, hover for why).</p>
       <div class="grid2">
@@ -890,17 +894,63 @@ $('#toggleSettings').onclick = () => $('#settings').classList.toggle('open');
 const showEm = () => $('#showEm').checked;
 $('#showEm').onchange = () => { if (showEm() && $('#macdPane').value === 'off') $('#macdPane').value = '15m'; saveInd(); renderDays(); if (results.length) showDay(sel, false); };
 $('#macdPane').onchange = () => { saveInd(); draw(); };
+// ---- indicator values (IP), editable in the panel next to the chart ----
+const IP_DEFAULTS = {
+  bb: { n: 20, k: 2 }, kc: { n: 20, atr: 10, m: 2 }, dc: { n: 20 }, ichi: { t: 9, k: 26, s: 52 }, sar: { step: 0.02, max: 0.2 }, st: { n: 10, m: 3 },
+  macd: { f: 12, s: 26, g: 9 }, vol: { n: 20, hi: 1.5 }, rsi: { n: 14, hi: 70, lo: 30 }, stoch: { n: 14, k: 3, d: 3, hi: 80, lo: 20 },
+  adx: { n: 14, lvl: 20, strong: 25 }, atr: { n: 14 },
+};
+const IP = JSON.parse(JSON.stringify(IP_DEFAULTS));
+const ipGet = key => { const [a, b] = key.split('.'); return IP[a][b]; };
+const syncIp = () => $$('[data-p]').forEach(inp => inp.value = ipGet(inp.dataset.p));
+$$('[data-p]').forEach(inp => inp.onchange = () => {
+  const [a, b] = inp.dataset.p.split('.'), v = +inp.value;
+  // multipliers, steps and levels can be decimals; every other value is a period, a whole number of at least 1
+  if (!isFinite(v) || v <= 0) { inp.value = IP[a][b]; return; }
+  const decimal = ['bb.k', 'kc.m', 'st.m', 'sar.step', 'sar.max', 'vol.hi', 'rsi.hi', 'rsi.lo', 'stoch.hi', 'stoch.lo', 'adx.lvl', 'adx.strong'].includes(a + '.' + b);
+  IP[a][b] = decimal ? v : Math.max(1, Math.round(v));
+  inp.value = IP[a][b]; saveInd(); draw();
+});
+// the one-line summary above the chart: the active chart type and indicators with their values
+function indSummary() {
+  const on = id => $(id).checked, f = x => +x.toFixed(3), parts = [];
+  const ct = $('#candleType').value;
+  if (ct !== 'real') parts.push({ ha: 'Heikin Ashi', line: 'Line', area: 'Area', renko: `Renko ${f(+$('#renkoSize').value)} pts`, pf: `P&F ${f(+$('#pfBox').value)} × ${$('#pfRev').value}`, kagi: `Kagi ${f(+$('#kagiRev').value)} pts` }[ct]
+    + (({ line: '#lineHa', area: '#areaHa', renko: '#renkoHa', pf: '#pfHa', kagi: '#kagiHa' })[ct] && on(({ line: '#lineHa', area: '#areaHa', renko: '#renkoHa', pf: '#pfHa', kagi: '#kagiHa' })[ct]) ? ' (HA)' : ''));
+  if (on('#showEm')) parts.push('EMA·MACD Trades');
+  if (on('#showVwap')) parts.push(`VWAP (${$('#vwapAnchor').value === 'td' ? '18:00' : '09:30'})`);
+  if (on('#showBb')) parts.push(`BB(${IP.bb.n}, ${f(IP.bb.k)})`);
+  if (on('#showKc')) parts.push(`KC(${IP.kc.n}, ${IP.kc.atr}, ${f(IP.kc.m)})`);
+  if (on('#showDc')) parts.push(`Donchian(${IP.dc.n})`);
+  if (on('#showIchi')) parts.push(`Ichimoku(${IP.ichi.t}, ${IP.ichi.k}, ${IP.ichi.s})`);
+  if (on('#showSar')) parts.push(`PSAR(${f(IP.sar.step)}, ${f(IP.sar.max)})`);
+  if (on('#showSt')) parts.push(`Supertrend(${IP.st.n}, ${f(IP.st.m)})`);
+  const mp = $('#macdPane').value; if (mp !== 'off') parts.push(mp === '15m' ? 'MACD(12, 26, 9; 15m)' : `MACD(${IP.macd.f}, ${IP.macd.s}, ${IP.macd.g})`);
+  if (on('#showVol')) parts.push(`Volume(avg ${IP.vol.n}, high × ${f(IP.vol.hi)})`);
+  if (on('#showRsi')) parts.push(`RSI(${IP.rsi.n}; ${IP.rsi.hi}/${IP.rsi.lo})`);
+  if (on('#showStoch')) parts.push(`Stoch(${IP.stoch.n}, ${IP.stoch.k}, ${IP.stoch.d}; ${IP.stoch.hi}/${IP.stoch.lo})`);
+  if (on('#showAdx')) parts.push(`ADX(${IP.adx.n}; ${IP.adx.lvl}/${IP.adx.strong})`);
+  if (on('#showAtr')) parts.push(`ATR(${IP.atr.n})`);
+  if (on('#showObv')) parts.push('OBV');
+  $('#indSummary').innerHTML = parts.length ? '<b>Indicators:</b> ' + parts.join(' · ') + ' <span style="color:var(--accent)">✎</span>' : 'No indicators. <span style="color:var(--accent)">Add indicators ✎</span>';
+}
+$('#indSummary').onclick = () => $('#indicators').classList.toggle('open');
+$('#indDefaults').onclick = () => { Object.assign(IP, JSON.parse(JSON.stringify(IP_DEFAULTS))); syncIp(); saveInd(); draw(); };
 // ---- indicators panel: on/off per indicator, remembered in this browser ----
 const IND_CHECKS = ['#lineHa', '#areaHa', '#renkoHa', '#pfHa', '#kagiHa', '#showEm', '#showVwap', '#showBb', '#showKc', '#showDc', '#showIchi', '#showSar', '#showSt', '#showVol', '#showRsi', '#showStoch', '#showAdx', '#showAtr', '#showObv'];
 const IND_SELECTS = ['#vwapAnchor', '#macdPane', '#candleType', '#renkoSize', '#pfBox', '#pfRev', '#kagiRev'];
 function indCount() { return IND_CHECKS.filter(id => !['#lineHa', '#areaHa', '#renkoHa', '#pfHa', '#kagiHa'].includes(id) && $(id).checked).length + ($('#macdPane').value !== 'off' ? 1 : 0) + ($('#candleType').value !== 'real' ? 1 : 0); }
 function saveInd() {
   const st = {}; IND_CHECKS.forEach(id => st[id] = $(id).checked); IND_SELECTS.forEach(id => st[id] = $(id).value);
+  st.values = IP;
   try { localStorage.setItem('sb-indicators', JSON.stringify(st)); } catch {}
+  indSummary();
   const n = indCount(); $('#toggleInd').textContent = n ? `Indicators (${n} on)` : 'Indicators';
 }
 function loadInd() {
   let st = null; try { st = JSON.parse(localStorage.getItem('sb-indicators') || 'null'); } catch {}
+  if (st && st.values) for (const a in IP_DEFAULTS) for (const b in IP_DEFAULTS[a]) { const v = st.values[a]?.[b]; if (typeof v === 'number' && isFinite(v) && v > 0) IP[a][b] = v; }
+  syncIp();
   if (st) { IND_CHECKS.forEach(id => { if (id in st) $(id).checked = !!st[id]; }); IND_SELECTS.forEach(id => { const el = $(id); if (st[id] && (el.tagName !== 'SELECT' || [...el.options].some(o => o.value === st[id]))) el.value = st[id]; }); }
   saveInd();
 }
@@ -1251,12 +1301,12 @@ function draw() {
 
   if (paneH) drawMacdPane({ a, b, arr, X, padL, cw, bw, paneTop: padT + ch + 10, paneH, pane });
   lowPanes.forEach(([, fn], j) => fn({ a, b, arr, X, padL, cw, paneTop: padT + ch + 10 + (paneH ? paneH + 10 : 0) + j * (lowH + 10), paneH: lowH }));
-  if ($('#showIchi').checked) drawIchi({ a, b, X, Y, padL, padT, cw, ch, I: ichiOf(arr) });
-  if ($('#showBb').checked) drawBb({ a, b, X, Y, padL, padT, cw, ch, B: bbOf(arr) });
-  if ($('#showKc').checked) drawChannel({ a, b, X, Y, padL, padT, cw, ch, C: kcOf(arr), col: '#9333ea', fill: 'rgba(147,51,234,.06)', label: `Keltner 20, 2 (${view.tf}m): EMA 20 ± 2 × ATR 10`, ly: 108 });
-  if ($('#showDc').checked) drawChannel({ a, b, X, Y, padL, padT, cw, ch, C: dcOf(arr), col: '#c2410c', fill: 'rgba(194,65,12,.05)', label: `Donchian 20 (${view.tf}m): 20-bar high and low`, ly: 122, step: true });
-  if ($('#showSt').checked) drawSt({ a, b, X, Y, padL, padT, cw, ch, T: stOf(arr) });
-  if ($('#showSar').checked) drawSar({ a, b, X, Y, padL, padT, cw, ch, P: sarOf(arr) });
+  if ($('#showIchi').checked) drawIchi({ a, b, X, Y, padL, padT, cw, ch, I: ichiOf(arr, IP.ichi.t, IP.ichi.k, IP.ichi.s) });
+  if ($('#showBb').checked) drawBb({ a, b, X, Y, padL, padT, cw, ch, B: bbOf(arr, IP.bb.n, IP.bb.k) });
+  if ($('#showKc').checked) drawChannel({ a, b, X, Y, padL, padT, cw, ch, C: kcOf(arr, IP.kc.n, IP.kc.atr, IP.kc.m), col: '#9333ea', fill: 'rgba(147,51,234,.06)', label: `Keltner (${view.tf}m): EMA ${IP.kc.n} ± ${IP.kc.m} × ATR ${IP.kc.atr}`, ly: 108 });
+  if ($('#showDc').checked) drawChannel({ a, b, X, Y, padL, padT, cw, ch, C: dcOf(arr, IP.dc.n), col: '#c2410c', fill: 'rgba(194,65,12,.05)', label: `Donchian (${view.tf}m): ${IP.dc.n}-bar high and low`, ly: 122, step: true });
+  if ($('#showSt').checked) drawSt({ a, b, X, Y, padL, padT, cw, ch, T: stOf(arr, IP.st.n, IP.st.m) });
+  if ($('#showSar').checked) drawSar({ a, b, X, Y, padL, padT, cw, ch, P: sarOf(arr, IP.sar.step, IP.sar.max) });
   if ($('#showVwap').checked) drawVwap({ a, b, arr, X, Y, padL, padT, cw, ch });
   if (emOn) drawEm({ a, b, arr, X, Y, XT, padL, padT, cw, ch, bw, paneTop: padT + ch + 10, paneH });
 
@@ -1308,14 +1358,17 @@ function drawEm(L) {
     if (paneH) { const xc = XT(s.crossT + (view.tf === 15 ? 0 : 15 * 60000)); g.strokeStyle = EM_COL; g.beginPath(); g.moveTo(xc, paneTop); g.lineTo(xc, paneTop + paneH); g.stroke(); }
   }
 }
-// MACD 12,26,9 per chart timeframe, computed over the whole loaded series and cached per dataset
+// Indicator caches are keyed by the bar array and by the indicator's settings, so changing a value recomputes it.
+const pget = (cache, arr, key) => cache.get(arr)?.get(key);
+const pset = (cache, arr, key, v) => { let m = cache.get(arr); if (!m) cache.set(arr, m = new Map()); m.set(key, v); };
+// MACD (fast, slow, signal) per chart timeframe, computed over the whole loaded series and cached per dataset
 const macdCache = new WeakMap();
-function macdOf(arr) {
-  let m = macdCache.get(arr);
+function macdOf(arr, fast = 12, slow = 26, sig = 9) {
+  let m = pget(macdCache, arr, [...arguments].slice(1).join());
   if (!m) {
     const ema = (xs, n) => { const k = 2 / (n + 1), o = []; let e = null; for (const x of xs) { e = e == null ? x : x * k + e * (1 - k); o.push(e); } return o; };
-    const c = arr.map(b => b.c), f = ema(c, 12), sl = ema(c, 26), macd = f.map((x, i) => x - sl[i]), signal = ema(macd, 9);
-    m = { macd, signal, hist: macd.map((x, i) => x - signal[i]) }; macdCache.set(arr, m);
+    const c = arr.map(b => b.c), f = ema(c, fast), sl = ema(c, slow), macd = f.map((x, i) => x - sl[i]), signal = ema(macd, sig);
+    m = { macd, signal, hist: macd.map((x, i) => x - signal[i]) }; pset(macdCache, arr, [...arguments].slice(1).join(), m);
   }
   return m;
 }
@@ -1325,7 +1378,7 @@ function drawMacdPane(L) {
   const { a, b, arr, X, padL, cw, bw, paneTop, paneH, pane } = L, Q = ctx.bars15;
   let S, at;
   if (pane === '15m') { S = emResults.series; at = x => { const k = lb(Q, x.t + 1) - 1; const q = view.tf === 15 ? k : k - 1; return q >= 25 ? q : -1; }; }
-  else { S = macdOf(arr); at = x => { const k = lb(arr, x.t); return k >= 25 ? k : -1; }; }
+  else { S = macdOf(arr, IP.macd.f, IP.macd.s, IP.macd.g); at = x => { const k = lb(arr, x.t); return k >= 25 ? k : -1; }; }
   if (!S) return;
   const line = (vals, toY, col) => {
     g.strokeStyle = col; g.lineWidth = 1.2; g.beginPath(); let on = false;
@@ -1340,13 +1393,13 @@ function drawMacdPane(L) {
   g.beginPath(); g.moveTo(padL, YP(0)); g.lineTo(padL + cw, YP(0)); g.stroke();
   for (let k = a; k <= b; k++) { const q = at(arr[k]); if (q < 0) continue; const h = S.hist[q]; g.fillStyle = h >= 0 ? 'rgba(15,118,110,.35)' : 'rgba(185,28,28,.35)'; const y0 = YP(0), y1 = YP(h); g.fillRect(X(k) - Math.max(1, bw * .35), Math.min(y0, y1), Math.max(1, bw * .7), Math.abs(y1 - y0)); }
   line(S.macd, YP, '#2563eb'); line(S.signal, YP, '#ea580c');
-  g.fillStyle = css('--muted'); g.fillText(`MACD 12,26,9 (${pane === '15m' ? '15m' : view.tf + 'm'})`, padL + 4, paneTop + 12);
+  g.fillStyle = css('--muted'); g.fillText(pane === '15m' ? 'MACD 12, 26, 9 (15m, the EMA·MACD strategy)' : `MACD ${IP.macd.f}, ${IP.macd.s}, ${IP.macd.g} (${view.tf}m)`, padL + 4, paneTop + 12);
   g.fillStyle = '#2563eb'; g.fillText('MACD', padL + cw - 90, paneTop + 12); g.fillStyle = '#ea580c'; g.fillText('signal', padL + cw - 50, paneTop + 12);
 }
 // RSI 14 (Wilder) on the displayed bars, cached per bar array
 const rsiCache = new WeakMap();
 function rsiOf(arr, n = 14) {
-  let r = rsiCache.get(arr);
+  let r = pget(rsiCache, arr, [...arguments].slice(1).join());
   if (!r) {
     r = new Array(arr.length).fill(null);
     let ag = 0, al = 0;
@@ -1355,22 +1408,22 @@ function rsiOf(arr, n = 14) {
       if (i <= n) { ag += gn / n; al += ls / n; } else { ag = (ag * (n - 1) + gn) / n; al = (al * (n - 1) + ls) / n; }
       if (i >= n) r[i] = al === 0 ? 100 : 100 - 100 / (1 + ag / al);
     }
-    rsiCache.set(arr, r);
+    pset(rsiCache, arr, [...arguments].slice(1).join(), r);
   }
   return r;
 }
 function drawRsiPane(L) {
-  const { a, b, arr, X, padL, cw, paneTop, paneH } = L, R = rsiOf(arr);
+  const { a, b, arr, X, padL, cw, paneTop, paneH } = L, R = rsiOf(arr, IP.rsi.n), HI = IP.rsi.hi, LO = IP.rsi.lo;
   const YR = v => paneTop + 4 + (100 - v) / 100 * (paneH - 8);
   g.strokeStyle = css('--line'); g.strokeRect(padL + .5, paneTop + .5, cw - 1, paneH - 1);
-  g.fillStyle = 'rgba(185,28,28,.07)'; g.fillRect(padL, YR(100), cw, YR(70) - YR(100));
-  g.fillStyle = 'rgba(15,118,110,.07)'; g.fillRect(padL, YR(30), cw, YR(0) - YR(30));
+  g.fillStyle = 'rgba(185,28,28,.07)'; g.fillRect(padL, YR(100), cw, YR(HI) - YR(100));
+  g.fillStyle = 'rgba(15,118,110,.07)'; g.fillRect(padL, YR(LO), cw, YR(0) - YR(LO));
   g.font = '11px system-ui';
-  for (const lv of [70, 50, 30]) { const y = Math.round(YR(lv)) + .5; g.strokeStyle = lv === 50 ? css('--line') : '#a8a29e'; g.setLineDash(lv === 50 ? [] : [4, 3]); g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + cw, y); g.stroke(); g.setLineDash([]); g.fillStyle = css('--muted'); g.fillText(String(lv), padL + cw + 6, y + 4); }
+  for (const lv of [HI, 50, LO]) { const y = Math.round(YR(lv)) + .5; g.strokeStyle = lv === 50 ? css('--line') : '#a8a29e'; g.setLineDash(lv === 50 ? [] : [4, 3]); g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + cw, y); g.stroke(); g.setLineDash([]); g.fillStyle = css('--muted'); g.fillText(String(lv), padL + cw + 6, y + 4); }
   g.strokeStyle = '#7c3aed'; g.lineWidth = 1.3; g.beginPath(); let on = false;
   for (let k = a; k <= b; k++) { const v = R[k]; if (v == null) { on = false; continue; } const y = YR(v); if (on) g.lineTo(X(k), y); else { g.moveTo(X(k), y); on = true; } }
   g.stroke(); g.lineWidth = 1;
-  const last = R[b]; g.fillStyle = css('--muted'); g.fillText(`RSI 14 (${view.tf}m)${last != null ? ' · ' + last.toFixed(1) : ''}`, padL + 4, paneTop + 12);
+  const last = R[b]; g.fillStyle = css('--muted'); g.fillText(`RSI ${IP.rsi.n} (${view.tf}m)${last != null ? ' · ' + last.toFixed(1) : ''}`, padL + 4, paneTop + 12);
 }
 // ---- Renko: its own view, bricks instead of time ----
 // Bricks from the 1m closes of the selected trading day: a new brick when a close is a full brick beyond the last
@@ -1631,14 +1684,14 @@ function drawKagi(r, arr) {
 // open and close (the first: (O + C) / 2), high and low = the extremes of the real high/low and the HA open/close.
 const haCache = new WeakMap();
 function haOf(arr) {
-  let r = haCache.get(arr);
+  let r = pget(haCache, arr, [...arguments].slice(1).join());
   if (!r) {
     r = new Array(arr.length);
     for (let i = 0; i < arr.length; i++) {
       const b = arr[i], c = (b.o + b.h + b.l + b.c) / 4, o = i ? (r[i - 1].o + r[i - 1].c) / 2 : (b.o + b.c) / 2;
       r[i] = { o, c, h: Math.max(b.h, o, c), l: Math.min(b.l, o, c) };
     }
-    haCache.set(arr, r);
+    pset(haCache, arr, [...arguments].slice(1).join(), r);
   }
   return r;
 }
@@ -1646,12 +1699,12 @@ function haOf(arr) {
 // down, stronger at 1.5× the 20-bar average or more (high volume per the DAFT Trade documentation), with the average.
 const volMaCache = new WeakMap();
 function volMaOf(arr, n = 20) {
-  let r = volMaCache.get(arr);
-  if (!r) { r = new Array(arr.length).fill(null); let s = 0; for (let i = 0; i < arr.length; i++) { s += arr[i].v || 0; if (i >= n) s -= arr[i - n].v || 0; if (i >= n - 1) r[i] = s / n; } volMaCache.set(arr, r); }
+  let r = pget(volMaCache, arr, [...arguments].slice(1).join());
+  if (!r) { r = new Array(arr.length).fill(null); let s = 0; for (let i = 0; i < arr.length; i++) { s += arr[i].v || 0; if (i >= n) s -= arr[i - n].v || 0; if (i >= n - 1) r[i] = s / n; } pset(volMaCache, arr, [...arguments].slice(1).join(), r); }
   return r;
 }
 function drawVolPane(L) {
-  const { a, b, arr, X, padL, cw, paneTop, paneH } = L, MA = volMaOf(arr);
+  const { a, b, arr, X, padL, cw, paneTop, paneH } = L, MA = volMaOf(arr, IP.vol.n);
   g.strokeStyle = css('--line'); g.strokeRect(padL + .5, paneTop + .5, cw - 1, paneH - 1);
   g.font = '11px system-ui';
   let top = 0; for (let k = a; k <= b; k++) top = Math.max(top, arr[k].v || 0);
@@ -1660,7 +1713,7 @@ function drawVolPane(L) {
   const bw = Math.max(1, (X(a + 1) - X(a)) * .7);
   for (let k = a; k <= b; k++) {
     const x = arr[k], v = x.v || 0; if (!v) continue;
-    const hi = MA[k] && v >= 1.5 * MA[k], up = x.c >= x.o;
+    const hi = MA[k] && v >= IP.vol.hi * MA[k], up = x.c >= x.o;
     g.fillStyle = up ? (hi ? 'rgba(15,118,110,.85)' : 'rgba(15,118,110,.35)') : (hi ? 'rgba(185,28,28,.85)' : 'rgba(185,28,28,.35)');
     g.fillRect(X(k) - bw / 2, YV(v), bw, paneTop + paneH - 2 - YV(v));
   }
@@ -1668,12 +1721,12 @@ function drawVolPane(L) {
   g.fillStyle = css('--muted');
   for (const v of [top / 2, top]) g.fillText(v >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : String(Math.round(v)), padL + cw + 6, YV(v) + 4);
   const v = arr[b].v || 0, m = MA[b];
-  g.fillText(`Volume (${view.tf}m) · ${v.toLocaleString()} contracts${m ? ` = ${(v / m).toFixed(1)}× the 20-bar average` : ''} · dark bars ≥ 1.5× average`, padL + 4, paneTop + 12);
+  g.fillText(`Volume (${view.tf}m) · ${v.toLocaleString()} contracts${m ? ` = ${(v / m).toFixed(1)}× the ${IP.vol.n}-bar average` : ''} · dark bars ≥ ${IP.vol.hi}× average`, padL + 4, paneTop + 12);
 }
 // Wilder's ATR(14) and ADX(14) with +DI and -DI, on the displayed bars, cached per bar array
 const dmiCache = new WeakMap();
 function dmiOf(arr, n = 14) {
-  let r = dmiCache.get(arr);
+  let r = pget(dmiCache, arr, [...arguments].slice(1).join());
   if (!r) {
     const L = arr.length; r = { atr: new Array(L).fill(null), adx: new Array(L).fill(null), pdi: new Array(L).fill(null), mdi: new Array(L).fill(null) };
     let trS = 0, pS = 0, mS = 0, dxS = 0, dxN = 0, adxV = null;
@@ -1690,7 +1743,7 @@ function dmiOf(arr, n = 14) {
       if (adxV == null) { dxS += dx; if (++dxN === n) adxV = dxS / n; } else adxV = (adxV * (n - 1) + dx) / n;
       r.adx[i] = adxV;
     }
-    dmiCache.set(arr, r);
+    pset(dmiCache, arr, [...arguments].slice(1).join(), r);
   }
   return r;
 }
@@ -1700,21 +1753,21 @@ function paneLine(a, b, X, vals, toY, col, width) {
   g.stroke(); g.lineWidth = 1;
 }
 function drawAdxPane(L) {
-  const { a, b, arr, X, padL, cw, paneTop, paneH } = L, D = dmiOf(arr);
+  const { a, b, arr, X, padL, cw, paneTop, paneH } = L, D = dmiOf(arr, IP.adx.n);
   let top = 50; for (let k = a; k <= b; k++) top = Math.max(top, D.adx[k] || 0, D.pdi[k] || 0, D.mdi[k] || 0);
   top = Math.ceil(top / 10) * 10;
   const YA = v => paneTop + 4 + (top - v) / top * (paneH - 8);
   g.strokeStyle = css('--line'); g.strokeRect(padL + .5, paneTop + .5, cw - 1, paneH - 1);
-  g.fillStyle = 'rgba(120,113,108,.07)'; g.fillRect(padL, YA(20), cw, YA(0) - YA(20)); // under 20: no trend
+  g.fillStyle = 'rgba(120,113,108,.07)'; g.fillRect(padL, YA(IP.adx.lvl), cw, YA(0) - YA(IP.adx.lvl)); // under the first line: no trend
   g.font = '11px system-ui';
-  for (const lv of [20, 25]) { const y = Math.round(YA(lv)) + .5; g.strokeStyle = '#a8a29e'; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + cw, y); g.stroke(); g.setLineDash([]); g.fillStyle = css('--muted'); g.fillText(String(lv), padL + cw + 6, y + (lv === 25 ? -1 : 10)); }
+  for (const lv of [IP.adx.lvl, IP.adx.strong]) { const y = Math.round(YA(lv)) + .5; g.strokeStyle = '#a8a29e'; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + cw, y); g.stroke(); g.setLineDash([]); g.fillStyle = css('--muted'); g.fillText(String(lv), padL + cw + 6, y + (lv === IP.adx.strong && lv >= IP.adx.lvl ? -1 : 10)); }
   paneLine(a, b, X, D.pdi, YA, '#15803d', 1); paneLine(a, b, X, D.mdi, YA, '#dc2626', 1); paneLine(a, b, X, D.adx, YA, '#1c1917', 1.6);
   const v = D.adx[b];
-  g.fillStyle = css('--muted'); g.fillText(`ADX 14 (${view.tf}m)${v != null ? ' · ' + v.toFixed(1) : ''}`, padL + 4, paneTop + 12);
+  g.fillStyle = css('--muted'); g.fillText(`ADX ${IP.adx.n} (${view.tf}m)${v != null ? ' · ' + v.toFixed(1) : ''}`, padL + 4, paneTop + 12);
   g.fillStyle = '#1c1917'; g.fillText('ADX', padL + cw - 90, paneTop + 12); g.fillStyle = '#15803d'; g.fillText('+DI', padL + cw - 62, paneTop + 12); g.fillStyle = '#dc2626'; g.fillText('−DI', padL + cw - 36, paneTop + 12);
 }
 function drawAtrPane(L) {
-  const { a, b, arr, X, padL, cw, paneTop, paneH } = L, D = dmiOf(arr);
+  const { a, b, arr, X, padL, cw, paneTop, paneH } = L, D = dmiOf(arr, IP.atr.n);
   let lo = Infinity, hi = -Infinity; for (let k = a; k <= b; k++) { const v = D.atr[k]; if (v != null) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
   if (!isFinite(lo)) return;
   const pad = (hi - lo) * 0.1 || 0.5; lo = Math.max(0, lo - pad); hi += pad;
@@ -1724,13 +1777,13 @@ function drawAtrPane(L) {
   for (const v of [lo + (hi - lo) * .2, lo + (hi - lo) * .8]) g.fillText(v.toFixed(2), padL + cw + 6, YT(v) + 4);
   paneLine(a, b, X, D.atr, YT, '#b45309', 1.4);
   const v = D.atr[b];
-  g.fillStyle = css('--muted'); g.fillText(`ATR 14 (${view.tf}m)${v != null ? ` · ${v.toFixed(2)} pts = $${(v * 2).toFixed(2)} per MNQ` : ''}`, padL + 4, paneTop + 12);
+  g.fillStyle = css('--muted'); g.fillText(`ATR ${IP.atr.n} (${view.tf}m)${v != null ? ` · ${v.toFixed(2)} pts = $${(v * 2).toFixed(2)} per MNQ` : ''}`, padL + 4, paneTop + 12);
 }
 // Slow Stochastic 14,3,3 on the displayed bars: fast %K = (close − lowest low 14) ÷ (highest high 14 − lowest low 14),
 // %K = SMA 3 of fast %K, %D = SMA 3 of %K. Cached per bar array.
 const stochCache = new WeakMap();
 function stochOf(arr, n = 14, kS = 3, dS = 3) {
-  let r = stochCache.get(arr);
+  let r = pget(stochCache, arr, [...arguments].slice(1).join());
   if (!r) {
     const L = arr.length, fast = new Array(L).fill(null), k = new Array(L).fill(null), d = new Array(L).fill(null);
     const sma = (src, out, m, i) => { let s = 0; for (let j = i - m + 1; j <= i; j++) { if (j < 0 || src[j] == null) return; s += src[j]; } out[i] = s / m; };
@@ -1739,28 +1792,28 @@ function stochOf(arr, n = 14, kS = 3, dS = 3) {
       fast[i] = hi > lo ? 100 * (arr[i].c - lo) / (hi - lo) : 50;
       sma(fast, k, kS, i); sma(k, d, dS, i);
     }
-    r = { k, d }; stochCache.set(arr, r);
+    r = { k, d }; pset(stochCache, arr, [...arguments].slice(1).join(), r);
   }
   return r;
 }
 function drawStochPane(L) {
-  const { a, b, arr, X, padL, cw, paneTop, paneH } = L, S = stochOf(arr);
+  const { a, b, arr, X, padL, cw, paneTop, paneH } = L, S = stochOf(arr, IP.stoch.n, IP.stoch.k, IP.stoch.d), HI = IP.stoch.hi, LO = IP.stoch.lo;
   const YS = v => paneTop + 4 + (100 - v) / 100 * (paneH - 8);
   g.strokeStyle = css('--line'); g.strokeRect(padL + .5, paneTop + .5, cw - 1, paneH - 1);
-  g.fillStyle = 'rgba(185,28,28,.07)'; g.fillRect(padL, YS(100), cw, YS(80) - YS(100));
-  g.fillStyle = 'rgba(15,118,110,.07)'; g.fillRect(padL, YS(20), cw, YS(0) - YS(20));
+  g.fillStyle = 'rgba(185,28,28,.07)'; g.fillRect(padL, YS(100), cw, YS(HI) - YS(100));
+  g.fillStyle = 'rgba(15,118,110,.07)'; g.fillRect(padL, YS(LO), cw, YS(0) - YS(LO));
   g.font = '11px system-ui';
-  for (const lv of [80, 20]) { const y = Math.round(YS(lv)) + .5; g.strokeStyle = '#a8a29e'; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + cw, y); g.stroke(); g.setLineDash([]); g.fillStyle = css('--muted'); g.fillText(String(lv), padL + cw + 6, y + 4); }
+  for (const lv of [HI, LO]) { const y = Math.round(YS(lv)) + .5; g.strokeStyle = '#a8a29e'; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + cw, y); g.stroke(); g.setLineDash([]); g.fillStyle = css('--muted'); g.fillText(String(lv), padL + cw + 6, y + 4); }
   paneLine(a, b, X, S.k, YS, '#2563eb', 1.3); paneLine(a, b, X, S.d, YS, '#ea580c', 1.1);
   const v = S.k[b];
-  g.fillStyle = css('--muted'); g.fillText(`Stochastic 14,3,3 (${view.tf}m)${v != null ? ' · %K ' + v.toFixed(1) : ''}`, padL + 4, paneTop + 12);
+  g.fillStyle = css('--muted'); g.fillText(`Stochastic ${IP.stoch.n}, ${IP.stoch.k}, ${IP.stoch.d} (${view.tf}m)${v != null ? ' · %K ' + v.toFixed(1) : ''}`, padL + 4, paneTop + 12);
   g.fillStyle = '#2563eb'; g.fillText('%K', padL + cw - 50, paneTop + 12); g.fillStyle = '#ea580c'; g.fillText('%D', padL + cw - 26, paneTop + 12);
 }
 // OBV on the displayed bars: + volume when a bar closes above the previous close, − volume when below. Cumulated from
 // the start of the loaded file, so only its slope and turns matter, not its level. Needs the volume column.
 const obvCache = new WeakMap();
 function obvOf(arr) {
-  let r = obvCache.get(arr);
+  let r = pget(obvCache, arr, [...arguments].slice(1).join());
   if (!r) {
     r = new Array(arr.length).fill(null); let v = 0, hasVol = false;
     for (let i = 0; i < arr.length; i++) {
@@ -1768,7 +1821,7 @@ function obvOf(arr) {
       if (i > 0) v += arr[i].c > arr[i - 1].c ? vol : arr[i].c < arr[i - 1].c ? -vol : 0;
       r[i] = v;
     }
-    r.hasVol = hasVol; obvCache.set(arr, r);
+    r.hasVol = hasVol; pset(obvCache, arr, [...arguments].slice(1).join(), r);
   }
   return r;
 }
@@ -1789,19 +1842,19 @@ function drawObvPane(L) {
 // ((Tenkan + Kijun) / 2) and Senkou B (mid of the 52-bar range) from bar k − 26, so it is known at k. Chikou at
 // bar k is the close of bar k + 26: plotted 26 bars back, as usual, so it shows what came later.
 const ichiCache = new WeakMap();
-function ichiOf(arr) {
-  let r = ichiCache.get(arr);
+function ichiOf(arr, tN = 9, kN = 26, sN = 52) { // the cloud and Chikou are shifted by the Kijun period
+  let r = pget(ichiCache, arr, [...arguments].slice(1).join());
   if (!r) {
     const L = arr.length, mid = (i, n) => { if (i < n - 1) return null; let hi = -Infinity, lo = Infinity; for (let j = i - n + 1; j <= i; j++) { hi = Math.max(hi, arr[j].h); lo = Math.min(lo, arr[j].l); } return (hi + lo) / 2; };
     const tenkan = [], kijun = [], spanA = new Array(L).fill(null), spanB = new Array(L).fill(null), chikou = new Array(L).fill(null);
-    for (let i = 0; i < L; i++) { tenkan[i] = mid(i, 9); kijun[i] = mid(i, 26); }
-    for (let i = 26; i < L; i++) {
-      const j = i - 26;
+    for (let i = 0; i < L; i++) { tenkan[i] = mid(i, tN); kijun[i] = mid(i, kN); }
+    for (let i = kN; i < L; i++) {
+      const j = i - kN;
       if (tenkan[j] != null && kijun[j] != null) spanA[i] = (tenkan[j] + kijun[j]) / 2;
-      spanB[i] = mid(j, 52);
+      spanB[i] = mid(j, sN);
     }
-    for (let i = 0; i + 26 < L; i++) chikou[i] = arr[i + 26].c;
-    r = { tenkan, kijun, spanA, spanB, chikou }; ichiCache.set(arr, r);
+    for (let i = 0; i + kN < L; i++) chikou[i] = arr[i + kN].c;
+    r = { tenkan, kijun, spanA, spanB, chikou }; pset(ichiCache, arr, [...arguments].slice(1).join(), r);
   }
   return r;
 }
@@ -1819,13 +1872,13 @@ function drawIchi(L) {
   line(I.spanA, 'rgba(22,163,74,.6)', 1); line(I.spanB, 'rgba(220,38,38,.6)', 1);
   line(I.tenkan, '#2563eb', 1.2); line(I.kijun, '#991b1b', 1.4); line(I.chikou, '#65a30d', 1, [2, 2]);
   g.restore();
-  g.fillStyle = '#991b1b'; g.fillText(`Ichimoku (${view.tf}m): Tenkan blue, Kijun dark red, cloud, Chikou dotted`, padL + 4, padT + 66);
+  g.fillStyle = '#991b1b'; g.fillText(`Ichimoku ${IP.ichi.t}, ${IP.ichi.k}, ${IP.ichi.s} (${view.tf}m): Tenkan blue, Kijun dark red, cloud, Chikou dotted`, padL + 4, padT + 66);
 }
 // Parabolic SAR (Wilder): acceleration 0.02, +0.02 at each new extreme, max 0.2. sar[i] is the stop for bar i; on
 // a flip it restarts at the previous extreme point. up[i] is the trend after bar i. Cached per bar array.
 const sarCache = new WeakMap();
 function sarOf(arr, step = 0.02, maxAf = 0.2) {
-  let r = sarCache.get(arr);
+  let r = pget(sarCache, arr, [...arguments].slice(1).join());
   if (!r) {
     const L = arr.length, sar = new Array(L).fill(null), up = new Array(L).fill(null);
     if (L > 2) {
@@ -1848,7 +1901,7 @@ function sarOf(arr, step = 0.02, maxAf = 0.2) {
         sar[i] = s; up[i] = isUp;
       }
     }
-    r = { sar, up }; sarCache.set(arr, r);
+    r = { sar, up }; pset(sarCache, arr, [...arguments].slice(1).join(), r);
   }
   return r;
 }
@@ -1857,14 +1910,14 @@ function drawSar(L) {
   g.save(); g.beginPath(); g.rect(padL, padT, cw, ch); g.clip();
   for (let k = a; k <= b; k++) { const v = P.sar[k]; if (v == null) continue; g.fillStyle = P.up[k] ? '#15803d' : '#b91c1c'; g.beginPath(); g.arc(X(k), Y(v), 1.8, 0, 7); g.fill(); }
   g.restore();
-  g.fillStyle = '#15803d'; g.fillText('Parabolic SAR 0.02, 0.2 (dots)', padL + 4, padT + 80);
+  g.fillStyle = '#15803d'; g.fillText(`Parabolic SAR ${IP.sar.step}, ${IP.sar.max} (dots)`, padL + 4, padT + 80);
 }
 // Supertrend 10, 3: bands at (high + low) / 2 ± 3 × ATR(10, Wilder), each band only tightens while price stays
 // on its side; the line follows the lower band in an uptrend and the upper band in a downtrend, and flips when
 // a close crosses it. Cached per bar array.
 const stCache = new WeakMap();
 function stOf(arr, n = 10, m = 3) {
-  let r = stCache.get(arr);
+  let r = pget(stCache, arr, [...arguments].slice(1).join());
   if (!r) {
     const L = arr.length, line = new Array(L).fill(null), up = new Array(L).fill(null);
     let atr = null, trSum = 0, fu = null, fl = null, prevSt = null;
@@ -1882,7 +1935,7 @@ function stOf(arr, n = 10, m = 3) {
       fu = nfu; fl = nfl; prevSt = isUp ? fl : fu;
       line[i] = prevSt; up[i] = isUp;
     }
-    r = { line, up }; stCache.set(arr, r);
+    r = { line, up }; pset(stCache, arr, [...arguments].slice(1).join(), r);
   }
   return r;
 }
@@ -1896,12 +1949,12 @@ function drawSt(L) {
     g.beginPath(); g.moveTo(X(k - 1), Y(T.line[k - 1])); g.lineTo(X(k), Y(T.line[k])); g.stroke();
   }
   g.lineWidth = 1; g.restore();
-  g.fillStyle = '#16a34a'; g.fillText('Supertrend 10, 3 (green under price = up, red above = down)', padL + 4, padT + 94);
+  g.fillStyle = '#16a34a'; g.fillText(`Supertrend ${IP.st.n}, ${IP.st.m} (green under price = up, red above = down)`, padL + 4, padT + 94);
 }
 // Keltner Channels: EMA 20 of the close ± 2 × ATR 10 (Wilder), on the displayed bars. Cached per bar array.
 const kcCache = new WeakMap();
 function kcOf(arr, n = 20, atrN = 10, m = 2) {
-  let r = kcCache.get(arr);
+  let r = pget(kcCache, arr, [...arguments].slice(1).join());
   if (!r) {
     const L = arr.length; r = { mid: new Array(L).fill(null), up: new Array(L).fill(null), lo: new Array(L).fill(null) };
     const k = 2 / (n + 1); let e = null, atr = null, trSum = 0;
@@ -1913,21 +1966,21 @@ function kcOf(arr, n = 20, atrN = 10, m = 2) {
       if (i < n - 1) continue;
       r.mid[i] = e; r.up[i] = e + m * atr; r.lo[i] = e - m * atr;
     }
-    kcCache.set(arr, r);
+    pset(kcCache, arr, [...arguments].slice(1).join(), r);
   }
   return r;
 }
 // Donchian Channels: highest high and lowest low of the last 20 bars (this bar included), and their middle.
 const dcCache = new WeakMap();
 function dcOf(arr, n = 20) {
-  let r = dcCache.get(arr);
+  let r = pget(dcCache, arr, [...arguments].slice(1).join());
   if (!r) {
     const L = arr.length; r = { mid: new Array(L).fill(null), up: new Array(L).fill(null), lo: new Array(L).fill(null) };
     for (let i = n - 1; i < L; i++) {
       let hi = -Infinity, lo = Infinity; for (let j = i - n + 1; j <= i; j++) { hi = Math.max(hi, arr[j].h); lo = Math.min(lo, arr[j].l); }
       r.up[i] = hi; r.lo[i] = lo; r.mid[i] = (hi + lo) / 2;
     }
-    dcCache.set(arr, r);
+    pset(dcCache, arr, [...arguments].slice(1).join(), r);
   }
   return r;
 }
@@ -1952,7 +2005,7 @@ function drawChannel(L) {
 // Bollinger Bands: SMA(20) ± 2 standard deviations of the closes of the displayed bars, cached per bar array
 const bbCache = new WeakMap();
 function bbOf(arr, n = 20, k = 2) {
-  let r = bbCache.get(arr);
+  let r = pget(bbCache, arr, [...arguments].slice(1).join());
   if (!r) {
     r = { mid: new Array(arr.length).fill(null), up: new Array(arr.length).fill(null), lo: new Array(arr.length).fill(null) };
     let s1 = 0, s2 = 0;
@@ -1961,7 +2014,7 @@ function bbOf(arr, n = 20, k = 2) {
       if (i >= n) { const o = arr[i - n].c; s1 -= o; s2 -= o * o; }
       if (i >= n - 1) { const m = s1 / n, sd = Math.sqrt(Math.max(0, s2 / n - m * m)); r.mid[i] = m; r.up[i] = m + k * sd; r.lo[i] = m - k * sd; }
     }
-    bbCache.set(arr, r);
+    pset(bbCache, arr, [...arguments].slice(1).join(), r);
   }
   return r;
 }
@@ -1981,7 +2034,7 @@ function drawBb(L) {
   const line = (vals, dash) => { g.setLineDash(dash); g.beginPath(); let on = false; for (let k = a; k <= b; k++) { const v = vals[k]; if (v == null) { on = false; continue; } const y = Y(v); if (on) g.lineTo(X(k), y); else { g.moveTo(X(k), y); on = true; } } g.stroke(); g.setLineDash([]); };
   g.strokeStyle = '#0284c7'; g.lineWidth = 1.1; line(B.up, []); line(B.lo, []); line(B.mid, [5, 4]); g.lineWidth = 1;
   g.restore();
-  g.fillStyle = '#0284c7'; g.fillText(`Bollinger 20, 2 (${view.tf}m)`, padL + 4, padT + 52);
+  g.fillStyle = '#0284c7'; g.fillText(`Bollinger ${IP.bb.n}, ${IP.bb.k} (${view.tf}m)`, padL + 4, padT + 52);
 }
 // VWAP: Σ(typical price × volume) / Σ volume on the 1m bars, reset at the start of each trading day (18:00 NY)
 // or at 09:30 NY. A 5m or 15m bar shows the VWAP at its last 1m bar.
