@@ -82,6 +82,7 @@
     <label class="datanote">Strategy <select id="preset"></select></label>
     <label class="datanote"><input type="checkbox" id="showEm"> Show EMA 200 + MACD</label>
     <label class="datanote"><input type="checkbox" id="showVwap"> VWAP <select id="vwapAnchor"><option value="td">from 18:00 (trading day)</option><option value="rth">from 09:30</option></select></label>
+    <label class="datanote"><input type="checkbox" id="showBb"> Bollinger 20, 2</label>
     <label class="datanote"><input type="checkbox" id="showRsi"> RSI 14 pane</label>
     <label class="datanote">MACD pane <select id="macdPane"><option value="off">off</option><option value="chart">chart timeframe</option><option value="15m">15m (EMA·MACD strategy)</option></select></label>
     <button id="toggleSettings">Rule settings</button>
@@ -156,6 +157,7 @@
           <li><b>Entry, stop, targets</b>: limit at the near edge, stop 2 ticks beyond the sweep extreme, reward-to-risk ≥ 1.0. TP1 halfway, rounded toward the entry. TP2 1 tick before the draw. 1 contract means a single leg at TP2. Contracts = floor(2% × $5,000 ÷ risk per contract), max 5. Break-even after TP1.</li>
           <li><b>Entry model</b> (setting; the user chose <b>FVG only</b> as the default): any FVG that passes the FVG checks, in the Bias direction, with its third candle in a Window and a Draw on liquidity. There is no sweep or MSS: the stop is 2 ticks beyond the FVG's first candle, and a resting entry is cancelled if price reaches that stop level first. <b>Sweep → MSS → FVG</b> is the first agreed chain; with it, the stop is beyond the sweep extreme.</li>
           <li><b>G · EMA 200 + MACD</b> (comparison row; "Show EMA 200 + MACD" draws the EMA 200, a MACD pane and its Trades on the chart, in teal, next to the Silver Bullet): the DAFT Trade documentation's strategy on 15m bars built from the 1m bars. Long: close above a rising EMA 200 (higher than 10 bars ago), ADX(14) &gt; 20, MACD histogram negative for ≥ 3 bars, then the MACD crosses above its signal with both lines below zero; market entry at the next 1m open. Stop at the pullback low − 0.25 × ATR(14), skipped if wider than 3 × ATR. Half at 1.5R and stop to entry, the rest at 3R or when the MACD crosses back; everything closed on a 15m close beyond the EMA 200. Mirror for shorts. <i>Interpretations:</i> entries only 09:45–12:00 and 13:30–15:50 NY, flattened at 15:50; the map's risk settings (2% of $5,000, max 5 MNQ) instead of the docs' 0.5–1%; no news rule. The EMA 200 needs 200 bars of 15m history (about 3 days) before the first Signal.</li>
+          <li><b>Bollinger Bands</b> (display only, from the DAFT Trade documentation): SMA 20 of the displayed bars' closes (dashed) ± 2 standard deviations, shaded between the bands.</li>
           <li><b>VWAP and RSI</b> (display only, no rule uses them; settings from the DAFT Trade documentation): <b>VWAP</b> = Σ(typical price × volume) ÷ Σ volume on the 1m bars, reset at 18:00 NY (the start of the Trading day) or at 09:30 NY (then shown 09:30–17:00 only); a 5m or 15m bar shows the VWAP at its last minute. It needs the file's volume column. <b>RSI 14</b> (Wilder) of the displayed bars in its own pane, with 70/30 lines.</li>
           <li><b>MACD pane</b> (display only, no rule uses it): MACD 12,26,9 under the chart. "Chart timeframe" uses the displayed 1m, 5m or 15m bars. "15m" is the EMA·MACD strategy's MACD; on 1m and 5m charts each bar shows the last 15m bar closed before it. Turning on "Show EMA 200 + MACD" switches the pane to 15m if it was off.</li>
           <li><b>Levers for more entries</b> (settings, and the <b>Strategy</b> presets A–F, compared side by side in "Compare strategies". Each preset builds on the one before, except F, which adds the fallback to D):
@@ -837,7 +839,7 @@ $('#toggleSettings').onclick = () => $('#settings').classList.toggle('open');
 const showEm = () => $('#showEm').checked;
 $('#showEm').onchange = () => { if (showEm() && $('#macdPane').value === 'off') $('#macdPane').value = '15m'; renderDays(); if (results.length) showDay(sel, false); };
 $('#macdPane').onchange = () => draw();
-['#showVwap', '#vwapAnchor', '#showRsi'].forEach(id => $(id).onchange = () => draw());
+['#showVwap', '#vwapAnchor', '#showRsi', '#showBb'].forEach(id => $(id).onchange = () => draw());
 $('#preset').innerHTML = SB.PRESETS.map(p => `<option value="${p.id}">${p.name}</option>`).join('') + '<option value="custom">Custom (settings changed by hand)</option>';
 $('#preset').value = 'fvg';
 $('#preset').onchange = () => { const p = SB.PRESETS.find(p => p.id === $('#preset').value); if (!p) return; Object.assign(settings, p.set); syncForm(); rerun(); };
@@ -1146,6 +1148,7 @@ function draw() {
 
   if (paneH) drawMacdPane({ a, b, arr, X, padL, cw, bw, paneTop: padT + ch + 10, paneH, pane });
   if (rsiH) drawRsiPane({ a, b, arr, X, padL, cw, paneTop: padT + ch + 10 + (paneH ? paneH + 10 : 0), paneH: rsiH });
+  if ($('#showBb').checked) drawBb({ a, b, X, Y, padL, padT, cw, ch, B: bbOf(arr) });
   if ($('#showVwap').checked) drawVwap({ a, b, arr, X, Y, padL, padT, cw, ch });
   if (emOn) drawEm({ a, b, arr, X, Y, XT, padL, padT, cw, ch, bw, paneTop: padT + ch + 10, paneH });
 
@@ -1260,6 +1263,40 @@ function drawRsiPane(L) {
   for (let k = a; k <= b; k++) { const v = R[k]; if (v == null) { on = false; continue; } const y = YR(v); if (on) g.lineTo(X(k), y); else { g.moveTo(X(k), y); on = true; } }
   g.stroke(); g.lineWidth = 1;
   const last = R[b]; g.fillStyle = css('--muted'); g.fillText(`RSI 14 (${view.tf}m)${last != null ? ' · ' + last.toFixed(1) : ''}`, padL + 4, paneTop + 12);
+}
+// Bollinger Bands: SMA(20) ± 2 standard deviations of the closes of the displayed bars, cached per bar array
+const bbCache = new WeakMap();
+function bbOf(arr, n = 20, k = 2) {
+  let r = bbCache.get(arr);
+  if (!r) {
+    r = { mid: new Array(arr.length).fill(null), up: new Array(arr.length).fill(null), lo: new Array(arr.length).fill(null) };
+    let s1 = 0, s2 = 0;
+    for (let i = 0; i < arr.length; i++) {
+      const c = arr[i].c; s1 += c; s2 += c * c;
+      if (i >= n) { const o = arr[i - n].c; s1 -= o; s2 -= o * o; }
+      if (i >= n - 1) { const m = s1 / n, sd = Math.sqrt(Math.max(0, s2 / n - m * m)); r.mid[i] = m; r.up[i] = m + k * sd; r.lo[i] = m - k * sd; }
+    }
+    bbCache.set(arr, r);
+  }
+  return r;
+}
+function drawBb(L) {
+  const { a, b, X, Y, padL, padT, cw, ch, B } = L;
+  g.save(); g.beginPath(); g.rect(padL, padT, cw, ch); g.clip();
+  // shaded band, one segment per run of bars with values
+  for (let k = a; k <= b; k++) {
+    if (B.up[k] == null) continue;
+    let e = k; while (e + 1 <= b && B.up[e + 1] != null) e++;
+    g.beginPath(); g.moveTo(X(k), Y(B.up[k]));
+    for (let j = k + 1; j <= e; j++) g.lineTo(X(j), Y(B.up[j]));
+    for (let j = e; j >= k; j--) g.lineTo(X(j), Y(B.lo[j]));
+    g.closePath(); g.fillStyle = 'rgba(14,165,233,.07)'; g.fill();
+    k = e;
+  }
+  const line = (vals, dash) => { g.setLineDash(dash); g.beginPath(); let on = false; for (let k = a; k <= b; k++) { const v = vals[k]; if (v == null) { on = false; continue; } const y = Y(v); if (on) g.lineTo(X(k), y); else { g.moveTo(X(k), y); on = true; } } g.stroke(); g.setLineDash([]); };
+  g.strokeStyle = '#0284c7'; g.lineWidth = 1.1; line(B.up, []); line(B.lo, []); line(B.mid, [5, 4]); g.lineWidth = 1;
+  g.restore();
+  g.fillStyle = '#0284c7'; g.fillText(`Bollinger 20, 2 (${view.tf}m)`, padL + 4, padT + 52);
 }
 // VWAP: Σ(typical price × volume) / Σ volume on the 1m bars, reset at the start of each trading day (18:00 NY)
 // or at 09:30 NY. A 5m or 15m bar shows the VWAP at its last 1m bar.
