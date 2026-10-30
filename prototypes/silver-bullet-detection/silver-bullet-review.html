@@ -86,6 +86,8 @@
     <label class="datanote"><input type="checkbox" id="showRsi"> RSI 14 pane</label>
     <label class="datanote"><input type="checkbox" id="showAdx"> ADX 14 pane</label>
     <label class="datanote"><input type="checkbox" id="showAtr"> ATR 14 pane</label>
+    <label class="datanote"><input type="checkbox" id="showStoch"> Stochastic 14,3,3 pane</label>
+    <label class="datanote"><input type="checkbox" id="showObv"> OBV pane</label>
     <label class="datanote">MACD pane <select id="macdPane"><option value="off">off</option><option value="chart">chart timeframe</option><option value="15m">15m (EMA·MACD strategy)</option></select></label>
     <button id="toggleSettings">Rule settings</button>
     <button id="export" class="primary">Export review notes</button>
@@ -159,6 +161,7 @@
           <li><b>Entry, stop, targets</b>: limit at the near edge, stop 2 ticks beyond the sweep extreme, reward-to-risk ≥ 1.0. TP1 halfway, rounded toward the entry. TP2 1 tick before the draw. 1 contract means a single leg at TP2. Contracts = floor(2% × $5,000 ÷ risk per contract), max 5. Break-even after TP1.</li>
           <li><b>Entry model</b> (setting; the user chose <b>FVG only</b> as the default): any FVG that passes the FVG checks, in the Bias direction, with its third candle in a Window and a Draw on liquidity. There is no sweep or MSS: the stop is 2 ticks beyond the FVG's first candle, and a resting entry is cancelled if price reaches that stop level first. <b>Sweep → MSS → FVG</b> is the first agreed chain; with it, the stop is beyond the sweep extreme.</li>
           <li><b>G · EMA 200 + MACD</b> (comparison row; "Show EMA 200 + MACD" draws the EMA 200, a MACD pane and its Trades on the chart, in teal, next to the Silver Bullet): the DAFT Trade documentation's strategy on 15m bars built from the 1m bars. Long: close above a rising EMA 200 (higher than 10 bars ago), ADX(14) &gt; 20, MACD histogram negative for ≥ 3 bars, then the MACD crosses above its signal with both lines below zero; market entry at the next 1m open. Stop at the pullback low − 0.25 × ATR(14), skipped if wider than 3 × ATR. Half at 1.5R and stop to entry, the rest at 3R or when the MACD crosses back; everything closed on a 15m close beyond the EMA 200. Mirror for shorts. <i>Interpretations:</i> entries only 09:45–12:00 and 13:30–15:50 NY, flattened at 15:50; the map's risk settings (2% of $5,000, max 5 MNQ) instead of the docs' 0.5–1%; no news rule. The EMA 200 needs 200 bars of 15m history (about 3 days) before the first Signal.</li>
+          <li><b>Stochastic and OBV panes</b> (display only; not in the DAFT Trade documentation's indicator pages, so standard definitions): slow Stochastic 14,3,3 of the displayed bars, %K blue and %D orange, with 80/20 lines. OBV adds a bar's volume when it closes above the previous close and subtracts it when below; it is cumulated from the start of the file, so read its slope, not its level. OBV needs the volume column.</li>
           <li><b>ADX and ATR panes</b> (display only): Wilder's ADX 14 with +DI (green) and −DI (red) of the displayed bars, lines at 20 and 25 and the area under 20 (no trend, per the DAFT Trade documentation) shaded; Wilder's ATR 14 in points, with its value per MNQ ($2 a point). Both match the ADX and ATR the EMA·MACD strategy uses on 15m.</li>
           <li><b>Bollinger Bands</b> (display only, from the DAFT Trade documentation): SMA 20 of the displayed bars' closes (dashed) ± 2 standard deviations, shaded between the bands.</li>
           <li><b>VWAP and RSI</b> (display only, no rule uses them; settings from the DAFT Trade documentation): <b>VWAP</b> = Σ(typical price × volume) ÷ Σ volume on the 1m bars, reset at 18:00 NY (the start of the Trading day) or at 09:30 NY (then shown 09:30–17:00 only); a 5m or 15m bar shows the VWAP at its last minute. It needs the file's volume column. <b>RSI 14</b> (Wilder) of the displayed bars in its own pane, with 70/30 lines.</li>
@@ -224,9 +227,9 @@ const SB = (() => {
     for (const b of bars1) {
       const k = Math.floor(b.t / size) * size;
       if (!cur || cur.t !== k) {
-        cur = { t: k, o: b.o, h: b.h, l: b.l, c: b.c, first: b.i, last: b.i, td: b.td };
+        cur = { t: k, o: b.o, h: b.h, l: b.l, c: b.c, v: b.v, first: b.i, last: b.i, td: b.td };
         out.push(cur);
-      } else { cur.h = Math.max(cur.h, b.h); cur.l = Math.min(cur.l, b.l); cur.c = b.c; cur.last = b.i; }
+      } else { cur.h = Math.max(cur.h, b.h); cur.l = Math.min(cur.l, b.l); cur.c = b.c; cur.v += b.v; cur.last = b.i; }
     }
     out.forEach((b, k) => { b.k = k; const n = ny(b.t); b.date = n.date; b.min = n.min; });
     return out;
@@ -842,7 +845,7 @@ $('#toggleSettings').onclick = () => $('#settings').classList.toggle('open');
 const showEm = () => $('#showEm').checked;
 $('#showEm').onchange = () => { if (showEm() && $('#macdPane').value === 'off') $('#macdPane').value = '15m'; renderDays(); if (results.length) showDay(sel, false); };
 $('#macdPane').onchange = () => draw();
-['#showVwap', '#vwapAnchor', '#showRsi', '#showBb', '#showAdx', '#showAtr'].forEach(id => $(id).onchange = () => draw());
+['#showVwap', '#vwapAnchor', '#showRsi', '#showBb', '#showAdx', '#showAtr', '#showStoch', '#showObv'].forEach(id => $(id).onchange = () => draw());
 $('#preset').innerHTML = SB.PRESETS.map(p => `<option value="${p.id}">${p.name}</option>`).join('') + '<option value="custom">Custom (settings changed by hand)</option>';
 $('#preset').value = 'fvg';
 $('#preset').onchange = () => { const p = SB.PRESETS.find(p => p.id === $('#preset').value); if (!p) return; Object.assign(settings, p.set); syncForm(); rerun(); };
@@ -1046,13 +1049,13 @@ function draw() {
   if (!ctx || !results.length) return;
   const r = results[sel], arr = tfBars();
   // each pane adds its own height, so the price area keeps its size
-  const wantH = 520 + ($('#macdPane').value !== 'off' ? 100 : 0) + ['#showRsi', '#showAdx', '#showAtr'].filter(id => $(id).checked).length * 90;
+  const wantH = 520 + ($('#macdPane').value !== 'off' ? 100 : 0) + ['#showRsi', '#showAdx', '#showAtr', '#showStoch', '#showObv'].filter(id => $(id).checked).length * 90;
   if ($('#chartwrap').style.height !== wantH + 'px') $('#chartwrap').style.height = wantH + 'px';
   const W = cv.clientWidth, H = cv.clientHeight, dpr = window.devicePixelRatio || 1;
   cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
   const emOn = showEm() && emResults.series, pane = $('#macdPane').value, paneH = pane !== 'off' ? 90 : 0;
   // panes below the MACD, in this order, 80px each
-  const lowPanes = [['#showRsi', drawRsiPane], ['#showAdx', drawAdxPane], ['#showAtr', drawAtrPane]].filter(([id]) => $(id).checked);
+  const lowPanes = [['#showRsi', drawRsiPane], ['#showStoch', drawStochPane], ['#showAdx', drawAdxPane], ['#showAtr', drawAtrPane], ['#showObv', drawObvPane]].filter(([id]) => $(id).checked);
   const lowH = 80;
   const padL = 8, padR = 70, padT = 14, padB = 24 + (paneH ? paneH + 10 : 0) + lowPanes.length * (lowH + 10), cw = W - padL - padR, ch = H - padT - padB;
   const a = Math.max(0, view.a), b = Math.min(arr.length - 1, view.b), n = b - a + 1;
@@ -1324,6 +1327,64 @@ function drawAtrPane(L) {
   paneLine(a, b, X, D.atr, YT, '#b45309', 1.4);
   const v = D.atr[b];
   g.fillStyle = css('--muted'); g.fillText(`ATR 14 (${view.tf}m)${v != null ? ` · ${v.toFixed(2)} pts = $${(v * 2).toFixed(2)} per MNQ` : ''}`, padL + 4, paneTop + 12);
+}
+// Slow Stochastic 14,3,3 on the displayed bars: fast %K = (close − lowest low 14) ÷ (highest high 14 − lowest low 14),
+// %K = SMA 3 of fast %K, %D = SMA 3 of %K. Cached per bar array.
+const stochCache = new WeakMap();
+function stochOf(arr, n = 14, kS = 3, dS = 3) {
+  let r = stochCache.get(arr);
+  if (!r) {
+    const L = arr.length, fast = new Array(L).fill(null), k = new Array(L).fill(null), d = new Array(L).fill(null);
+    const sma = (src, out, m, i) => { let s = 0; for (let j = i - m + 1; j <= i; j++) { if (j < 0 || src[j] == null) return; s += src[j]; } out[i] = s / m; };
+    for (let i = n - 1; i < L; i++) {
+      let lo = Infinity, hi = -Infinity; for (let j = i - n + 1; j <= i; j++) { lo = Math.min(lo, arr[j].l); hi = Math.max(hi, arr[j].h); }
+      fast[i] = hi > lo ? 100 * (arr[i].c - lo) / (hi - lo) : 50;
+      sma(fast, k, kS, i); sma(k, d, dS, i);
+    }
+    r = { k, d }; stochCache.set(arr, r);
+  }
+  return r;
+}
+function drawStochPane(L) {
+  const { a, b, arr, X, padL, cw, paneTop, paneH } = L, S = stochOf(arr);
+  const YS = v => paneTop + 4 + (100 - v) / 100 * (paneH - 8);
+  g.strokeStyle = css('--line'); g.strokeRect(padL + .5, paneTop + .5, cw - 1, paneH - 1);
+  g.fillStyle = 'rgba(185,28,28,.07)'; g.fillRect(padL, YS(100), cw, YS(80) - YS(100));
+  g.fillStyle = 'rgba(15,118,110,.07)'; g.fillRect(padL, YS(20), cw, YS(0) - YS(20));
+  g.font = '11px system-ui';
+  for (const lv of [80, 20]) { const y = Math.round(YS(lv)) + .5; g.strokeStyle = '#a8a29e'; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + cw, y); g.stroke(); g.setLineDash([]); g.fillStyle = css('--muted'); g.fillText(String(lv), padL + cw + 6, y + 4); }
+  paneLine(a, b, X, S.k, YS, '#2563eb', 1.3); paneLine(a, b, X, S.d, YS, '#ea580c', 1.1);
+  const v = S.k[b];
+  g.fillStyle = css('--muted'); g.fillText(`Stochastic 14,3,3 (${view.tf}m)${v != null ? ' · %K ' + v.toFixed(1) : ''}`, padL + 4, paneTop + 12);
+  g.fillStyle = '#2563eb'; g.fillText('%K', padL + cw - 50, paneTop + 12); g.fillStyle = '#ea580c'; g.fillText('%D', padL + cw - 26, paneTop + 12);
+}
+// OBV on the displayed bars: + volume when a bar closes above the previous close, − volume when below. Cumulated from
+// the start of the loaded file, so only its slope and turns matter, not its level. Needs the volume column.
+const obvCache = new WeakMap();
+function obvOf(arr) {
+  let r = obvCache.get(arr);
+  if (!r) {
+    r = new Array(arr.length).fill(null); let v = 0, hasVol = false;
+    for (let i = 0; i < arr.length; i++) {
+      const vol = arr[i].v || 0; if (vol) hasVol = true;
+      if (i > 0) v += arr[i].c > arr[i - 1].c ? vol : arr[i].c < arr[i - 1].c ? -vol : 0;
+      r[i] = v;
+    }
+    r.hasVol = hasVol; obvCache.set(arr, r);
+  }
+  return r;
+}
+function drawObvPane(L) {
+  const { a, b, arr, X, padL, cw, paneTop, paneH } = L, O = obvOf(arr);
+  g.strokeStyle = css('--line'); g.strokeRect(padL + .5, paneTop + .5, cw - 1, paneH - 1);
+  g.font = '11px system-ui';
+  if (!O.hasVol) { g.fillStyle = css('--muted'); g.fillText('OBV: no volume in the file', padL + 4, paneTop + 12); return; }
+  let lo = Infinity, hi = -Infinity; for (let k = a; k <= b; k++) { lo = Math.min(lo, O[k]); hi = Math.max(hi, O[k]); }
+  const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
+  const YO = v => paneTop + 4 + (hi - v) / (hi - lo) * (paneH - 8);
+  paneLine(a, b, X, O, YO, '#0f766e', 1.4);
+  const chg = O[b] - O[a], fmt = x => Math.abs(x) >= 1e6 ? (x / 1e6).toFixed(2) + 'M' : Math.abs(x) >= 1e3 ? (x / 1e3).toFixed(1) + 'k' : String(Math.round(x));
+  g.fillStyle = css('--muted'); g.fillText(`OBV (${view.tf}m) · ${chg >= 0 ? '+' : ''}${fmt(chg)} contracts across the view`, padL + 4, paneTop + 12);
 }
 // Bollinger Bands: SMA(20) ± 2 standard deviations of the closes of the displayed bars, cached per bar array
 const bbCache = new WeakMap();
