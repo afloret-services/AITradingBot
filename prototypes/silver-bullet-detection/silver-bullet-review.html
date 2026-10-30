@@ -1180,6 +1180,7 @@ function draw() {
   for (let k = a; k <= b; k++) if (arr[k].min % (view.tf * every) === 0 || k === a) { const x = X(k); g.fillText(SB.fmtMin(arr[k].min), x - 14, H - 7); }
 
   // levels
+  const levelLabels = [];
   for (const L of r.levels) {
     const y = Y(L.price); if (y < padT || y > padT + ch) { edgeLabel(L.name + ' ' + px(L.price), y < padT ? padT + 10 : padT + ch - 4, padL + cw); continue; }
     const xs = Math.max(padL, XT(L.at)), xt = L.takenT ? Math.max(padL, XT(L.takenT)) : padL + cw; // from the bar that made it
@@ -1187,11 +1188,8 @@ function draw() {
     g.setLineDash([]); if (xt > xs) { g.beginPath(); g.moveTo(xs, y); g.lineTo(Math.min(xt, padL + cw), y); g.stroke(); }
     g.setLineDash([2, 3]); if (xt < padL + cw) { g.beginPath(); g.moveTo(Math.max(xt, xs), y); g.lineTo(padL + cw, y); g.stroke(); }
     g.setLineDash([]);
-    // label on a light background so the candles it starts over don't hide it
-    const lt = `${L.name} ${px(L.price)}`, lx = Math.max(padL + 4, Math.min(xs + 4, padL + cw - 120));
-    g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(lx - 2, y - 13, g.measureText(lt).width + 4, 12);
-    g.fillStyle = css('--muted'); g.fillText(lt, lx, y - 3);
-    g.fillStyle = '#a8a29e'; g.beginPath(); g.arc(xs, y, 2.5, 0, 7); g.fill(); // where it was made
+    // the label and the dot where it was made are drawn after the candles, so candles don't hide them
+    levelLabels.push({ text: `${L.name} ${px(L.price)}`, x: Math.max(padL + 4, Math.min(xs + 4, padL + cw - 120)), y, xs });
   }
 
   // FVG boxes
@@ -1228,6 +1226,14 @@ function draw() {
   }
 
   if (HA) { g.font = '11px system-ui'; g.fillStyle = css('--muted'); const t = `Heikin Ashi ${areaOn ? 'close area' : lineOn ? 'close line' : 'candles'} · rules, levels, entries and stops use real prices (hover a bar for both)`; g.fillText(t, padL + cw - g.measureText(t).width - 6, padT + 26); }
+
+  // level labels, on a light background, over the candles
+  g.font = '11px system-ui';
+  for (const ll of levelLabels) {
+    g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(ll.x - 2, ll.y - 13, g.measureText(ll.text).width + 4, 12);
+    g.fillStyle = css('--muted'); g.fillText(ll.text, ll.x, ll.y - 3);
+    g.fillStyle = '#a8a29e'; g.beginPath(); g.arc(ll.xs, ll.y, 2.5, 0, 7); g.fill();
+  }
 
   // chain marks
   g.font = '11px system-ui';
