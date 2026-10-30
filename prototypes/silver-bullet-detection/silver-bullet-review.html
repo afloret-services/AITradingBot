@@ -973,7 +973,8 @@ function useRows(rows, name, note) {
   $('#datanote').textContent = `${name}: ${ctx.bars1.length.toLocaleString()} bars, ${d.length} trading days (${d[0]?.td} → ${d[d.length - 1]?.td})${note ? ' · ' + note : ''}`;
   sel = Math.max(0, d.length - 1); // open on the most recent day, at the top of the list
   rerun();
-  showDay(sel, true);
+  const sh = shownDays(); if (sh.length) sel = sh[sh.length - 1]; // the most recent day the day-list filter shows
+  renderDays(); showDay(sel, true);
   $('#days').scrollTop = 0;
 }
 $('#file').onchange = async e => {
@@ -1040,23 +1041,40 @@ function dayResult(r) {
   const sign = x => (x >= 0 ? '+' : '−') + Math.abs(x);
   return { kind, R, usd, n: tr.length, html: `${tr.length > 1 ? tr.length + ' Trades · ' : ''}${word} <b>${sign(+R.toFixed(2))}R</b><br>${usd >= 0 ? '+' : '−'}$${Math.abs(usd).toFixed(0)}` };
 }
+// day-list filter: all days, days with a closed Trade, winning days or losing days; remembered in this browser
+let dayFilter = 'all';
+try { dayFilter = localStorage.getItem('sb-dayfilter') || 'all'; } catch {}
+const DAY_FILTERS = { all: 'All days', trades: 'Days with Trades', win: 'Winning days', loss: 'Losing days' };
+const dayShown = (dr) => dayFilter === 'all' || (dayFilter === 'trades' ? !!dr.n : dr.kind === dayFilter);
+function shownDays() { return results.map((r, k) => k).filter(k => dayShown(dayResult(results[k]))); }
 function renderDays() {
   // totals over every loaded day, for the current strategy and settings
   const res = results.map(dayResult), closed = res.filter(x => x.n);
   const totR = closed.reduce((a, x) => a + x.R, 0), totUsd = closed.reduce((a, x) => a + x.usd, 0), nTr = closed.reduce((a, x) => a + x.n, 0);
   const wins = closed.filter(x => x.kind === 'win').length, losses = closed.filter(x => x.kind === 'loss').length;
-  const head = `<div class="daystotal">${results.length} days · ${nTr} Trade${nTr === 1 ? '' : 's'} on ${closed.length} days (${wins} won, ${losses} lost) · <b class="${totR > 0.05 ? 'res win' : totR < -0.05 ? 'res loss' : ''}">${totR >= 0 ? '+' : '−'}${Math.abs(totR).toFixed(2)}R</b> · ${totUsd >= 0 ? '+' : '−'}$${Math.abs(totUsd).toFixed(0)} before costs</div>`;
+  const filter = `<label style="display:flex;gap:6px;align-items:center;margin-bottom:3px">Show <select id="dayFilter">${Object.entries(DAY_FILTERS).map(([v, t]) => `<option value="${v}" ${v === dayFilter ? 'selected' : ''}>${t}</option>`).join('')}</select>
+    <span>${dayFilter === 'all' ? '' : `${results.filter((r, k) => dayShown(res[k])).length} of ${results.length}`}</span></label>`;
+  const head = `<div class="daystotal">${filter}${results.length} days · ${nTr} Trade${nTr === 1 ? '' : 's'} on ${closed.length} days (${wins} won, ${losses} lost) · <b class="${totR > 0.05 ? 'res win' : totR < -0.05 ? 'res loss' : ''}">${totR >= 0 ? '+' : '−'}${Math.abs(totR).toFixed(2)}R</b> · ${totUsd >= 0 ? '+' : '−'}$${Math.abs(totUsd).toFixed(0)} before costs</div>`;
   // most recent day first; data-k stays the day's index in date order
-  $('#days').innerHTML = head + results.map((r, k) => [r, k]).reverse().map(([r, k]) => {
+  const shown = results.map((r, k) => [r, k]).filter(([r, k]) => dayShown(res[k]));
+  $('#days').innerHTML = head + (shown.length ? '' : `<div class="day" style="cursor:default"><span class="s">No day matches "${DAY_FILTERS[dayFilter]}" with the current strategy and settings.</span></div>`) + shown.reverse().map(([r, k]) => {
     const rv = reviews[r.td], dr = res[k];
     return `<div class="day ${k === sel ? 'sel' : ''}" data-k="${k}"><span class="d">${r.td} ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(r.td + 'T12:00:00Z').getUTCDay()]}</span>
       <span class="rv">${rv?.verdict ? RV[rv.verdict] : ''}</span><span class="res ${dr.kind}">${dr.html}</span>
       <span class="s"><span class="tag ${r.status.kind}">${dr.n ? `${dr.n} Trade${dr.n > 1 ? 's' : ''}` : r.status.text}</span> ${r.bias ? (r.bias === 'bull' ? '· Bias ↑' : '· Bias ↓') : r.bothSides ? '· no Bias, both sides' : ''}${showEm() ? emTag(k) : ''}</span></div>`;
   }).join('');
 }
-$('#days').onclick = e => { const el = e.target.closest('.day'); if (el) showDay(+el.dataset.k, true); };
-$('#prevDay').onclick = () => showDay(Math.max(0, sel - 1), true);
-$('#nextDay').onclick = () => showDay(Math.min(results.length - 1, sel + 1), true);
+$('#days').onclick = e => { const el = e.target.closest('.day[data-k]'); if (el) showDay(+el.dataset.k, true); };
+$('#days').onchange = e => {
+  if (e.target.id !== 'dayFilter') return;
+  dayFilter = e.target.value; try { localStorage.setItem('sb-dayfilter', dayFilter); } catch {}
+  renderDays();
+  // if the open day is now hidden, open the most recent day that is shown
+  const sh = shownDays(); if (sh.length && !sh.includes(sel)) showDay(sh[sh.length - 1], true);
+};
+// step to the previous or next day that the day-list filter shows
+$('#prevDay').onclick = () => { const k = shownDays().filter(k => k < sel).pop(); if (k != null) showDay(k, true); };
+$('#nextDay').onclick = () => { const k = shownDays().find(k => k > sel); if (k != null) showDay(k, true); };
 document.addEventListener('keydown', e => { if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return; if (e.key === 'ArrowLeft') $('#prevDay').click(); if (e.key === 'ArrowRight') $('#nextDay').click(); });
 
 // ---- one day ----
