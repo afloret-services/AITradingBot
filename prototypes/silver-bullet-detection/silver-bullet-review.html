@@ -80,6 +80,7 @@
     <label class="filebtn">Load CSV of 1-minute bars<input type="file" id="file" accept=".csv,.txt"></label>
     <button id="demo">Load synthetic demo</button>
     <label class="datanote">Strategy <select id="preset"></select></label>
+    <label class="datanote"><input type="checkbox" id="showEm"> Show EMA 200 + MACD</label>
     <button id="toggleSettings">Rule settings</button>
     <button id="export" class="primary">Export review notes</button>
     <span class="datanote" id="datanote">No data loaded.</span>
@@ -151,7 +152,7 @@
           <li><b>Draw</b>: the nearest untaken level on the Trade's side at least the Minimum framework from the entry. None means no Signal; later FVGs in the Window are still checked.</li>
           <li><b>Entry, stop, targets</b>: limit at the near edge, stop 2 ticks beyond the sweep extreme, reward-to-risk ≥ 1.0. TP1 halfway, rounded toward the entry. TP2 1 tick before the draw. 1 contract means a single leg at TP2. Contracts = floor(2% × $5,000 ÷ risk per contract), max 5. Break-even after TP1.</li>
           <li><b>Entry model</b> (setting; the user chose <b>FVG only</b> as the default): any FVG that passes the FVG checks, in the Bias direction, with its third candle in a Window and a Draw on liquidity. There is no sweep or MSS: the stop is 2 ticks beyond the FVG's first candle, and a resting entry is cancelled if price reaches that stop level first. <b>Sweep → MSS → FVG</b> is the first agreed chain; with it, the stop is beyond the sweep extreme.</li>
-          <li><b>G · EMA 200 + MACD</b> (comparison row only, not drawn on the chart): the DAFT Trade documentation's strategy on 15m bars built from the 1m bars. Long: close above a rising EMA 200 (higher than 10 bars ago), ADX(14) &gt; 20, MACD histogram negative for ≥ 3 bars, then the MACD crosses above its signal with both lines below zero; market entry at the next 1m open. Stop at the pullback low − 0.25 × ATR(14), skipped if wider than 3 × ATR. Half at 1.5R and stop to entry, the rest at 3R or when the MACD crosses back; everything closed on a 15m close beyond the EMA 200. Mirror for shorts. <i>Interpretations:</i> entries only 09:45–12:00 and 13:30–15:50 NY, flattened at 15:50; the map's risk settings (2% of $5,000, max 5 MNQ) instead of the docs' 0.5–1%; no news rule. The EMA 200 needs 200 bars of 15m history (about 3 days) before the first Signal.</li>
+          <li><b>G · EMA 200 + MACD</b> (comparison row; "Show EMA 200 + MACD" draws the EMA 200, a MACD pane and its Trades on the chart, in teal, next to the Silver Bullet): the DAFT Trade documentation's strategy on 15m bars built from the 1m bars. Long: close above a rising EMA 200 (higher than 10 bars ago), ADX(14) &gt; 20, MACD histogram negative for ≥ 3 bars, then the MACD crosses above its signal with both lines below zero; market entry at the next 1m open. Stop at the pullback low − 0.25 × ATR(14), skipped if wider than 3 × ATR. Half at 1.5R and stop to entry, the rest at 3R or when the MACD crosses back; everything closed on a 15m close beyond the EMA 200. Mirror for shorts. <i>Interpretations:</i> entries only 09:45–12:00 and 13:30–15:50 NY, flattened at 15:50; the map's risk settings (2% of $5,000, max 5 MNQ) instead of the docs' 0.5–1%; no news rule. The EMA 200 needs 200 bars of 15m history (about 3 days) before the first Signal.</li>
           <li><b>Levers for more entries</b> (settings, and the <b>Strategy</b> presets A–F, compared side by side in "Compare strategies". Each preset builds on the one before, except F, which adds the fallback to D):
             <ul>
               <li><b>PM Window</b>: a second Window, 14:00–15:00 NY, with the same rules. An unfilled entry is cancelled at the end of the Window it came from.</li>
@@ -641,7 +642,8 @@ const SB = (() => {
     const settle = () => {
       const sgn = tr.dir === 'long' ? 1 : -1;
       const pts = tr.legs.reduce((a, l) => a + (l.exit - tr.entry) * sgn * l.qty, 0);
-      tr.R = pts / (Math.abs(tr.entry - tr.stop) * tr.contracts); tr.status = 'closed'; tr = null;
+      tr.R = pts / (Math.abs(tr.entry - tr.stop) * tr.contracts); tr.usd = pts * USD_PER_POINT; tr.status = 'closed';
+      tr.exitT = Math.max(...tr.legs.map(l => l.exitT)); tr = null;
     };
 
     for (let q = P.emaN; q < Q.length; q++) {
@@ -682,13 +684,15 @@ const SB = (() => {
         const stop = dir === 'long' ? Math.floor(raw / TICK) * TICK : Math.ceil(raw / TICK) * TICK;
         const entry = nb.o, risk = Math.abs(entry - stop);
         const day = byDay.get(nb.td);
-        const sig = { dir, entry, stop, stopNow: stop, td: nb.td, t: nb.t, fromIdx: next, legs: [], status: 'pending', strategy: 'ema-macd' };
+        const sig = { dir, entry, stop, stopNow: stop, td: nb.td, t: nb.t, fromIdx: next, legs: [], status: 'pending', strategy: 'ema-macd',
+          crossT: bq.t, pullbackT: Q[k + 1].t, ext, atr: atr[q], adx: adx[q], ema: ema[q] };
         if (!day) break;
         day.signals.push(sig);
         if (risk <= 0 || risk > P.maxStopAtr * atr[q]) { sig.status = 'skipped'; sig.reason = 'stop wider than 3 × ATR'; break; }
         sig.contracts = Math.min(S.maxContracts, Math.floor(riskUSD / (risk * USD_PER_POINT)));
         if (sig.contracts < 1) { sig.status = 'skipped'; sig.reason = 'stop too wide'; break; }
-        const tp1 = entry + sgn * P.tp1R * risk, tp2 = entry + sgn * P.tp2R * risk;
+        const tp1 = entry + sgn * floorTick(P.tp1R * risk), tp2 = entry + sgn * floorTick(P.tp2R * risk); // rounded toward the entry
+        sig.tp1 = tp1; sig.tp2 = tp2;
         const half = Math.ceil(sig.contracts / 2);
         sig.legs = [{ name: 'TP1', qty: half, tp: tp1 }];
         if (sig.contracts - half > 0) sig.legs.push({ name: '3R', qty: sig.contracts - half, tp: tp2 });
@@ -697,7 +701,9 @@ const SB = (() => {
       }
     }
     if (tr) { tr.status = 'open at data end'; }
-    return ctx.days.map(d => byDay.get(d.td));
+    const out = ctx.days.map(d => byDay.get(d.td));
+    out.series = { ema, macd, signal, hist }; // per 15m bar, for the chart
+    return out;
   }
 
   // Strategy presets, cumulative from the agreed rules. Each only sets the fields it names.
@@ -790,6 +796,7 @@ if (typeof module !== 'undefined') module.exports.syntheticBars = syntheticBars;
 (() => {
 if (typeof document === 'undefined') return;
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+let emResults = [];
 let ctx = null, results = [], sel = 0, datasetName = '', settings = { ...SB.DEFAULTS };
 const view = { tf: 1, span: 'focus', a: 0, b: 0 };
 const px = SB.px, hhmm = SB.hhmm;
@@ -822,6 +829,8 @@ $('#fields').addEventListener('change', e => {
   rerun();
 });
 $('#toggleSettings').onclick = () => $('#settings').classList.toggle('open');
+const showEm = () => $('#showEm').checked;
+$('#showEm').onchange = () => { renderDays(); if (results.length) showDay(sel, false); };
 $('#preset').innerHTML = SB.PRESETS.map(p => `<option value="${p.id}">${p.name}</option>`).join('') + '<option value="custom">Custom (settings changed by hand)</option>';
 $('#preset').value = 'fvg';
 $('#preset').onchange = () => { const p = SB.PRESETS.find(p => p.id === $('#preset').value); if (!p) return; Object.assign(settings, p.set); syncForm(); rerun(); };
@@ -847,6 +856,7 @@ $('#demo').onclick = () => useRows(syntheticBars(), 'SYNTHETIC demo (made-up pri
 function rerun() {
   if (!ctx) return;
   results = SB.run(ctx, settings);
+  emResults = SB.runEmaMacd(ctx, settings);
   renderDays(); renderFunnel(); if (results.length) showDay(sel, false);
 }
 
@@ -869,7 +879,7 @@ function renderFunnel() {
   $('#funnel').style.display = '';
   // every preset on the same bars, keeping the other settings (Bias rule, risk, ...) as they are now
   const strats = [...SB.PRESETS.map(p => ({ id: p.id, name: p.name, rs: SB.run(ctx, { ...settings, ...p.set }) })),
-    { id: 'emamacd', name: 'G · EMA 200 + MACD, 15m (DAFT docs; not a Silver Bullet, comparison only)', rs: SB.runEmaMacd(ctx, settings) }];
+    { id: 'emamacd', name: 'G · EMA 200 + MACD, 15m (DAFT docs; not a Silver Bullet, comparison only)', rs: emResults }];
   const cmp = strats.map(p => {
     const rs = p.rs;
     const trades = rs.flatMap(r => r.signals.filter(s => s.status === 'closed'));
@@ -896,7 +906,7 @@ function renderDays() {
     const rv = reviews[r.td];
     return `<div class="day ${k === sel ? 'sel' : ''}" data-k="${k}"><span class="d">${r.td} ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(r.td + 'T12:00:00Z').getUTCDay()]}</span>
       <span class="rv">${rv?.verdict ? RV[rv.verdict] : ''}</span>
-      <span class="s"><span class="tag ${r.status.kind}">${r.status.text}</span> ${r.bias ? (r.bias === 'bull' ? '· Bias ↑' : '· Bias ↓') : r.bothSides ? '· no Bias, both sides' : ''}</span></div>`;
+      <span class="s"><span class="tag ${r.status.kind}">${r.status.text}</span> ${r.bias ? (r.bias === 'bull' ? '· Bias ↑' : '· Bias ↓') : r.bothSides ? '· no Bias, both sides' : ''}${showEm() ? emTag(k) : ''}</span></div>`;
   }).join('');
 }
 $('#days').onclick = e => { const el = e.target.closest('.day'); if (el) showDay(+el.dataset.k, true); };
@@ -927,8 +937,27 @@ $$('[data-rv]').forEach(b => b.onclick = () => {
 });
 $('#note').oninput = () => { const r = results[sel], rv = reviews[r.td] || (reviews[r.td] = {}); rv.note = $('#note').value; rv.status = r.status.text; saveReviews(); };
 
+function emTag(k) {
+  const tr = (emResults[k]?.signals || []).filter(s => s.status === 'closed' || s.status === 'open at data end');
+  if (!tr.length) return '';
+  const R = tr.reduce((a, s) => a + (s.R || 0), 0);
+  return ` <span class="tag" style="background:#cffafe;color:#0e7490">EMA·MACD ${tr.length} · ${R >= 0 ? '+' : ''}${R.toFixed(2)}R</span>`;
+}
+function renderEm(k) {
+  if (!showEm()) return '';
+  const sigs = emResults[k]?.signals || [];
+  return '<h3 style="margin-top:12px">EMA 200 + MACD (15m)</h3>' + (!sigs.length ? '<p class="datanote" style="margin:0">No Signal this day.</p>' : sigs.map(s => `
+    <div class="kv" style="margin-bottom:10px">
+      <span class="k">Direction</span><span>${s.dir} · MACD cross at the 15m close of ${hhmm(s.crossT + 15 * 60000)} · pullback from ${hhmm(s.pullbackT)}, ${s.dir === 'long' ? 'low' : 'high'} ${px(s.ext)}</span>
+      <span class="k">Filters</span><span>EMA 200 ${px(s.ema)} · ADX ${s.adx.toFixed(1)} · ATR ${px(s.atr)}</span>
+      <span class="k">Entry / stop</span><span>${px(s.entry)} at ${hhmm(s.t)} / ${px(s.stop)} (${px(Math.abs(s.entry - s.stop))} pts = ${(Math.abs(s.entry - s.stop) / s.atr).toFixed(1)} × ATR)</span>
+      ${s.legs.length ? `<span class="k">Targets</span><span>${s.legs.map(l => `${l.name} ${px(l.tp)} ×${l.qty}`).join(', ')} · ${s.contracts} MNQ</span>` : ''}
+      <span class="k">Outcome</span><span><b>${s.status}</b>${s.reason ? ': ' + s.reason : ''}${s.R != null ? ` · ${s.R >= 0 ? '+' : ''}${s.R.toFixed(2)}R ($${s.usd.toFixed(0)} before costs)` : ''}${s.legs.some(l => l.exit != null) ? '<br>' + s.legs.map(l => `${l.name}: ${l.how} ${px(l.exit)} at ${hhmm(l.exitT)}`).join(' · ') : ''}</span>
+    </div>`).join(''));
+}
+
 function renderSignal(r) {
-  if (!r.signals.length) { $('#sigcard').innerHTML = `<h3>Signal</h3><p class="datanote" style="margin:0">None. ${r.status.text}.</p>`; return; }
+  if (!r.signals.length) { $('#sigcard').innerHTML = `<h3>Signal</h3><p class="datanote" style="margin:0">None. ${r.status.text}.</p>` + renderEm(sel); return; }
   $('#sigcard').innerHTML = '<h3>Signal' + (r.signals.length > 1 ? 's' : '') + '</h3>' + r.signals.map(s => `
     <div class="kv" style="margin-bottom:10px">
       <span class="k">Direction</span><span>${s.dir} · FVG ${hhmm(s.fvg.t1)}–${hhmm(s.fvg.t3)} (${px(s.fvg.lo)}–${px(s.fvg.hi)})</span>
@@ -938,7 +967,7 @@ function renderSignal(r) {
       <span class="k">Targets</span><span>${s.legs ? s.legs.map(l => `${l.name} ${px(l.tp)} ×${l.qty}`).join(', ') : `TP1 ${px(s.tp1)}, TP2 ${px(s.tp2)}`} · ${s.contracts} MNQ</span>
       <span class="k">Outcome</span><span><b>${s.status}</b>${s.reason ? ': ' + s.reason : ''}${s.R != null ? ` · ${s.R >= 0 ? '+' : ''}${s.R.toFixed(2)}R ($${s.usd.toFixed(0)} before costs)` : ''}${s.legs && s.legs.some(l => l.exit != null) ? '<br>' + s.legs.map(l => `${l.name}: ${l.how} ${px(l.exit)} at ${hhmm(l.exitT)}`).join(' · ') : ''}</span>
       ${s.flags.length ? `<span class="k">Flags</span><span class="bad">${s.flags.join('; ')}</span>` : ''}
-    </div>`).join('');
+    </div>`).join('') + renderEm(sel);
 }
 
 function renderFvgs(r) {
@@ -1006,7 +1035,8 @@ function draw() {
   const r = results[sel], arr = tfBars();
   const W = cv.clientWidth, H = cv.clientHeight, dpr = window.devicePixelRatio || 1;
   cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
-  const padL = 8, padR = 70, padT = 14, padB = 24, cw = W - padL - padR, ch = H - padT - padB;
+  const emOn = showEm() && emResults.series, paneH = emOn ? 90 : 0;
+  const padL = 8, padR = 70, padT = 14, padB = 24 + (emOn ? paneH + 10 : 0), cw = W - padL - padR, ch = H - padT - padB;
   const a = Math.max(0, view.a), b = Math.min(arr.length - 1, view.b), n = b - a + 1;
   if (n <= 0) return;
   let lo = Infinity, hi = -Infinity;
@@ -1103,6 +1133,8 @@ function draw() {
     if (m.type === 'void') { g.fillStyle = css('--down'); g.fillText('✕ chain void', x + 4, y + 12); }
   }
 
+  if (emOn) drawEm({ a, b, arr, X, Y, XT, padL, padT, cw, ch, bw, paneTop: padT + ch + 10, paneH });
+
   // signal lines
   for (const s of r.signals) {
     const x0 = XT(s.t), x1 = s.exitT ? XT(s.exitT) : s.fvg && results[sel] ? Math.min(padL + cw, x0 + bw * (s.status === 'closed' ? 30 : 15)) : padL + cw;
@@ -1116,6 +1148,50 @@ function draw() {
     if (s.fillT) { g.fillStyle = css('--accent'); g.beginPath(); g.arc(XT(s.fillT), Y(s.entry), 4, 0, 7); g.fill(); }
     if (s.legs) for (const l of s.legs) if (l.exitT) { g.fillStyle = l.how.startsWith('TP') ? css('--tp') : css('--stop'); g.beginPath(); g.arc(XT(l.exitT), Y(l.exit), 4, 0, 7); g.fill(); }
     if (faded) { g.fillStyle = css('--muted'); g.fillText(`${s.status}: ${s.reason}`, x0, Y(s.entry) - 6); }
+  }
+}
+// EMA 200 on the price chart, the MACD in a pane below it, and the day's EMA 200 + MACD Trades.
+// On 1m and 5m charts a bar shows the values of the last 15m bar closed before it.
+const EM_COL = '#0891b2';
+function drawEm(L) {
+  const { a, b, arr, X, Y, XT, padL, padT, cw, ch, bw, paneTop, paneH } = L, S = emResults.series, Q = ctx.bars15;
+  const qAt = x => { const k = lb(Q, x.t + 1) - 1; return view.tf === 15 ? k : k - 1; }; // k: the 15m bar containing x
+  const line = (vals, toY, col, width) => {
+    g.strokeStyle = col; g.lineWidth = width; g.beginPath(); let on = false;
+    for (let k = a; k <= b; k++) { const q = qAt(arr[k]); const v = q >= 199 ? vals[q] : null; if (v == null) { on = false; continue; } const y = toY(v); if (on) g.lineTo(X(k), y); else { g.moveTo(X(k), y); on = true; } }
+    g.stroke(); g.lineWidth = 1;
+  };
+  // EMA 200 (clipped to the price area)
+  g.save(); g.beginPath(); g.rect(padL, padT, cw, ch); g.clip();
+  line(S.ema, Y, '#f59e0b', 1.6);
+  g.restore();
+  g.fillStyle = '#b45309'; g.fillText('EMA 200', padL + 4, padT + 24);
+  // MACD pane
+  let m = 0;
+  for (let k = a; k <= b; k++) { const q = qAt(arr[k]); if (q >= 199) m = Math.max(m, Math.abs(S.macd[q]), Math.abs(S.signal[q]), Math.abs(S.hist[q])); }
+  m = m || 1;
+  const YP = v => paneTop + paneH / 2 - v / m * (paneH / 2 - 4);
+  g.strokeStyle = css('--line'); g.strokeRect(padL + .5, paneTop + .5, cw - 1, paneH - 1);
+  g.beginPath(); g.moveTo(padL, YP(0)); g.lineTo(padL + cw, YP(0)); g.stroke();
+  for (let k = a; k <= b; k++) { const q = qAt(arr[k]); if (q < 199) continue; const h = S.hist[q]; g.fillStyle = h >= 0 ? 'rgba(15,118,110,.35)' : 'rgba(185,28,28,.35)'; const y0 = YP(0), y1 = YP(h); g.fillRect(X(k) - Math.max(1, bw * .35), Math.min(y0, y1), Math.max(1, bw * .7), Math.abs(y1 - y0)); }
+  line(S.macd, YP, '#2563eb', 1.2); line(S.signal, YP, '#ea580c', 1.2);
+  g.fillStyle = css('--muted'); g.fillText('MACD 12,26,9 (15m)', padL + 4, paneTop + 12);
+  g.fillStyle = '#2563eb'; g.fillText('MACD', padL + cw - 90, paneTop + 12); g.fillStyle = '#ea580c'; g.fillText('signal', padL + cw - 50, paneTop + 12);
+  // Trades of this day
+  for (const s of emResults[sel]?.signals || []) {
+    const x0 = XT(s.t), x1 = s.exitT ? XT(s.exitT) : Math.min(padL + cw, x0 + bw * 20);
+    const faded = s.status === 'skipped';
+    const hl = (p, col, label) => { const y = Y(p); if (p == null || y < padT || y > padT + ch) return; g.strokeStyle = col; g.setLineDash(faded ? [3, 3] : [6, 2]); g.beginPath(); g.moveTo(x0, y); g.lineTo(Math.max(x1, x0 + 40), y); g.stroke(); g.setLineDash([]); g.fillStyle = col; g.fillText(`${label} ${px(p)}`, Math.max(x1, x0 + 40) + 3, y + 4); };
+    hl(s.entry, EM_COL, 'EMA·MACD entry'); hl(s.stop, css('--stop'), 'EM stop');
+    if (!faded) { hl(s.tp1, css('--tp'), 'EM 1.5R'); if (s.legs.length > 1) hl(s.tp2, css('--tp'), 'EM 3R'); }
+    // pullback extreme and the entry arrow
+    const yx = Y(s.ext), xp = XT(s.pullbackT);
+    if (yx >= padT && yx <= padT + ch) { g.strokeStyle = EM_COL; g.setLineDash([2, 3]); g.beginPath(); g.moveTo(xp, yx); g.lineTo(x0, yx); g.stroke(); g.setLineDash([]); g.fillStyle = EM_COL; g.fillText('pullback ' + (s.dir === 'long' ? 'low' : 'high'), xp, yx + (s.dir === 'long' ? 13 : -5)); }
+    const ye = Y(s.entry); if (ye >= padT && ye <= padT + ch) tri(x0, s.dir === 'long' ? ye + 4 : ye - 4, s.dir === 'long' ? 1 : -1, EM_COL);
+    for (const l of s.legs) if (l.exitT) { g.fillStyle = l.how === 'stop' ? css('--stop') : EM_COL; g.beginPath(); g.arc(XT(l.exitT), Y(l.exit), 4, 0, 7); g.fill(); }
+    g.fillStyle = EM_COL; g.fillText(faded ? `EMA·MACD skipped: ${s.reason}` : `EMA·MACD ${s.dir}${s.R != null ? ` ${s.R >= 0 ? '+' : ''}${s.R.toFixed(2)}R` : ''}`, x0 + 6, ye + (s.dir === 'long' ? 26 : -18));
+    // mark the cross in the pane
+    const xc = XT(s.crossT + (view.tf === 15 ? 0 : 15 * 60000)); g.strokeStyle = EM_COL; g.beginPath(); g.moveTo(xc, paneTop); g.lineTo(xc, paneTop + paneH); g.stroke();
   }
 }
 function hmToMin(s) { const [h, m] = s.split(':').map(Number); return h * 60 + m; }
