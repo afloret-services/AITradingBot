@@ -98,6 +98,7 @@
         <label>Renko brick <input type="number" id="renkoSize" value="5" min="0.25" step="0.25" style="width:60px"> pts</label>
         <label><input type="checkbox" id="renkoHa"> Renko from Heikin Ashi closes</label>
         <label>Kagi reversal <input type="number" id="kagiRev" value="10" min="0.25" step="0.25" style="width:60px"> pts</label>
+        <label><input type="checkbox" id="kagiHa"> Kagi from Heikin Ashi closes</label>
         <label>P&amp;F box <input type="number" id="pfBox" value="5" min="0.25" step="0.25" style="width:60px"> pts, reversal <input type="number" id="pfRev" value="3" min="1" step="1" style="width:44px"> boxes</label>
         <label><input type="checkbox" id="pfHa"> P&amp;F from Heikin Ashi closes</label>
         <label><input type="checkbox" id="showVwap"> VWAP <select id="vwapAnchor"><option value="td">from 18:00 (trading day)</option><option value="rth">from 09:30</option></select></label>
@@ -187,7 +188,7 @@
           <li><b>Entry model</b> (setting; the user chose <b>FVG only</b> as the default): any FVG that passes the FVG checks, in the Bias direction, with its third candle in a Window and a Draw on liquidity. There is no sweep or MSS: the stop is 2 ticks beyond the FVG's first candle, and a resting entry is cancelled if price reaches that stop level first. <b>Sweep → MSS → FVG</b> is the first agreed chain; with it, the stop is beyond the sweep extreme.</li>
           <li><b>G · EMA 200 + MACD</b> (comparison row; "Show EMA 200 + MACD" draws the EMA 200, a MACD pane and its Trades on the chart, in teal, next to the Silver Bullet): the DAFT Trade documentation's strategy on 15m bars built from the 1m bars. Long: close above a rising EMA 200 (higher than 10 bars ago), ADX(14) &gt; 20, MACD histogram negative for ≥ 3 bars, then the MACD crosses above its signal with both lines below zero; market entry at the next 1m open. Stop at the pullback low − 0.25 × ATR(14), skipped if wider than 3 × ATR. Half at 1.5R and stop to entry, the rest at 3R or when the MACD crosses back; everything closed on a 15m close beyond the EMA 200. Mirror for shorts. <i>Interpretations:</i> entries only 09:45–12:00 and 13:30–15:50 NY, flattened at 15:50; the map's risk settings (2% of $5,000, max 5 MNQ) instead of the docs' 0.5–1%; no news rule. The EMA 200 needs 200 bars of 15m history (about 3 days) before the first Signal.</li>
           <li><b>Renko</b> ("Candles: Renko" in the Indicators panel; display only): bricks of a set size (default 5 points) built from the 1m closes of the selected trading day. A new brick when a close is a full brick beyond the last one in the trend's direction; a reversal when a close is a full brick beyond the last brick's other end. With "Renko from Heikin Ashi closes" the bricks are built from the 1m bars' Heikin Ashi closes ((O + H + L + C) ÷ 4, smoothed) instead of their real closes, which filters out small back-and-forth moves; the Signal's prices stay real, so its lines may sit off the bricks. Bricks have no time axis, so the chart shows only the bricks completed in the current view, with the Liquidity levels, the Signal's lines, the fills and exits on the brick they fell in, and the Window's bricks shaded; sessions, indicator overlays and panes are hidden. The labels under the bricks are the times they completed.</li>
-          <li><b>Kagi</b> ("Candles: Kagi" in the Indicators panel; display only): one line from the selected trading day's 1m closes that extends while closes make new extremes and turns when a close reverses by the reversal amount (default 10 points). It turns thick (yang, green) where a rise passes the previous shoulder and thin (yin, red) where a fall passes the previous waist. Like Renko and Point &amp; Figure it has no time axis, so it shows the Liquidity levels, the Signal's lines, fills and exits on the segment they fell in, and the Window's segments shaded, and hides sessions, overlays and panes. The labels under the line are the times each segment started.</li>
+          <li><b>Kagi</b> ("Candles: Kagi" in the Indicators panel; display only): one line from the selected trading day's 1m closes that extends while closes make new extremes and turns when a close reverses by the reversal amount (default 10 points). It turns thick (yang, green) where a rise passes the previous shoulder and thin (yin, red) where a fall passes the previous waist. With "Kagi from Heikin Ashi closes" the line follows the 1m bars' Heikin Ashi closes instead of their real closes, which filters out small back-and-forth moves; the Signal's prices stay real. Like Renko and Point &amp; Figure it has no time axis, so it shows the Liquidity levels, the Signal's lines, fills and exits on the segment they fell in, and the Window's segments shaded, and hides sessions, overlays and panes. The labels under the line are the times each segment started.</li>
           <li><b>Point &amp; Figure</b> ("Candles: Point &amp; Figure" in the Indicators panel; display only): columns of X (rising) and O (falling) from the selected trading day's 1m closes, on a grid of box size points (default 5). A column extends while closes reach one more box; a new column in the other direction starts when a close reverses by the reversal count (default 3 boxes), one box past the last column's extreme. With "P&amp;F from Heikin Ashi closes" the columns are built from the 1m bars' Heikin Ashi closes instead of their real closes, which filters out small back-and-forth moves; the Signal's prices stay real. Like Renko it has no time axis, so it shows the Liquidity levels, the Signal's lines, fills and exits on the column they fell in, and the Window's columns shaded, and hides sessions, overlays and panes. The labels under the columns are the times they started.</li>
           <li><b>Heikin Ashi candles</b> (display only; "Candles" in the Indicators panel): close = (open + high + low + close) ÷ 4, open = the midpoint of the previous Heikin Ashi candle's open and close, high and low = the extremes of the real high/low and those two. They smooth the trend but are not traded prices: every rule, level, FVG, entry, stop and indicator still uses the real bars, so lines may not touch the drawn candles. Hovering a bar shows both.</li>
           <li><b>Volume pane</b> (display only, as in the DAFT Trade documentation): contracts per displayed bar, green for up candles and red for down, darker when at least 1.5× the 20-bar average, which is drawn as a grey line. 5m and 15m bars carry the sum of their 1m bars' volume. Needs the volume column.</li>
@@ -879,9 +880,9 @@ const showEm = () => $('#showEm').checked;
 $('#showEm').onchange = () => { if (showEm() && $('#macdPane').value === 'off') $('#macdPane').value = '15m'; saveInd(); renderDays(); if (results.length) showDay(sel, false); };
 $('#macdPane').onchange = () => { saveInd(); draw(); };
 // ---- indicators panel: on/off per indicator, remembered in this browser ----
-const IND_CHECKS = ['#renkoHa', '#pfHa', '#showEm', '#showVwap', '#showBb', '#showKc', '#showDc', '#showIchi', '#showSar', '#showSt', '#showVol', '#showRsi', '#showStoch', '#showAdx', '#showAtr', '#showObv'];
+const IND_CHECKS = ['#renkoHa', '#pfHa', '#kagiHa', '#showEm', '#showVwap', '#showBb', '#showKc', '#showDc', '#showIchi', '#showSar', '#showSt', '#showVol', '#showRsi', '#showStoch', '#showAdx', '#showAtr', '#showObv'];
 const IND_SELECTS = ['#vwapAnchor', '#macdPane', '#candleType', '#renkoSize', '#pfBox', '#pfRev', '#kagiRev'];
-function indCount() { return IND_CHECKS.filter(id => id !== '#renkoHa' && id !== '#pfHa' && $(id).checked).length + ($('#macdPane').value !== 'off' ? 1 : 0) + ($('#candleType').value !== 'real' ? 1 : 0); }
+function indCount() { return IND_CHECKS.filter(id => !['#renkoHa', '#pfHa', '#kagiHa'].includes(id) && $(id).checked).length + ($('#macdPane').value !== 'off' ? 1 : 0) + ($('#candleType').value !== 'real' ? 1 : 0); }
 function saveInd() {
   const st = {}; IND_CHECKS.forEach(id => st[id] = $(id).checked); IND_SELECTS.forEach(id => st[id] = $(id).value);
   try { localStorage.setItem('sb-indicators', JSON.stringify(st)); } catch {}
@@ -1510,11 +1511,12 @@ function drawPf(r, arr) {
 // a close reverses by `rev` points from the line's end. The first segment starts once a close is `rev` from the first
 // close. Thickness, as on any Kagi chart: thick (yang) from the point where a rise passes the previous shoulder (the
 // end of the last up segment), thin (yin) from the point where a fall passes the previous waist.
-function kagiOf(D, rev) {
+function kagiOf(D, rev, fromHa) {
   const B = ctx.bars1, segs = [], meta = b => ({ t: b.t, date: b.date, min: b.min, td: b.td });
-  const p0 = B[D.from].c; let seg = null;
+  const HA = fromHa ? haOf(B) : null, cl = i => HA ? HA[i].c : B[i].c;
+  const p0 = cl(D.from); let seg = null;
   for (let i = D.from; i <= D.to; i++) {
-    const b = B[i], c = b.c;
+    const b = B[i], c = cl(i);
     if (!seg) { if (Math.abs(c - p0) >= rev) { seg = { from: p0, to: c, up: c > p0, start: meta(B[D.from]), end: meta(b) }; segs.push(seg); } continue; }
     if (seg.up ? c > seg.to : c < seg.to) { seg.to = c; seg.end = meta(b); }
     else if (seg.up ? c <= seg.to - rev : c >= seg.to + rev) { seg = { from: seg.to, to: c, up: !seg.up, start: meta(b), end: meta(b) }; segs.push(seg); }
@@ -1537,7 +1539,8 @@ function drawKagi(r, arr) {
   const padL = 8, padR = 70, padT = 26, padB = 24, cw = W - padL - padR, ch = H - padT - padB;
   const rev = Math.max(SB.TICK, +$('#kagiRev').value || 10);
   const t0 = arr[Math.max(0, view.a)].t, t1 = arr[Math.min(arr.length - 1, view.b)].t + view.tf * 60000;
-  const segs = kagiOf(ctx.days[r.di], rev).filter(sg => sg.end.t >= t0 && sg.start.t < t1);
+  const fromHa = $('#kagiHa').checked;
+  const segs = kagiOf(ctx.days[r.di], rev, fromHa).filter(sg => sg.end.t >= t0 && sg.start.t < t1);
   g.font = '11px system-ui';
   if (!segs.length) { g.fillStyle = css('--muted'); g.fillText(`Kagi ${px(rev)} pts: no turn in this view. Try a smaller reversal or "Whole trading day".`, padL + 4, padT + 20); layout = null; return; }
   const n = segs.length, bw = Math.min(36, cw / (n + 1));
@@ -1583,7 +1586,7 @@ function drawKagi(r, arr) {
     if (faded) { g.fillStyle = css('--muted'); g.fillText(`${s.status}: ${s.reason}`, x0, Y(s.entry) - 6); }
   }
   g.fillStyle = css('--muted');
-  const note = `Kagi ${px(rev)}-pt reversal, from 1m closes · ${n} segments · thick green = yang, thin red = yin · no time axis: sessions, overlays and panes are hidden`;
+  const note = `Kagi ${px(rev)}-pt reversal, from 1m ${fromHa ? 'Heikin Ashi closes' : 'closes'} · ${n} segments · thick green = yang, thin red = yin · no time axis: sessions, overlays and panes are hidden`;
   g.fillText(note, padL + cw - g.measureText(note).width - 6, padT - 9); // above the plot area
 }
 // Heikin Ashi candles of the displayed bars: close = (O + H + L + C) / 4, open = midpoint of the previous HA candle's
@@ -1991,7 +1994,8 @@ window.addEventListener('mousemove', e => {
   const f = results[sel].candidates.find(f => c.t >= f.t1 && c.t <= f.t3 + (view.tf - 1) * 60000 && results[sel].candidates.length);
   if (f) text += `\nFVG ${hhmm(f.t1)}–${hhmm(f.t3)} ${f.dir}: ${f.note === 'SIGNAL' ? 'Signal' : (f.note || (f.ok ? 'passes' : f.why.join('; ')))}`;
   tip.textContent = text; tip.style.display = 'block';
-  tip.style.left = Math.min(mx + 14, rect.width - 260) + 'px'; tip.style.top = (my + 14) + 'px';
+  // keep the box inside the chart: flip it to the left of the mouse near the right edge
+  const tw = tip.offsetWidth; tip.style.left = Math.max(0, mx + 14 + tw > rect.width ? mx - tw - 14 : mx + 14) + 'px'; tip.style.top = (my + 14) + 'px';
 });
 cv.addEventListener('wheel', e => {
   e.preventDefault(); if (!layout) return;
