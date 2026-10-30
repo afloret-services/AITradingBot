@@ -45,6 +45,7 @@
   .chartbar .sep { width: 12px; }
   #chartwrap { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; height: 520px; }
   #chart { width: 100%; height: 100%; display: block; cursor: grab; }
+  .eqtip { position: absolute; pointer-events: none; background: rgba(28,25,23,.9); color: #fff; font-size: 12px; padding: 4px 7px; border-radius: 4px; display: none; white-space: pre; font-variant-numeric: tabular-nums; }
   #tip { position: absolute; pointer-events: none; background: rgba(28,25,23,.9); color: #fff; font-size: 12px; padding: 4px 7px; border-radius: 4px; display: none; white-space: pre; font-variant-numeric: tabular-nums; }
   .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-top: 14px; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
@@ -158,6 +159,10 @@
       <div id="indSummary" class="datanote" title="Click to change the indicators"></div>
       <div id="chartwrap"><canvas id="chart"></canvas><div id="tip"></div></div>
       <p class="datanote" style="margin:4px 0 0">Drag to pan, scroll to zoom. Blue band: the Window. Grey lines: Liquidity levels, dotted from when price first reaches them. Boxes: FVGs in the Window (blue = the Signal's FVG, grey = rejected, hover for why).</p>
+      <div class="card" id="eqcard" style="margin-top:12px; padding: 8px 12px">
+        <div id="eqhead" class="datanote" style="margin-bottom:4px"></div>
+        <div style="position:relative; height:170px"><canvas id="equity" style="width:100%; height:100%; display:block; cursor:pointer"></canvas><div id="eqtip" class="eqtip"></div></div>
+      </div>
       <div class="grid2">
         <div>
           <div class="card review">
@@ -1085,7 +1090,7 @@ function showDay(k, resetView) {
   $('.day.sel')?.scrollIntoView({ block: 'nearest' });
   $('#dtitle').textContent = `${r.td} · ${r.status.text}`;
   if (resetView) setSpan(view.span);
-  renderReview(r); renderSignal(r); renderFvgs(r); renderTrace(r); renderLevels(r); draw();
+  renderReview(r); renderSignal(r); renderFvgs(r); renderTrace(r); renderLevels(r); draw(); drawEquity();
 }
 
 function renderReview(r) {
@@ -2131,7 +2136,59 @@ cv.addEventListener('wheel', e => {
   const len = view.b - view.a, nl = Math.max(10, Math.min(tfBars().length - 1, Math.round(len * (e.deltaY > 0 ? 1.15 : 0.87))));
   const pivot = view.a + f * len; view.a = Math.max(0, Math.round(pivot - f * nl)); view.b = Math.min(tfBars().length - 1, view.a + nl); draw();
 }, { passive: false });
-window.addEventListener('resize', draw);
+window.addEventListener('resize', () => { draw(); drawEquity(); });
+
+// ---- equity curve: cumulative R of closed Trades over every loaded day, for the current strategy ----
+const eqc = $('#equity'), eg = eqc.getContext('2d');
+let eqLayout = null;
+function cumR(rs) { // [{k, dayR, cum}] per day, in date order
+  let cum = 0; return rs.map((r, k) => { const dayR = r.signals.filter(s => s.status === 'closed').reduce((a, s) => a + s.R, 0); cum += dayR; return { k, dayR, cum, n: r.signals.filter(s => s.status === 'closed').length }; });
+}
+function maxDd(pts) { let peak = 0, dd = 0; for (const p of pts) { peak = Math.max(peak, p.cum); dd = Math.min(dd, p.cum - peak); } return dd; }
+function drawEquity() {
+  if (!ctx || !results.length) return;
+  const W = eqc.clientWidth, H = eqc.clientHeight, dpr = window.devicePixelRatio || 1;
+  eqc.width = W * dpr; eqc.height = H * dpr; eg.setTransform(dpr, 0, 0, dpr, 0, 0); eg.clearRect(0, 0, W, H);
+  const main = cumR(results), em = showEm() && emResults.length ? cumR(emResults) : null;
+  const usd = results.flatMap(r => r.signals.filter(s => s.status === 'closed')).reduce((a, s) => a + s.usd, 0);
+  const tot = main[main.length - 1].cum, dd = maxDd(main), nTr = main.reduce((a, p) => a + p.n, 0);
+  const preset = $('#preset').selectedOptions[0]?.text || '';
+  const sgn = x => Math.abs(x) < 0.005 ? '0.00' : (x > 0 ? '+' : '−') + Math.abs(x).toFixed(2);
+  $('#eqhead').innerHTML = `<b style="color:var(--ink)">Cumulative R</b> · ${preset.replace(/ \(.*$/, '')} · ${nTr} Trades · total <b class="${tot > 0.05 ? 'res win' : tot < -0.05 ? 'res loss' : ''}">${sgn(tot)}R</b> (${usd >= 0 ? '+' : '−'}$${Math.abs(usd).toFixed(0)} before costs) · max drawdown ${sgn(dd)}R`
+    + (em ? ` · <span style="color:#0891b2">dashed: EMA 200 + MACD ${sgn(em[em.length - 1].cum)}R, max drawdown ${sgn(maxDd(em))}R</span>` : '') + ' · click to open a day';
+  const padL = 8, padR = 70, padT = 8, padB = 18, cw = W - padL - padR, ch = H - padT - padB, n = main.length;
+  const all = [0, ...main.map(p => p.cum), ...(em ? em.map(p => p.cum) : [])];
+  let lo = Math.min(...all), hi = Math.max(...all); const pad = (hi - lo) * 0.1 || 1; lo -= pad; hi += pad;
+  const X = k => padL + (n === 1 ? cw / 2 : k / (n - 1) * cw), Y = v => padT + (hi - v) / (hi - lo) * ch;
+  eqLayout = { X, n, padL, cw, main, em };
+  // grid, zero line, labels
+  eg.font = '11px system-ui'; eg.strokeStyle = css('--line'); eg.fillStyle = css('--muted'); eg.lineWidth = 1;
+  const step = niceStep((hi - lo) / 4);
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) { const y = Math.round(Y(v)) + .5; eg.beginPath(); eg.moveTo(padL, y); eg.lineTo(padL + cw, y); eg.stroke(); eg.fillText((v >= 0 ? '+' : '') + v.toFixed(Math.abs(step) < 1 ? 1 : 0) + 'R', padL + cw + 6, y + 4); }
+  eg.strokeStyle = '#a8a29e'; eg.beginPath(); eg.moveTo(padL, Y(0) + .5); eg.lineTo(padL + cw, Y(0) + .5); eg.stroke();
+  const every = Math.max(1, Math.ceil(n / Math.max(1, Math.floor(cw / 70))));
+  for (let k = 0; k < n; k += every) eg.fillText(results[k].td.slice(5), X(k) - 14, H - 4);
+  // drawdown shading under the running peak
+  let peak = 0; eg.fillStyle = 'rgba(185,28,28,.08)';
+  main.forEach((p, k) => { peak = Math.max(peak, p.cum); if (p.cum < peak && k > 0) eg.fillRect(X(k - 1), Y(peak), X(k) - X(k - 1), Y(p.cum) - Y(peak)); });
+  // the selected day
+  eg.strokeStyle = css('--accent'); eg.globalAlpha = .5; eg.beginPath(); eg.moveTo(X(sel) + .5, padT); eg.lineTo(X(sel) + .5, padT + ch); eg.stroke(); eg.globalAlpha = 1;
+  // curves: steps at each day's close
+  const curve = (pts, col, dash, w) => { eg.strokeStyle = col; eg.lineWidth = w; eg.setLineDash(dash); eg.beginPath(); eg.moveTo(X(0), Y(0)); let prev = 0; pts.forEach((p, k) => { eg.lineTo(X(k), Y(prev)); eg.lineTo(X(k), Y(p.cum)); prev = p.cum; }); eg.stroke(); eg.setLineDash([]); eg.lineWidth = 1; };
+  if (em) curve(em, '#0891b2', [5, 3], 1.3);
+  curve(main, css('--ink'), [], 1.8);
+  main.forEach((p, k) => { if (!p.n) return; eg.fillStyle = p.dayR > 0.05 ? '#15803d' : p.dayR < -0.05 ? '#b91c1c' : '#78716c'; eg.beginPath(); eg.arc(X(k), Y(p.cum), k === sel ? 4.5 : 3, 0, 7); eg.fill(); });
+}
+const eqIndex = e => { if (!eqLayout) return -1; const r = eqc.getBoundingClientRect(), mx = e.clientX - r.left; const { padL, cw, n } = eqLayout; return Math.max(0, Math.min(n - 1, Math.round((mx - padL) / (cw / Math.max(1, n - 1))))); };
+eqc.addEventListener('click', e => { const k = eqIndex(e); if (k >= 0) showDay(k, true); });
+eqc.addEventListener('mousemove', e => {
+  const k = eqIndex(e), tip = $('#eqtip'); if (k < 0) { tip.style.display = 'none'; return; }
+  const p = eqLayout.main[k], f = x => (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(2) + 'R';
+  tip.textContent = `${results[k].td}\n${p.n ? `${p.n} Trade${p.n > 1 ? 's' : ''}: ${f(p.dayR)}` : 'no Trade'}\ncumulative ${f(p.cum)}` + (eqLayout.em ? `\nEMA·MACD cumulative ${f(eqLayout.em[k].cum)}` : '');
+  tip.style.display = 'block'; const r = eqc.getBoundingClientRect(), mx = e.clientX - r.left, tw = tip.offsetWidth;
+  tip.style.left = (mx + 14 + tw > r.width ? mx - tw - 14 : mx + 14) + 'px'; tip.style.top = '10px';
+});
+eqc.addEventListener('mouseleave', () => $('#eqtip').style.display = 'none');
 })();
 </script>
 </body>
