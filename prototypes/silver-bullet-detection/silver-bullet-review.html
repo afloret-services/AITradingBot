@@ -94,7 +94,8 @@
       <div><h3>Strategy overlay</h3>
         <label><input type="checkbox" id="showEm"> EMA 200 + MACD Trades (row G)</label></div>
       <div><h3>On the price chart</h3>
-        <label>Candles <select id="candleType"><option value="real">regular</option><option value="ha">Heikin Ashi</option><option value="renko">Renko (own view)</option><option value="pf">Point &amp; Figure (own view)</option><option value="kagi">Kagi (own view)</option></select></label>
+        <label>Candles <select id="candleType"><option value="real">regular</option><option value="ha">Heikin Ashi</option><option value="line">Line (closes)</option><option value="renko">Renko (own view)</option><option value="pf">Point &amp; Figure (own view)</option><option value="kagi">Kagi (own view)</option></select></label>
+        <label><input type="checkbox" id="lineHa"> Line from Heikin Ashi closes</label>
         <label>Renko brick <input type="number" id="renkoSize" value="5" min="0.25" step="0.25" style="width:60px"> pts</label>
         <label><input type="checkbox" id="renkoHa"> Renko from Heikin Ashi closes</label>
         <label>Kagi reversal <input type="number" id="kagiRev" value="10" min="0.25" step="0.25" style="width:60px"> pts</label>
@@ -187,6 +188,7 @@
           <li><b>Entry, stop, targets</b>: limit at the near edge, stop 2 ticks beyond the sweep extreme, reward-to-risk ≥ 1.0. TP1 halfway, rounded toward the entry. TP2 1 tick before the draw. 1 contract means a single leg at TP2. Contracts = floor(2% × $5,000 ÷ risk per contract), max 5. Break-even after TP1.</li>
           <li><b>Entry model</b> (setting; the user chose <b>FVG only</b> as the default): any FVG that passes the FVG checks, in the Bias direction, with its third candle in a Window and a Draw on liquidity. There is no sweep or MSS: the stop is 2 ticks beyond the FVG's first candle, and a resting entry is cancelled if price reaches that stop level first. <b>Sweep → MSS → FVG</b> is the first agreed chain; with it, the stop is beyond the sweep extreme.</li>
           <li><b>G · EMA 200 + MACD</b> (comparison row; "Show EMA 200 + MACD" draws the EMA 200, a MACD pane and its Trades on the chart, in teal, next to the Silver Bullet): the DAFT Trade documentation's strategy on 15m bars built from the 1m bars. Long: close above a rising EMA 200 (higher than 10 bars ago), ADX(14) &gt; 20, MACD histogram negative for ≥ 3 bars, then the MACD crosses above its signal with both lines below zero; market entry at the next 1m open. Stop at the pullback low − 0.25 × ATR(14), skipped if wider than 3 × ATR. Half at 1.5R and stop to entry, the rest at 3R or when the MACD crosses back; everything closed on a 15m close beyond the EMA 200. Mirror for shorts. <i>Interpretations:</i> entries only 09:45–12:00 and 13:30–15:50 NY, flattened at 15:50; the map's risk settings (2% of $5,000, max 5 MNQ) instead of the docs' 0.5–1%; no news rule. The EMA 200 needs 200 bars of 15m history (about 3 days) before the first Signal.</li>
+          <li><b>Line</b> ("Candles: Line" in the Indicators panel; display only): the closes of the displayed bars joined by a line, on the normal time axis, so sessions, overlays, panes and all the Silver Bullet markings stay. With "Line from Heikin Ashi closes" it joins the Heikin Ashi closes instead (brown line), which smooths it; every rule still uses the real bars.</li>
           <li><b>Renko</b> ("Candles: Renko" in the Indicators panel; display only): bricks of a set size (default 5 points) built from the 1m closes of the selected trading day. A new brick when a close is a full brick beyond the last one in the trend's direction; a reversal when a close is a full brick beyond the last brick's other end. With "Renko from Heikin Ashi closes" the bricks are built from the 1m bars' Heikin Ashi closes ((O + H + L + C) ÷ 4, smoothed) instead of their real closes, which filters out small back-and-forth moves; the Signal's prices stay real, so its lines may sit off the bricks. Bricks have no time axis, so the chart shows only the bricks completed in the current view, with the Liquidity levels, the Signal's lines, the fills and exits on the brick they fell in, and the Window's bricks shaded; sessions, indicator overlays and panes are hidden. The labels under the bricks are the times they completed.</li>
           <li><b>Kagi</b> ("Candles: Kagi" in the Indicators panel; display only): one line from the selected trading day's 1m closes that extends while closes make new extremes and turns when a close reverses by the reversal amount (default 10 points). It turns thick (yang, green) where a rise passes the previous shoulder and thin (yin, red) where a fall passes the previous waist. With "Kagi from Heikin Ashi closes" the line follows the 1m bars' Heikin Ashi closes instead of their real closes, which filters out small back-and-forth moves; the Signal's prices stay real. Like Renko and Point &amp; Figure it has no time axis, so it shows the Liquidity levels, the Signal's lines, fills and exits on the segment they fell in, and the Window's segments shaded, and hides sessions, overlays and panes. The labels under the line are the times each segment started.</li>
           <li><b>Point &amp; Figure</b> ("Candles: Point &amp; Figure" in the Indicators panel; display only): columns of X (rising) and O (falling) from the selected trading day's 1m closes, on a grid of box size points (default 5). A column extends while closes reach one more box; a new column in the other direction starts when a close reverses by the reversal count (default 3 boxes), one box past the last column's extreme. With "P&amp;F from Heikin Ashi closes" the columns are built from the 1m bars' Heikin Ashi closes instead of their real closes, which filters out small back-and-forth moves; the Signal's prices stay real. Like Renko it has no time axis, so it shows the Liquidity levels, the Signal's lines, fills and exits on the column they fell in, and the Window's columns shaded, and hides sessions, overlays and panes. The labels under the columns are the times they started.</li>
@@ -880,9 +882,9 @@ const showEm = () => $('#showEm').checked;
 $('#showEm').onchange = () => { if (showEm() && $('#macdPane').value === 'off') $('#macdPane').value = '15m'; saveInd(); renderDays(); if (results.length) showDay(sel, false); };
 $('#macdPane').onchange = () => { saveInd(); draw(); };
 // ---- indicators panel: on/off per indicator, remembered in this browser ----
-const IND_CHECKS = ['#renkoHa', '#pfHa', '#kagiHa', '#showEm', '#showVwap', '#showBb', '#showKc', '#showDc', '#showIchi', '#showSar', '#showSt', '#showVol', '#showRsi', '#showStoch', '#showAdx', '#showAtr', '#showObv'];
+const IND_CHECKS = ['#lineHa', '#renkoHa', '#pfHa', '#kagiHa', '#showEm', '#showVwap', '#showBb', '#showKc', '#showDc', '#showIchi', '#showSar', '#showSt', '#showVol', '#showRsi', '#showStoch', '#showAdx', '#showAtr', '#showObv'];
 const IND_SELECTS = ['#vwapAnchor', '#macdPane', '#candleType', '#renkoSize', '#pfBox', '#pfRev', '#kagiRev'];
-function indCount() { return IND_CHECKS.filter(id => !['#renkoHa', '#pfHa', '#kagiHa'].includes(id) && $(id).checked).length + ($('#macdPane').value !== 'off' ? 1 : 0) + ($('#candleType').value !== 'real' ? 1 : 0); }
+function indCount() { return IND_CHECKS.filter(id => !['#lineHa', '#renkoHa', '#pfHa', '#kagiHa'].includes(id) && $(id).checked).length + ($('#macdPane').value !== 'off' ? 1 : 0) + ($('#candleType').value !== 'real' ? 1 : 0); }
 function saveInd() {
   const st = {}; IND_CHECKS.forEach(id => st[id] = $(id).checked); IND_SELECTS.forEach(id => st[id] = $(id).value);
   try { localStorage.setItem('sb-indicators', JSON.stringify(st)); } catch {}
@@ -1115,7 +1117,8 @@ function draw() {
   const a = Math.max(0, view.a), b = Math.min(arr.length - 1, view.b), n = b - a + 1;
   if (n <= 0) return;
   let lo = Infinity, hi = -Infinity;
-  const HA = $('#candleType').value === 'ha' ? haOf(arr) : null, cs = k => HA ? HA[k] : arr[k]; // the candles drawn
+  const ctype = $('#candleType').value, lineOn = ctype === 'line', lineHa = lineOn && $('#lineHa').checked;
+  const HA = ctype === 'ha' || lineHa ? haOf(arr) : null, cs = k => HA ? HA[k] : arr[k]; // the candles (or line) drawn
   for (let k = a; k <= b; k++) { lo = Math.min(lo, arr[k].l, cs(k).l); hi = Math.max(hi, arr[k].h, cs(k).h); }
   const pad = (hi - lo) * 0.08 || 5; lo -= pad; hi += pad;
   const bw = cw / n;
@@ -1186,8 +1189,14 @@ function draw() {
     if (isSig) { g.strokeStyle = css('--accent'); g.strokeRect(Math.max(padL, x0), y0, x1 - Math.max(padL, x0), Math.max(1, y1 - y0)); }
   }
 
+  // line: the closes (or Heikin Ashi closes) joined, instead of candles
+  if (lineOn) {
+    g.strokeStyle = lineHa ? '#7c2d12' : css('--ink'); g.lineWidth = 1.6; g.beginPath();
+    for (let k = a; k <= b; k++) { const y = Y(cs(k).c); if (k === a) g.moveTo(X(k), y); else g.lineTo(X(k), y); }
+    g.stroke(); g.lineWidth = 1;
+  }
   // candles
-  for (let k = a; k <= b; k++) {
+  for (let k = lineOn ? b + 1 : a; k <= b; k++) {
     const c = cs(k), x = X(k), up = c.c >= c.o;
     g.strokeStyle = g.fillStyle = up ? css('--up') : css('--down');
     g.beginPath(); g.moveTo(Math.round(x) + .5, Y(c.h)); g.lineTo(Math.round(x) + .5, Y(c.l)); g.stroke();
@@ -1195,7 +1204,7 @@ function draw() {
     if (up) { g.fillStyle = '#fff'; g.fillRect(x - wb / 2, yb, wb, hb); g.strokeRect(x - wb / 2 + .5, yb + .5, wb - 1, hb - 1); } else g.fillRect(x - wb / 2, yb, wb, hb);
   }
 
-  if (HA) { g.font = '11px system-ui'; g.fillStyle = css('--muted'); const t = 'Heikin Ashi candles · rules, levels, entries and stops use real prices (hover a bar for both)'; g.fillText(t, padL + cw - g.measureText(t).width - 6, padT + 26); }
+  if (HA) { g.font = '11px system-ui'; g.fillStyle = css('--muted'); const t = `Heikin Ashi ${lineOn ? 'close line' : 'candles'} · rules, levels, entries and stops use real prices (hover a bar for both)`; g.fillText(t, padL + cw - g.measureText(t).width - 6, padT + 26); }
 
   // chain marks
   g.font = '11px system-ui';
@@ -1990,7 +1999,7 @@ window.addEventListener('mousemove', e => {
   const k = layout.a + Math.floor((mx - layout.padL) / layout.bw), c = layout.arr[k];
   if (!c || k > layout.b) { tip.style.display = 'none'; return; }
   let text = `${c.date} ${SB.fmtMin(c.min)} NY\nO ${px(c.o)}  H ${px(c.h)}\nL ${px(c.l)}  C ${px(c.c)}`;
-  if ($('#candleType').value === 'ha') { const h = haOf(layout.arr)[k]; text += `\nHeikin Ashi: O ${px(h.o)}  H ${px(h.h)}  L ${px(h.l)}  C ${px(h.c)}`; }
+  if ($('#candleType').value === 'ha' || ($('#candleType').value === 'line' && $('#lineHa').checked)) { const h = haOf(layout.arr)[k]; text += `\nHeikin Ashi: O ${px(h.o)}  H ${px(h.h)}  L ${px(h.l)}  C ${px(h.c)}`; }
   const f = results[sel].candidates.find(f => c.t >= f.t1 && c.t <= f.t3 + (view.tf - 1) * 60000 && results[sel].candidates.length);
   if (f) text += `\nFVG ${hhmm(f.t1)}–${hhmm(f.t3)} ${f.dir}: ${f.note === 'SIGNAL' ? 'Signal' : (f.note || (f.ok ? 'passes' : f.why.join('; ')))}`;
   tip.textContent = text; tip.style.display = 'block';
