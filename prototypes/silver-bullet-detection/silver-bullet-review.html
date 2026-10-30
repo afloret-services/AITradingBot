@@ -94,7 +94,8 @@
       <div><h3>Strategy overlay</h3>
         <label><input type="checkbox" id="showEm"> EMA 200 + MACD Trades (row G)</label></div>
       <div><h3>On the price chart</h3>
-        <label>Candles <select id="candleType"><option value="real">regular</option><option value="ha">Heikin Ashi</option></select></label>
+        <label>Candles <select id="candleType"><option value="real">regular</option><option value="ha">Heikin Ashi</option><option value="renko">Renko (own view)</option></select></label>
+        <label>Renko brick <input type="number" id="renkoSize" value="5" min="0.25" step="0.25" style="width:60px"> pts</label>
         <label><input type="checkbox" id="showVwap"> VWAP <select id="vwapAnchor"><option value="td">from 18:00 (trading day)</option><option value="rth">from 09:30</option></select></label>
         <label><input type="checkbox" id="showBb"> Bollinger 20, 2</label>
         <label><input type="checkbox" id="showKc"> Keltner 20, 2</label>
@@ -181,6 +182,7 @@
           <li><b>Entry, stop, targets</b>: limit at the near edge, stop 2 ticks beyond the sweep extreme, reward-to-risk ≥ 1.0. TP1 halfway, rounded toward the entry. TP2 1 tick before the draw. 1 contract means a single leg at TP2. Contracts = floor(2% × $5,000 ÷ risk per contract), max 5. Break-even after TP1.</li>
           <li><b>Entry model</b> (setting; the user chose <b>FVG only</b> as the default): any FVG that passes the FVG checks, in the Bias direction, with its third candle in a Window and a Draw on liquidity. There is no sweep or MSS: the stop is 2 ticks beyond the FVG's first candle, and a resting entry is cancelled if price reaches that stop level first. <b>Sweep → MSS → FVG</b> is the first agreed chain; with it, the stop is beyond the sweep extreme.</li>
           <li><b>G · EMA 200 + MACD</b> (comparison row; "Show EMA 200 + MACD" draws the EMA 200, a MACD pane and its Trades on the chart, in teal, next to the Silver Bullet): the DAFT Trade documentation's strategy on 15m bars built from the 1m bars. Long: close above a rising EMA 200 (higher than 10 bars ago), ADX(14) &gt; 20, MACD histogram negative for ≥ 3 bars, then the MACD crosses above its signal with both lines below zero; market entry at the next 1m open. Stop at the pullback low − 0.25 × ATR(14), skipped if wider than 3 × ATR. Half at 1.5R and stop to entry, the rest at 3R or when the MACD crosses back; everything closed on a 15m close beyond the EMA 200. Mirror for shorts. <i>Interpretations:</i> entries only 09:45–12:00 and 13:30–15:50 NY, flattened at 15:50; the map's risk settings (2% of $5,000, max 5 MNQ) instead of the docs' 0.5–1%; no news rule. The EMA 200 needs 200 bars of 15m history (about 3 days) before the first Signal.</li>
+          <li><b>Renko</b> ("Candles: Renko" in the Indicators panel; display only): bricks of a set size (default 5 points) built from the 1m closes of the selected trading day. A new brick when a close is a full brick beyond the last one in the trend's direction; a reversal when a close is a full brick beyond the last brick's other end. Bricks have no time axis, so the chart shows only the bricks completed in the current view, with the Liquidity levels, the Signal's lines, the fills and exits on the brick they fell in, and the Window's bricks shaded; sessions, indicator overlays and panes are hidden. The labels under the bricks are the times they completed.</li>
           <li><b>Heikin Ashi candles</b> (display only; "Candles" in the Indicators panel): close = (open + high + low + close) ÷ 4, open = the midpoint of the previous Heikin Ashi candle's open and close, high and low = the extremes of the real high/low and those two. They smooth the trend but are not traded prices: every rule, level, FVG, entry, stop and indicator still uses the real bars, so lines may not touch the drawn candles. Hovering a bar shows both.</li>
           <li><b>Volume pane</b> (display only, as in the DAFT Trade documentation): contracts per displayed bar, green for up candles and red for down, darker when at least 1.5× the 20-bar average, which is drawn as a grey line. 5m and 15m bars carry the sum of their 1m bars' volume. Needs the volume column.</li>
           <li><b>Stochastic and OBV panes</b> (display only; not in the DAFT Trade documentation's indicator pages, so standard definitions): slow Stochastic 14,3,3 of the displayed bars, %K blue and %D orange, with 80/20 lines. OBV adds a bar's volume when it closes above the previous close and subtracts it when below; it is cumulated from the start of the file, so read its slope, not its level. OBV needs the volume column.</li>
@@ -872,8 +874,8 @@ $('#showEm').onchange = () => { if (showEm() && $('#macdPane').value === 'off') 
 $('#macdPane').onchange = () => { saveInd(); draw(); };
 // ---- indicators panel: on/off per indicator, remembered in this browser ----
 const IND_CHECKS = ['#showEm', '#showVwap', '#showBb', '#showKc', '#showDc', '#showIchi', '#showSar', '#showSt', '#showVol', '#showRsi', '#showStoch', '#showAdx', '#showAtr', '#showObv'];
-const IND_SELECTS = ['#vwapAnchor', '#macdPane', '#candleType'];
-function indCount() { return IND_CHECKS.filter(id => $(id).checked).length + ($('#macdPane').value !== 'off' ? 1 : 0) + ($('#candleType').value === 'ha' ? 1 : 0); }
+const IND_SELECTS = ['#vwapAnchor', '#macdPane', '#candleType', '#renkoSize'];
+function indCount() { return IND_CHECKS.filter(id => $(id).checked).length + ($('#macdPane').value !== 'off' ? 1 : 0) + ($('#candleType').value !== 'real' ? 1 : 0); }
 function saveInd() {
   const st = {}; IND_CHECKS.forEach(id => st[id] = $(id).checked); IND_SELECTS.forEach(id => st[id] = $(id).value);
   try { localStorage.setItem('sb-indicators', JSON.stringify(st)); } catch {}
@@ -881,7 +883,7 @@ function saveInd() {
 }
 function loadInd() {
   let st = null; try { st = JSON.parse(localStorage.getItem('sb-indicators') || 'null'); } catch {}
-  if (st) { IND_CHECKS.forEach(id => { if (id in st) $(id).checked = !!st[id]; }); IND_SELECTS.forEach(id => { if (st[id] && [...$(id).options].some(o => o.value === st[id])) $(id).value = st[id]; }); }
+  if (st) { IND_CHECKS.forEach(id => { if (id in st) $(id).checked = !!st[id]; }); IND_SELECTS.forEach(id => { const el = $(id); if (st[id] && (el.tagName !== 'SELECT' || [...el.options].some(o => o.value === st[id]))) el.value = st[id]; }); }
   saveInd();
 }
 $('#toggleInd').onclick = () => $('#indicators').classList.toggle('open');
@@ -1090,6 +1092,7 @@ let layout = null;
 function draw() {
   if (!ctx || !results.length) return;
   const r = results[sel], arr = tfBars();
+  if ($('#candleType').value === 'renko') return drawRenko(r, arr);
   // each pane adds its own height, so the price area keeps its size
   const wantH = 520 + ($('#macdPane').value !== 'off' ? 100 : 0) + ['#showVol', '#showRsi', '#showAdx', '#showAtr', '#showStoch', '#showObv'].filter(id => $(id).checked).length * 90;
   if ($('#chartwrap').style.height !== wantH + 'px') $('#chartwrap').style.height = wantH + 'px';
@@ -1321,6 +1324,85 @@ function drawRsiPane(L) {
   for (let k = a; k <= b; k++) { const v = R[k]; if (v == null) { on = false; continue; } const y = YR(v); if (on) g.lineTo(X(k), y); else { g.moveTo(X(k), y); on = true; } }
   g.stroke(); g.lineWidth = 1;
   const last = R[b]; g.fillStyle = css('--muted'); g.fillText(`RSI 14 (${view.tf}m)${last != null ? ' · ' + last.toFixed(1) : ''}`, padL + 4, paneTop + 12);
+}
+// ---- Renko: its own view, bricks instead of time ----
+// Bricks from the 1m closes of the selected trading day: a new brick when a close is a full brick beyond the last
+// brick in the trend's direction, a reversal when a close is a full brick beyond the last brick's other end (two
+// bricks from its extreme). The first brick starts from the day's first close rounded to the brick grid. Each brick
+// keeps the time of the 1m bar that completed it. Time-based overlays and panes are hidden in this view.
+function renkoOf(D, size) {
+  const B = ctx.bars1, out = [];
+  let hi = Math.round(B[D.from].c / size) * size, lo = hi, dir = 0;
+  const push = (o, c, b) => out.push({ o, c, h: Math.max(o, c), l: Math.min(o, c), t: b.t, date: b.date, min: b.min, td: b.td });
+  for (let i = D.from; i <= D.to; i++) {
+    const b = B[i], c = b.c;
+    if (dir >= 0) {
+      while (c >= hi + size) { push(hi, hi + size, b); lo = hi; hi += size; dir = 1; }
+      if (c <= lo - size) { while (c <= lo - size) { push(lo, lo - size, b); hi = lo; lo -= size; } dir = -1; }
+    } else {
+      while (c <= lo - size) { push(lo, lo - size, b); hi = lo; lo -= size; }
+      if (c >= hi + size) { while (c >= hi + size) { push(hi, hi + size, b); lo = hi; hi += size; } dir = 1; }
+    }
+  }
+  return out;
+}
+function drawRenko(r, arr) {
+  if ($('#chartwrap').style.height !== '520px') $('#chartwrap').style.height = '520px';
+  const W = cv.clientWidth, H = cv.clientHeight, dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  const padL = 8, padR = 70, padT = 14, padB = 24, cw = W - padL - padR, ch = H - padT - padB;
+  const size = Math.max(SB.TICK, +$('#renkoSize').value || 5);
+  // the bricks completed inside the current view's time span
+  const t0 = arr[Math.max(0, view.a)].t, t1 = arr[Math.min(arr.length - 1, view.b)].t + view.tf * 60000;
+  const all = renkoOf(ctx.days[r.di], size), bricks = all.filter(k => k.t >= t0 && k.t < t1);
+  g.font = '11px system-ui';
+  if (!bricks.length) { g.fillStyle = css('--muted'); g.fillText(`Renko ${px(size)} pts: no brick completed in this view. Try a smaller brick or "Whole trading day".`, padL + 4, padT + 20); layout = null; return; }
+  const n = bricks.length, bw = Math.min(28, cw / n);
+  let lo = Math.min(...bricks.map(k => k.l)), hi = Math.max(...bricks.map(k => k.h));
+  const sigP = r.signals.flatMap(s => [s.entry, s.stop]);
+  for (const p of sigP) if (p >= lo - 4 * size && p <= hi + 4 * size) { lo = Math.min(lo, p); hi = Math.max(hi, p); }
+  const pad = (hi - lo) * 0.06 || size; lo -= pad; hi += pad;
+  const X = k => padL + (k + 0.5) * bw, Y = p => padT + (hi - p) / (hi - lo) * ch;
+  const at = t => { let k = bricks.findIndex(x => x.t >= t); return k < 0 ? n - 1 : k; }; // the brick an event falls in
+  layout = { a: 0, b: n - 1, bw, padL, X, Y, lo, hi, arr: bricks };
+  // Window bricks
+  const ws = hmToMin(settings.windowStart), we = hmToMin(settings.windowEnd);
+  g.fillStyle = css('--window');
+  bricks.forEach((k, j) => { if (k.date === r.td && k.min >= ws && k.min < we) g.fillRect(X(j) - bw / 2, padT, bw, ch); });
+  // price grid and time labels
+  g.fillStyle = css('--muted'); g.strokeStyle = css('--line'); g.lineWidth = 1;
+  const step = niceStep((hi - lo) / 7);
+  for (let p = Math.ceil(lo / step) * step; p <= hi; p += step) { const y = Math.round(Y(p)) + .5; g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + cw, y); g.stroke(); g.fillText(p.toFixed(2), padL + cw + 6, y + 4); }
+  const every = Math.max(1, Math.ceil(60 / bw));
+  bricks.forEach((k, j) => { if (j % every === 0) g.fillText(SB.fmtMin(k.min), X(j) - 14, H - 7); });
+  // levels, full width
+  for (const L of r.levels) { const y = Y(L.price); if (y < padT || y > padT + ch) continue; g.strokeStyle = '#a8a29e'; g.setLineDash([2, 3]); g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + cw, y); g.stroke(); g.setLineDash([]); g.fillStyle = css('--muted'); g.fillText(`${L.name} ${px(L.price)}`, padL + 4, y - 3); }
+  // bricks
+  bricks.forEach((k, j) => {
+    const up = k.c > k.o, x = X(j) - bw * 0.42, w = bw * 0.84, y = Y(k.h), h = Math.max(1, Y(k.l) - Y(k.h));
+    g.fillStyle = up ? css('--up') : css('--down');
+    if (up) { g.strokeStyle = css('--up'); g.fillStyle = '#fff'; g.fillRect(x, y, w, h); g.strokeRect(x + .5, y + .5, w - 1, h - 1); } else g.fillRect(x, y, w, h);
+  });
+  // Signals: price lines across the view, fills and exits on the brick they fall in
+  const usedY = []; // label positions, so close prices don't print on top of each other
+  for (const s of r.signals) {
+    const faded = s.status === 'skipped' || s.status === 'cancelled', x0 = X(at(s.t)) - bw / 2;
+    const hl = (p, col, label, dash) => {
+      const y = Y(p); if (p == null || y < padT || y > padT + ch) return;
+      g.strokeStyle = col; g.setLineDash(dash || (faded ? [3, 3] : [])); g.beginPath(); g.moveTo(x0, y); g.lineTo(padL + cw, y); g.stroke(); g.setLineDash([]);
+      let ly = y - 3; while (usedY.some(u => Math.abs(u - ly) < 12)) ly -= 12; usedY.push(ly);
+      const t = `${label} ${px(p)}`; g.fillStyle = '#fff'; g.fillRect(padL + cw - 112, ly - 10, g.measureText(t).width + 4, 12); g.fillStyle = col; g.fillText(t, padL + cw - 110, ly);
+    };
+    hl(s.entry, css('--accent'), 'entry'); hl(s.stop, css('--stop'), 'stop');
+    if (s.legs && s.legs.length > 1) hl(s.tp1, css('--tp'), 'TP1');
+    hl(s.tp2, css('--tp'), s.legs && s.legs.length > 1 ? 'TP2' : 'TP'); hl(s.draw, css('--draw'), 'draw', [5, 3]);
+    if (s.fillT) { g.fillStyle = css('--accent'); g.beginPath(); g.arc(X(at(s.fillT)), Y(s.entry), 4, 0, 7); g.fill(); }
+    if (s.legs) for (const l of s.legs) if (l.exitT) { g.fillStyle = l.how.startsWith('TP') ? css('--tp') : css('--stop'); g.beginPath(); g.arc(X(at(l.exitT)), Y(l.exit), 4, 0, 7); g.fill(); }
+    if (faded) { g.fillStyle = css('--muted'); g.fillText(`${s.status}: ${s.reason}`, x0, Y(s.entry) - 6); }
+  }
+  g.fillStyle = css('--muted');
+  const note = `Renko ${px(size)} pts from 1m closes · ${n} bricks in view · no time axis: sessions, overlays and panes are hidden`;
+  g.fillText(note, padL + cw - g.measureText(note).width - 6, padT + 12);
 }
 // Heikin Ashi candles of the displayed bars: close = (O + H + L + C) / 4, open = midpoint of the previous HA candle's
 // open and close (the first: (O + C) / 2), high and low = the extremes of the real high/low and the HA open/close.
