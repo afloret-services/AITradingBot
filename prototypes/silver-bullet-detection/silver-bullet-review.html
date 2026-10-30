@@ -86,6 +86,8 @@
     <label class="datanote"><input type="checkbox" id="showIchi"> Ichimoku 9, 26, 52</label>
     <label class="datanote"><input type="checkbox" id="showSar"> Parabolic SAR</label>
     <label class="datanote"><input type="checkbox" id="showSt"> Supertrend 10, 3</label>
+    <label class="datanote"><input type="checkbox" id="showKc"> Keltner 20, 2</label>
+    <label class="datanote"><input type="checkbox" id="showDc"> Donchian 20</label>
     <label class="datanote"><input type="checkbox" id="showRsi"> RSI 14 pane</label>
     <label class="datanote"><input type="checkbox" id="showAdx"> ADX 14 pane</label>
     <label class="datanote"><input type="checkbox" id="showAtr"> ATR 14 pane</label>
@@ -166,6 +168,7 @@
           <li><b>G · EMA 200 + MACD</b> (comparison row; "Show EMA 200 + MACD" draws the EMA 200, a MACD pane and its Trades on the chart, in teal, next to the Silver Bullet): the DAFT Trade documentation's strategy on 15m bars built from the 1m bars. Long: close above a rising EMA 200 (higher than 10 bars ago), ADX(14) &gt; 20, MACD histogram negative for ≥ 3 bars, then the MACD crosses above its signal with both lines below zero; market entry at the next 1m open. Stop at the pullback low − 0.25 × ATR(14), skipped if wider than 3 × ATR. Half at 1.5R and stop to entry, the rest at 3R or when the MACD crosses back; everything closed on a 15m close beyond the EMA 200. Mirror for shorts. <i>Interpretations:</i> entries only 09:45–12:00 and 13:30–15:50 NY, flattened at 15:50; the map's risk settings (2% of $5,000, max 5 MNQ) instead of the docs' 0.5–1%; no news rule. The EMA 200 needs 200 bars of 15m history (about 3 days) before the first Signal.</li>
           <li><b>Stochastic and OBV panes</b> (display only; not in the DAFT Trade documentation's indicator pages, so standard definitions): slow Stochastic 14,3,3 of the displayed bars, %K blue and %D orange, with 80/20 lines. OBV adds a bar's volume when it closes above the previous close and subtracts it when below; it is cumulated from the start of the file, so read its slope, not its level. OBV needs the volume column.</li>
           <li><b>ADX and ATR panes</b> (display only): Wilder's ADX 14 with +DI (green) and −DI (red) of the displayed bars, lines at 20 and 25 and the area under 20 (no trend, per the DAFT Trade documentation) shaded; Wilder's ATR 14 in points, with its value per MNQ ($2 a point). Both match the ADX and ATR the EMA·MACD strategy uses on 15m.</li>
+          <li><b>Keltner and Donchian Channels</b> (display only; not in the DAFT Trade documentation, so standard settings): Keltner 20, 2 is the EMA 20 of the close (dashed) ± 2 × ATR 10 (Wilder), in purple. Donchian 20 is the highest high and lowest low of the last 20 bars, this bar included, with their middle dashed, drawn as steps, in orange.</li>
           <li><b>Parabolic SAR and Supertrend</b> (display only; not in the DAFT Trade documentation, so standard settings): Wilder's Parabolic SAR with acceleration 0.02, +0.02 per new extreme, max 0.2, drawn as dots (green below price in an uptrend, red above in a downtrend). Supertrend 10, 3: (high + low) ÷ 2 ± 3 × ATR(10), the band only tightening while price stays on its side, green under price in an uptrend and red above in a downtrend, flipping when a close crosses it.</li>
           <li><b>Ichimoku</b> (display only; not in the DAFT Trade documentation, so the standard 9, 26, 52): Tenkan (mid of the 9-bar high-low range, blue), Kijun (26-bar, dark red), the cloud between Senkou A ((Tenkan + Kijun) ÷ 2) and Senkou B (mid of the 52-bar range), both shifted 26 bars forward, green when A is above B, and Chikou (the close shifted 26 bars back, dotted). Chikou shows the close 26 bars <i>later</i>, so it is hindsight, as on any Ichimoku chart.</li>
           <li><b>Bollinger Bands</b> (display only, from the DAFT Trade documentation): SMA 20 of the displayed bars' closes (dashed) ± 2 standard deviations, shaded between the bands.</li>
@@ -850,7 +853,7 @@ $('#toggleSettings').onclick = () => $('#settings').classList.toggle('open');
 const showEm = () => $('#showEm').checked;
 $('#showEm').onchange = () => { if (showEm() && $('#macdPane').value === 'off') $('#macdPane').value = '15m'; renderDays(); if (results.length) showDay(sel, false); };
 $('#macdPane').onchange = () => draw();
-['#showVwap', '#vwapAnchor', '#showRsi', '#showBb', '#showIchi', '#showSar', '#showSt', '#showAdx', '#showAtr', '#showStoch', '#showObv'].forEach(id => $(id).onchange = () => draw());
+['#showVwap', '#vwapAnchor', '#showRsi', '#showBb', '#showIchi', '#showSar', '#showSt', '#showKc', '#showDc', '#showAdx', '#showAtr', '#showStoch', '#showObv'].forEach(id => $(id).onchange = () => draw());
 $('#preset').innerHTML = SB.PRESETS.map(p => `<option value="${p.id}">${p.name}</option>`).join('') + '<option value="custom">Custom (settings changed by hand)</option>';
 $('#preset').value = 'fvg';
 $('#preset').onchange = () => { const p = SB.PRESETS.find(p => p.id === $('#preset').value); if (!p) return; Object.assign(settings, p.set); syncForm(); rerun(); };
@@ -1163,6 +1166,8 @@ function draw() {
   lowPanes.forEach(([, fn], j) => fn({ a, b, arr, X, padL, cw, paneTop: padT + ch + 10 + (paneH ? paneH + 10 : 0) + j * (lowH + 10), paneH: lowH }));
   if ($('#showIchi').checked) drawIchi({ a, b, X, Y, padL, padT, cw, ch, I: ichiOf(arr) });
   if ($('#showBb').checked) drawBb({ a, b, X, Y, padL, padT, cw, ch, B: bbOf(arr) });
+  if ($('#showKc').checked) drawChannel({ a, b, X, Y, padL, padT, cw, ch, C: kcOf(arr), col: '#9333ea', fill: 'rgba(147,51,234,.06)', label: `Keltner 20, 2 (${view.tf}m): EMA 20 ± 2 × ATR 10`, ly: 108 });
+  if ($('#showDc').checked) drawChannel({ a, b, X, Y, padL, padT, cw, ch, C: dcOf(arr), col: '#c2410c', fill: 'rgba(194,65,12,.05)', label: `Donchian 20 (${view.tf}m): 20-bar high and low`, ly: 122, step: true });
   if ($('#showSt').checked) drawSt({ a, b, X, Y, padL, padT, cw, ch, T: stOf(arr) });
   if ($('#showSar').checked) drawSar({ a, b, X, Y, padL, padT, cw, ch, P: sarOf(arr) });
   if ($('#showVwap').checked) drawVwap({ a, b, arr, X, Y, padL, padT, cw, ch });
@@ -1507,6 +1512,57 @@ function drawSt(L) {
   }
   g.lineWidth = 1; g.restore();
   g.fillStyle = '#16a34a'; g.fillText('Supertrend 10, 3 (green under price = up, red above = down)', padL + 4, padT + 94);
+}
+// Keltner Channels: EMA 20 of the close ± 2 × ATR 10 (Wilder), on the displayed bars. Cached per bar array.
+const kcCache = new WeakMap();
+function kcOf(arr, n = 20, atrN = 10, m = 2) {
+  let r = kcCache.get(arr);
+  if (!r) {
+    const L = arr.length; r = { mid: new Array(L).fill(null), up: new Array(L).fill(null), lo: new Array(L).fill(null) };
+    const k = 2 / (n + 1); let e = null, atr = null, trSum = 0;
+    for (let i = 0; i < L; i++) {
+      const b = arr[i]; e = e == null ? b.c : b.c * k + e * (1 - k);
+      if (i === 0) continue;
+      const p = arr[i - 1], tr = Math.max(b.h - b.l, Math.abs(b.h - p.c), Math.abs(b.l - p.c));
+      if (i <= atrN) { trSum += tr; if (i < atrN) continue; atr = trSum / atrN; } else atr = (atr * (atrN - 1) + tr) / atrN;
+      if (i < n - 1) continue;
+      r.mid[i] = e; r.up[i] = e + m * atr; r.lo[i] = e - m * atr;
+    }
+    kcCache.set(arr, r);
+  }
+  return r;
+}
+// Donchian Channels: highest high and lowest low of the last 20 bars (this bar included), and their middle.
+const dcCache = new WeakMap();
+function dcOf(arr, n = 20) {
+  let r = dcCache.get(arr);
+  if (!r) {
+    const L = arr.length; r = { mid: new Array(L).fill(null), up: new Array(L).fill(null), lo: new Array(L).fill(null) };
+    for (let i = n - 1; i < L; i++) {
+      let hi = -Infinity, lo = Infinity; for (let j = i - n + 1; j <= i; j++) { hi = Math.max(hi, arr[j].h); lo = Math.min(lo, arr[j].l); }
+      r.up[i] = hi; r.lo[i] = lo; r.mid[i] = (hi + lo) / 2;
+    }
+    dcCache.set(arr, r);
+  }
+  return r;
+}
+// A channel overlay: shaded between the bands, solid bands, dashed middle. step: draw as steps (Donchian levels hold).
+function drawChannel(L) {
+  const { a, b, X, Y, padL, padT, cw, ch, C, col, fill, label, ly, step } = L;
+  g.save(); g.beginPath(); g.rect(padL, padT, cw, ch); g.clip();
+  for (let k = a; k <= b; k++) {
+    if (C.up[k] == null) continue;
+    let e = k; while (e + 1 <= b && C.up[e + 1] != null) e++;
+    g.beginPath(); g.moveTo(X(k), Y(C.up[k]));
+    for (let j = k + 1; j <= e; j++) { if (step) g.lineTo(X(j), Y(C.up[j - 1])); g.lineTo(X(j), Y(C.up[j])); }
+    for (let j = e; j >= k; j--) { g.lineTo(X(j), Y(C.lo[j])); if (step && j > k) g.lineTo(X(j), Y(C.lo[j - 1])); }
+    g.closePath(); g.fillStyle = fill; g.fill();
+    k = e;
+  }
+  const line = (vals, dash) => { g.setLineDash(dash); g.beginPath(); let on = false; for (let k = a; k <= b; k++) { const v = vals[k]; if (v == null) { on = false; continue; } const y = Y(v); if (!on) { g.moveTo(X(k), y); on = true; } else { if (step) g.lineTo(X(k), Y(vals[k - 1])); g.lineTo(X(k), y); } } g.stroke(); g.setLineDash([]); };
+  g.strokeStyle = col; g.lineWidth = 1.1; line(C.up, []); line(C.lo, []); line(C.mid, [5, 4]); g.lineWidth = 1;
+  g.restore();
+  g.fillStyle = col; g.fillText(label, padL + 4, padT + ly);
 }
 // Bollinger Bands: SMA(20) ± 2 standard deviations of the closes of the displayed bars, cached per bar array
 const bbCache = new WeakMap();
