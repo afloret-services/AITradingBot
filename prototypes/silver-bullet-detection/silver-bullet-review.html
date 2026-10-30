@@ -57,7 +57,11 @@
   .kv .k { color: var(--muted); }
   .review textarea { width: 100%; min-height: 54px; font: inherit; font-size: 13px; padding: 6px; border: 1px solid var(--line); border-radius: 6px; margin-top: 8px; }
   .review .btns { display: flex; flex-wrap: wrap; gap: 6px; }
-  #settings { display: none; margin-top: 12px; }
+  #settings, #indicators { display: none; margin-top: 12px; }
+  #indicators.open { display: block; }
+  #indicators .indgroups { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px 24px; }
+  #indicators label { display: flex; gap: 6px; align-items: center; font-size: 13px; margin: 3px 0; }
+  #indicators select { font: inherit; font-size: 12px; }
   #settings.open { display: block; }
   #settings .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px 18px; }
   #settings label { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; align-items: center; }
@@ -80,23 +84,32 @@
     <label class="filebtn">Load CSV of 1-minute bars<input type="file" id="file" accept=".csv,.txt"></label>
     <button id="demo">Load synthetic demo</button>
     <label class="datanote">Strategy <select id="preset"></select></label>
-    <label class="datanote"><input type="checkbox" id="showEm"> Show EMA 200 + MACD</label>
-    <label class="datanote"><input type="checkbox" id="showVwap"> VWAP <select id="vwapAnchor"><option value="td">from 18:00 (trading day)</option><option value="rth">from 09:30</option></select></label>
-    <label class="datanote"><input type="checkbox" id="showBb"> Bollinger 20, 2</label>
-    <label class="datanote"><input type="checkbox" id="showIchi"> Ichimoku 9, 26, 52</label>
-    <label class="datanote"><input type="checkbox" id="showSar"> Parabolic SAR</label>
-    <label class="datanote"><input type="checkbox" id="showSt"> Supertrend 10, 3</label>
-    <label class="datanote"><input type="checkbox" id="showKc"> Keltner 20, 2</label>
-    <label class="datanote"><input type="checkbox" id="showDc"> Donchian 20</label>
-    <label class="datanote"><input type="checkbox" id="showRsi"> RSI 14 pane</label>
-    <label class="datanote"><input type="checkbox" id="showAdx"> ADX 14 pane</label>
-    <label class="datanote"><input type="checkbox" id="showAtr"> ATR 14 pane</label>
-    <label class="datanote"><input type="checkbox" id="showStoch"> Stochastic 14,3,3 pane</label>
-    <label class="datanote"><input type="checkbox" id="showObv"> OBV pane</label>
-    <label class="datanote">MACD pane <select id="macdPane"><option value="off">off</option><option value="chart">chart timeframe</option><option value="15m">15m (EMA·MACD strategy)</option></select></label>
+    <button id="toggleInd">Indicators</button>
     <button id="toggleSettings">Rule settings</button>
     <button id="export" class="primary">Export review notes</button>
     <span class="datanote" id="datanote">No data loaded.</span>
+  </div>
+  <div id="indicators" class="card">
+    <div class="indgroups">
+      <div><h3>Strategy overlay</h3>
+        <label><input type="checkbox" id="showEm"> EMA 200 + MACD Trades (row G)</label></div>
+      <div><h3>On the price chart</h3>
+        <label><input type="checkbox" id="showVwap"> VWAP <select id="vwapAnchor"><option value="td">from 18:00 (trading day)</option><option value="rth">from 09:30</option></select></label>
+        <label><input type="checkbox" id="showBb"> Bollinger 20, 2</label>
+        <label><input type="checkbox" id="showKc"> Keltner 20, 2</label>
+        <label><input type="checkbox" id="showDc"> Donchian 20</label>
+        <label><input type="checkbox" id="showIchi"> Ichimoku 9, 26, 52</label>
+        <label><input type="checkbox" id="showSar"> Parabolic SAR</label>
+        <label><input type="checkbox" id="showSt"> Supertrend 10, 3</label></div>
+      <div><h3>Panes below the chart</h3>
+        <label>MACD <select id="macdPane"><option value="off">off</option><option value="chart">chart timeframe</option><option value="15m">15m (EMA·MACD strategy)</option></select></label>
+        <label><input type="checkbox" id="showRsi"> RSI 14</label>
+        <label><input type="checkbox" id="showStoch"> Stochastic 14,3,3</label>
+        <label><input type="checkbox" id="showAdx"> ADX 14</label>
+        <label><input type="checkbox" id="showAtr"> ATR 14</label>
+        <label><input type="checkbox" id="showObv"> OBV</label></div>
+    </div>
+    <p class="datanote" style="margin:8px 0 0">Display only: no Silver Bullet rule uses these, except that the EMA 200 + MACD overlay shows comparison row G. Indicators use the bars on screen (1m, 5m or 15m). Your choices are remembered in this browser. <button id="indNone" style="margin-left:8px">Turn all off</button></p>
   </div>
   <div id="settings" class="card"><div class="fields" id="fields"></div>
     <p class="datanote" style="margin:8px 0 0">These are the agreed starting values. Changing one re-runs every day at once, so you can see what a rule change would do. Your review marks are kept.</p></div>
@@ -851,9 +864,26 @@ $('#fields').addEventListener('change', e => {
 });
 $('#toggleSettings').onclick = () => $('#settings').classList.toggle('open');
 const showEm = () => $('#showEm').checked;
-$('#showEm').onchange = () => { if (showEm() && $('#macdPane').value === 'off') $('#macdPane').value = '15m'; renderDays(); if (results.length) showDay(sel, false); };
-$('#macdPane').onchange = () => draw();
-['#showVwap', '#vwapAnchor', '#showRsi', '#showBb', '#showIchi', '#showSar', '#showSt', '#showKc', '#showDc', '#showAdx', '#showAtr', '#showStoch', '#showObv'].forEach(id => $(id).onchange = () => draw());
+$('#showEm').onchange = () => { if (showEm() && $('#macdPane').value === 'off') $('#macdPane').value = '15m'; saveInd(); renderDays(); if (results.length) showDay(sel, false); };
+$('#macdPane').onchange = () => { saveInd(); draw(); };
+// ---- indicators panel: on/off per indicator, remembered in this browser ----
+const IND_CHECKS = ['#showEm', '#showVwap', '#showBb', '#showKc', '#showDc', '#showIchi', '#showSar', '#showSt', '#showRsi', '#showStoch', '#showAdx', '#showAtr', '#showObv'];
+const IND_SELECTS = ['#vwapAnchor', '#macdPane'];
+function indCount() { return IND_CHECKS.filter(id => $(id).checked).length + ($('#macdPane').value !== 'off' ? 1 : 0); }
+function saveInd() {
+  const st = {}; IND_CHECKS.forEach(id => st[id] = $(id).checked); IND_SELECTS.forEach(id => st[id] = $(id).value);
+  try { localStorage.setItem('sb-indicators', JSON.stringify(st)); } catch {}
+  const n = indCount(); $('#toggleInd').textContent = n ? `Indicators (${n} on)` : 'Indicators';
+}
+function loadInd() {
+  let st = null; try { st = JSON.parse(localStorage.getItem('sb-indicators') || 'null'); } catch {}
+  if (st) { IND_CHECKS.forEach(id => { if (id in st) $(id).checked = !!st[id]; }); IND_SELECTS.forEach(id => { if (st[id] && [...$(id).options].some(o => o.value === st[id])) $(id).value = st[id]; }); }
+  saveInd();
+}
+$('#toggleInd').onclick = () => $('#indicators').classList.toggle('open');
+[...IND_CHECKS, ...IND_SELECTS].filter(id => id !== '#showEm' && id !== '#macdPane').forEach(id => $(id).onchange = () => { saveInd(); draw(); });
+$('#indNone').onclick = () => { IND_CHECKS.forEach(id => $(id).checked = false); $('#macdPane').value = 'off'; saveInd(); renderDays(); if (results.length) showDay(sel, false); };
+loadInd();
 $('#preset').innerHTML = SB.PRESETS.map(p => `<option value="${p.id}">${p.name}</option>`).join('') + '<option value="custom">Custom (settings changed by hand)</option>';
 $('#preset').value = 'fvg';
 $('#preset').onchange = () => { const p = SB.PRESETS.find(p => p.id === $('#preset').value); if (!p) return; Object.assign(settings, p.set); syncForm(); rerun(); };
