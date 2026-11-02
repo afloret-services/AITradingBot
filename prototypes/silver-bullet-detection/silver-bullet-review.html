@@ -137,7 +137,8 @@
             <label>Kagi reversal <input type="number" id="kagiRev" value="10" min="0.25" step="0.25" style="width:52px"> pts <input type="checkbox" id="kagiHa"> from HA</label>
             <h3 style="margin-top:10px">Strategy overlay</h3>
             <label><input type="checkbox" id="showEm"> EMA 200 + MACD Trades (row G, fixed rules)</label>
-            <label><input type="checkbox" id="showOte"> OTE + OB on the chart (row H) · leg <select id="oteTf"><option value="5">5m</option><option value="10">10m</option><option value="15">15m</option></select></label></div>
+            <label><input type="checkbox" id="showOte"> OTE + OB on the chart (row H) · leg <select id="oteTf"><option value="5">5m</option><option value="10">10m</option><option value="15">15m</option></select></label>
+            <label>H impulse: a candle ≥ <input type="number" id="oteDispK" value="1" min="0" step="0.1" style="width:46px"> × average range, body ≥ <input type="number" id="oteBodyPct" value="50" min="0" max="100" step="5" style="width:46px"> % (0 = off)</label></div>
           <div><h3>On the price chart</h3>
             <label><input type="checkbox" id="showVwap"> VWAP <select id="vwapAnchor"><option value="td">from 18:00</option><option value="rth">from 09:30</option></select></label>
             <label><input type="checkbox" id="showBb"> Bollinger period <input type="number" data-p="bb.n" step="1" style="width:46px"> × SD <input type="number" data-p="bb.k" step="0.1" style="width:46px"></label>
@@ -218,7 +219,7 @@
           <li><b>Bollinger Bands</b> (display only, from the DAFT Trade documentation): SMA 20 of the displayed bars' closes (dashed) ± 2 standard deviations, shaded between the bands.</li>
           <li><b>VWAP and RSI</b> (display only, no rule uses them; settings from the DAFT Trade documentation): <b>VWAP</b> = Σ(typical price × volume) ÷ Σ volume on the 1m bars, reset at 18:00 NY (the start of the Trading day) or at 09:30 NY (then shown 09:30–17:00 only); a 5m or 15m bar shows the VWAP at its last minute. It needs the file's volume column. <b>RSI 14</b> (Wilder) of the displayed bars in its own pane, with 70/30 lines.</li>
           <li><b>MACD pane</b> (display only, no rule uses it): MACD 12,26,9 under the chart. "Chart timeframe" uses the displayed 1m, 5m or 15m bars. "15m" is the EMA·MACD strategy's MACD; on 1m and 5m charts each bar shows the last 15m bar closed before it. Turning on "Show EMA 200 + MACD" switches the pane to 15m if it was off.</li>
-          <li><b>H · OTE + OB with 1m confirmation</b> (the user's method; <b>a method to validate, not a proven system</b>; comparison row; its setups are always listed in the day list and the day's card; "OTE + OB on the chart" draws them, violet): in the direction of the last 1h break of structure (a 1h close beyond the last 1h swing, 2 bars each side; a setup not yet at its OB ends if the 1h turns), a leg on 5, 10 or 15 min that broke structure (a close beyond the last swing, 2 bars each side) and holds a displacement candle; Fibonacci 0% at its end, 100% at its start. Only in discount (buys) or premium (sells): an OB, the last opposite candle inside the leg whose high (low) a later close broke, overlapping the OTE (61.8%–78.6%), nearest 70.5%. When a 1m bar reaches the OB: a 1m local low (1 bar each side, equal lows on the right allowed) swept by a tick, then a 1m close above the last minor high (CHoCH). Both are required. Entry: limit at the near edge of the latest 1m FVG of the CHoCH move, else the high of the last bearish 1m candle (1m OB). Stop 2 ticks beyond the sweep. Targets 0%, −27%, −62%, one Bracket order each, break-even after the first. A leg-timeframe close beyond 78.6% or the OB invalidates the setup. <i>Interpretations to confirm:</i> entries only 09:30–15:30 NY, flattened at 15:50; reward to 0% at least the "Min reward-to-risk" setting; setups live within their trading day; one Trade at a time.</li>
+          <li><b>H · OTE + OB with 1m confirmation</b> (the user's method; <b>a method to validate, not a proven system</b>; comparison row; its setups are always listed in the day list and the day's card; "OTE + OB on the chart" draws them, violet): in the direction of the last 1h break of structure (a 1h close beyond the last 1h swing, 2 bars each side; a setup not yet at its OB ends if the 1h turns), a leg on 5, 10 or 15 min that broke structure (a close beyond the last swing, 2 bars each side) and holds a displacement candle (H's own test, looser than the FVG's: range ≥ 1.0× the 20-bar average and body ≥ 50% by default, set next to the H overlay; 0 turns a part off); Fibonacci 0% at its end, 100% at its start. Only in discount (buys) or premium (sells): an OB, the last opposite candle inside the leg whose high (low) a later close broke, overlapping the OTE (61.8%–78.6%), nearest 70.5%. When a 1m bar reaches the OB: a 1m local low (1 bar each side, equal lows on the right allowed) swept by a tick, then a 1m close above the last minor high (CHoCH). Both are required. Entry: limit at the near edge of the latest 1m FVG of the CHoCH move, else the high of the last bearish 1m candle (1m OB). Stop 2 ticks beyond the sweep. Targets 0%, −27%, −62%, one Bracket order each, break-even after the first. A leg-timeframe close beyond 78.6% or the OB invalidates the setup. <i>Interpretations to confirm:</i> entries only 09:30–15:30 NY, flattened at 15:50; reward to 0% at least the "Min reward-to-risk" setting; setups live within their trading day; one Trade at a time.</li>
           <li><b>Levers for more entries</b> (settings, and the <b>Strategy</b> presets A–F, compared side by side in "Compare strategies". Each preset builds on the one before, except F, which adds the fallback to D):
             <ul>
               <li><b>PM Window</b>: a second Window, 14:00–15:00 NY, with the same rules. An unfilled entry is cancelled at the end of the Window it came from.</li>
@@ -785,7 +786,8 @@ const SB = (() => {
   // by the time the leg-TF bar closes. No 1h BOS yet, no setups; a setup not yet at its OB ends if the 1h turns.
   // 1. Leg, on legTf (5, 10 or 15 min) bars: a close above the last confirmed swing high (legSwingN bars each side)
   //    is the BOS. The leg runs from the lowest low since that swing high to the highest high since; it must hold a
-  //    displacement candle (range >= dispK x the 20-bar average, body >= bodyPct) to count as impulsive. Until price
+  //    displacement candle (range >= P.dispK x the 20-bar average, body >= P.bodyPct %, defaults 1.0 and 50) to count
+  //    as impulsive. Until price
   //    reaches the OB the leg re-anchors on new highs; a later BOS replaces an untouched setup.
   // 2-3. Fibonacci 0% at the leg high, 100% at the leg low. The OB is a bearish leg-TF candle inside the leg whose high
   //    a later close broke, with its range overlapping the OTE (61.8% to 78.6%); the one nearest 70.5% wins. It is
@@ -798,7 +800,7 @@ const SB = (() => {
   //    S.breakEven). Skipped if reward to 0% is under minRR.
   // Invalidation: a legTf close below the 78.6% level or below the OB ends the setup, and cancels a resting entry.
   // Entries only between oteFrom and oteTo NY; open Trades flatten at S.flatten; one Trade at a time.
-  const OTE = { htfMin: 60, htfSwingN: 2, legTf: 5, legSwingN: 2, m1SwingN: 1, oteFrom: '09:30', oteTo: '15:30', lv: [0.618, 0.705, 0.786], ext: [0.27, 0.62] };
+  const OTE = { dispK: 1.0, bodyPct: 50, htfMin: 60, htfSwingN: 2, legTf: 5, legSwingN: 2, m1SwingN: 1, oteFrom: '09:30', oteTo: '15:30', lv: [0.618, 0.705, 0.786], ext: [0.27, 0.62] };
 
   function runOte(ctx, settings) {
     const S = { ...DEFAULTS, ...settings }, P = { ...OTE, ...(settings.ote || {}) };
@@ -838,7 +840,8 @@ const SB = (() => {
     const impulsive = (from, to, dir) => {
       for (let k = from; k <= to; k++) {
         const b = Q[k], r = b.h - b.l, up = b.c > b.o;
-        if ((dir === 'long' ? up : !up) && r >= S.dispK * avgRange(k) && Math.abs(b.c - b.o) >= S.bodyPct / 100 * r) return true;
+        // H's own displacement test (0 turns a part off); looser by default than the Silver Bullet's FVG test
+        if ((dir === 'long' ? up : !up) && r >= P.dispK * avgRange(k) && Math.abs(b.c - b.o) >= P.bodyPct / 100 * r) return true;
       }
       return false;
     };
@@ -1095,6 +1098,12 @@ $('#showEm').onchange = () => { if (showEm() && $('#macdPane').value === 'off') 
 $('#macdPane').onchange = () => { saveInd(); draw(); };
 $('#showOte').onchange = () => { saveInd(); renderDays(); if (results.length) showDay(sel, false); };
 $('#oteTf').onchange = () => { saveInd(); if (ctx) rerun(); };
+// H's displacement values: numbers of at least 0 (0 turns that part of the test off), a body of at most 100%
+['#oteDispK', '#oteBodyPct'].forEach(id => $(id).onchange = () => {
+  const el = $(id), v = +el.value, max = id === '#oteBodyPct' ? 100 : Infinity;
+  if (!isFinite(v) || v < 0) el.value = id === '#oteBodyPct' ? 50 : 1; else if (v > max) el.value = max;
+  saveInd(); if (ctx) rerun();
+});
 // ---- indicator values (IP), editable in the panel next to the chart ----
 const IP_DEFAULTS = {
   bb: { n: 20, k: 2 }, kc: { n: 20, atr: 10, m: 2 }, dc: { n: 20 }, ichi: { t: 9, k: 26, s: 52 }, sar: { step: 0.02, max: 0.2 }, st: { n: 10, m: 3 },
@@ -1119,7 +1128,7 @@ function indSummary() {
   if (ct !== 'real') parts.push({ ha: 'Heikin Ashi', line: 'Line', area: 'Area', renko: `Renko ${f(+$('#renkoSize').value)} pts`, pf: `P&F ${f(+$('#pfBox').value)} × ${$('#pfRev').value}`, kagi: `Kagi ${f(+$('#kagiRev').value)} pts` }[ct]
     + (({ line: '#lineHa', area: '#areaHa', renko: '#renkoHa', pf: '#pfHa', kagi: '#kagiHa' })[ct] && on(({ line: '#lineHa', area: '#areaHa', renko: '#renkoHa', pf: '#pfHa', kagi: '#kagiHa' })[ct]) ? ' (HA)' : ''));
   if (on('#showEm')) parts.push('EMA·MACD Trades');
-  if (on('#showOte')) parts.push(`OTE + OB on the chart (${$('#oteTf').value}m leg)`);
+  if (on('#showOte')) parts.push(`OTE + OB on the chart (${$('#oteTf').value}m leg, impulse ${$('#oteDispK').value}× / ${$('#oteBodyPct').value}%)`);
   if (on('#showVwap')) parts.push(`VWAP (${$('#vwapAnchor').value === 'td' ? '18:00' : '09:30'})`);
   if (on('#showBb')) parts.push(`BB(${IP.bb.n}, ${f(IP.bb.k)})`);
   if (on('#showKc')) parts.push(`KC(${IP.kc.n}, ${IP.kc.atr}, ${f(IP.kc.m)})`);
@@ -1140,7 +1149,7 @@ $('#indSummary').onclick = () => $('#indicators').classList.toggle('open');
 $('#indDefaults').onclick = () => { Object.assign(IP, JSON.parse(JSON.stringify(IP_DEFAULTS))); syncIp(); saveInd(); draw(); };
 // ---- indicators panel: on/off per indicator, remembered in this browser ----
 const IND_CHECKS = ['#lineHa', '#areaHa', '#renkoHa', '#pfHa', '#kagiHa', '#showEm', '#showOte', '#showVwap', '#showBb', '#showKc', '#showDc', '#showIchi', '#showSar', '#showSt', '#showVol', '#showRsi', '#showStoch', '#showAdx', '#showAtr', '#showObv'];
-const IND_SELECTS = ['#oteTf', '#vwapAnchor', '#macdPane', '#candleType', '#renkoSize', '#pfBox', '#pfRev', '#kagiRev'];
+const IND_SELECTS = ['#oteTf', '#oteDispK', '#oteBodyPct', '#vwapAnchor', '#macdPane', '#candleType', '#renkoSize', '#pfBox', '#pfRev', '#kagiRev'];
 function indCount() { return IND_CHECKS.filter(id => !['#lineHa', '#areaHa', '#renkoHa', '#pfHa', '#kagiHa'].includes(id) && $(id).checked).length + ($('#macdPane').value !== 'off' ? 1 : 0) + ($('#candleType').value !== 'real' ? 1 : 0); }
 function saveInd() {
   const st = {}; IND_CHECKS.forEach(id => st[id] = $(id).checked); IND_SELECTS.forEach(id => st[id] = $(id).value);
@@ -1157,7 +1166,7 @@ function loadInd() {
   saveInd();
 }
 $('#toggleInd').onclick = () => $('#indicators').classList.toggle('open');
-[...IND_CHECKS, ...IND_SELECTS].filter(id => !['#showEm', '#macdPane', '#showOte', '#oteTf'].includes(id)).forEach(id => $(id).onchange = () => { saveInd(); draw(); });
+[...IND_CHECKS, ...IND_SELECTS].filter(id => !['#showEm', '#macdPane', '#showOte', '#oteTf', '#oteDispK', '#oteBodyPct'].includes(id)).forEach(id => $(id).onchange = () => { saveInd(); draw(); });
 $('#indNone').onclick = () => { IND_CHECKS.forEach(id => $(id).checked = false); $('#macdPane').value = 'off'; $('#candleType').value = 'real'; saveInd(); renderDays(); if (results.length) showDay(sel, false); };
 loadInd();
 $('#preset').innerHTML = SB.PRESETS.map(p => `<option value="${p.id}">${p.name}</option>`).join('')
@@ -1213,7 +1222,7 @@ function rerun() {
   if (!ctx) return;
   results = SB.run(ctx, settings);
   emResults = SB.runEmaMacd(ctx, settings);
-  oteResults = SB.runOte(ctx, { ...settings, ote: { legTf: +$('#oteTf').value } });
+  oteResults = SB.runOte(ctx, { ...settings, ote: { legTf: +$('#oteTf').value, dispK: +$('#oteDispK').value, bodyPct: +$('#oteBodyPct').value } });
   renderDays(); renderFunnel(); if (results.length) showDay(sel, false);
 }
 
@@ -1237,7 +1246,7 @@ function renderFunnel() {
   // every preset on the same bars, keeping the other settings (Bias rule, risk, ...) as they are now
   const strats = [...SB.PRESETS.map(p => ({ id: p.id, name: p.name, rs: SB.run(ctx, { ...settings, ...p.set }) })),
     { id: 'emamacd', name: 'G · EMA 200 + MACD, 15m (DAFT docs; not a Silver Bullet, comparison only)', rs: emResults },
-    { id: 'ote', name: `H · OTE + OB, ${$('#oteTf').value}m leg + 1m sweep & CHoCH (method to validate; comparison only)`, rs: oteResults }];
+    { id: 'ote', name: `H · OTE + OB, ${$('#oteTf').value}m leg (impulse ${$('#oteDispK').value}× / ${$('#oteBodyPct').value}%) + 1m sweep & CHoCH (method to validate)`, rs: oteResults }];
   const cmp = strats.map(p => {
     const rs = p.rs;
     const trades = rs.flatMap(r => r.signals.filter(s => s.status === 'closed'));
