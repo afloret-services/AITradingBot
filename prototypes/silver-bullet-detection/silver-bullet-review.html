@@ -1072,7 +1072,7 @@ syncForm();
 $('#fields').addEventListener('change', e => {
   const inp = e.target, k = inp.dataset.k;
   settings[k] = inp.type === 'checkbox' ? inp.checked : inp.type === 'number' ? +inp.value : inp.value;
-  $('#preset').value = 'custom';
+  $('#preset').value = 'custom'; activeStrat = 'sb';
   rerun();
 });
 $('#toggleSettings').onclick = () => $('#settings').classList.toggle('open');
@@ -1146,9 +1146,34 @@ $('#toggleInd').onclick = () => $('#indicators').classList.toggle('open');
 [...IND_CHECKS, ...IND_SELECTS].filter(id => !['#showEm', '#macdPane', '#showOte', '#oteTf'].includes(id)).forEach(id => $(id).onchange = () => { saveInd(); draw(); });
 $('#indNone').onclick = () => { IND_CHECKS.forEach(id => $(id).checked = false); $('#macdPane').value = 'off'; $('#candleType').value = 'real'; saveInd(); renderDays(); if (results.length) showDay(sel, false); };
 loadInd();
-$('#preset').innerHTML = SB.PRESETS.map(p => `<option value="${p.id}">${p.name}</option>`).join('') + '<option value="custom">Custom (settings changed by hand)</option>';
+$('#preset').innerHTML = SB.PRESETS.map(p => `<option value="${p.id}">${p.name}</option>`).join('')
+  + '<option value="emamacd">G · EMA 200 + MACD, 15m (not a Silver Bullet)</option>'
+  + '<option value="ote">H · OTE + OB, 1m sweep & CHoCH (method to validate)</option>'
+  + '<option value="custom">Custom Silver Bullet (settings changed by hand)</option>';
 $('#preset').value = 'fvg';
-$('#preset').onchange = () => { const p = SB.PRESETS.find(p => p.id === $('#preset').value); if (!p) return; Object.assign(settings, p.set); syncForm(); rerun(); };
+// the active strategy drives the day list, the day's title and card, the equity curve and what the chart draws:
+// 'sb' (presets A-F or custom settings), 'emamacd' (G) or 'ote' (H)
+let activeStrat = 'sb';
+const actRes = () => activeStrat === 'ote' ? oteResults : activeStrat === 'emamacd' ? emResults : results;
+const STRAT_NAMES = { emamacd: 'G · EMA 200 + MACD', ote: 'H · OTE + OB' };
+$('#preset').onchange = () => {
+  const v = $('#preset').value, p = SB.PRESETS.find(p => p.id === v);
+  if (p) { activeStrat = 'sb'; Object.assign(settings, p.set); syncForm(); rerun(); return; }
+  if (v === 'custom') { activeStrat = 'sb'; rerun(); return; }
+  if (v === 'emamacd' || v === 'ote') {
+    activeStrat = v;
+    if (v === 'emamacd') { $('#showEm').checked = true; if ($('#macdPane').value === 'off') $('#macdPane').value = '15m'; } else $('#showOte').checked = true;
+    saveInd(); rerun();
+  }
+};
+// a short status for a day under G or H (the Silver Bullet days carry their own)
+function actStatus(k) {
+  if (activeStrat === 'sb') return results[k].status;
+  const d = actRes()[k] || { signals: [] }, last = d.signals[d.signals.length - 1];
+  if (activeStrat === 'ote' && !last) { const su = d.setups?.[d.setups.length - 1]; return { kind: 'none', text: su ? `OTE: ${oteStage(su).text}` : 'No OTE setup' }; }
+  if (!last) return { kind: 'none', text: 'No EMA·MACD Signal' };
+  return { kind: last.status === 'closed' ? (last.R >= 0 ? 'trade' : 'loss') : 'skip', text: last.status === 'closed' ? 'Trade' : `Signal ${last.status}${last.reason ? ': ' + last.reason : ''}` };
+}
 
 // ---- data ----
 function useRows(rows, name, note) {
@@ -1235,10 +1260,10 @@ const dayShown = (dr, k) => dayFilter === 'all' ? true
   : dayFilter === 'ote' ? !!oteResults[k]?.setups.length
   : dayFilter === 'otetr' ? !!oteResults[k]?.signals.some(s => s.status === 'closed' || s.status === 'open at data end')
   : dayFilter === 'trades' ? !!dr.n : dr.kind === dayFilter;
-function shownDays() { return results.map((r, k) => k).filter(k => dayShown(dayResult(results[k]), k)); }
+function shownDays() { return results.map((r, k) => k).filter(k => dayShown(dayResult(actRes()[k] || { signals: [] }), k)); }
 function renderDays() {
   // totals over every loaded day, for the current strategy and settings
-  const res = results.map(dayResult), closed = res.filter(x => x.n);
+  const res = results.map((r, k) => dayResult(actRes()[k] || { signals: [] })), closed = res.filter(x => x.n);
   const totR = closed.reduce((a, x) => a + x.R, 0), totUsd = closed.reduce((a, x) => a + x.usd, 0), nTr = closed.reduce((a, x) => a + x.n, 0);
   const wins = closed.filter(x => x.kind === 'win').length, losses = closed.filter(x => x.kind === 'loss').length;
   const filter = `<label style="display:flex;gap:6px;align-items:center;margin-bottom:3px">Show <select id="dayFilter">${Object.entries(DAY_FILTERS).map(([v, t]) => `<option value="${v}" ${v === dayFilter ? 'selected' : ''}>${t}</option>`).join('')}</select>
@@ -1250,7 +1275,7 @@ function renderDays() {
     const rv = reviews[r.td], dr = res[k];
     return `<div class="day ${k === sel ? 'sel' : ''}" data-k="${k}"><span class="d">${r.td} ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(r.td + 'T12:00:00Z').getUTCDay()]}</span>
       <span class="rv">${rv?.verdict ? RV[rv.verdict] : ''}</span><span class="res ${dr.kind}">${dr.html}</span>
-      <span class="s"><span class="tag ${r.status.kind}">${dr.n ? `${dr.n} Trade${dr.n > 1 ? 's' : ''}` : r.status.text}</span> ${r.bias ? (r.bias === 'bull' ? '· Bias ↑' : '· Bias ↓') : r.bothSides ? '· no Bias, both sides' : ''}${showEm() ? emTag(k) : ''}${oteTag(k)}</span></div>`;
+      <span class="s"><span class="tag ${actStatus(k).kind}">${dr.n ? `${dr.n} Trade${dr.n > 1 ? 's' : ''}` : actStatus(k).text}</span> ${r.bias ? (r.bias === 'bull' ? '· Bias ↑' : '· Bias ↓') : r.bothSides ? '· no Bias, both sides' : ''}${showEm() ? emTag(k) : ''}${oteTag(k)}</span></div>`;
   }).join('');
 }
 $('#days').onclick = e => { const el = e.target.closest('.day[data-k]'); if (el) showDay(+el.dataset.k, true); };
@@ -1272,7 +1297,7 @@ function showDay(k, resetView) {
   $('#empty').style.display = 'none'; $('#dayview').style.display = '';
   $$('.day').forEach(el => el.classList.toggle('sel', +el.dataset.k === k));
   $('.day.sel')?.scrollIntoView({ block: 'nearest' });
-  $('#dtitle').textContent = `${r.td} · ${r.status.text}`;
+  $('#dtitle').textContent = `${r.td} · ${activeStrat === 'sb' ? '' : STRAT_NAMES[activeStrat] + ': '}${actStatus(k).text}`;
   if (resetView) setSpan(view.span);
   renderReview(r); renderSignal(r); renderFvgs(r); renderTrace(r); renderLevels(r); draw(); drawEquity();
 }
@@ -1344,6 +1369,8 @@ function renderEm(k) {
 }
 
 function renderSignal(r) {
+  if (activeStrat === 'ote') { $('#sigcard').innerHTML = renderOte(sel) + renderEm(sel); return; }
+  if (activeStrat === 'emamacd') { $('#sigcard').innerHTML = renderEm(sel) + renderOte(sel); return; }
   if (!r.signals.length) { $('#sigcard').innerHTML = `<h3>Signal</h3><p class="datanote" style="margin:0">None. ${r.status.text}.</p>` + renderEm(sel) + renderOte(sel); return; }
   $('#sigcard').innerHTML = '<h3>Signal' + (r.signals.length > 1 ? 's' : '') + '</h3>' + r.signals.map(s => `
     <div class="kv" style="margin-bottom:10px">
@@ -1502,8 +1529,8 @@ function draw() {
     levelLabels.push({ text: `${L.name} ${px(L.price)}`, x: Math.max(padL + 4, Math.min(xs + 4, padL + cw - 120)), y, xs });
   }
 
-  // FVG boxes
-  for (const f of r.candidates.filter(f => f.ok || f.note === 'SIGNAL' || f.gap >= settings.minGapTicks * SB.TICK)) {
+  // FVG boxes (Silver Bullet only)
+  for (const f of activeStrat !== 'sb' ? [] : r.candidates.filter(f => f.ok || f.note === 'SIGNAL' || f.gap >= settings.minGapTicks * SB.TICK)) {
     const x0 = XT(f.t1), x1 = Math.min(padL + cw, XT(f.t3) + bw * 6), y0 = Y(f.hi), y1 = Y(f.lo);
     if (x1 < padL || x0 > padL + cw) continue;
     const isSig = f.note === 'SIGNAL';
@@ -1545,9 +1572,9 @@ function draw() {
     g.fillStyle = '#a8a29e'; g.beginPath(); g.arc(ll.xs, ll.y, 2.5, 0, 7); g.fill();
   }
 
-  // chain marks
+  // chain marks (Silver Bullet only)
   g.font = '11px system-ui';
-  for (const m of r.marks) {
+  for (const m of activeStrat !== 'sb' ? [] : r.marks) {
     const x = XT(m.t) + (view.tf === 1 && m.type !== 'void' ? 2 * bw : 0), y = Y(m.price);
     if (x < padL || x > padL + cw) continue;
     if (m.type === 'sweep' || m.type === 'extreme') { tri(x, y, r.bias === 'bull' ? 1 : -1, '#ea580c'); g.fillStyle = '#ea580c'; g.fillText(m.type === 'sweep' ? m.label : 'new extreme', x + 6, y + (r.bias === 'bull' ? 14 : -8)); }
@@ -1571,8 +1598,8 @@ function draw() {
   if (emOn) drawEm({ a, b, arr, X, Y, XT, padL, padT, cw, ch, bw, paneTop: padT + ch + 10, paneH });
   if (showOte() && oteResults.length) drawOte({ X, Y, XT, padL, padT, cw, ch, bw });
 
-  // signal lines
-  for (const s of r.signals) {
+  // signal lines (Silver Bullet only)
+  for (const s of activeStrat !== 'sb' ? [] : r.signals) {
     const x0 = XT(s.t), x1 = s.exitT ? XT(s.exitT) : s.fvg && results[sel] ? Math.min(padL + cw, x0 + bw * (s.status === 'closed' ? 30 : 15)) : padL + cw;
     const hl = (p, col, label, dash) => { const y = Y(p); if (y < padT || y > padT + ch) return; g.strokeStyle = col; g.setLineDash(dash || []); g.beginPath(); g.moveTo(x0, y); g.lineTo(Math.max(x1, x0 + 40), y); g.stroke(); g.setLineDash([]); g.fillStyle = col; g.fillText(`${label} ${px(p)}`, Math.max(x1, x0 + 40) + 3, y + 4); };
     const faded = s.status === 'skipped' || s.status === 'cancelled';
@@ -2414,8 +2441,8 @@ function drawEquity() {
   if (!ctx || !results.length) return;
   const W = eqc.clientWidth, H = eqc.clientHeight, dpr = window.devicePixelRatio || 1;
   eqc.width = W * dpr; eqc.height = H * dpr; eg.setTransform(dpr, 0, 0, dpr, 0, 0); eg.clearRect(0, 0, W, H);
-  const main = cumR(results), em = showEm() && emResults.length ? cumR(emResults) : null, ote = showOte() && oteResults.length ? cumR(oteResults) : null;
-  const usd = results.flatMap(r => r.signals.filter(s => s.status === 'closed')).reduce((a, s) => a + s.usd, 0);
+  const main = cumR(actRes()), em = activeStrat !== 'emamacd' && showEm() && emResults.length ? cumR(emResults) : null, ote = activeStrat !== 'ote' && showOte() && oteResults.length ? cumR(oteResults) : null;
+  const usd = actRes().flatMap(r => r.signals.filter(s => s.status === 'closed')).reduce((a, s) => a + s.usd, 0);
   const tot = main[main.length - 1].cum, dd = maxDd(main), nTr = main.reduce((a, p) => a + p.n, 0);
   const preset = $('#preset').selectedOptions[0]?.text || '';
   const sgn = x => Math.abs(x) < 0.005 ? '0.00' : (x > 0 ? '+' : '−') + Math.abs(x).toFixed(2);
