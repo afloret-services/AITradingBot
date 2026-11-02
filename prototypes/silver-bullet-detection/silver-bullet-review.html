@@ -1230,19 +1230,22 @@ function dayResult(r) {
 // day-list filter: all days, days with a closed Trade, winning days or losing days; remembered in this browser
 let dayFilter = 'all';
 try { dayFilter = localStorage.getItem('sb-dayfilter') || 'all'; } catch {}
-const DAY_FILTERS = { all: 'All days', trades: 'Days with Trades', win: 'Winning days', loss: 'Losing days' };
-const dayShown = (dr) => dayFilter === 'all' || (dayFilter === 'trades' ? !!dr.n : dr.kind === dayFilter);
-function shownDays() { return results.map((r, k) => k).filter(k => dayShown(dayResult(results[k]))); }
+const DAY_FILTERS = { all: 'All days', trades: 'Days with Trades', win: 'Winning days', loss: 'Losing days', ote: 'Days with OTE setups', otetr: 'Days with OTE Trades' };
+const dayShown = (dr, k) => dayFilter === 'all' ? true
+  : dayFilter === 'ote' ? !!oteResults[k]?.setups.length
+  : dayFilter === 'otetr' ? !!oteResults[k]?.signals.some(s => s.status === 'closed' || s.status === 'open at data end')
+  : dayFilter === 'trades' ? !!dr.n : dr.kind === dayFilter;
+function shownDays() { return results.map((r, k) => k).filter(k => dayShown(dayResult(results[k]), k)); }
 function renderDays() {
   // totals over every loaded day, for the current strategy and settings
   const res = results.map(dayResult), closed = res.filter(x => x.n);
   const totR = closed.reduce((a, x) => a + x.R, 0), totUsd = closed.reduce((a, x) => a + x.usd, 0), nTr = closed.reduce((a, x) => a + x.n, 0);
   const wins = closed.filter(x => x.kind === 'win').length, losses = closed.filter(x => x.kind === 'loss').length;
   const filter = `<label style="display:flex;gap:6px;align-items:center;margin-bottom:3px">Show <select id="dayFilter">${Object.entries(DAY_FILTERS).map(([v, t]) => `<option value="${v}" ${v === dayFilter ? 'selected' : ''}>${t}</option>`).join('')}</select>
-    <span>${dayFilter === 'all' ? '' : `${results.filter((r, k) => dayShown(res[k])).length} of ${results.length}`}</span></label>`;
+    <span>${dayFilter === 'all' ? '' : `${results.filter((r, k) => dayShown(res[k], k)).length} of ${results.length}`}</span></label>`;
   const head = `<div class="daystotal">${filter}${results.length} days · ${nTr} Trade${nTr === 1 ? '' : 's'} on ${closed.length} days (${wins} won, ${losses} lost) · <b class="${totR > 0.05 ? 'res win' : totR < -0.05 ? 'res loss' : ''}">${totR >= 0 ? '+' : '−'}${Math.abs(totR).toFixed(2)}R</b> · ${totUsd >= 0 ? '+' : '−'}$${Math.abs(totUsd).toFixed(0)} before costs</div>`;
   // most recent day first; data-k stays the day's index in date order
-  const shown = results.map((r, k) => [r, k]).filter(([r, k]) => dayShown(res[k]));
+  const shown = results.map((r, k) => [r, k]).filter(([r, k]) => dayShown(res[k], k));
   $('#days').innerHTML = head + (shown.length ? '' : `<div class="day" style="cursor:default"><span class="s">No day matches "${DAY_FILTERS[dayFilter]}" with the current strategy and settings.</span></div>`) + shown.reverse().map(([r, k]) => {
     const rv = reviews[r.td], dr = res[k];
     return `<div class="day ${k === sel ? 'sel' : ''}" data-k="${k}"><span class="d">${r.td} ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(r.td + 'T12:00:00Z').getUTCDay()]}</span>
@@ -1292,11 +1295,26 @@ function emTag(k) {
   const R = tr.reduce((a, s) => a + (s.R || 0), 0);
   return ` <span class="tag" style="background:#cffafe;color:#0e7490">EMA·MACD ${tr.length} · ${R >= 0 ? '+' : ''}${R.toFixed(2)}R</span>`;
 }
+// how far an OTE setup got, or how it ended, in a few words
+function oteStage(su, sig) {
+  if (sig) {
+    if (sig.status === 'closed') return { text: `${sig.R >= 0 ? '+' : '−'}${Math.abs(sig.R).toFixed(2)}R`, kind: sig.R > 0.05 ? 'win' : sig.R < -0.05 ? 'loss' : 'be' };
+    if (sig.status === 'open at data end') return { text: 'open at data end', kind: 'open' };
+    return { text: `${sig.status}: ${sig.reason}`, kind: 'skip' };
+  }
+  const c = su.conf, end = su.end ? su.end.reason : null;
+  const got = !su.ob ? 'no OB in the OTE' : c.choch ? 'CHoCH, no entry' : c.sweep ? 'swept, no CHoCH' : c.touch ? 'OB reached, no sweep' : 'OB not reached';
+  if (end && su.ob && /beyond/.test(end)) return { text: `invalidated (${end.replace(/^\d+m close beyond /, 'close beyond ')})`, kind: 'skip' };
+  return { text: got, kind: 'none' };
+}
 function oteTag(k) {
-  const tr = (oteResults[k]?.signals || []).filter(s => s.status === 'closed' || s.status === 'open at data end');
-  if (!tr.length) return '';
-  const R = tr.reduce((a, s) => a + (s.R || 0), 0);
-  return ` <span class="tag" style="background:#ede9fe;color:#6d28d9">OTE ${tr.length} · ${R >= 0 ? '+' : ''}${R.toFixed(2)}R</span>`;
+  const d = oteResults[k];
+  if (!d || !d.setups.length) return '';
+  const col = { win: 'background:#dcfce7;color:#166534', loss: 'background:#fee2e2;color:#991b1b', be: 'background:#f5f5f4;color:#57534e', open: 'background:#e0e7ff;color:#3730a3', skip: 'background:#fef3c7;color:#92400e', none: 'background:#ede9fe;color:#6d28d9' };
+  return '<br>' + d.setups.map(su => {
+    const st = oteStage(su, d.signals.find(s => s.setup === su));
+    return `<span class="tag" style="${col[st.kind]};margin-right:3px" title="OTE + OB setup: BOS at ${hhmm(su.bosT)}, ${su.dir}">OTE ${hhmm(su.bosT)} ${su.dir === 'long' ? '↑' : '↓'} ${st.text}</span>`;
+  }).join('');
 }
 function renderOte(k) {
   if (!showOte()) return '';
