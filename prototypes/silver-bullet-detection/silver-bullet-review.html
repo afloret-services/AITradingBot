@@ -137,7 +137,7 @@
             <label>Kagi reversal <input type="number" id="kagiRev" value="10" min="0.25" step="0.25" style="width:52px"> pts <input type="checkbox" id="kagiHa"> from HA</label>
             <h3 style="margin-top:10px">Strategy overlay</h3>
             <label><input type="checkbox" id="showEm"> EMA 200 + MACD Trades (row G, fixed rules)</label>
-            <label><input type="checkbox" id="showOte"> OTE + OB Trades (row H) · leg <select id="oteTf"><option value="5">5m</option><option value="10">10m</option><option value="15">15m</option></select></label></div>
+            <label><input type="checkbox" id="showOte"> OTE + OB on the chart (row H) · leg <select id="oteTf"><option value="5">5m</option><option value="10">10m</option><option value="15">15m</option></select></label></div>
           <div><h3>On the price chart</h3>
             <label><input type="checkbox" id="showVwap"> VWAP <select id="vwapAnchor"><option value="td">from 18:00</option><option value="rth">from 09:30</option></select></label>
             <label><input type="checkbox" id="showBb"> Bollinger period <input type="number" data-p="bb.n" step="1" style="width:46px"> × SD <input type="number" data-p="bb.k" step="0.1" style="width:46px"></label>
@@ -218,7 +218,7 @@
           <li><b>Bollinger Bands</b> (display only, from the DAFT Trade documentation): SMA 20 of the displayed bars' closes (dashed) ± 2 standard deviations, shaded between the bands.</li>
           <li><b>VWAP and RSI</b> (display only, no rule uses them; settings from the DAFT Trade documentation): <b>VWAP</b> = Σ(typical price × volume) ÷ Σ volume on the 1m bars, reset at 18:00 NY (the start of the Trading day) or at 09:30 NY (then shown 09:30–17:00 only); a 5m or 15m bar shows the VWAP at its last minute. It needs the file's volume column. <b>RSI 14</b> (Wilder) of the displayed bars in its own pane, with 70/30 lines.</li>
           <li><b>MACD pane</b> (display only, no rule uses it): MACD 12,26,9 under the chart. "Chart timeframe" uses the displayed 1m, 5m or 15m bars. "15m" is the EMA·MACD strategy's MACD; on 1m and 5m charts each bar shows the last 15m bar closed before it. Turning on "Show EMA 200 + MACD" switches the pane to 15m if it was off.</li>
-          <li><b>H · OTE + OB with 1m confirmation</b> (the user's method; <b>a method to validate, not a proven system</b>; comparison row and "OTE + OB Trades" overlay, violet): with the daily Bias, a leg on 5, 10 or 15 min that broke structure (a close beyond the last swing, 2 bars each side) and holds a displacement candle; Fibonacci 0% at its end, 100% at its start. Only in discount (buys) or premium (sells): an OB, the last opposite candle inside the leg whose high (low) a later close broke, overlapping the OTE (61.8%–78.6%), nearest 70.5%. When a 1m bar reaches the OB: a 1m local low (1 bar each side, equal lows on the right allowed) swept by a tick, then a 1m close above the last minor high (CHoCH). Both are required. Entry: limit at the near edge of the latest 1m FVG of the CHoCH move, else the high of the last bearish 1m candle (1m OB). Stop 2 ticks beyond the sweep. Targets 0%, −27%, −62%, one Bracket order each, break-even after the first. A leg-timeframe close beyond 78.6% or the OB invalidates the setup. <i>Interpretations to confirm:</i> entries only 09:30–15:30 NY, flattened at 15:50; reward to 0% at least the "Min reward-to-risk" setting; setups live within their trading day; one Trade at a time.</li>
+          <li><b>H · OTE + OB with 1m confirmation</b> (the user's method; <b>a method to validate, not a proven system</b>; comparison row; its setups are always listed in the day list and the day's card; "OTE + OB on the chart" draws them, violet): with the daily Bias, a leg on 5, 10 or 15 min that broke structure (a close beyond the last swing, 2 bars each side) and holds a displacement candle; Fibonacci 0% at its end, 100% at its start. Only in discount (buys) or premium (sells): an OB, the last opposite candle inside the leg whose high (low) a later close broke, overlapping the OTE (61.8%–78.6%), nearest 70.5%. When a 1m bar reaches the OB: a 1m local low (1 bar each side, equal lows on the right allowed) swept by a tick, then a 1m close above the last minor high (CHoCH). Both are required. Entry: limit at the near edge of the latest 1m FVG of the CHoCH move, else the high of the last bearish 1m candle (1m OB). Stop 2 ticks beyond the sweep. Targets 0%, −27%, −62%, one Bracket order each, break-even after the first. A leg-timeframe close beyond 78.6% or the OB invalidates the setup. <i>Interpretations to confirm:</i> entries only 09:30–15:30 NY, flattened at 15:50; reward to 0% at least the "Min reward-to-risk" setting; setups live within their trading day; one Trade at a time.</li>
           <li><b>Levers for more entries</b> (settings, and the <b>Strategy</b> presets A–F, compared side by side in "Compare strategies". Each preset builds on the one before, except F, which adds the fallback to D):
             <ul>
               <li><b>PM Window</b>: a second Window, 14:00–15:00 NY, with the same rules. An unfilled entry is cancelled at the end of the Window it came from.</li>
@@ -1105,7 +1105,7 @@ function indSummary() {
   if (ct !== 'real') parts.push({ ha: 'Heikin Ashi', line: 'Line', area: 'Area', renko: `Renko ${f(+$('#renkoSize').value)} pts`, pf: `P&F ${f(+$('#pfBox').value)} × ${$('#pfRev').value}`, kagi: `Kagi ${f(+$('#kagiRev').value)} pts` }[ct]
     + (({ line: '#lineHa', area: '#areaHa', renko: '#renkoHa', pf: '#pfHa', kagi: '#kagiHa' })[ct] && on(({ line: '#lineHa', area: '#areaHa', renko: '#renkoHa', pf: '#pfHa', kagi: '#kagiHa' })[ct]) ? ' (HA)' : ''));
   if (on('#showEm')) parts.push('EMA·MACD Trades');
-  if (on('#showOte')) parts.push(`OTE + OB Trades (${$('#oteTf').value}m leg)`);
+  if (on('#showOte')) parts.push(`OTE + OB on the chart (${$('#oteTf').value}m leg)`);
   if (on('#showVwap')) parts.push(`VWAP (${$('#vwapAnchor').value === 'td' ? '18:00' : '09:30'})`);
   if (on('#showBb')) parts.push(`BB(${IP.bb.n}, ${f(IP.bb.k)})`);
   if (on('#showKc')) parts.push(`KC(${IP.kc.n}, ${IP.kc.atr}, ${f(IP.kc.m)})`);
@@ -1250,7 +1250,7 @@ function renderDays() {
     const rv = reviews[r.td], dr = res[k];
     return `<div class="day ${k === sel ? 'sel' : ''}" data-k="${k}"><span class="d">${r.td} ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(r.td + 'T12:00:00Z').getUTCDay()]}</span>
       <span class="rv">${rv?.verdict ? RV[rv.verdict] : ''}</span><span class="res ${dr.kind}">${dr.html}</span>
-      <span class="s"><span class="tag ${r.status.kind}">${dr.n ? `${dr.n} Trade${dr.n > 1 ? 's' : ''}` : r.status.text}</span> ${r.bias ? (r.bias === 'bull' ? '· Bias ↑' : '· Bias ↓') : r.bothSides ? '· no Bias, both sides' : ''}${showEm() ? emTag(k) : ''}${showOte() ? oteTag(k) : ''}</span></div>`;
+      <span class="s"><span class="tag ${r.status.kind}">${dr.n ? `${dr.n} Trade${dr.n > 1 ? 's' : ''}` : r.status.text}</span> ${r.bias ? (r.bias === 'bull' ? '· Bias ↑' : '· Bias ↓') : r.bothSides ? '· no Bias, both sides' : ''}${showEm() ? emTag(k) : ''}${oteTag(k)}</span></div>`;
   }).join('');
 }
 $('#days').onclick = e => { const el = e.target.closest('.day[data-k]'); if (el) showDay(+el.dataset.k, true); };
@@ -1316,8 +1316,7 @@ function oteTag(k) {
     return `<span class="tag" style="${col[st.kind]};margin-right:3px" title="OTE + OB setup: BOS at ${hhmm(su.bosT)}, ${su.dir}">OTE ${hhmm(su.bosT)} ${su.dir === 'long' ? '↑' : '↓'} ${st.text}</span>`;
   }).join('');
 }
-function renderOte(k) {
-  if (!showOte()) return '';
+function renderOte(k) { // the day's OTE setups, whether or not the chart overlay is on
   const d = oteResults[k] || { setups: [], signals: [] }, L = (su, f) => su.dir === 'long' ? su.hi - f * (su.hi - su.lo) : su.lo + f * (su.hi - su.lo);
   const stage = su => su.conf.choch ? 'CHoCH' : su.conf.sweep ? 'swept, no CHoCH yet' : su.conf.touch ? 'OB reached, no sweep' : su.ob ? 'OB not reached' : 'no OB in the OTE';
   return `<h3 style="margin-top:12px">OTE + OB, ${$('#oteTf').value}m leg (method to validate)</h3>` + (!d.setups.length ? '<p class="datanote" style="margin:0">No leg with a BOS in the Bias direction this day.</p>' : d.setups.map(su => {
