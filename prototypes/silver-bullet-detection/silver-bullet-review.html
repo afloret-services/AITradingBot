@@ -1166,11 +1166,13 @@ $('#preset').onchange = () => {
     saveInd(); rerun();
   }
 };
+// why a day has no OTE setup: H only looks for a BOS leg in the daily Bias direction
+const noOteWhy = k => results[k]?.bias ? 'No OTE setup: no impulsive BOS leg in the Bias direction' : 'No OTE setup: no daily Bias';
 // a short status for a day under G or H (the Silver Bullet days carry their own)
 function actStatus(k) {
   if (activeStrat === 'sb') return results[k].status;
   const d = actRes()[k] || { signals: [] }, last = d.signals[d.signals.length - 1];
-  if (activeStrat === 'ote' && !last) { const su = d.setups?.[d.setups.length - 1]; return { kind: 'none', text: su ? `OTE: ${oteStage(su).text}` : 'No OTE setup' }; }
+  if (activeStrat === 'ote' && !last) { const su = d.setups?.[d.setups.length - 1]; return { kind: 'none', text: su ? `OTE: ${oteStage(su).text}` : noOteWhy(k) }; }
   if (!last) return { kind: 'none', text: 'No EMA·MACD Signal' };
   return { kind: last.status === 'closed' ? (last.R >= 0 ? 'trade' : 'loss') : 'skip', text: last.status === 'closed' ? 'Trade' : `Signal ${last.status}${last.reason ? ': ' + last.reason : ''}` };
 }
@@ -1344,7 +1346,7 @@ function oteTag(k) {
 function renderOte(k) { // the day's OTE setups, whether or not the chart overlay is on
   const d = oteResults[k] || { setups: [], signals: [] }, L = (su, f) => su.dir === 'long' ? su.hi - f * (su.hi - su.lo) : su.lo + f * (su.hi - su.lo);
   const stage = su => su.conf.choch ? 'CHoCH' : su.conf.sweep ? 'swept, no CHoCH yet' : su.conf.touch ? 'OB reached, no sweep' : su.ob ? 'OB not reached' : 'no OB in the OTE';
-  return `<h3 style="margin-top:12px">OTE + OB, ${$('#oteTf').value}m leg (method to validate)</h3>` + (!d.setups.length ? '<p class="datanote" style="margin:0">No leg with a BOS in the Bias direction this day.</p>' : d.setups.map(su => {
+  return `<h3 style="margin-top:12px">OTE + OB, ${$('#oteTf').value}m leg (method to validate)</h3>` + (!d.setups.length ? `<p class="datanote" style="margin:0">${noOteWhy(k)}.${results[k]?.bias ? '' : ' H needs the daily Bias (Rule settings → Bias rule) and only looks for a BOS in its direction.'}</p>` : d.setups.map(su => {
     const s = d.signals.find(x => x.setup === su);
     return `<div class="kv" style="margin-bottom:10px">
       <span class="k">Leg</span><span>${su.dir} · BOS at ${hhmm(su.bosT)} · ${px(su.lo)} → ${px(su.hi)} · 50% ${px(L(su, 0.5))} · OTE ${px(L(su, 0.786))}–${px(L(su, 0.618))} (70.5% ${px(L(su, 0.705))})</span>
