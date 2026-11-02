@@ -1583,17 +1583,17 @@ function drawOte(L) {
   for (const su of d.setups) {
     const lv = f => su.dir === 'long' ? su.hi - f * (su.hi - su.lo) : su.lo + f * (su.hi - su.lo);
     const x0 = Math.max(padL, XT(su.fib.t0)), x1 = su.end ? Math.min(xr, XT(su.end.t)) : xr;
-    // the leg itself; a leg with no OB in its OTE is drawn faintly, with no levels
+    // the leg itself. Every setup gets its levels; a leg with no OB in its OTE is drawn lighter, since it can't trade
     const xs = XT(su.fib.t0), xe = XT(su.fib.t1), yFrom = Y(su.dir === 'long' ? su.lo : su.hi), yTo = Y(su.dir === 'long' ? su.hi : su.lo);
-    g.strokeStyle = OTE_COL; g.globalAlpha = su.ob ? 1 : 0.35; g.lineWidth = 1.5; g.setLineDash([]); g.beginPath(); g.moveTo(xs, yFrom); g.lineTo(xe, yTo); g.stroke(); g.lineWidth = 1;
-    if (!su.ob) { g.fillStyle = OTE_COL; g.fillText('leg: no OB in the OTE', xe + 3, yTo + (su.dir === 'long' ? -3 : 11)); g.globalAlpha = 1; continue; }
-    g.globalAlpha = 1;
+    g.globalAlpha = su.ob ? 1 : 0.45;
+    g.strokeStyle = OTE_COL; g.lineWidth = 1.5; g.setLineDash([]); g.beginPath(); g.moveTo(xs, yFrom); g.lineTo(xe, yTo); g.stroke(); g.lineWidth = 1;
+    g.fillStyle = OTE_COL; g.fillText(`BOS ${hhmm(su.bosT)}${su.ob ? '' : ' · no OB in the OTE'}`, xe + 3, yTo + (su.dir === 'long' ? -3 : 11));
     // OTE band and Fibonacci levels
     g.fillStyle = 'rgba(124,58,237,.08)'; g.fillRect(x0, Math.min(Y(lv(0.618)), Y(lv(0.786))), x1 - x0, Math.abs(Y(lv(0.786)) - Y(lv(0.618))));
     for (const [f, name, dash] of [[0, '0%', []], [0.5, '50%', [6, 3]], [0.618, '61.8%', [2, 2]], [0.705, '70.5%', [1, 2]], [0.786, '78.6%', [2, 2]], [1, '100%', []], [-0.27, '−27%', [4, 3]], [-0.62, '−62%', [4, 3]]]) {
       const y = Y(lv(f)); if (!clipY(y)) continue;
       g.strokeStyle = f === 0.705 ? OTE_COL : 'rgba(124,58,237,.55)'; g.setLineDash(dash); g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke(); g.setLineDash([]);
-      g.fillStyle = OTE_COL; g.fillText(`${name} ${px(lv(f))}`, Math.min(x1, xr) - 78, y - 2);
+      g.fillStyle = OTE_COL; g.fillText(`${name} ${px(lv(f))}`, Math.max(x0 + 2, Math.min(x1, xr) - 78), y - 2);
     }
     // the OB
     if (su.ob) { const ox = XT(su.ob.t); g.strokeStyle = OTE_COL; g.fillStyle = 'rgba(124,58,237,.18)'; g.fillRect(ox, Y(su.ob.hi), x1 - ox, Y(su.ob.lo) - Y(su.ob.hi)); g.strokeRect(ox + .5, Y(su.ob.hi) + .5, x1 - ox, Y(su.ob.lo) - Y(su.ob.hi)); g.fillStyle = OTE_COL; g.fillText('OB', ox + 3, Y(su.ob.hi) + 10); }
@@ -1602,6 +1602,7 @@ function drawOte(L) {
     if (c.sweep) { const x = XT(c.sweep.t), y = Y(c.sweep.of.price); g.strokeStyle = OTE_COL; g.setLineDash([2, 2]); g.beginPath(); g.moveTo(XT(c.sweep.of.t), y); g.lineTo(x, y); g.stroke(); g.setLineDash([]); g.fillStyle = OTE_COL; g.fillText('sweep', x + 3, y + (su.dir === 'long' ? 11 : -3)); }
     if (c.choch) { const x = XT(c.choch.t), y = Y(c.choch.of.price); g.strokeStyle = OTE_COL; g.beginPath(); g.moveTo(XT(c.choch.of.t), y); g.lineTo(x, y); g.stroke(); g.fillStyle = OTE_COL; g.fillText('CHoCH', x + 3, y + (su.dir === 'long' ? -3 : 11)); }
     if (su.end && su.end.reason && !d.signals.some(s => s.setup === su)) { g.fillStyle = css('--muted'); g.fillText('✕ ' + su.end.reason, Math.min(XT(su.end.t), xr - 160) + 3, Y(lv(0.786)) + 12); }
+    g.globalAlpha = 1;
   }
   // Trades
   for (const s of d.signals) {
