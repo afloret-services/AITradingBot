@@ -2441,14 +2441,14 @@ function drawEquity() {
   if (!ctx || !results.length) return;
   const W = eqc.clientWidth, H = eqc.clientHeight, dpr = window.devicePixelRatio || 1;
   eqc.width = W * dpr; eqc.height = H * dpr; eg.setTransform(dpr, 0, 0, dpr, 0, 0); eg.clearRect(0, 0, W, H);
-  const main = cumR(actRes()), em = activeStrat !== 'emamacd' && showEm() && emResults.length ? cumR(emResults) : null, ote = activeStrat !== 'ote' && showOte() && oteResults.length ? cumR(oteResults) : null;
+  const main = cumR(actRes()), em = activeStrat !== 'emamacd' && showEm() && emResults.length ? cumR(emResults) : null, ote = activeStrat !== 'ote' && oteResults.length ? cumR(oteResults) : null; // the OTE curve shows whether or not its overlay is on
   const usd = actRes().flatMap(r => r.signals.filter(s => s.status === 'closed')).reduce((a, s) => a + s.usd, 0);
   const tot = main[main.length - 1].cum, dd = maxDd(main), nTr = main.reduce((a, p) => a + p.n, 0);
   const preset = $('#preset').selectedOptions[0]?.text || '';
   const sgn = x => Math.abs(x) < 0.005 ? '0.00' : (x > 0 ? '+' : '−') + Math.abs(x).toFixed(2);
   $('#eqhead').innerHTML = `<b style="color:var(--ink)">Cumulative R</b> · ${preset.replace(/ \(.*$/, '')} · ${nTr} Trades · total <b class="${tot > 0.05 ? 'res win' : tot < -0.05 ? 'res loss' : ''}">${sgn(tot)}R</b> (${usd >= 0 ? '+' : '−'}$${Math.abs(usd).toFixed(0)} before costs) · max drawdown ${sgn(dd)}R`
     + (em ? ` · <span style="color:#0891b2">dashed: EMA 200 + MACD ${sgn(em[em.length - 1].cum)}R, max drawdown ${sgn(maxDd(em))}R</span>` : '')
-    + (ote ? ` · <span style="color:#7c3aed">dotted: OTE + OB ${sgn(ote[ote.length - 1].cum)}R, max drawdown ${sgn(maxDd(ote))}R</span>` : '') + ' · click to open a day';
+    + (ote ? ` · <span style="color:#7c3aed">dotted, ringed dots: OTE + OB ${sgn(ote[ote.length - 1].cum)}R over ${ote.reduce((a, p) => a + p.n, 0)} Trades, max drawdown ${sgn(maxDd(ote))}R</span>` : '') + ' · click to open a day';
   const padL = 8, padR = 70, padT = 8, padB = 18, cw = W - padL - padR, ch = H - padT - padB, n = main.length;
   const all = [0, ...main.map(p => p.cum), ...(em ? em.map(p => p.cum) : []), ...(ote ? ote.map(p => p.cum) : [])];
   let lo = Math.min(...all), hi = Math.max(...all); const pad = (hi - lo) * 0.1 || 1; lo -= pad; hi += pad;
@@ -2470,18 +2470,33 @@ function drawEquity() {
   const curve = (pts, col, dash, w) => { eg.strokeStyle = col; eg.lineWidth = w; eg.setLineDash(dash); eg.beginPath(); eg.moveTo(X(0), Y(0)); let prev = 0; pts.forEach((p, k) => { eg.lineTo(X(k), Y(prev)); eg.lineTo(X(k), Y(p.cum)); prev = p.cum; }); eg.stroke(); eg.setLineDash([]); eg.lineWidth = 1; };
   if (em) curve(em, '#0891b2', [5, 3], 1.3);
   if (ote) curve(ote, '#7c3aed', [2, 2], 1.4);
+  // OTE Trades, day by day: a violet ring on the OTE curve (or the main curve when H is active), filled by the day's OTE result
+  const otePts = activeStrat === 'ote' ? main : ote;
+  if (otePts) otePts.forEach((p, k) => {
+    if (!p.n) return;
+    eg.beginPath(); eg.arc(X(k), Y(p.cum), k === sel ? 5.5 : 4.5, 0, 7);
+    eg.fillStyle = p.dayR > 0.05 ? '#15803d' : p.dayR < -0.05 ? '#b91c1c' : '#78716c'; eg.fill();
+    eg.strokeStyle = '#7c3aed'; eg.lineWidth = 1.6; eg.stroke(); eg.lineWidth = 1;
+    if (p.n > 1) { eg.fillStyle = '#7c3aed'; eg.font = '10px system-ui'; eg.fillText('×' + p.n, X(k) + 6, Y(p.cum) - 5); eg.font = '11px system-ui'; }
+  });
   curve(main, css('--ink'), [], 1.8);
-  main.forEach((p, k) => { if (!p.n) return; eg.fillStyle = p.dayR > 0.05 ? '#15803d' : p.dayR < -0.05 ? '#b91c1c' : '#78716c'; eg.beginPath(); eg.arc(X(k), Y(p.cum), k === sel ? 4.5 : 3, 0, 7); eg.fill(); });
+  main.forEach((p, k) => { if (!p.n || activeStrat === 'ote') return; eg.fillStyle = p.dayR > 0.05 ? '#15803d' : p.dayR < -0.05 ? '#b91c1c' : '#78716c'; eg.beginPath(); eg.arc(X(k), Y(p.cum), k === sel ? 4.5 : 3, 0, 7); eg.fill(); });
 }
 const eqIndex = e => { if (!eqLayout) return -1; const r = eqc.getBoundingClientRect(), mx = e.clientX - r.left; const { padL, cw, n } = eqLayout; return Math.max(0, Math.min(n - 1, Math.round((mx - padL) / (cw / Math.max(1, n - 1))))); };
 eqc.addEventListener('click', e => { const k = eqIndex(e); if (k >= 0) showDay(k, true); });
 eqc.addEventListener('mousemove', e => {
   const k = eqIndex(e), tip = $('#eqtip'); if (k < 0) { tip.style.display = 'none'; return; }
   const p = eqLayout.main[k], f = x => (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(2) + 'R';
-  tip.textContent = `${results[k].td}\n${p.n ? `${p.n} Trade${p.n > 1 ? 's' : ''}: ${f(p.dayR)}` : 'no Trade'}\ncumulative ${f(p.cum)}` + (eqLayout.em ? `\nEMA·MACD cumulative ${f(eqLayout.em[k].cum)}` : '') + (eqLayout.ote ? `\nOTE + OB cumulative ${f(eqLayout.ote[k].cum)}` : '');
+  tip.textContent = `${results[k].td}\n${p.n ? `${p.n} Trade${p.n > 1 ? 's' : ''}: ${f(p.dayR)}` : 'no Trade'}\ncumulative ${f(p.cum)}` + (eqLayout.em ? `\nEMA·MACD cumulative ${f(eqLayout.em[k].cum)}` : '') + (eqLayout.ote ? `\nOTE + OB cumulative ${f(eqLayout.ote[k].cum)}` : '') + oteTradesText(k);
   tip.style.display = 'block'; const r = eqc.getBoundingClientRect(), mx = e.clientX - r.left, tw = tip.offsetWidth;
   tip.style.left = (mx + 14 + tw > r.width ? mx - tw - 14 : mx + 14) + 'px'; tip.style.top = '10px';
 });
+// the day's OTE Trades for the equity tooltip: fill time, direction and R (or how a Signal ended)
+function oteTradesText(k) {
+  const sigs = (oteResults[k]?.signals || []).filter(s => s.fillT || s.status === 'closed');
+  if (!sigs.length) return '';
+  return '\nOTE Trades:' + sigs.map(s => `\n  ${hhmm(s.fillT || s.t)} ${s.dir === 'long' ? '↑' : '↓'} ${s.R != null ? (s.R >= 0 ? '+' : '−') + Math.abs(s.R).toFixed(2) + 'R' : s.status}`).join('');
+}
 eqc.addEventListener('mouseleave', () => $('#eqtip').style.display = 'none');
 })();
 </script>
