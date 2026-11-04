@@ -1,14 +1,18 @@
 # AITradingBot
 
-An automated trading bot that spots ICT (Inner Circle Trader) setups on index futures and trades them through Interactive Brokers.
+An automated trading bot that runs several Setups at once (ICT patterns such as the Silver Bullet and OTE + OB, and indicator-based ones such as EMA 200 + MACD) on index futures and trades them through Interactive Brokers.
 
 ## Language
 
 ### Strategy
 
 **Setup**:
-One ICT entry pattern, written as exact rules that decide when a trade is valid, which way it goes, and where its entry, stop and target sit.
+One entry pattern, ICT or indicator-based, written as exact rules that decide when a trade is valid, which way it goes, and where its entry, stop and target sit. The bot runs several Setups at once; each one reaches the Paper account only after passing the Promotion gate.
 _Avoid_: Strategy (when meaning one pattern), model, play
+
+**Promotion gate**:
+The test a Setup must pass before it trades on the Paper account: a measurable result on the held-out backtest period, after costs, plus the user's review that its Trades match its written rules on the chart.
+_Avoid_: Approval, sign-off
 
 **Signal**:
 One occurrence of a Setup's rules being met on live or historical bars.
