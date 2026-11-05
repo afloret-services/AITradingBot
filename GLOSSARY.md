@@ -10,6 +10,10 @@ An automated trading bot that runs several Setups at once (ICT patterns such as 
 One entry pattern, ICT or indicator-based, written as exact rules that decide when a trade is valid, which way it goes, and where its entry, stop and target sit. The bot runs several Setups at once; each one reaches the Paper account only after passing the Promotion gate.
 _Avoid_: Strategy (when meaning one pattern), model, play
 
+**Candidate**:
+A partly formed pattern a Setup is tracking that may still become a Signal; a Setup may watch several at once, and they stay inside the Setup.
+_Avoid_: Setup (that is the whole set of rules), watch, pending setup
+
 **Promotion gate**:
 The test a Setup must pass before it trades on the Paper account: a measurable result on the held-out backtest period, after costs, plus the user's review that its Trades match its written rules on the chart.
 _Avoid_: Approval, sign-off
@@ -85,7 +89,7 @@ An entry order sent together with its stop-loss and take-profit orders, so the p
 _Avoid_: OCO (that names only the two exit legs)
 
 **Take-profit leg**:
-One slice of a Trade's contracts with its own target, sent as its own Bracket order; a Trade's last leg always aims at the Draw on liquidity.
+One slice of a Trade's contracts with its own target, sent as its own Bracket order; a Trade's last leg aims at its Setup's final target (for the Silver Bullet, the Draw on liquidity).
 _Avoid_: Partial (alone), scale-out, tranche
 
 **Break-even**:
