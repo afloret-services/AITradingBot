@@ -82,6 +82,10 @@ _Avoid_: Gate, confirmation
 A Signal the Signal filter declined, so no Trade was opened.
 _Avoid_: Rejected, skipped trade
 
+**Daily pick**:
+A Decision model's probability, given before a Trading day's Signals, that a Setup's Trades that day will end net positive; it is only logged and decides nothing yet.
+_Avoid_: Regime, Setup selection
+
 ### Execution
 
 **Bracket order**:
