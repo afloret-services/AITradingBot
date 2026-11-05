@@ -82,6 +82,10 @@ _Avoid_: Gate, confirmation
 A Signal the Signal filter declined, so no Trade was opened.
 _Avoid_: Rejected, skipped trade
 
+**Verdict**:
+One pipeline step's answer on a Signal (News-day check, Signal filter, risk guard, Trade manager): passed or declined, with the reason.
+_Avoid_: Rejected, skipped, result
+
 **Daily pick**:
 A Decision model's probability, given before a Trading day's Signals, that a Setup's Trades that day will end net positive; it is only logged and decides nothing yet.
 _Avoid_: Regime, Setup selection
@@ -119,6 +123,14 @@ _Avoid_: Balance, equity, net liquidation (the broker's figure)
 **Paper account**:
 The IBKR simulated account the bot trades in; no real money moves.
 _Avoid_: Demo, sim
+
+**Paper session**:
+One Trading day the bot ran on the Paper account.
+_Avoid_: Run (that is a backtest), session (alone; that is Asia, London or the cash session)
+
+**Clean session**:
+A Paper session in which the bot covered every listed trading window with no unexplained Halt, every Signal has a final Verdict, the day's replay matches what the bot did, every Trade was reviewed as matching its rules, no risk limit was breached and the net position always checked out.
+_Avoid_: Good day, successful session
 
 ### Markets
 
