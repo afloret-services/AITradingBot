@@ -260,8 +260,9 @@ def step_watch(ib, args):
         state["last_bar"] = dt.datetime.now()
 
     def on_error_watch(req_id, code, message, c):
-        if code == 1101:
-            log("    1101: will resubscribe the 1-min bars")
+        # A drop kills a keepUpToDate subscription (10182), and 1102 ("data maintained") does not revive it.
+        if code in (1101, 1102):
+            log(f"    {code}: will resubscribe the 1-min bars")
             state["resubscribe"] = True
 
     ib.errorEvent += on_error_watch
@@ -326,6 +327,9 @@ def main():
     ib.disconnectedEvent += lambda: log("[disconnected]")
     try:
         STEPS[args.step](ib, args)
+    except Exception:
+        import traceback
+        log("CRASH:\n" + traceback.format_exc())
     except KeyboardInterrupt:
         log("Interrupted")
         if ib.isConnected() and args.step in ("legs", "watch", "reconnect", "cancel-parent"):
