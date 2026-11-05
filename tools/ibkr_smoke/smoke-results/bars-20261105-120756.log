@@ -1,0 +1,12 @@
+12:07:56.628  [error 2104] reqId=-1 Market data farm connection is OK:usfarm
+12:07:56.628  [error 2106] reqId=-1 HMDS data farm connection is OK:ushmds
+12:07:56.629  [error 2158] reqId=-1 Sec-def data farm connection is OK:secdefnj
+12:07:56.630  [error 2172] reqId=-1 The version of the application you are running, 1033.1, needs to be upgraded, as it will be desupported on 20261215. The minimum supported version at that time will be 1050.1. 
+12:07:56.735  ib_async 2.1.0, server version 178, accounts ['DUR316340'], Gateway time 2026-11-05 17:07:56+00:00
+12:07:56.785  Using MNQZ6 (conId 815824267, last trade 20261218)
+12:07:58.370  keepUpToDate 1-min backfill: 1078 bars, first 2026-11-04 23:00:00+00:00, last 2026-11-05 16:57:00+00:00
+12:07:58.371  Listening for 3 minutes...
+12:07:58.464  [error 420] reqId=5 Invalid Real-time Query:No market data permissions for CME FUT (MNQZ6)
+12:10:58.398  Received: {'1m new': 0, '1m update': 0, '5s': 0}
+12:10:58.402  [disconnected]
+12:10:58.404  Log written to D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke-results\bars-20261105-120756.log

@@ -1,0 +1,23 @@
+12:47:08.666  [error 2104] reqId=-1 Market data farm connection is OK:usfuture
+12:47:08.667  [error 2104] reqId=-1 Market data farm connection is OK:usfarm
+12:47:08.668  [error 2106] reqId=-1 HMDS data farm connection is OK:ushmds
+12:47:08.668  [error 2158] reqId=-1 Sec-def data farm connection is OK:secdefnj
+12:47:08.669  [error 2172] reqId=-1 The version of the application you are running, 1033.1, needs to be upgraded, as it will be desupported on 20261215. The minimum supported version at that time will be 1050.1. 
+12:47:09.090  ib_async 2.1.0, server version 178, accounts ['DUR316340'], Gateway time 2026-11-05 17:47:09+00:00
+12:47:09.122  Using MNQZ6 (conId 815824267, last trade 20261218)
+12:47:09.623  Market MNQZ6: bid 26951.0 ask 26951.75 last 26951.25
+12:47:09.629  Placed BUY bracket: entry 25603.75, take-profit 25653.75, stop 25553.75 (ids [16, 17, 18])
+12:47:12.640  --- open orders: after placing
+12:47:12.642      id 16 parent 0 BUY 1 LMT @ 25603.75 -> Submitted
+12:47:12.644      id 17 parent 16 SELL 1 LMT @ 25653.75 -> PreSubmitted
+12:47:12.645      id 18 parent 16 SELL 1 STP @ 25553.75 -> PreSubmitted
+12:47:12.648  Cancelling the parent only
+12:47:12.689  [error 202] reqId=16 Order Canceled - reason:
+12:47:12.691  [error 202] reqId=17 Order Canceled - reason:
+12:47:12.693  [error 202] reqId=18 Order Canceled - reason:
+12:47:15.659      id 16 LMT -> Cancelled
+12:47:15.661      id 17 LMT -> Cancelled
+12:47:15.663      id 18 STP -> Cancelled
+12:47:15.664  --- open orders: after cancelling the parent
+12:47:15.665  [disconnected]
+12:47:15.666  Log written to D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke-results\cancel-parent-20261105-124708.log

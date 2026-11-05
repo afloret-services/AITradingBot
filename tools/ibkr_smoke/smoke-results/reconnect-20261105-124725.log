@@ -1,0 +1,33 @@
+12:47:25.336  [error 2104] reqId=-1 Market data farm connection is OK:usfuture
+12:47:25.337  [error 2104] reqId=-1 Market data farm connection is OK:usfarm
+12:47:25.338  [error 2106] reqId=-1 HMDS data farm connection is OK:ushmds
+12:47:25.339  [error 2158] reqId=-1 Sec-def data farm connection is OK:secdefnj
+12:47:25.340  [error 2172] reqId=-1 The version of the application you are running, 1033.1, needs to be upgraded, as it will be desupported on 20261215. The minimum supported version at that time will be 1050.1. 
+12:47:25.761  ib_async 2.1.0, server version 178, accounts ['DUR316340'], Gateway time 2026-11-05 17:47:25+00:00
+12:47:25.794  Using MNQZ6 (conId 815824267, last trade 20261218)
+12:47:26.299  Market MNQZ6: bid 27002.75 ask 27003.5 last 27002.75
+12:47:26.301  Placed BUY bracket: entry 25652.5, take-profit 25702.5, stop 25602.5 (ids [23, 24, 25])
+12:47:29.312  --- open orders: before disconnect
+12:47:29.313      id 23 parent 0 BUY 1 LMT @ 25652.5 -> Submitted
+12:47:29.314      id 24 parent 23 SELL 1 LMT @ 25702.5 -> PreSubmitted
+12:47:29.315      id 25 parent 23 SELL 1 STP @ 25602.5 -> PreSubmitted
+12:47:29.316  [disconnected]
+12:47:29.318  Disconnected; waiting 10 s
+12:47:39.347  [error 2104] reqId=-1 Market data farm connection is OK:usfuture
+12:47:39.349  [error 2104] reqId=-1 Market data farm connection is OK:usfarm
+12:47:39.350  [error 2106] reqId=-1 HMDS data farm connection is OK:ushmds
+12:47:39.351  [error 2158] reqId=-1 Sec-def data farm connection is OK:secdefnj
+12:47:39.352  [error 2172] reqId=-1 The version of the application you are running, 1033.1, needs to be upgraded, as it will be desupported on 20261215. The minimum supported version at that time will be 1050.1. 
+12:47:39.761  ib_async 2.1.0, server version 178, accounts ['DUR316340'], Gateway time 2026-11-05 17:47:39+00:00
+12:47:39.762  --- open orders: after reconnect (same client id)
+12:47:39.762      id 25 parent 23 SELL 1 STP @ 25602.5 -> PreSubmitted
+12:47:39.763      id 24 parent 23 SELL 1 LMT @ 25702.5 -> PreSubmitted
+12:47:39.763      id 23 parent 0 BUY 1 LMT @ 25652.5 -> Submitted
+12:47:39.767  reqAllOpenOrders sees 3 open orders
+12:47:39.794  [error 202] reqId=24 Order Canceled - reason:
+12:47:39.796  [error 202] reqId=25 Order Canceled - reason:
+12:47:39.871  [error 10148] reqId=24 OrderId 24 that needs to be cancelled cannot be cancelled, state: Cancelled.
+12:47:40.007  [error 202] reqId=23 Order Canceled - reason:
+12:47:44.785  --- open orders: after flatten
+12:47:44.787  [disconnected]
+12:47:44.789  Log written to D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke-results\reconnect-20261105-124725.log

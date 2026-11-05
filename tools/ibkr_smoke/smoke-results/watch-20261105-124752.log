@@ -1,0 +1,14 @@
+12:47:52.639  [error 2104] reqId=-1 Market data farm connection is OK:usfuture
+12:47:52.640  [error 2104] reqId=-1 Market data farm connection is OK:usfarm
+12:47:52.641  [error 2106] reqId=-1 HMDS data farm connection is OK:ushmds
+12:47:52.641  [error 2158] reqId=-1 Sec-def data farm connection is OK:secdefnj
+12:47:52.642  [error 2172] reqId=-1 The version of the application you are running, 1033.1, needs to be upgraded, as it will be desupported on 20261215. The minimum supported version at that time will be 1050.1. 
+12:47:52.961  ib_async 2.1.0, server version 178, accounts ['DUR316340'], Gateway time 2026-11-05 17:47:52+00:00
+12:47:53.007  Using MNQZ6 (conId 815824267, last trade 20261218)
+12:47:53.529  Market MNQZ6: bid 26993.25 ask 26994.0 last 26994.25
+12:47:53.534  Placed BUY bracket: entry 25644.0, take-profit 25694.0, stop 25594.0 (ids [30, 31, 32])
+12:47:53.534  Watching for 15 minutes. Now break the connection (see README), then restore it.
+12:47:53.957      subscribed to 1-min bars (31 backfilled)
+12:47:53.958      connected, last bar update None
+12:48:24.003      connected, last bar update 2026-11-05 12:48:19.910558
+12:48:49.362  [disconnected]

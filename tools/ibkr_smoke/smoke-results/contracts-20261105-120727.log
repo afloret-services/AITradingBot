@@ -1,0 +1,14 @@
+12:07:27.446  [error 2104] reqId=-1 Market data farm connection is OK:usfarm
+12:07:27.447  [error 2106] reqId=-1 HMDS data farm connection is OK:ushmds
+12:07:27.448  [error 2158] reqId=-1 Sec-def data farm connection is OK:secdefnj
+12:07:27.449  [error 2172] reqId=-1 The version of the application you are running, 1033.1, needs to be upgraded, as it will be desupported on 20261215. The minimum supported version at that time will be 1050.1. 
+12:07:27.755  ib_async 2.1.0, server version 178, accounts ['DUR316340'], Gateway time 2026-11-05 17:07:27+00:00
+12:07:27.909  reqContractDetails(MNQ, no month) returned 5 contracts:
+12:07:27.910      MNQZ6    conId 815824267 last trade 20261218 multiplier 2 minTick 0.25 tz US/Central
+12:07:27.910      MNQH7    conId 840227399 last trade 20270319 multiplier 2 minTick 0.25 tz US/Central
+12:07:27.911      MNQM7    conId 866514785 last trade 20270617 multiplier 2 minTick 0.25 tz US/Central
+12:07:27.912      MNQU7    conId 893091676 last trade 20270917 multiplier 2 minTick 0.25 tz US/Central
+12:07:27.912      MNQZ7    conId 925800444 last trade 20271217 multiplier 2 minTick 0.25 tz US/Central
+12:07:27.913  Trading hours (MNQZ6): 20261104:1700-20261105:1600;20261105:1700-20261106:1600;20261107:CLOSED;20261108:1700-20261109:1600;20261109:1700-20261110:1600;20261110:1700-20261111:1600
+12:07:27.913  [disconnected]
+12:07:27.914  Log written to D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke-results\contracts-20261105-120727.log

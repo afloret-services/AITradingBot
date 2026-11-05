@@ -1,0 +1,13 @@
+12:43:07.506  [error 2104] reqId=-1 Market data farm connection is OK:usfarm
+12:43:07.507  [error 2106] reqId=-1 HMDS data farm connection is OK:ushmds
+12:43:07.508  [error 2158] reqId=-1 Sec-def data farm connection is OK:secdefnj
+12:43:07.508  [error 2172] reqId=-1 The version of the application you are running, 1033.1, needs to be upgraded, as it will be desupported on 20261215. The minimum supported version at that time will be 1050.1. 
+12:43:07.817  ib_async 2.1.0, server version 178, accounts ['DUR316340'], Gateway time 2026-11-05 17:43:07+00:00
+12:43:07.854  Using MNQZ6 (conId 815824267, last trade 20261218)
+12:43:07.932  [error 162] reqId=4 Historical Market Data Service error message:Trading TWS session is connected from a different IP address (MNQZ6)
+12:43:07.934  keepUpToDate 1-min backfill: 0 bars, first -, last -
+12:43:07.935  Listening for 3 minutes...
+12:43:07.996  [error 420] reqId=5 Invalid Real-time Query:Trading TWS session is connected from a different IP address (MNQZ6)
+12:46:07.940  Received: {'1m new': 0, '1m update': 0, '5s': 0}
+12:46:07.941  [disconnected]
+12:46:07.942  Log written to D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke-results\bars-20261105-124307.log

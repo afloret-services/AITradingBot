@@ -1,0 +1,76 @@
+12:50:10.332  [error 2104] reqId=-1 Market data farm connection is OK:usfarm
+12:50:10.333  [error 2106] reqId=-1 HMDS data farm connection is OK:ushmds
+12:50:10.334  [error 2158] reqId=-1 Sec-def data farm connection is OK:secdefnj
+12:50:10.335  [error 2172] reqId=-1 The version of the application you are running, 1033.1, needs to be upgraded, as it will be desupported on 20261215. The minimum supported version at that time will be 1050.1. 
+12:50:10.780  ib_async 2.1.0, server version 178, accounts ['DUR316340'], Gateway time 2026-11-05 17:50:10+00:00
+12:50:10.884  Using MNQZ6 (conId 815824267, last trade 20261218)
+12:50:10.925  [error 2119] reqId=-1 Market data farm is connecting:usfuture
+12:50:11.445  [error 2104] reqId=-1 Market data farm connection is OK:usfuture
+12:50:11.902  Market MNQZ6: bid 26975.0 ask 26975.5 last 26976.25
+12:50:11.908  Placed BUY bracket: entry 25626.5, take-profit 25676.5, stop 25576.5 (ids [37, 38, 39])
+12:50:11.910  Watching for 15 minutes. Now break the connection (see README), then restore it.
+12:50:13.543      subscribed to 1-min bars (31 backfilled)
+12:50:13.544      connected, last bar update None
+12:50:43.652      connected, last bar update 2026-11-05 12:50:35.012904
+12:50:58.674  [error 2157] reqId=-1 Sec-def data farm connection is broken:secdefnj
+12:50:58.683  [error 2105] reqId=-1 HMDS data farm connection is broken:ushmds
+12:50:58.706  [error 10182] reqId=40 Failed to request live updates (disconnected).
+12:50:58.970  [error 2103] reqId=-1 Market data farm connection is broken:usfarm
+12:51:13.929      connected, last bar update 2026-11-05 12:50:35.012904
+12:51:21.462  [error 2103] reqId=-1 Market data farm connection is broken:usfuture
+12:51:44.201      connected, last bar update 2026-11-05 12:50:35.012904
+12:51:53.577  [error 1100] reqId=-1 Connectivity between IBKR and Trader Workstation has been lost.
+12:52:14.437      connected, last bar update 2026-11-05 12:50:35.012904
+12:52:25.007  [error 1100] reqId=-1 Connectivity between IBKR and Trader Workstation has been lost.
+12:52:26.130  [error 2104] reqId=-1 Market data farm connection is OK:usfuture
+12:52:26.333  [error 2106] reqId=-1 HMDS data farm connection is OK:ushmds
+12:52:26.665  [error 2104] reqId=-1 Market data farm connection is OK:usfarm
+12:52:27.463  [error 2158] reqId=-1 Sec-def data farm connection is OK:secdefnj
+12:52:27.504  [error 1102] reqId=-1 Connectivity between IBKR and Trader Workstation has been restored - data maintained. All data farms are connected: usfuture; usfarm; ushmds; secdefnj.
+12:52:44.614      connected, last bar update 2026-11-05 12:50:35.012904
+12:52:56.896  [error 2103] reqId=-1 Market data farm connection is broken:usfuture
+12:52:56.897  [error 2104] reqId=-1 Market data farm connection is OK:usfuture
+12:53:14.847      connected, last bar update 2026-11-05 12:50:35.012904
+12:53:45.033      connected, last bar update 2026-11-05 12:50:35.012904
+12:54:15.171      connected, last bar update 2026-11-05 12:50:35.012904
+12:54:45.358      connected, last bar update 2026-11-05 12:50:35.012904
+12:55:15.474      connected, last bar update 2026-11-05 12:50:35.012904
+12:55:45.562      connected, last bar update 2026-11-05 12:50:35.012904
+12:56:15.754      connected, last bar update 2026-11-05 12:50:35.012904
+12:56:45.855      connected, last bar update 2026-11-05 12:50:35.012904
+12:57:15.945      connected, last bar update 2026-11-05 12:50:35.012904
+12:57:46.045      connected, last bar update 2026-11-05 12:50:35.012904
+12:58:16.190      connected, last bar update 2026-11-05 12:50:35.012904
+12:58:26.339  [error 2107] reqId=-1 HMDS data farm connection is inactive but should be available upon demand.ushmds
+12:58:46.297      connected, last bar update 2026-11-05 12:50:35.012904
+12:59:16.378      connected, last bar update 2026-11-05 12:50:35.012904
+12:59:46.466      connected, last bar update 2026-11-05 12:50:35.012904
+13:00:16.676      connected, last bar update 2026-11-05 12:50:35.012904
+13:00:46.772      connected, last bar update 2026-11-05 12:50:35.012904
+13:01:16.894      connected, last bar update 2026-11-05 12:50:35.012904
+13:01:47.070      connected, last bar update 2026-11-05 12:50:35.012904
+13:02:17.175      connected, last bar update 2026-11-05 12:50:35.012904
+13:02:47.295      connected, last bar update 2026-11-05 12:50:35.012904
+13:03:17.487      connected, last bar update 2026-11-05 12:50:35.012904
+13:03:47.652      connected, last bar update 2026-11-05 12:50:35.012904
+13:04:17.867      connected, last bar update 2026-11-05 12:50:35.012904
+13:04:47.978      connected, last bar update 2026-11-05 12:50:35.012904
+13:05:12.219  --- open orders: end of watch
+13:05:12.220      id 32 parent 30 SELL 1 STP @ 25594.0 -> PreSubmitted
+13:05:12.220      id 31 parent 30 SELL 1 LMT @ 25694.0 -> PreSubmitted
+13:05:12.221      id 30 parent 0 BUY 1 LMT @ 25644.0 -> Submitted
+13:05:12.221      id 37 parent 0 BUY 1 LMT @ 25626.5 -> Submitted
+13:05:12.222      id 38 parent 37 SELL 1 LMT @ 25676.5 -> PreSubmitted
+13:05:12.223      id 39 parent 37 SELL 1 STP @ 25576.5 -> PreSubmitted
+13:05:12.284  [error 202] reqId=31 Order Canceled - reason:
+13:05:12.302  [error 202] reqId=32 Order Canceled - reason:
+13:05:12.326  [error 10148] reqId=31 OrderId 31 that needs to be cancelled cannot be cancelled, state: Cancelled.
+13:05:12.475  [error 202] reqId=30 Order Canceled - reason:
+13:05:12.555  [error 202] reqId=37 Order Canceled - reason:
+13:05:12.557  [error 202] reqId=38 Order Canceled - reason:
+13:05:12.559  [error 202] reqId=39 Order Canceled - reason:
+13:05:12.626  [error 10148] reqId=38 OrderId 38 that needs to be cancelled cannot be cancelled, state: Cancelled.
+13:05:12.725  [error 10148] reqId=39 OrderId 39 that needs to be cancelled cannot be cancelled, state: Cancelled.
+13:05:17.235  --- open orders: after flatten
+13:05:17.236  [disconnected]
+13:05:17.237  Log written to D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke-results\watch-20261105-125010.log
