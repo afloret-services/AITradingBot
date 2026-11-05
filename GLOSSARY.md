@@ -14,6 +14,14 @@ _Avoid_: Strategy (when meaning one pattern), model, play
 The test a Setup must pass before it trades on the Paper account: a measurable result on the held-out backtest period, after costs, plus the user's review that its Trades match its written rules on the chart.
 _Avoid_: Approval, sign-off
 
+**Promoted version**:
+The frozen settings of a Setup that passed its Promotion gate, and the only settings the Paper account runs for that Setup. Changing any setting makes a new version, which must pass the gate again.
+_Avoid_: Live config, current settings
+
+**R**:
+The amount a Trade would lose if its stop were hit; every Trade is sized so that 1R is the day's risk amount, and results, expectancy and drawdowns are measured in multiples of it.
+_Avoid_: Risk unit, units
+
 **Signal**:
 One occurrence of a Setup's rules being met on live or historical bars.
 _Avoid_: Alert, trigger
