@@ -276,8 +276,9 @@ def step_watch(ib, args):
                 connect(ib)
                 show_orders(ib, "after reconnect")
                 state["resubscribe"] = True
-            except (ConnectionError, OSError, TimeoutError) as e:
-                log(f"    reconnect failed: {e!r}")
+            except Exception as e:  # any failure while Gateway is down: log it and keep retrying
+                import traceback
+                log(f"    reconnect failed: {e!r}\n" + traceback.format_exc())
                 ib.disconnect()
                 ib.sleep(5)
                 continue
