@@ -132,6 +132,10 @@ _Avoid_: Run (that is a backtest), session (alone; that is Asia, London or the c
 A Paper session in which the bot covered every listed trading window with no unexplained Halt, every Signal has a final Verdict, the day's replay matches what the bot did, every Trade was reviewed as matching its rules, no risk limit was breached and the net position always checked out.
 _Avoid_: Good day, successful session
 
+**Drill**:
+A deliberate exercise on the Paper account that forces one failure or limit (an unexpected position, a missing stop, a Stand-down, a Gateway restart) to show the bot reacts as its rules say; it trades only a built-in test Setup and never counts as a Paper session toward the Clean-session count.
+_Avoid_: Test (that is the automated test suite), fire drill, chaos test
+
 ### Markets
 
 **Trading day**:
