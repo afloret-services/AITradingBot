@@ -1,0 +1,88 @@
+10:18:10.669  [error 2104] reqId=-1 Market data farm connection is OK:usfarm
+10:18:10.670  [error 2106] reqId=-1 HMDS data farm connection is OK:ushmds
+10:18:10.671  [error 2158] reqId=-1 Sec-def data farm connection is OK:secdefnj
+10:18:10.843  [error 321] reqId=-1 Error validating request.-'ReqOpenOrders(5)' : cause - The API interface is currently in Read-Only mode.
+10:18:10.944  [error 321] reqId=-1 Error validating request.-'ReqCompletedOrders(99)' : cause - The API interface is currently in Read-Only mode.
+10:18:20.684  ib_async 2.1.0, server version 178, accounts ['DUR316340'], Gateway time 2026-11-06 15:18:20+00:00
+10:18:20.797  Using MNQZ6 (conId 815824267, last trade 20261218)
+10:18:20.868  [error 2119] reqId=-1 Market data farm is connecting:usfuture
+10:18:21.423  [error 2104] reqId=-1 Market data farm connection is OK:usfuture
+10:18:21.795  Market MNQZ6: bid 27245.5 ask 27246.25 last 27247.0
+10:18:21.797  Placed BUY bracket: entry 25883.5, take-profit 25933.5, stop 25833.5 (ids [51, 52, 53])
+10:18:21.798  Watching for 15 minutes. Now break the connection (see README), then restore it.
+10:18:21.826  [error 321] reqId=51 Error validating request.-'PlaceOrder(3)' : cause - The API interface is currently in Read-Only mode.
+10:18:21.924  [error 321] reqId=52 Error validating request.-'PlaceOrder(3)' : cause - The API interface is currently in Read-Only mode.
+10:18:22.024  [error 321] reqId=53 Error validating request.-'PlaceOrder(3)' : cause - The API interface is currently in Read-Only mode.
+10:18:23.105      subscribed to 1-min bars (31 backfilled)
+10:18:23.107      connected, last bar update None
+10:18:53.248      connected, last bar update 2026-11-06 10:18:50.278346
+10:19:23.374      connected, last bar update 2026-11-06 10:19:20.273360
+10:19:50.803  [error 2105] reqId=-1 HMDS data farm connection is broken:ushmds
+10:19:50.806  [error 2157] reqId=-1 Sec-def data farm connection is broken:secdefnj
+10:19:50.807  [error 10182] reqId=54 Failed to request live updates (disconnected).
+10:19:50.906  [error 2103] reqId=-1 Market data farm connection is broken:usfarm
+10:19:53.485      connected, last bar update 2026-11-06 10:19:35.278630
+10:20:23.794      connected, last bar update 2026-11-06 10:19:35.278630
+10:20:31.429  [error 2103] reqId=-1 Market data farm connection is broken:usfuture
+10:20:43.852  [error 1100] reqId=-1 Connectivity between IBKR and Trader Workstation has been lost.
+10:20:43.853  [error 1104] reqId=-1 Pending to create 3 orders: 51, 52, 53
+10:20:54.104      connected, last bar update 2026-11-06 10:19:35.278630
+10:21:24.395      connected, last bar update 2026-11-06 10:19:35.278630
+10:21:54.669      connected, last bar update 2026-11-06 10:19:35.278630
+10:22:24.969      connected, last bar update 2026-11-06 10:19:35.278630
+10:22:47.566  [error 1100] reqId=-1 Connectivity between IBKR and Trader Workstation has been lost.
+10:22:47.568  [error 1104] reqId=-1 Pending to create 3 orders: 51, 52, 53
+10:22:48.292  [error 10349] reqId=51 Order TIF was set to DAY based on order preset.
+10:22:48.307  [error 10349] reqId=52 Order TIF was set to DAY based on order preset.
+10:22:48.313  [error 10349] reqId=53 Order TIF was set to DAY based on order preset.
+10:22:48.720  [error 2106] reqId=-1 HMDS data farm connection is OK:ushmds
+10:22:49.103  [error 2158] reqId=-1 Sec-def data farm connection is OK:secdefnj
+10:22:49.104  [error 2119] reqId=-1 Market data farm is connecting:usfuture
+10:22:49.378  [error 2104] reqId=-1 Market data farm connection is OK:usfuture
+10:22:49.522  [error 2104] reqId=-1 Market data farm connection is OK:usfarm
+10:22:50.163  [error 1102] reqId=-1 Connectivity between IBKR and Trader Workstation has been restored - data maintained. All data farms are connected: usfuture; usfarm; ushmds; secdefnj.
+10:22:50.164      1102: will resubscribe the 1-min bars
+10:22:50.196  [error 366] reqId=54 No historical data query found for ticker id:54
+10:22:50.386      subscribed to 1-min bars (31 backfilled)
+10:22:55.409      connected, last bar update 2026-11-06 10:22:55.295846
+10:23:20.155  [error 2103] reqId=-1 Market data farm connection is broken:usfuture
+10:23:20.156  [error 2104] reqId=-1 Market data farm connection is OK:usfuture
+10:23:25.625      connected, last bar update 2026-11-06 10:23:25.336444
+10:23:55.953      connected, last bar update 2026-11-06 10:23:55.266002
+10:24:26.077      connected, last bar update 2026-11-06 10:24:25.270860
+10:24:56.178      connected, last bar update 2026-11-06 10:24:55.281817
+10:25:26.278      connected, last bar update 2026-11-06 10:25:25.283186
+10:25:56.464      connected, last bar update 2026-11-06 10:25:55.289210
+10:26:26.671      connected, last bar update 2026-11-06 10:26:25.309636
+10:26:56.840      connected, last bar update 2026-11-06 10:26:55.325651
+10:27:27.072      connected, last bar update 2026-11-06 10:27:25.273630
+10:27:57.253      connected, last bar update 2026-11-06 10:27:55.270290
+10:28:27.348      connected, last bar update 2026-11-06 10:28:25.272435
+10:28:57.495      connected, last bar update 2026-11-06 10:28:55.293924
+10:29:27.680      connected, last bar update 2026-11-06 10:29:25.276476
+10:29:57.783      connected, last bar update 2026-11-06 10:29:55.372675
+10:30:27.995      connected, last bar update 2026-11-06 10:30:25.275192
+10:30:58.090      connected, last bar update 2026-11-06 10:30:55.449639
+10:31:28.248      connected, last bar update 2026-11-06 10:31:25.276029
+10:31:58.392      connected, last bar update 2026-11-06 10:31:55.288613
+10:32:28.495      connected, last bar update 2026-11-06 10:32:25.267456
+10:32:58.570      connected, last bar update 2026-11-06 10:32:55.275210
+10:33:22.666  --- open orders: end of watch
+10:33:22.668      id 46 parent 44 SELL 1 STP @ 25796.0 -> PreSubmitted
+10:33:22.670      id 44 parent 0 BUY 1 LMT @ 25846.0 -> Submitted
+10:33:22.671      id 45 parent 44 SELL 1 LMT @ 25896.0 -> PreSubmitted
+10:33:22.673      id 51 parent 0 BUY 1 LMT @ 25883.5 -> Submitted
+10:33:22.675      id 52 parent 51 SELL 1 LMT @ 25933.5 -> PreSubmitted
+10:33:22.677      id 53 parent 51 SELL 1 STP @ 25833.5 -> PreSubmitted
+10:33:22.736  [error 202] reqId=45 Order Canceled - reason:
+10:33:22.737  [error 202] reqId=46 Order Canceled - reason:
+10:33:22.813  [error 202] reqId=44 Order Canceled - reason:
+10:33:22.879  [error 10148] reqId=45 OrderId 45 that needs to be cancelled cannot be cancelled, state: Cancelled.
+10:33:23.015  [error 202] reqId=51 Order Canceled - reason:
+10:33:23.016  [error 202] reqId=52 Order Canceled - reason:
+10:33:23.017  [error 202] reqId=53 Order Canceled - reason:
+10:33:23.079  [error 10148] reqId=52 OrderId 52 that needs to be cancelled cannot be cancelled, state: Cancelled.
+10:33:23.179  [error 10148] reqId=53 OrderId 53 that needs to be cancelled cannot be cancelled, state: Cancelled.
+10:33:27.677  --- open orders: after flatten
+10:33:27.679  [disconnected]
+10:33:27.680  Log written to D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke-results\watch-20261106-101810.log

@@ -1,0 +1,51 @@
+10:11:50.084  [error 2104] reqId=-1 Market data farm connection is OK:usfarm
+10:11:50.086  [error 2106] reqId=-1 HMDS data farm connection is OK:ushmds
+10:11:50.087  [error 2158] reqId=-1 Sec-def data farm connection is OK:secdefnj
+10:11:50.088  [error 2172] reqId=-1 The version of the application you are running, 1033.1, needs to be upgraded, as it will be desupported on 20261215. The minimum supported version at that time will be 1050.1. 
+10:11:50.575  ib_async 2.1.0, server version 178, accounts ['DUR316340'], Gateway time 2026-11-06 15:11:50+00:00
+10:11:50.769  Using MNQZ6 (conId 815824267, last trade 20261218)
+10:11:50.854  [error 2119] reqId=-1 Market data farm is connecting:usfuture
+10:11:51.418  [error 2104] reqId=-1 Market data farm connection is OK:usfuture
+10:11:51.798  Market MNQZ6: bid 27205.75 ask 27206.5 last 27206.25
+10:11:51.800  Placed BUY bracket: entry 25846.0, take-profit 25896.0, stop 25796.0 (ids [44, 45, 46])
+10:11:51.803  Watching for 15 minutes. Now break the connection (see README), then restore it.
+10:11:53.493      subscribed to 1-min bars (31 backfilled)
+10:11:53.494      connected, last bar update None
+10:12:23.637      connected, last bar update 2026-11-06 10:12:20.275880
+10:12:53.716      connected, last bar update 2026-11-06 10:12:50.287022
+10:13:23.894      connected, last bar update 2026-11-06 10:13:20.281239
+10:13:54.051      connected, last bar update 2026-11-06 10:13:50.275852
+10:14:24.252      connected, last bar update 2026-11-06 10:14:20.391038
+10:14:54.333      connected, last bar update 2026-11-06 10:14:50.277704
+10:15:24.457      connected, last bar update 2026-11-06 10:15:20.274828
+10:15:54.696      connected, last bar update 2026-11-06 10:15:50.279282
+10:16:05.950  [disconnected]
+10:16:06.119  CRASH:
+Traceback (most recent call last):
+  File "C:\Python310\lib\asyncio\tasks.py", line 605, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Python310\lib\site-packages\ib_async\util.py", line 360, in run
+    result = loop.run_until_complete(task)
+  File "C:\Python310\lib\asyncio\base_events.py", line 641, in run_until_complete
+    return future.result()
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke_test.py", line 330, in main
+    STEPS[args.step](ib, args)
+  File "D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke_test.py", line 296, in step_watch
+    ib.sleep(1)
+  File "C:\Python310\lib\site-packages\ib_async\util.py", line 405, in sleep
+    run(asyncio.sleep(secs))
+  File "C:\Python310\lib\site-packages\ib_async\util.py", line 362, in run
+    raise globalErrorEvent.value() or e
+ConnectionError: Socket disconnect
+
+10:16:06.127  Log written to D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke-results\watch-20261106-101149.log

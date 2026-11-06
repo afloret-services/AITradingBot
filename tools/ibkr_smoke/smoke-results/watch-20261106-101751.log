@@ -1,0 +1,40 @@
+10:17:51.359  [error 10141] reqId=-1 Paper trading disclaimer must first be accepted for API connection.
+10:18:01.345  CRASH:
+Traceback (most recent call last):
+  File "C:\Python310\lib\asyncio\tasks.py", line 644, in _wrap_awaitable
+    return (yield from awaitable.__await__())
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Python310\lib\asyncio\tasks.py", line 456, in wait_for
+    return fut.result()
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke_test.py", line 330, in main
+    STEPS[args.step](ib, args)
+  File "D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke_test.py", line 252, in step_watch
+    connect(ib)
+  File "D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke_test.py", line 52, in connect
+    ib.connect(HOST, PORT, clientId=CLIENT_ID, timeout=10)
+  File "C:\Python310\lib\site-packages\ib_async\ib.py", line 369, in connect
+    return self._run(
+  File "C:\Python310\lib\site-packages\ib_async\ib.py", line 428, in _run
+    return util.run(*awaitables, timeout=self.RequestTimeout)
+  File "C:\Python310\lib\site-packages\ib_async\util.py", line 360, in run
+    result = loop.run_until_complete(task)
+  File "C:\Python310\lib\asyncio\base_events.py", line 641, in run_until_complete
+    return future.result()
+  File "C:\Python310\lib\site-packages\ib_async\ib.py", line 2043, in connectAsync
+    await self.client.connectAsync(host, port, clientId, timeout)
+  File "C:\Python310\lib\site-packages\ib_async\client.py", line 227, in connectAsync
+    await asyncio.wait_for(self.apiStart, timeout)
+  File "C:\Python310\lib\asyncio\tasks.py", line 458, in wait_for
+    raise exceptions.TimeoutError() from exc
+asyncio.exceptions.TimeoutError
+
+10:18:01.349  Log written to D:\Workspaces\AITradingBot\AITradingBot\tools\ibkr_smoke\smoke-results\watch-20261106-101751.log
