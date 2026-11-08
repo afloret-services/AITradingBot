@@ -138,9 +138,9 @@
             <h3 style="margin-top:10px">Strategy overlay</h3>
             <label><input type="checkbox" id="showEm"> EMA 200 + MACD Trades (row G, fixed rules)</label>
             <label><input type="checkbox" id="showOte"> OTE + OB on the chart (row H) · leg <select id="oteTf"><option value="5">5m</option><option value="10">10m</option><option value="15">15m</option></select></label>
-            <label>H impulse: a candle ≥ <input type="number" id="oteDispK" value="1" min="0" step="0.1" style="width:46px"> × average range, body ≥ <input type="number" id="oteBodyPct" value="50" min="0" max="100" step="5" style="width:46px"> % (0 = off)</label>
+            <label>H impulse: the leg leaves a ≥ 4-tick FVG whose middle candle is ≥ <input type="number" id="oteDispK" value="1.5" min="0" step="0.1" style="width:46px"> × average range, body ≥ <input type="number" id="oteBodyPct" value="60" min="0" max="100" step="5" style="width:46px"> % (0 = off)</label>
             <label>H levels on the chart <select id="oteFibShow"><option value="all">all setups (labels once the OB is reached)</option><option value="touched">setups that reached the OB</option><option value="traded">setups that traded</option></select></label>
-            <label>H setups watched at once <input type="number" id="oteMax" value="3" min="1" step="1" style="width:46px"> (Trades never overlap)</label></div>
+            <label>H setups watched at once <input type="number" id="oteMax" value="0" min="0" step="1" style="width:46px"> (0 = unlimited; Trades never overlap)</label></div>
           <div><h3>On the price chart</h3>
             <label><input type="checkbox" id="showVwap"> VWAP <select id="vwapAnchor"><option value="td">from 18:00</option><option value="rth">from 09:30</option></select></label>
             <label><input type="checkbox" id="showBb"> Bollinger period <input type="number" data-p="bb.n" step="1" style="width:46px"> × SD <input type="number" data-p="bb.k" step="0.1" style="width:46px"></label>
@@ -221,7 +221,7 @@
           <li><b>Bollinger Bands</b> (display only, from the DAFT Trade documentation): SMA 20 of the displayed bars' closes (dashed) ± 2 standard deviations, shaded between the bands.</li>
           <li><b>VWAP and RSI</b> (display only, no rule uses them; settings from the DAFT Trade documentation): <b>VWAP</b> = Σ(typical price × volume) ÷ Σ volume on the 1m bars, reset at 18:00 NY (the start of the Trading day) or at 09:30 NY (then shown 09:30–17:00 only); a 5m or 15m bar shows the VWAP at its last minute. It needs the file's volume column. <b>RSI 14</b> (Wilder) of the displayed bars in its own pane, with 70/30 lines.</li>
           <li><b>MACD pane</b> (display only, no rule uses it): MACD 12,26,9 under the chart. "Chart timeframe" uses the displayed 1m, 5m or 15m bars. "15m" is the EMA·MACD strategy's MACD; on 1m and 5m charts each bar shows the last 15m bar closed before it. Turning on "Show EMA 200 + MACD" switches the pane to 15m if it was off.</li>
-          <li><b>H · OTE + OB with 1m confirmation</b> (the user's method; <b>a method to validate, not a proven system</b>; comparison row; its setups are always listed in the day list and the day's card; "OTE + OB on the chart" draws them, violet): in the direction of the last 1h break of structure (a 1h close beyond the last 1h swing, 2 bars each side; a setup not yet at its OB ends if the 1h turns), a leg on 5, 10 or 15 min that broke structure (a close beyond the last swing, 2 bars each side) and holds a displacement candle (H's own test, looser than the FVG's: range ≥ 1.0× the 20-bar average and body ≥ 50% by default, set next to the H overlay; 0 turns a part off); Fibonacci 0% at its end, 100% at its start. Only in discount (buys) or premium (sells): an OB, the last opposite candle inside the leg whose high (low) a later close broke, overlapping the OTE (61.8%–78.6%), nearest 70.5%. When a 1m bar reaches the OB: a 1m local low (1 bar each side, equal lows on the right allowed) swept by a tick, then a 1m close above the last minor high (CHoCH). Both are required. Several setups are watched at once ("H setups watched at once", default 3; beyond that the oldest untouched one is dropped), each with its own OB and 1m confirmation, and a swing's break makes one setup at most; Trades never overlap, so a CHoCH while another Trade is pending or open is skipped ("a Trade is already live"). Entry: limit at the near edge of the latest 1m FVG of the CHoCH move, else the high of the last bearish 1m candle (1m OB). Stop 2 ticks beyond the sweep. Targets 0%, −27%, −62%, one Bracket order each, break-even after the first. A leg-timeframe close beyond 78.6% or the OB invalidates the setup. <i>Interpretations to confirm:</i> entries only 09:30–15:30 NY, flattened at 15:50; reward to 0% at least the "Min reward-to-risk" setting; setups live within their trading day; one Trade at a time.</li>
+          <li><b>H · OTE + OB with 1m confirmation</b> (the user's method; <b>a method to validate, not a proven system</b>; comparison row; its setups are always listed in the day list and the day's card; "OTE + OB on the chart" draws them, violet). Rules as locked in <i>OTE + OB: lock its rules on real bars</i> (long; shorts mirror): <b>direction</b> from the last 1h break of structure alone (a 1h close beyond the last 1h swing, 2 bars each side; requiring the daily Bias to agree was tried and dropped); a setup not yet at its OB ends if the 1h turns. <b>Leg</b> on 5 min that broke structure (a close beyond the last swing, 2 bars each side) and is <b>impulsive: it leaves a 5m FVG passing the Silver Bullet's FVG test</b> (gap ≥ 4 ticks, middle candle closing the leg's way, range ≥ 1.5× the 20-bar average, body ≥ 60%; no 15m check); Fibonacci 0% at its end, 100% at its start. <b>OB</b>: the last opposite 5m candle inside the leg whose high a later close broke, overlapping the OTE (61.8%–78.6%), nearest 70.5%. <b>1m confirmation</b> once a 1m bar reaches the OB (09:30–15:30 NY): a 1m local low (1 bar each side, an equal low on its right allowed) swept by a tick, then a 1m close above the last minor high (CHoCH). <b>Entry: after the CHoCH, a limit at the near edge of the OTE OB</b> (fills on a trade-through; cancelled at 15:30, if TP1 or the stop level is reached first, or if the setup is invalidated). <b>Stop: 2 ticks beyond the far edge of the OTE OB</b> (no Trade if the entry is already beyond it). <b>Targets</b>: TP1 at the highest 1m high since the OB was reached, but at least 1R, then 0% and −27%; one Bracket order each, break-even after TP1. <b>Min reward-to-risk is measured to TP1.</b> All setups are watched at once (a swing's break makes one setup at most); Trades never overlap, so a CHoCH while another Trade is open is skipped. A 5m close beyond 78.6% or the OB invalidates the setup. Setups live within their trading day; flattened at 15:50.</li>
           <li><b>Levers for more entries</b> (settings, and the <b>Strategy</b> presets A–F, compared side by side in "Compare strategies". Each preset builds on the one before, except F, which adds the fallback to D):
             <ul>
               <li><b>PM Window</b>: a second Window, 14:00–15:00 NY, with the same rules. An unfilled entry is cancelled at the end of the Window it came from.</li>
@@ -803,7 +803,7 @@ const SB = (() => {
   //    S.breakEven). Skipped if reward to 0% is under minRR.
   // Invalidation: a legTf close below the 78.6% level or below the OB ends the setup, and cancels a resting entry.
   // Entries only between oteFrom and oteTo NY; open Trades flatten at S.flatten; one Trade at a time.
-  const OTE = { maxSetups: 3, dispK: 1.0, bodyPct: 50, htfMin: 60, htfSwingN: 2, legTf: 5, legSwingN: 2, m1SwingN: 1, oteFrom: '09:30', oteTo: '15:30', lv: [0.618, 0.705, 0.786], ext: [0.27, 0.62] };
+  const OTE = { maxSetups: 0, dispK: 1.5, bodyPct: 60, gapTicks: 4, dispN: 20, dailyAgree: false, htfMin: 60, htfSwingN: 2, legTf: 5, legSwingN: 2, m1SwingN: 1, oteFrom: '09:30', oteTo: '15:30', lv: [0.618, 0.705, 0.786], ext: [0.27, 0.62] };
 
   function runOte(ctx, settings) {
     const S = { ...DEFAULTS, ...settings }, P = { ...OTE, ...(settings.ote || {}) };
@@ -821,6 +821,8 @@ const SB = (() => {
       const nd = hH != null && H[x].c > hH && hDir !== 'long' ? 'long' : hL != null && H[x].c < hL && hDir !== 'short' ? 'short' : null;
       if (nd) { hDir = nd; htf.push({ closeT: H[x].t + htfMs, dir: nd, bosT: H[x].t }); }
     }
+    // the daily Bias (the Silver Bullet's rule); only used when P.dailyAgree is on (off: the 1h direction alone decides)
+    const dBias = new Map(ctx.days.map((d, di) => [d.td, dailyBias(ctx, di, S.swingN, S.biasRule).bias]));
     let hi1 = -1; // index into htf for the leg bar being processed
     const htfAt = closeT => { while (hi1 + 1 < htf.length && htf[hi1 + 1].closeT <= closeT) hi1++; return hi1 >= 0 ? htf[hi1] : null; };
     const n = P.legSwingN, m = P.m1SwingN;
@@ -840,12 +842,15 @@ const SB = (() => {
     let tr = null;              // the live Signal (pending or open); Trades never overlap
     const lvl = (s, f) => s.dir === 'long' ? s.hi - f * (s.hi - s.lo) : s.lo + f * (s.hi - s.lo); // f: 0 = 0%, 1 = 100%
     const beyond = (d, p, ref) => d === 'long' ? p < ref : p > ref;
-    const avgRange = k => { let s = 0, c = 0; for (let j = Math.max(0, k - 20); j < k; j++) { s += Q[j].h - Q[j].l; c++; } return c ? s / c : 0; };
+    // impulsive = the leg leaves a leg-timeframe FVG passing the Silver Bullet's FVG test: gap >= gapTicks, middle
+    // candle closing the leg's way with range >= dispK x the dispN-bar average and body >= bodyPct % (no 15m check)
+    const avgN = k => { let s = 0, c = 0; for (let j = Math.max(0, k - P.dispN); j < k; j++) { s += Q[j].h - Q[j].l; c++; } return c ? s / c : 0; };
     const impulsive = (from, to, dir) => {
-      for (let k = from; k <= to; k++) {
-        const b = Q[k], r = b.h - b.l, up = b.c > b.o;
-        // H's own displacement test (0 turns a part off); looser by default than the Silver Bullet's FVG test
-        if ((dir === 'long' ? up : !up) && r >= P.dispK * avgRange(k) && Math.abs(b.c - b.o) >= P.bodyPct / 100 * r) return true;
+      for (let k = from + 2; k <= to; k++) {
+        const c1 = Q[k - 2], c2 = Q[k - 1], c3 = Q[k], r = c2.h - c2.l;
+        const gap = dir === 'long' ? c3.l - c1.h : c1.l - c3.h;
+        if (gap >= P.gapTicks * TICK - 1e-9 && (dir === 'long' ? c2.c > c2.o : c2.c < c2.o) && r >= P.dispK * avgN(k - 1)
+          && r > 0 && Math.abs(c2.c - c2.o) >= P.bodyPct / 100 * r - 1e-9) return true;
       }
       return false;
     };
@@ -912,7 +917,7 @@ const SB = (() => {
           if (!su.ob || su.td !== b.td || ownsTrade(su)) continue;
           const d = su.dir, c = su.conf;
           if (!c.touch) {
-            if (inHours && (d === 'long' ? b.l <= su.ob.hi : b.h >= su.ob.lo)) { c.touch = { i, t: b.t }; su.locked = true; }
+            if (inHours && (d === 'long' ? b.l <= su.ob.hi : b.h >= su.ob.lo)) { c.touch = { i, t: b.t }; su.locked = true; c.top = d === 'long' ? b.h : b.l; }
             continue;
           }
           // 1m swing confirmed at i: the bar i - m. lastLow: the local extreme to sweep (a swing low for a long, a swing
@@ -922,36 +927,37 @@ const SB = (() => {
           if (j >= c.touch.i && swing1(j, sweepSide)) c.lastLow = { i: j, t: B[j].t, price: d === 'long' ? B[j].l : B[j].h };
           if (j >= c.touch.i - 30 && swing1(j, chochSide)) c.lastHigh = { i: j, t: B[j].t, price: d === 'long' ? B[j].h : B[j].l };
           if (!c.sweep) {
+            c.top = d === 'long' ? Math.max(c.top, b.h) : Math.min(c.top, b.l);
             if (c.lastLow && (d === 'long' ? b.l <= c.lastLow.price - TICK : b.h >= c.lastLow.price + TICK)) c.sweep = { i, t: b.t, of: c.lastLow, ext: d === 'long' ? b.l : b.h, extI: i };
             continue;
           }
           if (d === 'long' ? b.l < c.sweep.ext : b.h > c.sweep.ext) { c.sweep.ext = d === 'long' ? b.l : b.h; c.sweep.extI = i; }
+          const prevTop = c.top; // the highest 1m high (lowest low for a short) since the touch, before this bar
+          c.top = c.top == null ? (d === 'long' ? b.h : b.l) : d === 'long' ? Math.max(c.top, b.h) : Math.min(c.top, b.l);
           const mh = c.lastHigh && c.lastHigh.i < i ? c.lastHigh : null;
           if (!mh || !(d === 'long' ? b.c > mh.price : b.c < mh.price) || !inHours) continue;
-          // CHoCH at i: entry on the retracement into the 1m FVG or 1m OB of the move
+          // CHoCH at i: a limit rests at the near edge of the OTE OB (its high for a long)
           c.choch = { i, t: b.t, of: mh };
-          let entry = null, src = null;
-          for (let k = i; k >= c.sweep.extI + 2; k--) {
-            const c1 = B[k - 2], c3 = B[k];
-            if (d === 'long' ? c3.l > c1.h : c3.h < c1.l) { entry = d === 'long' ? c3.l : c3.h; src = { kind: '1m FVG', t: c1.t, lo: d === 'long' ? c1.h : c3.h, hi: d === 'long' ? c3.l : c1.l }; break; }
-          }
-          if (entry == null) for (let k = i - 1; k >= Math.max(0, c.sweep.extI - 3); k--) {
-            const x = B[k]; if (d === 'long' ? x.c < x.o : x.c > x.o) { entry = d === 'long' ? x.h : x.l; src = { kind: '1m OB', t: x.t, lo: x.l, hi: x.h }; break; }
-          }
-          if (entry == null) { dropSetup(su, 'no 1m FVG or OB after the CHoCH', b.t); continue; }
-          const sgn = d === 'long' ? 1 : -1, stop = c.sweep.ext - sgn * S.stopOffsetTicks * TICK, risk = Math.abs(entry - stop);
-          const tps = [lvl(su, 0), lvl(su, -P.ext[0]), lvl(su, -P.ext[1])].map(p => Math.round(p / TICK) * TICK);
-          const sig = { dir: d, td: b.td, t: b.t, entry, stop, stopNow: stop, src, setup: su, legs: [], status: 'pending', strategy: 'ote' };
+          const sgn = d === 'long' ? 1 : -1, entry = d === 'long' ? su.ob.hi : su.ob.lo, src = { kind: 'limit at the OTE OB', t: su.ob.t, lo: su.ob.lo, hi: su.ob.hi };
+          // stop: 2 ticks beyond the far edge of the OTE OB (its low for a long)
+          const stop = Math.round(((d === 'long' ? su.ob.lo : su.ob.hi) - sgn * S.stopOffsetTicks * TICK) / TICK) * TICK, risk = (entry - stop) * sgn;
+          // TP1: the highest 1m high (lowest low for a short) since the touch, but at least 1R. Then 0% and -27%.
+          const rawTp1 = prevTop != null ? prevTop : null;
+          const tp1From = rawTp1 != null && (rawTp1 - entry) * sgn >= risk ? 'high since touch' : '1R';
+          const tp1 = Math.round((tp1From === '1R' ? entry + sgn * risk : rawTp1) / TICK) * TICK;
+          const tps = [tp1, lvl(su, 0), lvl(su, -P.ext[0])].map(p => Math.round(p / TICK) * TICK);
+          const sig = { dir: d, td: b.td, t: b.t, entry, stop, stopNow: stop, src, setup: su, legs: [], status: 'pending', strategy: 'ote', tp1From };
           byDay.get(b.td)?.signals.push(sig);
-          const rr = (tps[0] - entry) * sgn / risk; sig.rr = rr;
+          const rr = risk > 0 ? (tps[0] - entry) * sgn / risk : -Infinity; sig.rr = rr;
           const skip = reason => { sig.status = 'skipped'; sig.reason = reason; dropSetup(su, `Signal skipped: ${reason}`, b.t); };
           if (tr) { skip('a Trade is already live'); continue; } // Trades never overlap
-          if (!(risk > 0) || rr < S.minRR - 1e-9) { skip(`reward to 0% is ${rr.toFixed(2)}R`); continue; }
+          if (!(risk > 0)) { skip('entry at or beyond the OB stop'); continue; }
+          if (rr < S.minRR - 1e-9) { skip(`reward to TP1 is ${rr.toFixed(2)}R`); continue; }
           sig.contracts = Math.min(S.maxContracts, Math.floor(riskUSD / (risk * USD_PER_POINT)));
           if (sig.contracts < 1) { skip('stop too wide'); continue; }
-          const names = ['0%', '−27%', '−62%'], nLegs = Math.min(3, sig.contracts);
+          const names = [tp1From === '1R' ? 'TP1 1R' : 'TP1 high', '0%', '−27%'], nLegs = Math.min(3, sig.contracts);
           for (let L = 0; L < nLegs; L++) sig.legs.push({ name: names[L], tp: tps[L], qty: Math.floor(sig.contracts / nLegs) + (L < sig.contracts % nLegs ? 1 : 0) });
-          tr = sig;
+          tr = sig; // pending: fills on a trade-through, cancelled at 15:30, on TP1 or the stop level first, or if the setup ends
         }
       }
 
@@ -979,6 +985,8 @@ const SB = (() => {
       // BOS: the leg from the extreme since the broken swing to this bar's side
       let ek = sw.k; for (let x = sw.k; x <= q; x++) if (dir === 'long' ? Q[x].l < Q[ek].l : Q[x].h > Q[ek].h) ek = x;
       let fk = ek; for (let x = ek; x <= q; x++) if (dir === 'long' ? Q[x].h > Q[fk].h : Q[x].l < Q[fk].l) fk = x;
+      const db = dBias.get(bq.td);
+      if (P.dailyAgree && db !== (dir === 'long' ? 'bull' : 'bear')) { const day = byDay.get(bq.td); if (day) day.biasOff = (day.biasOff || 0) + 1; continue; } // daily Bias must agree
       if (!impulsive(ek, q, dir)) continue; // checked again on later bars as the leg grows
       usedBos.add(dir + sw.k);
       const su = { dir, htf: hb, td: bq.td, bosOf: sw.k, bosT: bq.t, startK: ek, endK: fk, lo: dir === 'long' ? Q[ek].l : Q[fk].l, hi: dir === 'long' ? Q[fk].h : Q[ek].h, conf: {}, locked: false };
@@ -986,7 +994,7 @@ const SB = (() => {
       byDay.get(bq.td)?.setups.push(su);
       live.push(su);
       // too many at once: drop the oldest setup that isn't touched and has no Trade
-      if (live.length > P.maxSetups) { const old = live.find(x => !x.locked && !ownsTrade(x) && x !== su) || live.find(x => !ownsTrade(x) && x !== su); if (old) dropSetup(old, `more than ${P.maxSetups} setups at once`, bq.t); }
+      if (P.maxSetups > 0 && live.length > P.maxSetups) { const old = live.find(x => !x.locked && !ownsTrade(x) && x !== su) || live.find(x => !ownsTrade(x) && x !== su); if (old) dropSetup(old, `more than ${P.maxSetups} setups at once`, bq.t); }
     }
     if (tr) tr.status = tr.status === 'filled' ? 'open at data end' : tr.status;
     return ctx.days.map(d => byDay.get(d.td));
@@ -1124,8 +1132,8 @@ $('#oteTf').onchange = () => { saveInd(); if (ctx) rerun(); };
 // H's displacement values: numbers of at least 0 (0 turns that part of the test off), a body of at most 100%
 ['#oteDispK', '#oteBodyPct', '#oteMax'].forEach(id => $(id).onchange = () => {
   const el = $(id), v = +el.value, max = id === '#oteBodyPct' ? 100 : Infinity;
-  if (!isFinite(v) || v < 0) el.value = id === '#oteBodyPct' ? 50 : id === '#oteMax' ? 3 : 1; else if (v > max) el.value = max;
-  if (id === '#oteMax') el.value = Math.max(1, Math.round(+el.value)); // a whole number of setups, at least 1
+  if (!isFinite(v) || v < 0) el.value = id === '#oteBodyPct' ? 60 : id === '#oteMax' ? 0 : 1.5; else if (v > max) el.value = max;
+  if (id === '#oteMax') el.value = Math.max(0, Math.round(+el.value)); // a whole number of setups, 0 = unlimited
   saveInd(); if (ctx) rerun();
 });
 // ---- indicator values (IP), editable in the panel next to the chart ----
@@ -1270,7 +1278,7 @@ function renderFunnel() {
   // every preset on the same bars, keeping the other settings (Bias rule, risk, ...) as they are now
   const strats = [...SB.PRESETS.map(p => ({ id: p.id, name: p.name, rs: SB.run(ctx, { ...settings, ...p.set }) })),
     { id: 'emamacd', name: 'G · EMA 200 + MACD, 15m (DAFT docs; not a Silver Bullet, comparison only)', rs: emResults },
-    { id: 'ote', name: `H · OTE + OB, ${$('#oteTf').value}m leg (impulse ${$('#oteDispK').value}× / ${$('#oteBodyPct').value}%, ${$('#oteMax').value} setups at once) + 1m sweep & CHoCH (method to validate)`, rs: oteResults }];
+    { id: 'ote', name: `H · OTE + OB, ${$('#oteTf').value}m leg (impulse ${$('#oteDispK').value}× / ${$('#oteBodyPct').value}%, ${+$('#oteMax').value ? $('#oteMax').value + ' setups at once' : 'all setups watched'}) + 1m sweep & CHoCH (method to validate)`, rs: oteResults }];
   const cmp = strats.map(p => {
     const rs = p.rs;
     const trades = rs.flatMap(r => r.signals.filter(s => s.status === 'closed'));
