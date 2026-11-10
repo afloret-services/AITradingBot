@@ -680,7 +680,31 @@ const SB = (() => {
   // Interpretations: entries only 09:45–12:00 and 13:30–15:50 NY (the docs' 15-minute-chart times to avoid, and
   // "close before the end of the session"); no news rule (the prototype has no News calendar); one Trade at a time.
   const EM = { emaN: 200, slopeN: 10, adxN: 14, adxMin: 20, fast: 12, slow: 26, sig: 9, pullbackN: 3, atrN: 14,
-    stopAtr: 0.25, maxStopAtr: 3, tp1R: 1.5, tp2R: 3, entryFrom: '09:45', lunchFrom: '12:00', lunchTo: '13:30' };
+    stopAtr: 0.25, maxStopAtr: 3, tp1R: 1.5, tp2R: 3, entryFrom: '09:45', entryTo: '15:50', lunchFrom: '12:00', lunchTo: '13:30',
+    // settable for the ticket "EMA 200 + MACD: lock its rules for MNQ on real bars":
+    tf: 15,            // chart minutes for every indicator: 15, 60 or 240 (bars built from the 1m bars, on the clock / 18:00 NY for 240)
+    noLunch: true,     // skip entries 12:00-13:30 NY (the docs' rule for 15-minute charts)
+    htfEma: false,     // variant: trend = close vs the EMA 200 of the 4H chart (and its slope), MACD on the chart timeframe
+    histTrigger: false,// variant: enter when the histogram is still against the Trade but has turned for 2 candles
+    ema50: false,      // variant: also require EMA 50 beyond EMA 200 in the Trade's direction
+    fixed2R: false,    // variant: the whole position at 2R; no TP1, no break-even, no MACD exit
+    costPerSide: 0.62, slipTicks: 1 };
+
+  // bars of `minutes` built from the 1m bars; 240-minute bars start at 18:00 New York (the CME session open)
+  function barsOf(ctx, minutes) {
+    const key = 'bars' + minutes;
+    if (ctx[key]) return ctx[key];
+    if (minutes < 240) return (ctx[key] = aggregate(ctx.bars1, minutes));
+    const out = [];
+    let cur = null;
+    for (const b of ctx.bars1) {
+      const since = (b.min - 1080 + 1440) % 1440, k = b.t - (since % minutes) * MIN; // NY minutes since 18:00
+      if (!cur || cur.t !== k) { cur = { t: k, o: b.o, h: b.h, l: b.l, c: b.c, v: b.v, first: b.i, last: b.i, td: b.td }; out.push(cur); }
+      else { cur.h = Math.max(cur.h, b.h); cur.l = Math.min(cur.l, b.l); cur.c = b.c; cur.v += b.v; cur.last = b.i; }
+    }
+    out.forEach((b, k) => { b.k = k; const n = ny(b.t); b.date = n.date; b.min = n.min; });
+    return (ctx[key] = out);
+  }
 
   function emaSeries(xs, n) {
     const k = 2 / (n + 1), out = new Array(xs.length);
@@ -710,12 +734,26 @@ const SB = (() => {
   }
 
   function runEmaMacd(ctx, settings) {
-    const S = { ...DEFAULTS, ...settings }, P = EM;
-    const B = ctx.bars1, Q = ctx.bars15, c = Q.map(b => b.c);
+    const S = { ...DEFAULTS, ...settings }, P = { ...EM, ...(settings.em || {}) }, SL = P.slipTicks * TICK;
+    const B = ctx.bars1, Q = P.tf === 15 ? ctx.bars15 : barsOf(ctx, P.tf), c = Q.map(b => b.c);
     const ema = emaSeries(c, P.emaN), f = emaSeries(c, P.fast), s = emaSeries(c, P.slow);
     const macd = f.map((x, i) => x - s[i]), signal = emaSeries(macd, P.sig), hist = macd.map((x, i) => x - signal[i]);
     const { atr, adx } = wilder(Q, P.adxN);
-    const fl = hm(S.flatten), ef = hm(P.entryFrom), lf = hm(P.lunchFrom), lt = hm(P.lunchTo);
+    const ema50 = P.ema50 ? emaSeries(c, 50) : null;
+    // 4H trend filter: for chart bar q, the last 4H bar that closed by q's close
+    let H = null, hEma = null, hAt = null;
+    if (P.htfEma) {
+      H = barsOf(ctx, 240); hEma = emaSeries(H.map(b => b.c), P.emaN);
+      let h = -1; const idx = Q.map(b => { const close = b.t + P.tf * MIN; while (h + 1 < H.length && H[h + 1].t + 240 * MIN <= close) h++; return h; });
+      hAt = q => idx[q];
+    }
+    const trendOk = (q, sgn) => {
+      if (!P.htfEma) return (Q[q].c - ema[q]) * sgn > 0 && (ema[q] - ema[q - P.slopeN]) * sgn > 0;
+      const h = hAt(q); if (h < P.emaN + P.slopeN) return false;
+      return (Q[q].c - hEma[h]) * sgn > 0 && (hEma[h] - hEma[h - P.slopeN]) * sgn > 0;
+    };
+    const trendLine = q => P.htfEma ? (hAt(q) >= 0 ? hEma[hAt(q)] : null) : ema[q];
+    const fl = hm(S.flatten), ef = hm(P.entryFrom), et = hm(P.entryTo), lf = hm(P.lunchFrom), lt = hm(P.lunchTo);
     const riskUSD = S.capital * S.riskPct / 100;
     const byDay = new Map(ctx.days.map(d => [d.td, { td: d.td, signals: [] }]));
     let tr = null; // the open Trade
@@ -725,6 +763,7 @@ const SB = (() => {
       const sgn = tr.dir === 'long' ? 1 : -1;
       const pts = tr.legs.reduce((a, l) => a + (l.exit - tr.entry) * sgn * l.qty, 0);
       tr.R = pts / (Math.abs(tr.entry - tr.stop) * tr.contracts); tr.usd = pts * USD_PER_POINT; tr.status = 'closed';
+      tr.usdNet = tr.usd - 2 * P.costPerSide * tr.contracts; tr.Rnet = tr.usdNet / (Math.abs(tr.entry - tr.stop) * tr.contracts * USD_PER_POINT);
       tr.exitT = Math.max(...tr.legs.map(l => l.exitT)); tr = null;
     };
 
@@ -738,33 +777,43 @@ const SB = (() => {
           if (i < tr.fromIdx) continue;
           if (b.td !== tr.td || b.min >= fl) { exitAll(b.o, b.t, `flatten ${S.flatten}`); settle(); break; }
           const stopHit = tr.dir === 'long' ? b.l <= tr.stopNow : b.h >= tr.stopNow;
-          if (stopHit) { const gap = tr.dir === 'long' ? b.o < tr.stopNow : b.o > tr.stopNow; exitAll((gap ? b.o : tr.stopNow) - sgn * TICK, b.t, 'stop'); settle(); break; }
+          if (stopHit) { const gap = tr.dir === 'long' ? b.o < tr.stopNow : b.o > tr.stopNow; exitAll((gap ? b.o : tr.stopNow) - sgn * SL, b.t, 'stop'); settle(); break; }
           for (const l of tr.legs) if (l.exit == null && (tr.dir === 'long' ? b.h >= l.tp + TICK : b.l <= l.tp - TICK)) { l.exit = l.tp; l.exitT = b.t; l.how = l.name; }
-          if (tr.legs[0].exit != null && tr.stopNow !== tr.entry) tr.stopNow = tr.entry; // after TP1: stop to entry
+          if (!P.fixed2R && tr.legs[0].exit != null && tr.stopNow !== tr.entry) tr.stopNow = tr.entry; // after TP1: stop to entry
           if (tr.legs.every(l => l.exit != null)) settle();
         }
         // at the 15m close: trend broken, or (after TP1) the MACD crosses back; exit at the next 1m open
         if (tr && next < B.length) {
-          const broken = tr.dir === 'long' ? bq.c < ema[q] : bq.c > ema[q];
-          const crossBack = tr.legs[0].exit != null && (tr.dir === 'long' ? hist[q - 1] >= 0 && hist[q] < 0 : hist[q - 1] <= 0 && hist[q] > 0);
-          if (broken || crossBack) { exitAll(B[next].o, B[next].t, broken ? 'close beyond EMA 200' : 'MACD crossed back'); settle(); }
+          const tl = trendLine(q), broken = tl != null && (tr.dir === 'long' ? bq.c < tl : bq.c > tl);
+          const crossBack = !P.fixed2R && tr.legs[0].exit != null && (tr.dir === 'long' ? hist[q - 1] >= 0 && hist[q] < 0 : hist[q - 1] <= 0 && hist[q] > 0);
+          if (broken || crossBack) { const sgn = tr.dir === 'long' ? 1 : -1; exitAll(B[next].o - sgn * SL, B[next].t, broken ? 'close beyond EMA 200' : 'MACD crossed back'); settle(); }
         }
       }
       // 2) a new Signal at this 15m close
       if (tr || next >= B.length || atr[q] == null || adx[q] == null) continue;
       const nb = B[next];
-      if (nb.td !== bq.td || nb.min < ef || (nb.min >= lf && nb.min < lt) || nb.min >= fl) continue;
+      if (nb.td !== bq.td || nb.date !== nb.td || nb.min < ef || nb.min >= et || (P.noLunch && nb.min >= lf && nb.min < lt) || nb.min >= fl) continue;
       for (const dir of ['long', 'short']) {
         const sgn = dir === 'long' ? 1 : -1;
-        if (!((bq.c - ema[q]) * sgn > 0 && (ema[q] - ema[q - P.slopeN]) * sgn > 0 && adx[q] > P.adxMin)) continue;
-        // pullback: histogram against the Trade for >= 3 candles, then the cross, with both lines beyond zero
-        let k = q - 1; while (k >= 0 && hist[k] * sgn < 0) k--;
-        if (q - 1 - k < P.pullbackN || hist[q] * sgn <= 0 || macd[q] * sgn >= 0 || signal[q] * sgn >= 0) continue;
+        if (!(trendOk(q, sgn) && adx[q] > P.adxMin)) continue;
+        if (P.ema50 && (ema50[q] - ema[q]) * sgn <= 0) continue;
+        let k;
+        if (P.histTrigger) {
+          // histogram still against the Trade, but turned toward it for 2 candles, after >= 3 candles against it
+          if (!(hist[q] * sgn < 0 && (hist[q] - hist[q - 1]) * sgn > 0 && (hist[q - 1] - hist[q - 2]) * sgn > 0)) continue;
+          if (!((hist[q - 3] - hist[q - 2]) * sgn >= 0)) continue; // the first turning candle, not a later one
+          k = q; while (k >= 0 && hist[k] * sgn < 0) k--;
+          if (q - k < P.pullbackN || macd[q] * sgn >= 0 || signal[q] * sgn >= 0) continue;
+        } else {
+          // pullback: histogram against the Trade for >= 3 candles, then the cross, with both lines beyond zero
+          k = q - 1; while (k >= 0 && hist[k] * sgn < 0) k--;
+          if (q - 1 - k < P.pullbackN || hist[q] * sgn <= 0 || macd[q] * sgn >= 0 || signal[q] * sgn >= 0) continue;
+        }
         let ext = dir === 'long' ? Infinity : -Infinity;
         for (let j = k + 1; j <= q; j++) ext = dir === 'long' ? Math.min(ext, Q[j].l) : Math.max(ext, Q[j].h);
         const raw = ext - sgn * P.stopAtr * atr[q];
         const stop = dir === 'long' ? Math.floor(raw / TICK) * TICK : Math.ceil(raw / TICK) * TICK;
-        const entry = nb.o, risk = Math.abs(entry - stop);
+        const entry = nb.o + sgn * SL, risk = (entry - stop) * sgn;
         const day = byDay.get(nb.td);
         const sig = { dir, entry, stop, stopNow: stop, td: nb.td, t: nb.t, fromIdx: next, legs: [], status: 'pending', strategy: 'ema-macd',
           crossT: bq.t, pullbackT: Q[k + 1].t, ext, atr: atr[q], adx: adx[q], ema: ema[q] };
@@ -772,12 +821,15 @@ const SB = (() => {
         day.signals.push(sig);
         if (risk <= 0 || risk > P.maxStopAtr * atr[q]) { sig.status = 'skipped'; sig.reason = 'stop wider than 3 × ATR'; break; }
         sig.contracts = Math.min(S.maxContracts, Math.floor(riskUSD / (risk * USD_PER_POINT)));
-        if (sig.contracts < 1) { sig.status = 'skipped'; sig.reason = 'stop too wide'; break; }
+        if (sig.contracts < 1) { if (!S.anySize) { sig.status = 'skipped'; sig.reason = 'stop too wide'; break; } sig.contracts = 1; sig.oversize = true; }
         const tp1 = entry + sgn * floorTick(P.tp1R * risk), tp2 = entry + sgn * floorTick(P.tp2R * risk); // rounded toward the entry
         sig.tp1 = tp1; sig.tp2 = tp2;
-        const half = Math.ceil(sig.contracts / 2);
-        sig.legs = [{ name: 'TP1', qty: half, tp: tp1 }];
-        if (sig.contracts - half > 0) sig.legs.push({ name: '3R', qty: sig.contracts - half, tp: tp2 });
+        if (P.fixed2R) { sig.tp1 = entry + sgn * floorTick(2 * risk); sig.legs = [{ name: '2R', qty: sig.contracts, tp: sig.tp1 }]; }
+        else {
+          const half = Math.ceil(sig.contracts / 2);
+          sig.legs = [{ name: 'TP1', qty: half, tp: tp1 }];
+          if (sig.contracts - half > 0) sig.legs.push({ name: '3R', qty: sig.contracts - half, tp: tp2 });
+        }
         sig.status = 'filled'; tr = sig;
         break;
       }
