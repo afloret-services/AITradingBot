@@ -250,11 +250,11 @@ const SB = (() => {
   const TICK = 0.25, MIN = 60000, USD_PER_POINT = 2;
 
   const DEFAULTS = {
-    windowStart: '10:00', windowEnd: '11:00', sweepFrom: '09:30', flatten: '15:50',
+    windowStart: '10:00', windowEnd: '11:00', sweepFrom: '09:30', flatten: '16:55',
     dispK: 1.5, dispN: 20, bodyPct: 60, minGapTicks: 4, swingN: 2,
-    minFrameworkPts: 10, minRR: 1.0, stopOffsetTicks: 2, biasRule: 'swingLeg', entryModel: 'fvg',
+    minFrameworkPts: 10, minRR: 1.0, stopOffsetTicks: 2, biasRule: 'swing', entryModel: 'fvg',
     use15m: true, pmWindow: false, pmStart: '14:00', pmEnd: '15:00', noBias: 'skip', fallback: false, fallbackMins: 15,
-    capital: 5000, riskPct: 2, maxContracts: 5, breakEven: true, sweepUntakenOnly: false,
+    capital: 5000, riskPct: 3, maxContracts: 5, breakEven: true, sweepUntakenOnly: false,
   };
 
   // ---- New York time ----
@@ -1349,7 +1349,7 @@ const FIELDS = [
   ['fallback', 'Fallback FVG (FVG model)', 'checkbox'], ['fallbackMins', 'Fallback: min before Window end', 'number'],
 ];
 $('#fields').innerHTML = FIELDS.map(([k, label, type]) => `<label>${label}<input type="${type}" data-k="${k}" ${type === 'number' ? 'step="any"' : ''}></label>`).join('');
-$('#fields').insertAdjacentHTML('afterbegin', `<label>Bias rule<select data-k="biasRule"><option value="swingLeg">Swing + leg origin</option><option value="swing">Swing (original)</option><option value="prevDay">Previous-day break</option></select></label><label>Entry model<select data-k="entryModel"><option value="fvg">FVG in the Window only (ICT core)</option><option value="chain">Sweep → MSS → FVG (first agreed)</option></select></label><label>When no Bias<select data-k="noBias"><option value="skip">no Signals</option><option value="both">trade both sides (FVG model)</option></select></label>`);
+$('#fields').insertAdjacentHTML('afterbegin', `<label>Bias rule<select data-k="biasRule"><option value="swing">Swing (original, chosen)</option><option value="swingLeg">Swing + leg origin</option><option value="prevDay">Previous-day break</option></select></label><label>Entry model<select data-k="entryModel"><option value="fvg">FVG in the Window only (ICT core)</option><option value="chain">Sweep → MSS → FVG (first agreed)</option></select></label><label>When no Bias<select data-k="noBias"><option value="skip">no Signals</option><option value="both">trade both sides (FVG model)</option></select></label>`);
 const syncForm = () => $$('#fields input, #fields select').forEach(inp => { const v = settings[inp.dataset.k]; if (inp.type === 'checkbox') inp.checked = v; else inp.value = v; });
 syncForm();
 $('#fields').addEventListener('change', e => {
