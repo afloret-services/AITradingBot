@@ -693,7 +693,7 @@ const SB = (() => {
 
   // bars of `minutes` built from the 1m bars; 240-minute bars start at 18:00 New York (the CME session open)
   function barsOf(ctx, minutes) {
-    const key = 'bars' + minutes;
+    const key = minutes === 1 ? 'bars1m' : 'bars' + minutes; // ctx.bars1 is the raw 1m list, without first/last
     if (ctx[key]) return ctx[key];
     if (minutes < 240) return (ctx[key] = aggregate(ctx.bars1, minutes));
     const out = [];
