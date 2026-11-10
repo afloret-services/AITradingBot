@@ -219,3 +219,4 @@ __marimo__/
 
 # Claude Code agent worktrees
 .claude/worktrees/
+prototypes/strategy-lab/ibkr_cache/

@@ -20,7 +20,10 @@ same bars built into larger timeframes (--tf, default 5m 15m 1h 4h), one file ea
 only while it is the Active contract: from the previous contract's Roll to its own, the Roll being the Thursday
 8 days before expiry (the third Friday of the month). Bars are raw per-contract prices, not back-adjusted, so a
 lookback that spans a Roll sees the jump between contracts. IBKR serves expired futures for about 2 years after
-expiry, so the history reaches back about 2 years.
+expiry, so the history reaches back about 2 years. It takes about 4 minutes per contract (IBKR's pacing), so about
+30 minutes for 8 contracts; every request prints a line. Each finished contract is saved in ibkr_cache/ and reused
+if the script is run again, so an interrupted run (Ctrl+C) picks up where it stopped. A contract stops at its
+first Active day, when IBKR returns nothing or sends no older bars, or after the requests its span needs.
 """
 import argparse
 import csv
@@ -72,34 +75,58 @@ def quarter_months(first, last):
     return out
 
 
-def fetch(ib, month, start=None, stop=None, weeks=None):
-    """1m bars of one contract as {utc datetime: (o, h, l, c, v)}, back to `start` (or `weeks` weeks), ending at `stop`."""
+def fetch(ib, month, start=None, stop=None, weeks=None, label=""):
+    """1m bars of one contract as {utc datetime: (o, h, l, c, v)}, back to `start` (or `weeks` weeks), ending at `stop`.
+
+    Stops when it reaches `start`, when IBKR returns nothing, when a request brings no older bars (IBKR sometimes
+    answers the same week again), or after the number of requests the span needs plus 2, whichever comes first."""
     from ib_async import Future
     c = Future("MNQ", lastTradeDateOrContractMonth=month, exchange="CME", currency="USD", includeExpired=True)
     if not ib.qualifyContracts(c):
-        print(f"{month}: not found at IBKR (older than about 2 years?), skipped")
+        print(f"{label}{month}: not found at IBKR (older than about 2 years?), skipped")
         return {}
-    print("Contract:", c.localSymbol)
+    now = dt.datetime.now(UTC)
+    span_days = ((min(stop, now) if stop else now) - start).days if start else weeks * 7
+    max_req = -(-span_days // days_per_chunk) + 2
+    print(f"{label}{c.localSymbol}: about {max_req - 2} requests of {a.chunk}, ~{(max_req - 2) * 15 // 60 + 1} min")
     bars = {}
-    end = "" if stop is None or stop >= dt.datetime.now(UTC) else stop.strftime("%Y%m%d %H:%M:%S UTC")
-    n = 0
-    while True:
+    end = "" if stop is None or stop >= now else stop
+    prev_first = None
+    for n in range(1, max_req + 1):
         chunk = ib.reqHistoricalData(c, endDateTime=end, durationStr=a.chunk, barSizeSetting="1 min",
-                                     whatToShow="TRADES", useRTH=False, formatDate=2)
+                                     whatToShow="TRADES", useRTH=False, formatDate=2, timeout=120)
         if not chunk:
-            print("No more data.")
+            print(f"{label}{c.localSymbol}: IBKR returned no bars (no older data, or the request timed out); next contract")
             break
         for b in chunk:
             if (start is None or b.date >= start) and (stop is None or b.date < stop):
                 bars[b.date] = (b.open, b.high, b.low, b.close, int(b.volume))
         first = chunk[0].date
-        print(f"{c.localSymbol}: {len(chunk)} bars back to {first:%Y-%m-%d %H:%M} UTC")
-        n += 1
-        ib.sleep(11)  # stay inside IBKR's historical-data pacing limits
+        print(f"{label}{c.localSymbol}: request {n}/{max_req - 2}, {len(chunk)} bars back to {first:%Y-%m-%d %H:%M} UTC, {len(bars)} kept")
+        if prev_first is not None and first >= prev_first:
+            print(f"{label}{c.localSymbol}: IBKR sent no older bars; next contract")
+            break
+        prev_first = first
         if (start is not None and first <= start) or (weeks is not None and n * days_per_chunk >= weeks * 7):
             break
-        end = first.strftime("%Y%m%d %H:%M:%S UTC")
+        ib.sleep(11)  # stay inside IBKR's historical-data pacing limits
+        end = first
+    else:
+        print(f"{label}{c.localSymbol}: request limit reached; next contract")
     return bars
+
+
+def cache_path(month):
+    return os.path.join(os.path.dirname(a.out) or ".", "ibkr_cache", f"MNQ_{month}_1m.csv")
+
+
+def read_csv(path):
+    out = {}
+    with open(path, newline="") as f:
+        for r in csv.DictReader(f):
+            t = dt.datetime.strptime(r["ts"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
+            out[t] = (float(r["open"]), float(r["high"]), float(r["low"]), float(r["close"]), int(float(r.get("volume") or 0)))
+    return out
 
 
 def bucket(t, minutes):
@@ -143,10 +170,7 @@ def tf_path(tf):
 
 bars = {}
 if a.from_csv:
-    with open(a.from_csv, newline="") as f:
-        for r in csv.DictReader(f):
-            t = dt.datetime.strptime(r["ts"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
-            bars[t] = (float(r["open"]), float(r["high"]), float(r["low"]), float(r["close"]), int(float(r.get("volume") or 0)))
+    bars = read_csv(a.from_csv)
     print(f"Read {len(bars)} 1m bars from {a.from_csv}")
 else:
     from ib_async import IB
@@ -160,7 +184,22 @@ else:
             stop = dt.datetime.combine(roll_date(m), dt.time(22), UTC)
             if i == 0:
                 start = stop - dt.timedelta(days=91)
-            bars.update(fetch(ib, m, start=start, stop=stop))
+            label = f"[{i + 1}/{len(months)}] "
+            if start >= dt.datetime.now(UTC):
+                print(f"{label}{m}: not Active yet, skipped")
+                continue
+            # a finished contract is saved once and reused on the next run (delete ibkr_cache/ to fetch it again);
+            # the contract still Active is always fetched afresh
+            cp = cache_path(m)
+            if stop < dt.datetime.now(UTC) and os.path.exists(cp):
+                got = read_csv(cp)
+                print(f"{label}{m}: {len(got)} bars from {cp} (already fetched)")
+            else:
+                got = fetch(ib, m, start=start, stop=stop, label=label)
+                if got and stop < dt.datetime.now(UTC):
+                    os.makedirs(os.path.dirname(cp), exist_ok=True)
+                    write(cp, got)
+            bars.update(got)
     else:
         bars = fetch(ib, a.month, weeks=a.weeks)
     ib.disconnect()
