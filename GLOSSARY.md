@@ -141,8 +141,12 @@ One Trading day the bot ran on the Paper account.
 _Avoid_: Run (that is a backtest), session (alone; that is Asia, London or the cash session)
 
 **Clean session**:
-A Paper session in which the bot covered every listed trading window with no unexplained Halt, every Signal has a final Verdict, the day's replay matches what the bot did, every Trade was reviewed as matching its rules, no risk limit was breached and the net position always checked out.
+A Paper session in which the bot covered every Setup's entry hours across the Trading day with no unexplained Halt (a disconnect inside the Daily reset is excused when the bot recovers cleanly), every Signal has a final Verdict, the day's replay matches what the bot did, every Trade was reviewed as matching its rules, no risk limit was breached and the net position always checked out.
 _Avoid_: Good day, successful session
+
+**Daily reset**:
+IBKR's nightly maintenance window, inside the CME Trading day, during which the broker connection may drop; the bot opens nothing new until it has recovered.
+_Avoid_: Daily restart (that is IB Gateway's own scheduled restart), maintenance, outage
 
 **Drill**:
 A deliberate exercise on the Paper account that forces one failure or limit (an unexpected position, a missing stop, a Stand-down, a Gateway restart) to show the bot reacts as its rules say; it trades only a built-in test Setup and never counts as a Paper session toward the Clean-session count.
