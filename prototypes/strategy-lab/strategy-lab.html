@@ -688,6 +688,7 @@ const SB = (() => {
     histTrigger: false,// variant: enter when the histogram is still against the Trade but has turned for 2 candles
     ema50: false,      // variant: also require EMA 50 beyond EMA 200 in the Trade's direction
     fixed2R: false,    // variant: the whole position at 2R; no TP1, no break-even, no MACD exit
+    allSessions: false,// entries in every session of the Trading day (from 18:00 NY the evening before) up to entryTo; flatten at S.flatten on the trade date
     costPerSide: 0.62, slipTicks: 1 };
 
   // bars of `minutes` built from the 1m bars; 240-minute bars start at 18:00 New York (the CME session open)
@@ -775,7 +776,7 @@ const SB = (() => {
         for (let i = bq.first; i <= bq.last && tr; i++) {
           const b = B[i];
           if (i < tr.fromIdx) continue;
-          if (b.td !== tr.td || b.min >= fl) { exitAll(b.o, b.t, `flatten ${S.flatten}`); settle(); break; }
+          if (b.td !== tr.td || ((!P.allSessions || b.date === b.td) && b.min >= fl)) { exitAll(b.o, b.t, `flatten ${S.flatten}`); settle(); break; }
           const stopHit = tr.dir === 'long' ? b.l <= tr.stopNow : b.h >= tr.stopNow;
           if (stopHit) { const gap = tr.dir === 'long' ? b.o < tr.stopNow : b.o > tr.stopNow; exitAll((gap ? b.o : tr.stopNow) - sgn * SL, b.t, 'stop'); settle(); break; }
           for (const l of tr.legs) if (l.exit == null && (tr.dir === 'long' ? b.h >= l.tp + TICK : b.l <= l.tp - TICK)) { l.exit = l.tp; l.exitT = b.t; l.how = l.name; }
@@ -792,7 +793,8 @@ const SB = (() => {
       // 2) a new Signal at this 15m close
       if (tr || next >= B.length || atr[q] == null || adx[q] == null) continue;
       const nb = B[next];
-      if (nb.td !== bq.td || nb.date !== nb.td || nb.min < ef || nb.min >= et || (P.noLunch && nb.min >= lf && nb.min < lt) || nb.min >= fl) continue;
+      if (nb.td !== bq.td) continue;
+      if (P.allSessions ? (nb.date === nb.td && (nb.min >= et || nb.min >= fl)) : (nb.date !== nb.td || nb.min < ef || nb.min >= et || (P.noLunch && nb.min >= lf && nb.min < lt) || nb.min >= fl)) continue;
       for (const dir of ['long', 'short']) {
         const sgn = dir === 'long' ? 1 : -1;
         if (!(trendOk(q, sgn) && adx[q] > P.adxMin)) continue;
