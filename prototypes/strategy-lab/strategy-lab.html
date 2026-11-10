@@ -223,7 +223,7 @@
           <li><b>VWAP and RSI</b> (display only, no rule uses them; settings from the DAFT Trade documentation): <b>VWAP</b> = Σ(typical price × volume) ÷ Σ volume on the 1m bars, reset at 18:00 NY (the start of the Trading day) or at 09:30 NY (then shown 09:30–17:00 only); a 5m or 15m bar shows the VWAP at its last minute. It needs the file's volume column. <b>RSI 14</b> (Wilder) of the displayed bars in its own pane, with 70/30 lines.</li>
           <li><b>MACD pane</b> (display only, no rule uses it): MACD 12,26,9 under the chart. "Chart timeframe" uses the displayed 1m, 5m or 15m bars. "15m" is the EMA·MACD strategy's MACD; on 1m and 5m charts each bar shows the last 15m bar closed before it. Turning on "Show EMA 200 + MACD" switches the pane to 15m if it was off.</li>
           <li><b>H · OTE + OB with 1m confirmation</b> (the user's method; <b>a method to validate, not a proven system</b>; comparison row; its setups are always listed in the day list and the day's card; "OTE + OB on the chart" draws them, violet). Rules as locked in <i>OTE + OB: lock its rules on real bars</i> (long; shorts mirror): <b>direction</b> from the last 1h break of structure alone (a 1h close beyond the last 1h swing, 2 bars each side; requiring the daily Bias to agree was tried and dropped); a setup not yet at its OB ends if the 1h turns. <b>Leg</b> on 5 min that broke structure (a close beyond the last swing, 2 bars each side) and is <b>impulsive: it leaves a 5m FVG passing the Silver Bullet's FVG test</b> (gap ≥ 4 ticks, middle candle closing the leg's way, range ≥ 1.5× the 20-bar average, body ≥ 60%; no 15m check); Fibonacci 0% at its end, 100% at its start. <b>OB</b>: the last opposite 5m candle inside the leg whose high a later close broke, overlapping the OTE (61.8%–78.6%), nearest 70.5%. <b>1m confirmation</b> once a 1m bar reaches the OB (09:30–15:30 NY): a 1m local low (1 bar each side, an equal low on its right allowed) swept by a tick, then a 1m close above the last minor high (CHoCH). <b>Entry: after the CHoCH, a limit at the near edge of the OTE OB</b> (fills on a trade-through; cancelled at 15:30, if TP1 or the stop level is reached first, or if the setup is invalidated). <b>Stop: 2 ticks beyond the far edge of the OTE OB</b> (no Trade if the entry is already beyond it). <b>Targets</b>: TP1 at the highest 1m high since the OB was reached, but at least 1R, then 0% and −27%; one Bracket order each, break-even after TP1. <b>Min reward-to-risk is measured to TP1.</b> All setups are watched at once (a swing's break makes one setup at most); Trades never overlap, so a CHoCH while another Trade is open is skipped. A 5m close beyond 78.6% or the OB invalidates the setup. Setups live within their trading day; flattened at 15:50.</li>
-          <li><b>I–L · Published intraday strategies</b> (from the research note on branch <code>research/high-win-rate-futures-strategies</code>; <b>comparison only, none is a Setup</b>). Market entries fill at the bar's open plus 1 tick; stops get 1 tick of slippage; a bar touching both stop and target counts as a stop; costs about $0.62 per contract per side, shown in "Per Trade after costs". Risk is 2% of the capital, and a Signal whose stop needs more is skipped unless "every Signal, 1 MNQ" is on.
+          <li><b>I–L · Published intraday strategies</b> (from the research note on branch <code>research/high-win-rate-futures-strategies</code>; <b>comparison only, none is a Setup</b>). Market entries fill at the bar's open plus 1 tick, and stops get 1 tick of slippage (slipTicks; the gate also runs 2). Only full RTH days are traded, and the first day of a new contract has no prior close, so J and L skip it; a bar touching both stop and target counts as a stop; costs about $0.62 per contract per side, shown in "Per Trade after costs". Risk is 2% of the capital, and a Signal whose stop needs more is skipped unless "every Signal, 1 MNQ" is on.
             <b>I · 5-min opening-range breakout</b>: the 09:30–09:35 bar's direction; enter at 09:35; stop 1 tick beyond the other end of the range; target 10R; time exit at 15:50.
             <b>J · Noise-area momentum</b>: bands = max(open, prior 16:00 close) × (1 + σ) and min(…) × (1 − σ), σ = the 14-day average |close / open − 1| at that minute; at each 30-minute close from 10:00, enter on a close outside the area; exit on a 30-minute close beyond the band or VWAP (whichever is nearer), or at 15:50; hard stop at the far band. R = one noise unit (open × σ), so a loss can exceed 1R.
             <b>K · First half-hour → last half-hour</b>: the sign of the prior 16:00 close → 10:00 move; enter at 15:30 that way, exit at 16:00 (past the 15:50 flatten, as in the paper); stop = the 14-day average 15:30–16:00 range.
@@ -1015,6 +1015,7 @@ const SB = (() => {
   // R = the planned risk (entry to stop) x contracts; Rnet subtracts the costs.
   const PUB = {
     costPerSide: 0.62,
+    slipTicks: 1,              // slippage on market entries, stops and time exits after a 30-min check (the gate also runs 2)
     orbTargetR: 10,            // I: 5-min ORB (Zarattini & Aziz 2023): 10R target, stop at the far side of the range
     noiseDays: 14,             // J: noise area (Zarattini, Aziz & Barbon 2024): 14-day average move from the open
     halfHourStopDays: 14,      // K: first half-hour -> last half-hour (Gao et al. 2018): stop = 14-day average last-half-hour range
@@ -1029,7 +1030,7 @@ const SB = (() => {
   };
 
   function runPublished(ctx, id, settings) {
-    const S = { ...DEFAULTS, ...PUB, ...settings }, B = ctx.bars1, fl = hm(S.flatten);
+    const S = { ...DEFAULTS, ...PUB, ...settings }, B = ctx.bars1, fl = hm(S.flatten), SL = S.slipTicks * TICK;
     const riskUSD = S.capital * S.riskPct / 100;
     const out = ctx.days.map(d => ({ td: d.td, signals: [], info: null }));
     // RTH session of each day: 09:30 open bar, the bar index at a given NY minute, the 16:00 close
@@ -1039,12 +1040,28 @@ const SB = (() => {
       const o = atOrAfter(570), last = (() => { let k = -1; for (let i = d.from; i <= d.to; i++) if (B[i].date === d.td && B[i].min < 960) k = i; return k; })();
       return { at, atOrAfter, o: o >= 0 && B[o].min === 570 ? o : -1, last };
     });
-    const prevClose = di => { for (let x = di - 1; x >= 0; x--) if (rth[x].last >= 0) return B[rth[x].last].c; return null; };
+    // the first Trading day of each contract: the day after its Roll (the Thursday 8 days before the third Friday of
+    // Mar/Jun/Sep/Dec). The CSV holds raw per-contract prices, so the prior close then belongs to the old contract.
+    const firstOfContract = new Set();
+    for (const d of ctx.days) {
+      const y = +d.td.slice(0, 4);
+      for (const m of [3, 6, 9, 12]) {
+        const f = new Date(Date.UTC(y, m - 1, 15)); f.setUTCDate(15 + (5 - f.getUTCDay() + 7) % 7); // third Friday
+        f.setUTCDate(f.getUTCDate() - 7); firstOfContract.add(f.toISOString().slice(0, 10));        // Roll Thursday + 1 day
+      }
+    }
+    // only full RTH days are traded (the trading calendar: early-close days off), so a short or holiday day is skipped
+    const fullDay = di => { const R = rth[di]; return R.o >= 0 && R.last - R.o >= 384; };
+    const prevClose = di => {
+      if (firstOfContract.has(ctx.days[di].td)) return null;
+      for (let x = di - 1; x >= 0; x--) if (rth[x].last >= 0) return B[rth[x].last].c;
+      return null;
+    };
 
     // walk a Trade bar by bar from index i0 (market entry at B[i0].o) until stop, target or the time exit
     function trade(di, i0, dir, stopPx, targetPx, opts = {}) {
       const sgn = dir === 'long' ? 1 : -1, b0 = B[i0];
-      const entry = b0.o + sgn * TICK; // 1 tick of slippage on the market entry
+      const entry = b0.o + sgn * SL; // slippage on the market entry (S.slipTicks)
       const risk = (entry - stopPx) * sgn;
       const sig = { dir, td: b0.td, t: b0.t, entry, stop: stopPx, stopNow: stopPx, legs: [], status: 'pending', strategy: id, why: opts.why || '' };
       out[di].signals.push(sig);
@@ -1060,9 +1077,9 @@ const SB = (() => {
         if (b.td !== sig.td || b.min >= endMin || (opts.exitAt && opts.exitAt(i))) { leg.exit = b.o; leg.exitT = b.t; leg.how = opts.exitHow || `time exit ${hhmm(b.t)}`; break; }
         if (opts.trail) { const tl = opts.trail(i); if (tl != null) sig.stopNow = dir === 'long' ? Math.max(sig.stopNow, tl) : Math.min(sig.stopNow, tl); }
         const stopHit = dir === 'long' ? b.l <= sig.stopNow : b.h >= sig.stopNow;
-        if (stopHit) { const gap = dir === 'long' ? b.o < sig.stopNow : b.o > sig.stopNow; leg.exit = (gap ? b.o : sig.stopNow) - sgn * TICK; leg.exitT = b.t; leg.how = sig.stopNow === stopPx ? 'stop' : 'trailing stop'; break; }
+        if (stopHit) { const gap = dir === 'long' ? b.o < sig.stopNow : b.o > sig.stopNow; leg.exit = (gap ? b.o : sig.stopNow) - sgn * SL; leg.exitT = b.t; leg.how = sig.stopNow === stopPx ? 'stop' : 'trailing stop'; break; }
         if (targetPx != null && (dir === 'long' ? b.h >= targetPx + TICK : b.l <= targetPx - TICK)) { leg.exit = targetPx; leg.exitT = b.t; leg.how = 'target'; break; }
-        if (opts.closeCheck) { const r = opts.closeCheck(i); if (r) { const nb = B[i + 1]; leg.exit = nb && nb.td === sig.td ? nb.o - sgn * TICK : b.c; leg.exitT = nb ? nb.t : b.t; leg.how = r; break; } }
+        if (opts.closeCheck) { const r = opts.closeCheck(i); if (r) { const nb = B[i + 1]; leg.exit = nb && nb.td === sig.td ? nb.o - sgn * SL : b.c; leg.exitT = nb ? nb.t : b.t; leg.how = r; break; } }
       }
       if (leg.exit == null) { sig.status = 'open at data end'; return sig; }
       const pts = (leg.exit - entry) * sgn * sig.contracts, cost = 2 * S.costPerSide * sig.contracts;
@@ -1074,13 +1091,13 @@ const SB = (() => {
 
     if (id === 'orb') { // I: direction of the first 5-min bar; enter at 09:35; stop at the other end of the range; 10R target
       ctx.days.forEach((d, di) => {
-        const R = rth[di]; if (R.o < 0) { out[di].info = 'no 09:30 bar'; return; }
+        const R = rth[di]; if (!fullDay(di)) { out[di].info = 'early close or holiday: not traded'; return; } 
         const i5 = R.at(575); if (i5 < 0) { out[di].info = 'no 09:35 bar'; return; }
         let hi = -Infinity, lo = Infinity; for (let i = R.o; i < i5; i++) { hi = Math.max(hi, B[i].h); lo = Math.min(lo, B[i].l); }
         const o = B[R.o].o, c = B[i5 - 1].c;
         if (c === o) { out[di].info = 'first 5 minutes closed flat: no Trade'; return; }
         const dir = c > o ? 'long' : 'short', sgn = dir === 'long' ? 1 : -1, stop = dir === 'long' ? lo - TICK : hi + TICK;
-        const entry = B[i5].o + sgn * TICK, tgt = Math.round((entry + sgn * S.orbTargetR * Math.abs(entry - stop)) / TICK) * TICK;
+        const entry = B[i5].o + sgn * SL, tgt = Math.round((entry + sgn * S.orbTargetR * Math.abs(entry - stop)) / TICK) * TICK;
         trade(di, i5, dir, stop, tgt, { why: `opening range ${px(lo)}–${px(hi)}, first 5 minutes ${dir === 'long' ? 'up' : 'down'}` });
       });
     }
@@ -1092,10 +1109,10 @@ const SB = (() => {
         const o = B[R.o].o; for (let i = R.o; i <= R.last; i++) m.set(B[i].min, Math.abs(B[i].c / o - 1));
       });
       ctx.days.forEach((d, di) => {
-        const R = rth[di]; if (R.o < 0) { out[di].info = 'no 09:30 bar'; return; }
+        const R = rth[di]; if (!fullDay(di)) { out[di].info = 'early close or holiday: not traded'; return; } 
         const hist = moves.slice(Math.max(0, di - S.noiseDays), di).filter(m => m.size);
         if (hist.length < S.noiseDays) { out[di].info = `only ${hist.length} earlier days for the noise area (needs ${S.noiseDays})`; return; }
-        const pc = prevClose(di), o = B[R.o].o; if (pc == null) return;
+        const pc = prevClose(di), o = B[R.o].o; if (pc == null) { out[di].info = 'first day of a new contract: no prior close'; return; }
         const sigma = min => { let s = 0, c = 0; for (const m of hist) if (m.has(min)) { s += m.get(min); c++; } return c ? s / c : null; };
         const UB = min => Math.max(o, pc) * (1 + sigma(min)), LB = min => Math.min(o, pc) * (1 - sigma(min));
         let pv = 0, vv = 0; const vwap = []; for (let i = R.o; i <= R.last; i++) { const tp = (B[i].h + B[i].l + B[i].c) / 3, v = B[i].v || 1; pv += tp * v; vv += v; vwap[i] = pv / vv; }
@@ -1111,7 +1128,7 @@ const SB = (() => {
               // the 14-day average move from the open at this minute (open x sigma), which can be lost several times over.
               const trailAt = k => dir === 'long' ? Math.max(UB(B[k].min), vwap[k]) : Math.min(LB(B[k].min), vwap[k]);
               const hard = dir === 'long' ? LB(b.min) : UB(b.min);
-              const sgn = dir === 'long' ? 1 : -1, e0 = B[i + 1].o + sgn * TICK, unit = Math.max(4 * TICK, o * sigma(b.min));
+              const sgn = dir === 'long' ? 1 : -1, e0 = B[i + 1].o + sgn * SL, unit = Math.max(4 * TICK, o * sigma(b.min));
               const stopForR = Math.round((e0 - sgn * unit) / TICK) * TICK;
               const sig = trade(di, i + 1, dir, Math.round(hard / TICK) * TICK, null, { sizePts: unit,
                 why: `30-min close ${px(b.c)} ${dir === 'long' ? 'above the upper' : 'below the lower'} noise band ${px(dir === 'long' ? UB(b.min) : LB(b.min))}`,
@@ -1139,7 +1156,8 @@ const SB = (() => {
       const lastHalf = ctx.days.map((d, di) => { const R = rth[di], a = R.at(930); if (a < 0) return null; let hi = -Infinity, lo = Infinity; for (let i = a; i <= R.last; i++) { hi = Math.max(hi, B[i].h); lo = Math.min(lo, B[i].l); } return hi - lo; });
       ctx.days.forEach((d, di) => {
         const R = rth[di], pc = prevClose(di), i10 = R.at(599), i1530 = R.at(930);
-        if (pc == null || i10 < 0 || i1530 < 0) { out[di].info = 'missing bars'; return; }
+        if (!fullDay(di)) { out[di].info = 'early close or holiday: not traded'; return; } 
+        if (pc == null || i10 < 0 || i1530 < 0) { out[di].info = pc == null ? 'first day of a new contract: no prior close' : 'missing bars'; return; }
         const hist = lastHalf.slice(Math.max(0, di - S.halfHourStopDays), di).filter(x => x != null);
         if (hist.length < S.halfHourStopDays) { out[di].info = `only ${hist.length} earlier days for the stop (needs ${S.halfHourStopDays})`; return; }
         const r1 = B[i10].c - pc; if (r1 === 0) { out[di].info = 'first half-hour flat'; return; }
@@ -1151,11 +1169,12 @@ const SB = (() => {
 
     if (id === 'gap') { // L: fade the RTH gap at 09:30, target half the gap, stop the same distance away
       ctx.days.forEach((d, di) => {
-        const R = rth[di], pc = prevClose(di); if (R.o < 0 || pc == null) { out[di].info = 'no gap (missing bars)'; return; }
+        const R = rth[di], pc = prevClose(di); if (!fullDay(di)) { out[di].info = 'early close or holiday: not traded'; return; } 
+        if (pc == null) { out[di].info = 'first day of a new contract: no prior close'; return; }
         const o = B[R.o].o, gap = o - pc;
         if (Math.abs(gap) < S.gapMinPts) { out[di].info = `gap ${px(gap)} pts under ${S.gapMinPts}: no Trade`; return; }
         const dir = gap > 0 ? 'short' : 'long', sgn = dir === 'long' ? 1 : -1, half = Math.round(Math.abs(gap) / 2 / TICK) * TICK;
-        const entry = o + sgn * TICK;
+        const entry = o + sgn * SL;
         trade(di, R.o, dir, entry - sgn * half, entry + sgn * half, { why: `gap ${gap > 0 ? 'up' : 'down'} ${px(Math.abs(gap))} pts from the prior close ${px(pc)}` });
       });
     }
