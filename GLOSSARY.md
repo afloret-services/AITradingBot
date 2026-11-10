@@ -120,6 +120,18 @@ _Avoid_: Halt (that needs a human), pause
 The account size the bot sizes its Trades against, set by the user rather than read from the broker's balance, and grown or shrunk only by the bot's own realised profit and loss.
 _Avoid_: Balance, equity, net liquidation (the broker's figure)
 
+**Risk per Trade**:
+The share of Trading capital one Trade may lose at its stop, one setting for the whole bot; applied to the Trading capital at the start of each Trading day, it gives the day's risk amount, which is 1R.
+_Avoid_: Risk percent per Setup, position size
+
+**Peak capital**:
+The highest Trading capital the bot has had at the start of any Trading day, the mark a Drawdown Halt is measured from; it moves down only when the user resets it.
+_Avoid_: High-water mark, all-time high, equity peak
+
+**Drawdown Halt**:
+A Halt caused by Trading capital falling a set share below Peak capital; the bot restarts only after the user resets Peak capital, while a backtest logs it, resets Peak capital and carries on.
+_Avoid_: Max drawdown (that is a backtest statistic), circuit breaker
+
 **Paper account**:
 The IBKR simulated account the bot trades in; no real money moves.
 _Avoid_: Demo, sim
