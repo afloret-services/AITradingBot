@@ -1,4 +1,4 @@
-"""PROTOTYPE, throwaway: dump MNQ 1-minute bars from IB Gateway to a CSV for silver-bullet-review.html.
+"""PROTOTYPE, throwaway: dump MNQ 1-minute bars from IB Gateway to a CSV for strategy-lab.html.
 
 Run on the machine where IB Gateway is logged in to the paper account (port 4002):
 

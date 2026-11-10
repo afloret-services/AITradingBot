@@ -1,4 +1,4 @@
-"""PROTOTYPE, throwaway: download MNQ 1-minute bars from Databento to a CSV for silver-bullet-review.html.
+"""PROTOTYPE, throwaway: download MNQ 1-minute bars from Databento to a CSV for strategy-lab.html.
 
     pip install databento
     DATABENTO_API_KEY=db-... python fetch_databento.py --symbol MNQZ6 --start 2026-09-01 --end 2026-10-28
