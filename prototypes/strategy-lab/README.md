@@ -15,7 +15,8 @@ The files:
   - review buttons.
 
   "Compare strategies" puts every strategy side by side on the same bars. **Export review notes** produces a Markdown table to paste into the issue. Rule settings can be changed live. "Load synthetic demo" uses made-up prices and only shows what the page draws.
-- `fetch_ibkr.py`: pulls the bars from IB Gateway on the paper account. `--history 202503 202612` rolls through the quarterly contracts, giving about 2 years.
+- `fetch_ibkr.py`: pulls the bars from IB Gateway on the paper account. `--history 202503 202612` rolls through the quarterly contracts, giving about 2 years. It also writes 5m, 15m, 1h and 4h files built from the 1m bars, with 4h bars starting at 18:00 New York. `--from-csv mnq_1m.csv` builds those files from an existing 1m file without IBKR.
+- `mnq_1m.csv`, `mnq_5m.csv`, `mnq_15m.csv`, `mnq_1h.csv`, `mnq_4h.csv`: 35 trading days from IBKR (11 Sep – 29 Oct 2026). The page loads the 1m file and builds the rest itself.
 - `fetch_databento.py`: pulls the bars from Databento, showing the cost first.
 
 The strategy logic is the `<script id="sb-logic">` block: a pure module with no DOM access. The page lists the places where it had to interpret each strategy's rules, under "The rules as this prototype implements them".
