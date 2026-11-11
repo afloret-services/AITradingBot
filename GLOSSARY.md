@@ -27,7 +27,7 @@ The test a Setup must pass before it trades on the Paper account: a measurable r
 _Avoid_: Approval, sign-off
 
 **Promoted version**:
-The frozen settings of a Setup that passed its Promotion gate, and the only settings the Paper account runs for that Setup. Changing any setting makes a new version, which must pass the gate again.
+The frozen Rule blocks and default settings of a Setup that passed its Promotion gate on one instrument, and the only rules the Paper account runs for that Setup on that instrument. Changing any Rule block or default makes a new version, which must pass the gate again; a Run's risk overrides do not.
 _Avoid_: Live config, current settings
 
 **R**:
@@ -129,8 +129,8 @@ The account size the bot sizes its Trades against, set by the user rather than r
 _Avoid_: Balance, equity, net liquidation (the broker's figure)
 
 **Risk per Trade**:
-The share of Trading capital one Trade may lose at its stop, one setting for the whole bot; applied to the Trading capital at the start of each Trading day, it gives the day's risk amount, which is 1R.
-_Avoid_: Risk percent per Setup, position size
+The share of Trading capital one Trade may lose at its stop: a default on each Setup that a Run may override; applied to the Trading capital at the start of each Trading day, it gives that Setup's risk amount for the day, which is its 1R.
+_Avoid_: Position size
 
 **Peak capital**:
 The highest Trading capital the bot has had at the start of any Trading day, the mark a Drawdown Halt is measured from; it moves down only when the user resets it.
@@ -144,9 +144,13 @@ _Avoid_: Max drawdown (that is a backtest statistic), circuit breaker
 The IBKR simulated account the bot trades in; no real money moves.
 _Avoid_: Demo, sim
 
+**Run**:
+One execution of a chosen set of Setup versions, each bound to the instrument it trades, with its own risk settings: a backtest Run on history, or a paper Run on the Paper account.
+_Avoid_: Trading run, deployment, job
+
 **Paper session**:
-One Trading day the bot ran on the Paper account.
-_Avoid_: Run (that is a backtest), session (alone; that is Asia, London or the cash session)
+One Trading day of a paper Run.
+_Avoid_: Run (that is the whole execution), session (alone; that is Asia, London or the cash session)
 
 **Clean session**:
 A Paper session in which the bot covered every Setup's entry hours across the Trading day with no unexplained Halt (a disconnect inside the Daily reset is excused when the bot recovers cleanly), every Signal has a final Verdict, the day's replay matches what the bot did, every Trade was reviewed as matching its rules, no risk limit was breached and the net position always checked out.
