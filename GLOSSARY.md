@@ -7,8 +7,16 @@ An automated trading bot that runs several Setups at once (ICT patterns such as 
 ### Strategy
 
 **Setup**:
-One entry pattern, ICT or indicator-based, written as exact rules that decide when a trade is valid, which way it goes, and where its entry, stop and target sit. The bot runs several Setups at once; each one reaches the Paper account only after passing the Promotion gate.
-_Avoid_: Strategy (when meaning one pattern), model, play
+One entry pattern, ICT or indicator-based, put together from Rule blocks that decide when a trade is valid, which way it goes, and where its entry, stop and target sit. The bot runs several Setups at once; each one reaches the Paper account only after passing the Promotion gate.
+_Avoid_: Strategy (when meaning one pattern), model, play, built-in Setup
+
+**Rule block**:
+One configurable step of a Setup's rules, such as a price level, a candle close, an indicator value on a timeframe, a pattern, or a sequence of other Rule blocks.
+_Avoid_: Step, node, condition (alone)
+
+**Trading hours**:
+A Setup's period of New York clock time (for example 08:00–16:00) inside which its Signals may form.
+_Avoid_: Time window, Window (that is the one-hour Silver Bullet period), killzone
 
 **Candidate**:
 A partly formed pattern a Setup is tracking that may still become a Signal; a Setup may watch several at once, and they stay inside the Setup.
@@ -32,7 +40,7 @@ _Avoid_: Alert, trigger
 
 **Window**:
 A one-hour period of New York clock time (the Silver Bullet hour) inside which a Signal's fair value gap must form and its entry must fill.
-_Avoid_: Killzone (a wider, separate ICT period), session
+_Avoid_: Killzone (a wider, separate ICT period), session, Trading hours (a Setup's wider period)
 
 **Fair value gap (FVG)**:
 A price range left untraded across three consecutive bars: in a bullish gap the third bar's low stays above the first bar's high, in a bearish gap the third bar's high stays below the first bar's low, and the middle bar closes in the gap's direction.
