@@ -19,8 +19,12 @@ A Setup's period of New York clock time (for example 08:00–16:00) inside which
 _Avoid_: Time window, Window (that is the one-hour Silver Bullet period), killzone
 
 **Candidate**:
-A partly formed pattern a Setup is tracking that may still become a Signal; a Setup may watch several at once, and they stay inside the Setup.
+A partly formed pattern a Setup is tracking that may still become a Signal: one sequence of Rule blocks part-way done, holding the values its completed steps captured; a Setup may watch several at once, they stay inside the Setup, and each ends at its own limit or by the end of its Trading day.
 _Avoid_: Setup (that is the whole set of rules), watch, pending setup
+
+**Base bar**:
+A bar of a Setup's finest timeframe; the Setup's rules are checked once at each Base bar's close, against that bar and the last closed bar of every higher timeframe.
+_Avoid_: Tick, trigger bar, chart timeframe
 
 **Promotion gate**:
 The test a Setup must pass before it trades on the Paper account: a measurable result on the held-out backtest period, after costs, plus the user's review that its Trades match its written rules on the chart.
