@@ -78,6 +78,10 @@ _Avoid_: Break of structure (BOS), CHoCH
 The one direction a trading day's Signals may take, set by the most recent daily bar closing beyond a daily Swing point: above a swing high is bullish, below a swing low is bearish. A day without one has no Signals.
 _Avoid_: Daily bias (alone), trend, sentiment
 
+**Trend**:
+The direction of one timeframe's structure: up while its last two confirmed swing highs and lows are both higher than the ones before, down while both are lower, and none otherwise.
+_Avoid_: Trend for price above a moving average or a strong ADX (those are indicator conditions), Bias (that is the daily direction)
+
 **Draw on liquidity**:
 The untaken Liquidity level on the Trade's side that a Signal aims at: the nearest one at least the Minimum framework away from the entry. A Liquidity level is untaken while no bar has reached it since its period ended.
 _Avoid_: Target (that is an exit order's price), objective, magnet
