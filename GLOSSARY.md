@@ -117,8 +117,16 @@ One slice of a Trade's contracts with its own target, sent as its own Bracket or
 _Avoid_: Partial (alone), scale-out, tranche
 
 **Break-even**:
-Moving the stops of a Trade's open legs to its entry price once it has moved far enough in its favour, so the rest of the Trade can no longer lose.
+Moving the stops of a Trade's open legs to its entry price (plus a set offset) once a chosen leg has filled or price has gone a set number of R in its favour, so the rest of the Trade can no longer lose; it never loosens a stop already tighter than that.
 _Avoid_: Scratch, risk-free
+
+**In-position rule**:
+A Rule block checked at each Base bar's close while a Trade or its resting entry is open, which may close the Trade, close one Take-profit leg, tighten the stop, or cancel the entry.
+_Avoid_: Exit rule (alone), management rule, trailing stop
+
+**Flatten time**:
+The New York clock time by which a Setup's open Trades are closed for the Trading day, never later than its instrument allows.
+_Avoid_: EOD close, cut-off
 
 **Trade**:
 The life of one position, from entry fill to final exit fill, opened in response to one Signal.
