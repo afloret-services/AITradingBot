@@ -66,6 +66,10 @@ _Avoid_: Stop hunt, raid, grab
 A bar whose high (or low) is beyond the highs (or lows) of a set number of bars on each side of it.
 _Avoid_: Pivot, fractal
 
+**Structure break**:
+A bar of one timeframe closing beyond the most recent confirmed Swing point of that timeframe; above a swing high is bullish, below a swing low is bearish.
+_Avoid_: BOS, break of structure (alone), MSS (that needs a Liquidity sweep first)
+
 **Market structure shift (MSS)**:
 After a Liquidity sweep, a bar closing beyond the most recent Swing point on the other side, showing price has turned toward the Trade's direction.
 _Avoid_: Break of structure (BOS), CHoCH
@@ -154,7 +158,7 @@ _Avoid_: Trading run, deployment, job
 
 **Paper session**:
 One Trading day of a paper Run.
-_Avoid_: Run (that is the whole execution), session (alone; that is Asia, London or the cash session)
+_Avoid_: Run (that is the whole execution), Session (that is Asia, London or New York)
 
 **Clean session**:
 A Paper session in which the bot covered every Setup's entry hours across the Trading day with no unexplained Halt (a disconnect inside the Daily reset is excused when the bot recovers cleanly), every Signal has a final Verdict, the day's replay matches what the bot did, every Trade was reviewed as matching its rules, no risk limit was breached and the net position always checked out.
@@ -172,7 +176,11 @@ _Avoid_: Test (that is the automated test suite), fire drill, chaos test
 
 **Trading day**:
 One CME trade date: from 18:00 New York the evening before to 17:00, including any holiday-morning trading that CME counts toward it. Every daily rule (Bias, previous-day levels, daily loss, Stand-down) counts in Trading days.
-_Avoid_: Session (that is Asia, London or the cash session), calendar day
+_Avoid_: Session (that is Asia, London or New York), calendar day
+
+**Session**:
+One of the named periods of New York clock time a Setup can refer to: Asia (20:00–00:00), London (02:00–05:00) or New York (09:30–16:00).
+_Avoid_: Cash session, killzone, Window (that is the Silver Bullet hour), Trading hours (a Setup's own period)
 
 **Micro contract**:
 The 1/10-size index future (MES, MNQ) the first version trades; ES and NQ are the full-size versions of the same index.
