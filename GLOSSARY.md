@@ -71,8 +71,20 @@ A bar of one timeframe closing beyond the most recent confirmed Swing point of t
 _Avoid_: BOS, break of structure (alone), MSS (that needs a Liquidity sweep first)
 
 **Market structure shift (MSS)**:
-After a Liquidity sweep, a bar closing beyond the most recent Swing point on the other side, showing price has turned toward the Trade's direction.
+After a Liquidity sweep, a bar closing beyond the most recent Swing point on the other side that formed before the sweep's extreme, showing price has turned toward the Trade's direction.
 _Avoid_: Break of structure (BOS), CHoCH
+
+**Leg**:
+A move started by a Structure break: from the extreme price reached since the broken Swing point to the opposite extreme reached since then, which keeps extending until a later step of the Setup fixes it.
+_Avoid_: Impulse, swing (that is a Swing point), range
+
+**Optimal trade entry (OTE)**:
+The part of a Leg between 61.8 % and 78.6 % of the way back from its end toward its start, centred on 70.5 %, where a Setup may look for its entry.
+_Avoid_: Fib zone, discount/premium zone, retracement (alone)
+
+**Order block**:
+One candle of the opposite colour to the Trade inside a Leg (or just before a Displacement) whose range price later closes beyond, used as the zone for the entry and the stop.
+_Avoid_: OB (in prose), supply/demand zone, breaker
 
 **Bias**:
 The one direction a trading day's Signals may take, set by the most recent daily bar closing beyond a daily Swing point: above a swing high is bullish, below a swing low is bearish. A day without one has no Signals.
