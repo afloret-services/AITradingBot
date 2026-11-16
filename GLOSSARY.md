@@ -26,12 +26,24 @@ _Avoid_: Setup (that is the whole set of rules), watch, pending setup
 A bar of a Setup's finest timeframe; the Setup's rules are checked once at each Base bar's close, against that bar and the last closed bar of every higher timeframe.
 _Avoid_: Tick, trigger bar, chart timeframe
 
+**Draft**:
+The one editable copy of a Setup's Rule blocks and default settings, from which versions are frozen; it may be backtested only on the build years, never on the held-out period or on paper.
+_Avoid_: Working copy, unsaved version
+
+**Setup version**:
+An immutable, numbered freeze of a Setup's Draft (v1, v2…), identified by a hash of everything the engine reads; renaming or relabelling never makes a new one.
+_Avoid_: Revision, snapshot, release
+
+**Rule description**:
+The fixed English text generated from a Setup version's Rule blocks, read in the chart review and by the Daily pick; it is never typed.
+_Avoid_: Summary, notes (notes are the user's free text and never part of it)
+
 **Promotion gate**:
 The test a Setup must pass before it trades on the Paper account: a measurable result on the held-out backtest period, after costs, plus the user's review that its Trades match its written rules on the chart.
 _Avoid_: Approval, sign-off
 
 **Promoted version**:
-The frozen Rule blocks and default settings of a Setup that passed its Promotion gate on one instrument, and the only rules the Paper account runs for that Setup on that instrument. Changing any Rule block or default makes a new version, which must pass the gate again; a Run's risk overrides do not.
+A Setup version that passed its Promotion gate on one instrument, and the only rules the Paper account runs for that Setup on that instrument. Changing any Rule block or default makes a new Setup version, which must pass the gate again; a Run's risk overrides do not.
 _Avoid_: Live config, current settings
 
 **R**:
