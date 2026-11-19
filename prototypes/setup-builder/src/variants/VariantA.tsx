@@ -1,0 +1,162 @@
+// PROTOTYPE variant A, "Wizard": a fixed order of stages, one thing at a time, the chart always under the stage.
+// Order: basics → indicators → when to trade → Signal steps → entry & stop → Trade settings → review → create a Run.
+import React, { useState } from 'react';
+import { VariantProps } from '../types';
+import { Chart, StepStats, RunSummary } from '../components/Chart';
+import { CondEditor, tokenCtx } from '../components/CondEditor';
+import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection } from '../components/sections';
+import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
+import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step } from '../model';
+import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
+
+const STAGES = ['Basics', 'Indicators', 'When to trade', 'Signal steps', 'Entry & stop', 'Trade settings', 'Review & save', 'Create a Run'] as const;
+
+export function VariantA(p: VariantProps) {
+  const { setup, mutate, data, result } = p;
+  const [stage, setStage] = useState(0);
+  const [bi, setBi] = useState(0);
+  const [open, setOpen] = useState(0);
+  const issues = validate(setup);
+  const stageIssues = (k: number) => issues.filter((i) => (k === 3 ? /step|branch$|Signals/.test(i.where) : k === 4 ? /Entry/.test(i.where) : k === 5 ? /legs|Flatten|deadline|Trade settings/i.test(i.where) : false));
+  const br = setup.branches[bi] || setup.branches[0];
+  const runD = useRunDraft(data, setup);
+  const chartResult = stage === 7 && runD.result ? runD.result : result;
+
+  return (
+    <div className="mx-auto grid max-w-[1400px] grid-cols-[220px_1fr] gap-4 p-4">
+      <nav className="sticky top-4 h-fit space-y-0.5">
+        <div className="mb-3 px-2"><div className="text-lg font-semibold">{setup.name}</div><div className="text-xs text-muted-foreground">Draft · Base bar {setup.settings.base_bar}</div></div>
+        {STAGES.map((s, k) => {
+          const n = stageIssues(k).filter((i) => i.level === 'error').length;
+          return (
+            <button key={s} onClick={() => setStage(k)} className={cn('flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm', stage === k ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent/50')}>
+              <span className={cn('flex h-5 w-5 items-center justify-center rounded-full border text-[11px]', k < stage && 'border-emerald-500 text-emerald-400', stage === k && 'border-sky-400 text-sky-300')}>{k < stage ? '✓' : k + 1}</span>
+              {s}{n > 0 && <Badge tone="error" className="ml-auto">{n}</Badge>}
+            </button>
+          );
+        })}
+      </nav>
+      <main className="min-w-0 space-y-4">
+        <Card>
+          <CardHeader title={`${stage + 1}. ${STAGES[stage]}`} sub={SUBS[stage]} right={<div className="flex gap-1"><Button size="sm" variant="outline" disabled={stage === 0} onClick={() => setStage(stage - 1)}>Back</Button><Button size="sm" disabled={stage === STAGES.length - 1} onClick={() => setStage(stage + 1)}>Next: {STAGES[stage + 1] || ''}</Button></div>} />
+          <div className="space-y-4 p-4">
+            {stage === 0 && (
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="Name"><Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="w-64" /></Field>
+                <BaseBarEditor setup={setup} mutate={mutate} />
+                <Field label="Notes (never in the Rule description)"><textarea value={setup.notes} onChange={(e) => mutate((s) => { s.notes = e.target.value; })} className="h-16 w-full rounded-md border border-input bg-transparent p-2 text-sm" /></Field>
+                <div className="text-xs text-muted-foreground">Rule blocks are instrument-free. The instrument is chosen when a Run is created (stage 8). The preview below runs on MNQ.</div>
+              </div>
+            )}
+            {stage === 1 && <><div className="text-sm text-muted-foreground">Declare each indicator once. Steps pick from this list; changing one here changes every step that reads it.</div><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={indicatorUsage(setup)} /></>}
+            {stage === 2 && <div className="space-y-4"><TradingHoursEditor setup={setup} mutate={mutate} /><SessionsEditor setup={setup} mutate={mutate} /><BehaviourEditor setup={setup} mutate={mutate} /></div>}
+            {stage === 3 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Tabs value={String(bi)} onChange={(v) => { setBi(Number(v)); setOpen(0); }} tabs={setup.branches.map((b, k) => [String(k), `${b.side === 'long' ? 'Long' : 'Short'} branch`] as [string, string])} />
+                  {setup.branches.length === 1 && <Button size="sm" variant="ghost" onClick={() => mutate((s) => { addMirror(s); })}>Duplicate as mirrored {br.side === 'long' ? 'short' : 'long'}</Button>}
+                  <span className="ml-auto text-xs text-muted-foreground">On a new first step while one is running:</span>
+                  <Select value={br.on_new_start} onChange={(v) => mutate((s) => { s.branches[bi].on_new_start = v; })} options={[['start_another', 'start another'], ['replace', 'replace'], ['ignore', 'ignore']]} className="h-7" />
+                </div>
+                <ol className="space-y-0">
+                  {br.steps.map((st, k) => (
+                    <li key={st.id}>
+                      {k > 0 && <div className="ml-4 border-l-2 border-dashed py-1 pl-4 text-xs text-muted-foreground">then, {st.same_bar && st.within_bars === 0 ? 'on the same bar only' : st.same_bar ? 'possibly on the same bar' : 'on a later bar'}{st.within_bars ? `, within ${st.within_bars} bars` : ''}{st.until ? `, until ${st.until}` : ''}</div>}
+                      <div className={cn('rounded-lg border', open === k && 'border-sky-500/50')}>
+                        <button className="flex w-full items-center gap-2 px-3 py-2 text-left" onClick={() => { setOpen(open === k ? -1 : k); p.setFocus({ bi, si: k }); }}>
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-black" style={{ background: STEP_COLORS[k % 6] }}>{k + 1}</span>
+                          <Input value={st.name} onClick={(e) => e.stopPropagation()} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-7 w-72 border-transparent bg-transparent font-medium" />
+                          <StepStats result={result} bi={bi} si={k} data={data} />
+                          <span className="ml-auto text-muted-foreground">{open === k ? '▾' : '▸'}</span>
+                        </button>
+                        {open === k && (
+                          <div className="space-y-2 border-t p-3">
+                            <CondEditor cond={st.cond} ctx={tokenCtx(setup, bi, k)} side={br.side} look="boxes" onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
+                            <StepLimits step={st} isFirst={k === 0} ctx={tokenCtx(setup, bi, k)} side={br.side} look="boxes" onChange={(n: Step) => mutate((s) => { s.branches[bi].steps[k] = n; })} />
+                            <div className="flex gap-1"><Button size="sm" variant="ghost" disabled={k === 0} onClick={() => mutate((s) => { const a = s.branches[bi].steps; [a[k - 1], a[k]] = [a[k], a[k - 1]]; })}>↑ move up</Button><Button size="sm" variant="ghost" onClick={() => mutate((s) => { s.branches[bi].steps.splice(k, 1); })}>delete step</Button></div>
+                          </div>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+                <Button size="sm" variant="outline" onClick={() => { mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: `Step ${s.branches[bi].steps.length + 1}`, cond: { id: uid(), t: 'all', items: [] } }); }); setOpen(br.steps.length); }}>+ then another step</Button>
+              </div>
+            )}
+            {stage === 4 && setup.branches.map((b, k) => <div key={b.id} className="space-y-2"><Badge>{b.side} branch</Badge><EntryEditor setup={setup} mutate={mutate} bi={k} ctx={tokenCtx(setup, k, b.steps.length)} /></div>)}
+            {stage === 5 && (
+              <div className="space-y-4">
+                {SECTIONS.filter((k) => k !== 'stop').map((k) => (
+                  <div key={k}><div className="mb-1 text-sm font-medium">{SECTION_NAMES[k]}</div>
+                    <SectionEditor k={k} value={getSection(setup, k)} setup={setup} ctx={tokenCtx(setup, 0, 99)} onChange={(v) => mutate((s) => { setSection(s, k, v); })} /></div>
+                ))}
+                <div><div className="mb-1 text-sm font-medium">In-position rules <span className="text-xs font-normal text-muted-foreground">(part of the Setup version; a Run cannot override them)</span></div>
+                  <InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="boxes" /></div>
+              </div>
+            )}
+            {stage === 6 && (
+              <div className="grid gap-4 md:grid-cols-2">
+                <div><div className="mb-1 text-sm font-medium">Rule description (generated, stored at Freeze)</div><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{ruleDescription(setup)}</pre></div>
+                <div className="space-y-2"><div className="text-sm font-medium">Checks</div>
+                  {issues.length === 0 && <Badge tone="ok">Ready to freeze</Badge>}
+                  {issues.map((i, k) => <div key={k} className={cn('text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.level === 'error' ? '✕' : '!'} {i.where}: {i.text}</div>)}
+                  <RunSummary result={result} data={data} />
+                  {p.saveBar}
+                </div>
+              </div>
+            )}
+            {stage === 7 && <RunStage {...p} runD={runD} />}
+          </div>
+        </Card>
+        {stage >= 1 && (
+          <Card className="p-3">
+            <div className="mb-2 flex items-center justify-between"><RunSummary result={chartResult} data={data} />{stage === 3 && p.focus && <span className="text-xs text-muted-foreground">dots: step {p.focus.si + 1} completed · grey squares: held alone</span>}</div>
+            <Chart data={data} setup={stage === 7 ? runD.effective : setup} result={chartResult} day={p.day} setDay={p.setDay} focus={stage === 3 ? p.focus : null} selected={p.selected} setSelected={p.setSelected} />
+          </Card>
+        )}
+      </main>
+    </div>
+  );
+}
+
+
+const SUBS = [
+  'Name the Setup and declare its Base bar, the bar the evaluator runs on.',
+  'Every indicator the Setup reads, declared once by its token.',
+  'Trading hours, sessions, one-at-a-time and the news rule.',
+  'First A, then B: each step is one Sequence link. Open a step to see what it matches on the chart.',
+  'The Entry block: order type, price and the mandatory stop.',
+  'The Setup defaults a Run may override section by section, plus In-position rules.',
+  'What the engine will read, and what still blocks a Freeze.',
+  'Bind this Setup to an instrument and override whole sections. Overrides make no new version.',
+];
+
+function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
+  const { setup, runD } = p;
+  const ctx = tokenCtx(setup, 0, 99);
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3"><Field label="Instrument"><Select value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} options={INSTRUMENTS} /></Field>
+        <Field label="Binds"><span className="mono text-xs">{setup.setup_id} · Draft (a paper Run needs a frozen version that passed the gate)</span></Field></div>
+      {instrumentWarnings(setup, runD.draft.instrument).map((w) => <div key={w} className="text-xs text-amber-300">{w}</div>)}
+      <div className="divide-y rounded-md border">
+        {SECTIONS.map((k) => {
+          const on = k in runD.draft.overrides;
+          return (
+            <div key={k} className="p-3">
+              <div className="flex items-center gap-3">
+                <div className="w-44 text-sm font-medium">{SECTION_NAMES[k]}</div>
+                <label className="flex items-center gap-1 text-xs"><input type="radio" checked={!on} onChange={() => runD.override(k, false)} />Setup default</label>
+                <label className="flex items-center gap-1 text-xs"><input type="radio" checked={on} onChange={() => runD.override(k, true)} />Override</label>
+                <span className={cn('text-xs', on ? 'text-muted-foreground line-through' : 'text-muted-foreground')}>{sectionSummary(setup, k)}</span>
+              </div>
+              {on && <div className="mt-2 rounded-md bg-sky-500/5 p-2"><SectionEditor k={k} value={runD.draft.overrides[k]} setup={setup} ctx={ctx} onChange={(v) => runD.setOverride(k, v)} /><div className="mt-1 text-xs text-sky-300">→ {sectionSummary(runD.effective, k)}</div></div>}
+            </div>
+          );
+        })}
+        <div className="p-3 text-xs text-muted-foreground">Signal rules and In-position rules are part of the Setup version and cannot be overridden here.</div>
+      </div>
+      {runD.result && <div className="flex items-center gap-2 text-xs"><span>Defaults:</span><RunSummary result={p.result} data={p.data} /><span>With this Run's overrides:</span><RunSummary result={runD.result} data={p.data} /></div>}
+    </div>
+  );
+}

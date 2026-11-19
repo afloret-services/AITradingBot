@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root {
+  --background: 0 0% 100%; --foreground: 222 47% 11%; --card: 0 0% 100%; --card-foreground: 222 47% 11%;
+  --primary: 222 47% 11%; --primary-foreground: 210 40% 98%; --secondary: 210 40% 96%; --secondary-foreground: 222 47% 11%;
+  --muted: 210 40% 96%; --muted-foreground: 215 16% 47%; --accent: 210 40% 94%; --accent-foreground: 222 47% 11%;
+  --destructive: 0 72% 51%; --border: 214 32% 91%; --input: 214 32% 85%; --ring: 222 84% 60%;
+}
+.dark {
+  --background: 224 20% 7%; --foreground: 210 30% 96%; --card: 224 18% 10%; --card-foreground: 210 30% 96%;
+  --primary: 210 40% 96%; --primary-foreground: 222 47% 11%; --secondary: 222 16% 16%; --secondary-foreground: 210 30% 96%;
+  --muted: 222 16% 15%; --muted-foreground: 217 12% 64%; --accent: 222 16% 19%; --accent-foreground: 210 30% 96%;
+  --destructive: 0 63% 52%; --border: 222 14% 20%; --input: 222 14% 26%; --ring: 212 90% 60%;
+}
+* { border-color: hsl(var(--border)); }
+body { background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+select, input { color-scheme: dark; }
