@@ -64,7 +64,7 @@ export function IndicatorList({ setup, mutate, ctx, usage }: { setup: Setup; mut
     <div className="space-y-1.5">
       {setup.indicators.map((ind, k) => (
         <div key={k} className="flex flex-wrap items-center gap-2">
-          <TokenPicker value={ind.token} ctx={{ ...ctx, inlineDeclare: true, onDeclare: undefined }} compact onChange={(t) => mutate((s) => { const old = s.indicators[k].token; s.indicators[k].token = t.replace(/\.prev\[\d+\]$/, ''); renameToken(s, old, s.indicators[k].token); })} />
+          <TokenPicker value={ind.token} ctx={{ ...ctx, inlineDeclare: true, onDeclare: undefined, onlyIndicator: true }} compact onChange={(t) => mutate((s) => { const old = s.indicators[k].token; s.indicators[k].token = t.replace(/\.prev\[\d+\]$/, ''); renameToken(s, old, s.indicators[k].token); })} />
           <Input placeholder="display label (optional)" value={ind.label || ''} onChange={(e) => mutate((s) => { s.indicators[k].label = e.target.value || undefined; })} className="h-7 w-48" />
           {usage && <span className="text-[11px] text-muted-foreground">used {usage[ind.token] || 0}×</span>}
           <button className="text-muted-foreground hover:text-red-400" onClick={() => mutate((s) => { s.indicators.splice(k, 1); })}>×</button>

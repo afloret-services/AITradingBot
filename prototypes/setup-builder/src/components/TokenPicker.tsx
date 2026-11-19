@@ -12,6 +12,8 @@ export interface TokenCtx {
   inlineDeclare?: boolean;
   onDeclare?: (token: string) => void;
   inPosition?: boolean;
+  /** the Indicators stage: only indicators can be declared there */
+  onlyIndicator?: boolean;
 }
 
 const KINDS = [['number', 'Number'], ['enum', 'Word (bullish, …)'], ['bar', 'Candle value'], ['indicator', 'Indicator'], ['level', 'Level'], ['capture', 'Captured value'], ['bias', 'Bias / Trend'], ['draw', 'Draw on liquidity'], ['entry', 'The entry'], ['trade', 'Trade value']] as const;
@@ -73,7 +75,7 @@ function Editor({ value, onChange, ctx }: { value: string; onChange: (v: string)
     };
     onChange(def[k]);
   };
-  const kinds = KINDS.filter(([k]) => ctx.inPosition || k !== 'trade');
+  const kinds = KINDS.filter(([k]) => (ctx.onlyIndicator ? k === 'indicator' : ctx.inPosition || k !== 'trade'));
   return (
     <div className="space-y-2 text-sm">
       <div className="flex items-center gap-2"><span className="w-14 text-xs text-muted-foreground">Kind</span><Select value={kind} onChange={setKind} options={kinds.map(([k, l]) => [k, l] as [Kind, string])} /></div>
