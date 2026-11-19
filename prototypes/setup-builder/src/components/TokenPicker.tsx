@@ -1,11 +1,12 @@
 // PROTOTYPE: pick one value token. Only the builder writes tokens, always in canonical form.
 import React, { useEffect, useRef, useState } from 'react';
-import { TFS, TF, isToken, parseToken, phrase, withPrev } from '../model';
+import { TFS, TF, isToken, parseToken, phrase, withPrev, Pattern } from '../model';
 import { Button, Input, NumInput, Select, cn } from './ui';
 
 export interface TokenCtx {
   baseBar: TF;
   indicators: { token: string; label?: string }[];
+  patterns?: Pattern[];
   captures: { name: string; fields: string[] }[];
   labels: Record<string, string>;
   /** variant B: allow declaring a new indicator from the picker (declared on first use) */

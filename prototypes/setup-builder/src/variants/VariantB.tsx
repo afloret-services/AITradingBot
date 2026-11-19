@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { VariantProps } from '../types';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
-import { StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey } from '../components/sections';
+import { StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList } from '../components/sections';
 import { TokenCtx, shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, NumInput } from '../components/ui';
 import { Cond, Setup, TFS, TF, uid, SECTION_NAMES, validate, Step } from '../model';
@@ -104,6 +104,11 @@ export function VariantB(p: VariantProps) {
               <span className={cn('w-14 text-right', usage[ind.token] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[ind.token] ? `used ${usage[ind.token]}×` : 'unused'}</span>
             </div>
           ))}
+        </Card>
+        <Card className="p-3">
+          <div className="mb-1 text-sm font-semibold">Patterns in this Setup</div>
+          <div className="mb-1 text-[11px] text-muted-foreground">Declared up front, then used by name in a sentence ("a bullish fvg forms").</div>
+          <PatternList setup={setup} mutate={mutate} compact />
         </Card>
         <Card className="p-3">
           <div className="flex items-center justify-between"><div className="text-sm font-semibold">Save</div>{p.saveBar}</div>

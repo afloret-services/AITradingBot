@@ -16,7 +16,44 @@ export type Cond =
   | { id: string; t: 'for_n'; n: number; item: Cond; origin?: Origin }
   | { id: string; t: 'time'; start: string; end: string; tf?: TF; origin?: Origin }
   | { id: string; t: 'fvg'; side: 'long' | 'short'; tf: TF; min_gap_ticks: number; middle_closes_gap_way: boolean; capture: string; origin?: Origin }
-  | { id: string; t: 'draw'; side: 'long' | 'short'; from: string; min_framework_points: number; levels: string[]; origin?: Origin };
+  | { id: string; t: 'draw'; side: 'long' | 'short'; from: string; min_framework_points: number; levels: string[]; origin?: Origin }
+  /** a reference to a Pattern declared up front in the Setup; the step only adds the side. Captured under the pattern's name. */
+  | { id: string; t: 'pattern'; ref: string; side: 'long' | 'short'; origin?: Origin };
+
+// ---------- Patterns: declared once per Setup (kind, timeframe, settings), then referenced by name in steps ----------
+export type PatternKind = 'fvg' | 'displacement' | 'order_block' | 'leg' | 'mss';
+export interface Pattern { name: string; kind: PatternKind; tf: TF; params: Record<string, number | boolean>; label?: string }
+type PDef = { title: string; help: string; params: [key: string, label: string, def: number | boolean][]; fields: string[]; bull: string; bear: string };
+const DISP: PDef['params'] = [['disp_mult', 'range at least × the average range', 1.5], ['disp_body_pct', 'body % at least', 60], ['avg_len', 'average range over bars', 20]];
+const BAR3 = ['bar1', 'bar2', 'bar3'].flatMap((b) => ['open', 'high', 'low', 'close'].map((f) => `${b}.${f}`));
+export const PATTERN_KINDS: Record<PatternKind, PDef> = {
+  fvg: { title: 'Fair value gap (FVG)', bull: 'bullish', bear: 'bearish', help: 'Three candles; candle 1 and candle 3 leave a gap. Forms when candle 3 closes.',
+    params: [['min_gap_ticks', 'gap ≥ ticks', 4], ['middle_closes_gap_way', "middle candle closes the gap's way", true], ['displacement', 'middle candle is a Displacement', false], ...DISP],
+    fields: ['top', 'bottom', 'mid', 'size', ...BAR3] },
+  displacement: { title: 'Displacement', bull: 'bullish', bear: 'bearish', help: 'One large-bodied candle in the direction. Forms when it closes.',
+    params: [['disp_mult', 'range at least × the average range', 1.5], ['disp_body_pct', 'body % at least', 60], ['avg_len', 'average range over bars', 20]],
+    fields: ['open', 'high', 'low', 'close', 'range', 'mid'] },
+  order_block: { title: 'Order block', bull: 'bullish', bear: 'bearish', help: 'The last opposite candle before a Displacement that closes beyond it. Forms when the Displacement closes.',
+    params: [['lookback', 'opposite candle within N bars', 3], ['use_body', 'zone is the body (not the wicks)', false], ...DISP],
+    fields: ['top', 'bottom', 'mid', 'size', 'open', 'close', 'time'] },
+  leg: { title: 'Leg (swing to swing)', bull: 'up', bear: 'down', help: 'From a confirmed Swing low to the next confirmed Swing high (up), or the reverse. Forms when its end swing is confirmed. Fib tokens read it.',
+    params: [['strength', 'swing: bars each side', 2], ['min_size_points', 'size ≥ points', 10]],
+    fields: ['start', 'end', 'high', 'low', 'size', 'mid'] },
+  mss: { title: 'Market structure shift (MSS)', bull: 'bullish', bear: 'bearish', help: 'A close beyond the last confirmed Swing high (bullish) or Swing low (bearish). Forms on the breaking candle.',
+    params: [['strength', 'swing: bars each side', 2], ['displacement', 'breaking candle is a Displacement', true], ...DISP],
+    fields: ['level', 'swing_low', 'swing_high', 'high', 'low', 'close'] },
+};
+export function newPattern(kind: PatternKind, tf: TF, taken: string[]): Pattern {
+  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss' }[kind];
+  let name = base, n = 2;
+  while (taken.includes(name)) name = base + n++;
+  return { name, kind, tf, params: Object.fromEntries(PATTERN_KINDS[kind].params.map(([k, , d]) => [k, d])) };
+}
+export function patternPhrase(p: Pattern | undefined, side: 'long' | 'short') {
+  if (!p) return 'an undeclared pattern';
+  const d = PATTERN_KINDS[p.kind];
+  return `${p.label || `a ${p.tf} ${side === 'long' ? d.bull : d.bear} ${d.title.replace(/ \(.*\)$/, '')}`} forms (captured as "${p.name}")`;
+}
 
 export interface Step {
   id: string;
@@ -58,6 +95,7 @@ export interface Setup {
     one_at_a_time: 'off' | 'ignore_new_starts' | 'skip_completions';
   };
   indicators: { token: string; label?: string }[];
+  patterns: Pattern[];
   branches: Branch[];
   trade_settings: TradeSettings;
   in_position_rules: InPositionRule[];
@@ -135,13 +173,26 @@ export function condPhrase(c: Cond, labels: Record<string, string> = {}): string
     case 'for_n': return `${condPhrase(c.item, labels)} for at least ${c.n} bars`;
     case 'time': return `the ${c.tf || 'Base'} bar opens between ${c.start} and ${c.end} NY`;
     case 'fvg': return `a ${c.tf} ${c.side === 'long' ? 'bullish' : 'bearish'} FVG of at least ${c.min_gap_ticks} ticks forms${c.middle_closes_gap_way ? ', its middle candle closing the gap\'s way' : ''} (captured as "${c.capture}")`;
+    case 'pattern': return labels[`pattern:${c.ref}:${c.side}`] || `the pattern "${c.ref}" forms (not declared)`;
     case 'draw': return `a Draw on liquidity exists: the nearest untaken ${c.levels.map((l) => phrase(l)).join(' / ')} ${c.side === 'long' ? 'above' : 'below'} ${phrase(c.from)} by at least ${c.min_framework_points} points`;
   }
 }
+/** display labels: indicator labels, plus a phrase per declared pattern and side (key "pattern:<name>:<side>") */
+export function labelsOf(s: Setup): Record<string, string> {
+  const out: Record<string, string> = Object.fromEntries(s.indicators.filter((i) => i.label).map((i) => [i.token, i.label!]));
+  for (const p of s.patterns || []) for (const side of ['long', 'short'] as const) out[`pattern:${p.name}:${side}`] = patternPhrase(p, side);
+  return out;
+}
+export function patternSettingsPhrase(p: Pattern) {
+  const d = PATTERN_KINDS[p.kind];
+  const dispOn = p.kind === 'displacement' || p.kind === 'order_block' || !!p.params.displacement;
+  return d.params.filter(([k]) => dispOn || !['disp_mult', 'disp_body_pct', 'avg_len'].includes(k)).map(([k, l]) => (typeof p.params[k] === 'boolean' ? (p.params[k] ? l : '') : `${l} ${p.params[k]}`)).filter(Boolean).join(', ');
+}
 export function ruleDescription(s: Setup): string {
-  const labels = Object.fromEntries(s.indicators.filter((i) => i.label).map((i) => [i.token, i.label!]));
+  const labels = labelsOf(s);
   const lines: string[] = [];
   lines.push(`${s.name}. Base bar ${s.settings.base_bar}. Trading hours ${s.settings.trading_hours.ranges.map((r) => `${r.start}–${r.end}`).join(', ') || 'all day'} NY.`);
+  for (const p of s.patterns || []) lines.push(`Pattern "${p.name}": ${p.tf} ${PATTERN_KINDS[p.kind].title} (${patternSettingsPhrase(p)}).`);
   for (const br of s.branches) {
     lines.push(`${br.side === 'long' ? 'Long' : 'Short'}:`);
     br.steps.forEach((st, k) => {
@@ -189,7 +240,7 @@ export function mirrorBranch(br: Branch): Branch {
       case 'all': case 'any': return { ...c, id, items: c.items.map(m) };
       case 'not': return { ...c, id, item: m(c.item) };
       case 'for_n': return { ...c, id, item: m(c.item) };
-      case 'fvg': return { ...c, id, side: c.side === 'long' ? 'short' : 'long' };
+      case 'fvg': case 'pattern': return { ...c, id, side: c.side === 'long' ? 'short' : 'long' };
       case 'draw': return { ...c, id, side: c.side === 'long' ? 'short' : 'long', from: mirrorFieldSide(c.from), levels: c.levels.map(mirrorFieldSide) };
       default: return { ...c, id };
     }
@@ -216,6 +267,7 @@ export interface Issue { level: 'error' | 'warning'; where: string; text: string
 export function captureNames(c: Cond | undefined, out: string[] = []): string[] {
   if (!c) return out;
   if (c.t === 'fvg') out.push(c.capture);
+  if (c.t === 'pattern') out.push(c.ref);
   if (c.t === 'draw') out.push('draw');
   if (c.t === 'all' || c.t === 'any') c.items.forEach((x) => captureNames(x, out));
   if (c.t === 'not' || c.t === 'for_n') captureNames(c.item, out);
@@ -229,9 +281,32 @@ export function tokensOf(c: Cond | undefined, out: string[] = []): string[] {
   if (c.t === 'not' || c.t === 'for_n') tokensOf(c.item, out);
   return out;
 }
+export function patternRefs(c: Cond | undefined, out: string[] = []): string[] {
+  if (!c) return out;
+  if (c.t === 'pattern') out.push(c.ref);
+  if (c.t === 'all' || c.t === 'any') c.items.forEach((x) => patternRefs(x, out));
+  if (c.t === 'not' || c.t === 'for_n') patternRefs(c.item, out);
+  return out;
+}
+export function patternUsage(s: Setup): Record<string, number> {
+  const out: Record<string, number> = {};
+  const add = (c?: Cond) => patternRefs(c).forEach((n) => (out[n] = (out[n] || 0) + 1));
+  s.branches.forEach((b) => b.steps.forEach((st) => { add(st.cond); add(st.hold); add(st.invalidate); }));
+  s.in_position_rules.forEach((r) => add(r.when));
+  return out;
+}
 export function validate(s: Setup): Issue[] {
   const out: Issue[] = [];
   const bm = tfMinutes(s.settings.base_bar);
+  const pats = s.patterns || [];
+  const pu = patternUsage(s);
+  pats.forEach((p, k) => {
+    if (!/^[a-z][a-z0-9_]*$/.test(p.name)) out.push({ level: 'error', where: 'Patterns', text: `"${p.name}" is not a valid name (lower case letters, digits, _).` });
+    if (pats.findIndex((q) => q.name === p.name) !== k) out.push({ level: 'error', where: 'Patterns', text: `Two patterns are named "${p.name}".` });
+    if (tfMinutes(p.tf) < bm) out.push({ level: 'error', where: 'Patterns', text: `"${p.name}" is on ${p.tf}, finer than the Base bar (${s.settings.base_bar}).` });
+    if (!pu[p.name]) out.push({ level: 'warning', where: 'Patterns', text: `"${p.name}" is declared but no step uses it.` });
+  });
+  for (const n of Object.keys(pu)) if (!pats.some((p) => p.name === n)) out.push({ level: 'error', where: 'Signals', text: `A step reads the pattern "${n}", which is not declared.` });
   const declared = new Set(s.indicators.map((i) => i.token));
   if (!s.branches.length) out.push({ level: 'error', where: 'Signals', text: 'No entry branch yet: add a long or a short branch.' });
   s.branches.forEach((br) => {
@@ -316,6 +391,7 @@ export function blankSetup(): Setup {
     schema: 1, setup_id: 'stp_new', name: 'New Setup', notes: '',
     settings: { base_bar: '1m', trading_hours: { ranges: [{ start: '09:30', end: '16:00' }], weekdays: [1, 2, 3, 4, 5] }, sessions: structuredClone(DEFAULT_SESSIONS), news_rule: { mode: 'off' }, one_at_a_time: 'ignore_new_starts' },
     indicators: [],
+    patterns: [],
     branches: [{ id: uid('br'), side: 'long', on_new_start: 'start_another', steps: [{ id: uid('st'), name: 'Step 1', cond: { id: uid(), t: 'all', items: [] } }], entry: { order: 'limit', price: '', stop: { token: '', offset: 2, unit: 'ticks' } } }],
     trade_settings: { risk: { capital: 5000, pct: 3, max_contracts: 5 }, legs: [{ name: 'TP1', rule: 'r', r: 2, share: 1 }], leftover: 'last', break_even: { trigger: 'off', offset_ticks: 0 }, entry_deadline: { kind: 'end_of_hours', value: '' }, cancel_if: ['stop'], flatten_time: '16:55', signal_guards: [] },
     in_position_rules: [],
@@ -327,13 +403,14 @@ export function silverBullet(): Setup {
   s.setup_id = 'stp_silver_bullet'; s.name = 'Silver Bullet';
   s.notes = 'ICT AM Silver Bullet, preset B as locked in #42.';
   s.settings.trading_hours.ranges = [{ start: '10:00', end: '11:00' }];
-  s.indicators = [{ token: '{{indicator:avg_range:20:1m}}', label: 'the 20-bar average 1m range' }];
+  s.patterns = [{ name: 'fvg', kind: 'fvg', tf: '1m', params: { min_gap_ticks: 4, middle_closes_gap_way: true, displacement: true, disp_mult: 1.5, disp_body_pct: 60, avg_len: 20 }, label: '' }];
+  delete s.patterns[0].label;
   s.branches = [{
     id: uid('br'), side: 'long', on_new_start: 'start_another',
     steps: [
       { id: uid('st'), name: 'FVG with Displacement, with the Bias', cond: { id: uid(), t: 'all', items: [
         PRESETS.bias('long'),
-        PRESETS.fvgWithDisplacement('1m', 'long'),
+        { id: uid(), t: 'pattern', ref: 'fvg', side: 'long' },
         { id: uid(), t: 'cmp', a: '{{bar:dir:15m}}', op: '!=', b: 'bearish' },
         { id: uid(), t: 'time', start: '10:00', end: '11:00', tf: '1m' },
       ] } },

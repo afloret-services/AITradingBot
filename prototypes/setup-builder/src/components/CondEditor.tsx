@@ -1,6 +1,6 @@
 // PROTOTYPE: the recursive condition editor. Three looks (boxes / outline / chips) so each variant can show nesting its own way.
 import React, { useState } from 'react';
-import { Cond, OPS, Op, PRESETS, Setup, condPhrase, opWord, uid, captureNames } from '../model';
+import { Cond, OPS, Op, PRESETS, Setup, condPhrase, opWord, uid, captureNames, PATTERN_KINDS, labelsOf, patternSettingsPhrase } from '../model';
 import { TokenPicker, TokenCtx } from './TokenPicker';
 import { Badge, Button, Input, NumInput, Select, cn } from './ui';
 
@@ -19,9 +19,7 @@ export function AddMenu({ onAdd, ctx, side, small }: { onAdd: (c: Cond) => void;
     ['Not', () => ({ id: uid(), t: 'not', item: newCmp(ctx) }), ''],
     ['For at least N bars', () => ({ id: uid(), t: 'for_n', n: 3, item: newCmp(ctx) }), ''],
     ['Time range (NY)', () => ({ id: uid(), t: 'time', start: '10:00', end: '11:00', tf }), 'bar open time in [start, end)'],
-    ['FVG (detector)', () => ({ id: uid(), t: 'fvg', side, tf, min_gap_ticks: 4, middle_closes_gap_way: true, capture: 'fvg' }), 'captures fvg.top, .bottom, .bar1…'],
-    ['Preset: FVG with Displacement', () => PRESETS.fvgWithDisplacement(tf, side), 'expands into editable blocks'],
-    ['Preset: Displacement', () => PRESETS.displacement(tf, side), ''],
+    ...(ctx.patterns || []).map((p): [string, () => Cond, string] => [`Pattern: ${p.name}`, () => ({ id: uid(), t: 'pattern', ref: p.name, side }), `${p.tf} ${PATTERN_KINDS[p.kind].title}, ${side === 'long' ? PATTERN_KINDS[p.kind].bull : PATTERN_KINDS[p.kind].bear}`]),
     ['Preset: Bias', () => PRESETS.bias(side), '1d Structure break, 2 bars'],
     ['Preset: Draw on liquidity', () => PRESETS.draw(side), 'Choose: nearest untaken level'],
     ['Preset: MACD crosses signal', () => PRESETS.macdCross(tf, side), ''],
@@ -30,7 +28,8 @@ export function AddMenu({ onAdd, ctx, side, small }: { onAdd: (c: Cond) => void;
     <span className="relative inline-block">
       <Button size="sm" variant="ghost" className={cn('text-sky-300', small && 'h-6 px-1.5')} onClick={() => setOpen(!open)}>+ add</Button>
       {open && (
-        <div className="absolute left-0 top-full z-40 mt-1 w-72 rounded-lg border bg-card p-1 shadow-2xl" onMouseLeave={() => setOpen(false)}>
+        <div className="absolute left-0 top-full z-40 mt-1 w-80 rounded-lg border bg-card p-1 shadow-2xl" onMouseLeave={() => setOpen(false)}>
+          {!(ctx.patterns || []).length && <div className="px-2 py-1 text-[11px] text-muted-foreground">No patterns declared yet: declare FVG, Order block, Leg, MSS… in Patterns first.</div>}
           {items.map(([l, f, h]) => (
             <button key={l} className="block w-full rounded px-2 py-1 text-left text-sm hover:bg-accent" onClick={() => { onAdd(f()); setOpen(false); }}>
               {l}{h && <span className="ml-1 text-[11px] text-muted-foreground">{h}</span>}
@@ -129,6 +128,22 @@ export function CondEditor({ cond, onChange, onRemove, ctx, side, look, depth = 
       </div>
     );
   }
+  if (cond.t === 'pattern') {
+    const pats = ctx.patterns || [];
+    const p = pats.find((q) => q.name === cond.ref);
+    const d = p && PATTERN_KINDS[p.kind];
+    return (
+      <div className="flex flex-wrap items-center gap-1 text-sm">
+        <Badge tone="info">Pattern</Badge>
+        <span className="text-muted-foreground">a {p?.tf || ''} {d ? (cond.side === 'long' ? d.bull : d.bear) : ''}</span>
+        <Select value={cond.ref} onChange={(ref) => onChange({ ...cond, ref })} options={(p ? pats : [{ name: cond.ref } as any, ...pats]).map((q: any) => [q.name, q.kind ? `${q.name}: ${PATTERN_KINDS[q.kind as keyof typeof PATTERN_KINDS].title}` : `${q.name} (not declared)`] as [string, string])} className="h-7" />
+        <span className="text-muted-foreground">forms</span>
+        {!p && <Badge tone="error">not declared</Badge>}
+        {p && <span className="text-[11px] text-muted-foreground" title="edit it in Patterns; every step that uses it changes">({patternSettingsPhrase(p)})</span>}
+        {rm}
+      </div>
+    );
+  }
   if (cond.t === 'draw') {
     return (
       <div className="space-y-1 text-sm">
@@ -153,14 +168,18 @@ export function capturesAt(setup: Setup, bi: number, k: number, includeOwn = tru
   const FVG = ['top', 'bottom', 'mid', 'size', 'bar1.low', 'bar1.high', 'bar2.low', 'bar2.high', 'bar3.low', 'bar3.high'];
   br?.steps.forEach((st, j) => {
     if (j > k || (j === k && !includeOwn)) return;
-    for (const n of captureNames(st.cond)) if (n !== 'draw') out.push({ name: n, fields: FVG });
+    for (const n of captureNames(st.cond)) {
+      if (n === 'draw' || out.some((o) => o.name === n)) continue;
+      const p = (setup.patterns || []).find((q) => q.name === n);
+      out.push({ name: n, fields: p ? PATTERN_KINDS[p.kind].fields : FVG });
+    }
     if (st.capture_running) out.push({ name: st.capture_running.name, fields: ['low', 'high'] });
   });
   return out;
 }
 export function tokenCtx(setup: Setup, bi: number, k: number, extra: Partial<TokenCtx> = {}): TokenCtx {
   return {
-    baseBar: setup.settings.base_bar, indicators: setup.indicators, captures: capturesAt(setup, bi, k),
-    labels: Object.fromEntries(setup.indicators.filter((i) => i.label).map((i) => [i.token, i.label!])), ...extra,
+    baseBar: setup.settings.base_bar, indicators: setup.indicators, patterns: setup.patterns || [], captures: capturesAt(setup, bi, k),
+    labels: labelsOf(setup), ...extra,
   };
 }

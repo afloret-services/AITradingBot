@@ -1,6 +1,6 @@
 // PROTOTYPE, throwaway. A rough Rule-block evaluator over the strategy-lab MNQ 1m bars, so each builder step
 // shows its effect on real bars. It is NOT the engine (#78 rebuilds the three Setups and matches Trade lists).
-import type { Setup, Cond, Step, Branch, TF, Leg } from './model';
+import type { Setup, Cond, Step, Branch, TF, Leg, Pattern } from './model';
 import { tfMinutes, parseToken, mirrorFieldSide } from './model';
 
 export const TICK = 0.25;
@@ -337,8 +337,90 @@ export function evalCond(ctx: Ctx, c: Cond, base: Int32Array, p: number): Hit {
     }
     case 'fvg': return fvgAt(ctx, c);
     case 'draw': return drawAt(ctx, c);
+    case 'pattern': return patternAt(ctx, c);
   }
   return { ok: false };
+}
+
+// ---------- declared Patterns: one series per (pattern settings, side), indexed by tf bar; non-null where it forms ----------
+let PATS: Record<string, Pattern> = {}; // set by run(): the Setup's declared patterns
+const patCache = new Map<string, (Record<string, any> | null)[]>();
+function patternAt(ctx: Ctx, c: Extract<Cond, { t: 'pattern' }>): Hit {
+  const p = PATS[c.ref];
+  if (!p) return { ok: false };
+  const j = closedAt(ctx.data, p.tf)[ctx.i];
+  if (j < 0) return { ok: false };
+  const caps = patternSeries(ctx.data, p, c.side)[j];
+  return caps ? { ok: true, caps: { [p.name]: caps } } : { ok: false };
+}
+export function patternSeries(data: Data, p: Pattern, side: 'long' | 'short') {
+  const key = JSON.stringify([p.kind, p.tf, p.params, side]);
+  if (patCache.has(key)) return patCache.get(key)!;
+  const B = bars(data, p.tf), P = p.params as Record<string, any>, long = side === 'long';
+  const out: (Record<string, any> | null)[] = new Array(B.length).fill(null);
+  const avg = indicatorSeries(data, 'avg_range', String(P.avg_len ?? 20), p.tf);
+  const dirOk = (b: Bar) => (long ? b.c > b.o : b.c < b.o);
+  // Displacement: range ≥ k × the average range of the bars before it, body % ≥ x, closing the side's way
+  const isDisp = (k: number) => {
+    if (k < 1) return false;
+    const b = B[k], a = avg[k - 1], r = b.h - b.l;
+    if (a == null) return false;
+    return r >= P.disp_mult * a - 1e-9 && (r > 0 ? (100 * Math.abs(b.c - b.o)) / r : 0) >= P.disp_body_pct - 1e-9 && dirOk(b);
+  };
+  const bar = (b: Bar) => ({ open: b.o, high: b.h, low: b.l, close: b.c, time: b.t });
+  const mins = tfMinutes(p.tf) * MIN;
+  if (p.kind === 'fvg') {
+    for (let j = 2; j < B.length; j++) {
+      const c1 = B[j - 2], c2 = B[j - 1], c3 = B[j];
+      if (c3.t - c1.t !== 2 * mins) continue;
+      const bottom = long ? c1.h : c3.h, top = long ? c3.l : c1.l;
+      if (top - bottom < P.min_gap_ticks * TICK - 1e-9) continue;
+      if (P.middle_closes_gap_way && !dirOk(c2)) continue;
+      if (P.displacement && !isDisp(j - 1)) continue;
+      out[j] = { top, bottom, mid: (top + bottom) / 2, size: top - bottom, bar1: bar(c1), bar2: bar(c2), bar3: bar(c3) };
+    }
+  } else if (p.kind === 'displacement') {
+    for (let j = 1; j < B.length; j++) if (isDisp(j)) { const b = B[j]; out[j] = { open: b.o, high: b.h, low: b.l, close: b.c, range: b.h - b.l, mid: (b.h + b.l) / 2 }; }
+  } else if (p.kind === 'order_block') {
+    for (let j = 1; j < B.length; j++) {
+      if (!isDisp(j)) continue;
+      for (let k = j - 1; k >= Math.max(0, j - P.lookback); k--) {
+        const b = B[k];
+        if (long ? !(b.c < b.o) : !(b.c > b.o)) continue; // the last opposite candle
+        const top = P.use_body ? Math.max(b.o, b.c) : b.h, bottom = P.use_body ? Math.min(b.o, b.c) : b.l;
+        if (long ? B[j].c > top : B[j].c < bottom) out[j] = { top, bottom, mid: (top + bottom) / 2, size: top - bottom, open: b.o, close: b.c, time: b.t };
+        break;
+      }
+    }
+  } else if (p.kind === 'leg' || p.kind === 'mss') {
+    const n = Number(P.strength) || 2;
+    let sh: number | null = null, sl: number | null = null, broken = false;
+    for (let j = 0; j < B.length; j++) {
+      const s0 = j - n; // the bar confirmed as a swing at this close
+      const newHigh = s0 >= 0 && isSwing(B, s0, n, 'high'), newLow = s0 >= 0 && isSwing(B, s0, n, 'low');
+      if (p.kind === 'leg') {
+        // up leg: the last swing low, then this newly confirmed swing high (down leg: the reverse)
+        if (long && newHigh && sl != null && sl < s0 && B[s0].h - B[sl].l >= P.min_size_points - 1e-9) out[j] = { start: B[sl].l, end: B[s0].h, low: B[sl].l, high: B[s0].h, size: B[s0].h - B[sl].l, mid: (B[s0].h + B[sl].l) / 2 };
+        if (!long && newLow && sh != null && sh < s0 && B[sh].h - B[s0].l >= P.min_size_points - 1e-9) out[j] = { start: B[sh].h, end: B[s0].l, low: B[s0].l, high: B[sh].h, size: B[sh].h - B[s0].l, mid: (B[sh].h + B[s0].l) / 2 };
+      }
+      if (newHigh) { sh = s0; if (long) broken = false; }
+      if (newLow) { sl = s0; if (!long) broken = false; }
+      if (p.kind === 'mss') {
+        const ref = long ? sh : sl;
+        if (ref == null || broken) continue;
+        const lvl = long ? B[ref].h : B[ref].l;
+        if (long ? B[j].c > lvl : B[j].c < lvl) {
+          broken = true; // a level is shifted once; a break without Displacement still uses it up
+          if (P.displacement && !isDisp(j)) continue;
+          let lo = Infinity, hi = -Infinity;
+          for (let k = ref; k <= j; k++) { lo = Math.min(lo, B[k].l); hi = Math.max(hi, B[k].h); }
+          out[j] = { level: lvl, swing_low: long ? lo : B[sl ?? ref].l, swing_high: long ? B[ref].h : hi, high: B[j].h, low: B[j].l, close: B[j].c };
+        }
+      }
+    }
+  }
+  patCache.set(key, out);
+  return out;
 }
 
 function fvgAt(ctx: Ctx, c: Extract<Cond, { t: 'fvg' }>): Hit {
@@ -395,6 +477,7 @@ export function run(data: Data, setup: Setup): RunResult {
   const errors: string[] = [];
   const base = baseCloses(data, setup.settings.base_bar);
   const res: RunResult = { base, stepHeld: [], stepDone: [], signals: [], ms: 0, errors };
+  PATS = Object.fromEntries((setup.patterns || []).map((p) => [p.name, p]));
   setup.branches.forEach((br, bi) => {
     res.stepHeld[bi] = br.steps.map(() => []);
     res.stepDone[bi] = br.steps.map(() => []);

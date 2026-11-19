@@ -1,6 +1,6 @@
 // PROTOTYPE: editors for Setup settings and the Run-overridable Trade-settings sections, shared by the variants.
 import React from 'react';
-import { Setup, Step, TF, TFS, Leg, Guard, InPositionRule, Cond, uid, SECTION_NAMES, condPhrase } from '../model';
+import { Setup, Step, TF, TFS, Leg, Guard, InPositionRule, Cond, uid, SECTION_NAMES, condPhrase, Pattern, PatternKind, PATTERN_KINDS, newPattern, patternUsage, patternSettingsPhrase, tfMinutes } from '../model';
 import { TokenPicker, TokenCtx, shortName } from './TokenPicker';
 import { CondEditor, Look } from './CondEditor';
 import { Button, Field, Input, NumInput, Select, Switch, Badge, cn } from './ui';
@@ -74,6 +74,68 @@ export function IndicatorList({ setup, mutate, ctx, usage }: { setup: Setup; mut
     </div>
   );
 }
+// ---------- Patterns, declared once ----------
+const PKINDS = Object.keys(PATTERN_KINDS) as PatternKind[];
+const DISP_KEYS = ['disp_mult', 'disp_body_pct', 'avg_len'];
+export function PatternList({ setup, mutate, compact }: { setup: Setup; mutate: Mutate; compact?: boolean }) {
+  const usage = patternUsage(setup);
+  const pats = setup.patterns || [];
+  const set = (k: number, fn: (p: Pattern) => void) => mutate((s) => { fn(s.patterns[k]); });
+  const tfs = TFS.filter((t) => tfMinutes(t) >= tfMinutes(setup.settings.base_bar));
+  return (
+    <div className="space-y-2">
+      {pats.length === 0 && <div className="text-xs italic text-muted-foreground">No patterns yet.</div>}
+      {pats.map((p, k) => {
+        const d = PATTERN_KINDS[p.kind];
+        const dispOn = p.kind === 'displacement' || p.kind === 'order_block' || !!p.params.displacement;
+        return (
+          <div key={k} className="rounded-md border p-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Input value={p.name} onChange={(e) => { const v = e.target.value.trim(); mutate((s) => { renamePattern(s, s.patterns[k].name, v); s.patterns[k].name = v; }); }} className="mono h-7 w-24" title="its name: steps read it as {{capture:name.field}}" />
+              <Select value={p.kind} onChange={(kind: PatternKind) => set(k, (q) => { Object.assign(q, { ...newPattern(kind, q.tf, []), name: q.name, label: q.label }); })} options={PKINDS.map((x) => [x, PATTERN_KINDS[x].title] as [PatternKind, string])} className="h-7" />
+              <span className="text-xs text-muted-foreground">on</span>
+              <Select value={p.tf} onChange={(tf: TF) => set(k, (q) => { q.tf = tf; })} options={tfs.includes(p.tf) ? tfs : [p.tf, ...tfs]} className="h-7" />
+              <span className={cn('text-[11px]', usage[p.name] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[p.name] ? `used ${usage[p.name]}×` : 'unused'}</span>
+              <button className="ml-auto text-muted-foreground hover:text-red-400" title="remove" onClick={() => mutate((s) => { s.patterns.splice(k, 1); })}>×</button>
+            </div>
+            {!compact && <div className="mt-1 text-[11px] text-muted-foreground">{d.help}</div>}
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+              {d.params.filter(([key]) => dispOn || !DISP_KEYS.includes(key)).map(([key, label, def]) =>
+                typeof def === 'boolean'
+                  ? <label key={key} className="flex items-center gap-1 text-muted-foreground"><input type="checkbox" checked={!!p.params[key]} onChange={(e) => set(k, (q) => { q.params[key] = e.target.checked; })} />{label}</label>
+                  : <span key={key} className="flex items-center gap-1 text-muted-foreground">{label}<NumInput step={key === 'disp_mult' ? 0.1 : 1} value={p.params[key] as number} onChange={(n) => set(k, (q) => { q.params[key] = n; })} className="h-6 w-14" /></span>)}
+            </div>
+            <div className="mt-1 text-[11px] text-muted-foreground">captures <span className="mono">{p.name}.</span>{d.fields.filter((f) => !/^bar[123]\./.test(f)).join(', ')}{p.kind === 'fvg' ? ', bar1…bar3 (open, high, low, close)' : ''} · steps choose bullish or bearish</div>
+          </div>
+        );
+      })}
+      <div className="flex flex-wrap items-center gap-1">
+        <span className="text-xs text-muted-foreground">+ declare</span>
+        {PKINDS.map((kind) => <Button key={kind} size="sm" variant="outline" className="h-7" onClick={() => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })}>{PATTERN_KINDS[kind].title.replace(/ \(.*\)$/, '').replace('Fair value gap', 'FVG')}</Button>)}
+      </div>
+    </div>
+  );
+}
+/** renaming a pattern updates the steps that reference it and every {{capture:name.…}} token */
+export function renamePattern(s: Setup, from: string, to: string) {
+  if (from === to || !from) return;
+  const re = (x: string) => (x ? x.split(`{{capture:${from}.`).join(`{{capture:${to}.`) : x);
+  const walk = (c?: Cond) => {
+    if (!c) return;
+    if (c.t === 'pattern' && c.ref === from) c.ref = to;
+    if (c.t === 'cmp') { c.a = re(c.a); c.b = re(c.b); }
+    if (c.t === 'draw') c.from = re(c.from);
+    if (c.t === 'all' || c.t === 'any') c.items.forEach(walk);
+    if (c.t === 'not' || c.t === 'for_n') walk(c.item);
+  };
+  s.branches.forEach((b) => {
+    b.steps.forEach((st) => { walk(st.cond); walk(st.hold); walk(st.invalidate); });
+    b.entry.price = b.entry.price && re(b.entry.price); b.entry.stop.token = re(b.entry.stop.token);
+  });
+  s.in_position_rules.forEach((r) => walk(r.when));
+  s.trade_settings.legs.forEach((l) => { if (l.level) l.level = re(l.level); });
+}
+
 /** changing a declared indicator updates every place that reads it (a new Setup version on Freeze) */
 export function renameToken(s: Setup, from: string, to: string) {
   if (from === to) return;
@@ -253,7 +315,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
 function ctxCaps(setup: Setup, bi: number, ctx: TokenCtx) {
   const out: { name: string; fields: string[] }[] = [];
   setup.branches[bi]?.steps.forEach((st) => {
-    const walk = (c: Cond) => { if (c.t === 'fvg') out.push({ name: c.capture, fields: ['top', 'bottom', 'mid', 'bar1.low', 'bar1.high', 'bar3.low', 'bar3.high'] }); if (c.t === 'all' || c.t === 'any') c.items.forEach(walk); };
+    const walk = (c: Cond) => { if (c.t === 'pattern') { const pt = (setup.patterns || []).find((q) => q.name === c.ref); if (pt && !out.some((o) => o.name === c.ref)) out.push({ name: c.ref, fields: PATTERN_KINDS[pt.kind].fields }); } if (c.t === 'fvg') out.push({ name: c.capture, fields: ['top', 'bottom', 'mid', 'bar1.low', 'bar1.high', 'bar3.low', 'bar3.high'] }); if (c.t === 'all' || c.t === 'any') c.items.forEach(walk); };
     walk(st.cond);
     if (st.capture_running) out.push({ name: st.capture_running.name, fields: ['low', 'high'] });
   });

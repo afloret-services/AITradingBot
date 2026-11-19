@@ -4,12 +4,12 @@ import React, { useState } from 'react';
 import { VariantProps } from '../types';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
-import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection } from '../components/sections';
+import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection } from '../components/sections';
 import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
 import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
 
-const STAGES = ['Basics', 'Indicators', 'When to trade', 'Signal steps', 'Entry & stop', 'Trade settings', 'Review & save', 'Create a Run'] as const;
+const STAGES = ['Basics', 'Indicators & patterns', 'When to trade', 'Signal steps', 'Entry & stop', 'Trade settings', 'Review & save', 'Create a Run'] as const;
 
 export function VariantA(p: VariantProps) {
   const { setup, mutate, data, result } = p;
@@ -48,7 +48,10 @@ export function VariantA(p: VariantProps) {
                 <div className="text-xs text-muted-foreground">Rule blocks are instrument-free. The instrument is chosen when a Run is created (stage 8). The preview below runs on MNQ.</div>
               </div>
             )}
-            {stage === 1 && <><div className="text-sm text-muted-foreground">Declare each indicator once. Steps pick from this list; changing one here changes every step that reads it.</div><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={indicatorUsage(setup)} /></>}
+            {stage === 1 && <div className="space-y-5">
+              <div><div className="mb-1 text-sm font-semibold">Indicators</div><div className="mb-2 text-sm text-muted-foreground">Declare each indicator once. Steps pick from this list; changing one here changes every step that reads it.</div><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={indicatorUsage(setup)} /></div>
+              <div><div className="mb-1 text-sm font-semibold">Patterns</div><div className="mb-2 text-sm text-muted-foreground">Declare each pattern once: its kind, timeframe and settings, and a name. A step then says "a bullish <span className="mono">fvg</span> forms" and reads what it captured, e.g. <span className="mono">fvg.top</span>. The long and short branches share the same declaration.</div><PatternList setup={setup} mutate={mutate} /></div>
+            </div>}
             {stage === 2 && <div className="space-y-4"><TradingHoursEditor setup={setup} mutate={mutate} /><SessionsEditor setup={setup} mutate={mutate} /><BehaviourEditor setup={setup} mutate={mutate} /></div>}
             {stage === 3 && (
               <div className="space-y-3">
@@ -122,7 +125,7 @@ export function VariantA(p: VariantProps) {
 
 const SUBS = [
   'Name the Setup and declare its Base bar, the bar the evaluator runs on.',
-  'Every indicator the Setup reads, declared once by its token.',
+  'Every indicator and pattern the Setup reads, declared once. Steps pick from these lists.',
   'Trading hours, sessions, one-at-a-time and the news rule.',
   'First A, then B: each step is one Sequence link. Open a step to see what it matches on the chart.',
   'The Entry block: order type, price and the mandatory stop.',

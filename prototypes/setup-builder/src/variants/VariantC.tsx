@@ -5,10 +5,10 @@ import React, { useState } from 'react';
 import { VariantProps } from '../types';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx, AddMenu, newCmp } from '../components/CondEditor';
-import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey } from '../components/sections';
+import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList } from '../components/sections';
 import { shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs } from '../components/ui';
-import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror } from '../model';
+import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN_KINDS, patternUsage, labelsOf } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
 
 type Sel = { kind: 'step'; bi: number; si: number } | { kind: 'entry'; bi: number } | { kind: 'trade' } | { kind: 'settings' } | { kind: 'section'; k: SectionKey };
@@ -18,7 +18,7 @@ export function VariantC(p: VariantProps) {
   const [sel, setSel] = useState<Sel>({ kind: 'step', bi: 0, si: 0 });
   const [mode, setMode] = useState<'build' | 'run'>('build');
   const runD = useRunDraft(data, setup);
-  const labels = Object.fromEntries(setup.indicators.filter((i) => i.label).map((i) => [i.token, i.label!]));
+  const labels = labelsOf(setup);
   const insert = (c: Cond) => {
     if (sel.kind !== 'step') return;
     mutate((s) => { (s.branches[sel.bi].steps[sel.si].cond as any).items.push(c); });
@@ -47,14 +47,20 @@ export function VariantC(p: VariantProps) {
             ))}
             <button className="text-xs text-sky-300" onClick={() => setSel({ kind: 'settings' })}>manage / declare…</button>
           </Lib>
+          <Lib title="Patterns (declared once)">
+            {(setup.patterns || []).map((pt) => (
+              <LibItem key={pt.name} onClick={() => insert({ id: uid(), t: 'pattern', ref: pt.name, side: side() })} disabled={sel.kind !== 'step'} hint={`${pt.tf} · used ${patternUsage(setup)[pt.name] || 0}×`}>{pt.name}: {PATTERN_KINDS[pt.kind].title.replace(/ \(.*\)$/, '')}</LibItem>
+            ))}
+            <button className="text-xs text-sky-300" onClick={() => setSel({ kind: 'settings' })}>manage / declare…</button>
+          </Lib>
           <Lib title="ICT presets">
-            {[['FVG with Displacement', () => PRESETS.fvgWithDisplacement(setup.settings.base_bar, side())], ['Bias', () => PRESETS.bias(side())], ['Displacement', () => PRESETS.displacement(setup.settings.base_bar, side())], ['Draw on liquidity', () => PRESETS.draw(side())]].map(([l, f]: any) => <LibItem key={l} onClick={() => insert(f())} disabled={sel.kind !== 'step'}>{l}</LibItem>)}
+            {[['Bias', () => PRESETS.bias(side())], ['Draw on liquidity', () => PRESETS.draw(side())]].map(([l, f]: any) => <LibItem key={l} onClick={() => insert(f())} disabled={sel.kind !== 'step'}>{l}</LibItem>)}
           </Lib>
           <Lib title="Indicator presets">
             <LibItem onClick={() => insert(PRESETS.macdCross(setup.settings.base_bar, side()))} disabled={sel.kind !== 'step'}>MACD crosses signal</LibItem>
           </Lib>
           <Lib title="Logic">
-            {[['Compare', () => newCmp(tokenCtx(setup, 0, 0))], ['All of', () => ({ id: uid(), t: 'all', items: [] })], ['Any of', () => ({ id: uid(), t: 'any', items: [] })], ['Not', () => ({ id: uid(), t: 'not', item: newCmp(tokenCtx(setup, 0, 0)) })], ['For at least N bars', () => ({ id: uid(), t: 'for_n', n: 3, item: newCmp(tokenCtx(setup, 0, 0)) })], ['Time range', () => ({ id: uid(), t: 'time', start: '10:00', end: '11:00' })], ['FVG detector', () => ({ id: uid(), t: 'fvg', side: side(), tf: setup.settings.base_bar, min_gap_ticks: 4, middle_closes_gap_way: true, capture: 'fvg' })]].map(([l, f]: any) => <LibItem key={l} onClick={() => insert(f())} disabled={sel.kind !== 'step'}>{l}</LibItem>)}
+            {[['Compare', () => newCmp(tokenCtx(setup, 0, 0))], ['All of', () => ({ id: uid(), t: 'all', items: [] })], ['Any of', () => ({ id: uid(), t: 'any', items: [] })], ['Not', () => ({ id: uid(), t: 'not', item: newCmp(tokenCtx(setup, 0, 0)) })], ['For at least N bars', () => ({ id: uid(), t: 'for_n', n: 3, item: newCmp(tokenCtx(setup, 0, 0)) })], ['Time range', () => ({ id: uid(), t: 'time', start: '10:00', end: '11:00' })]].map(([l, f]: any) => <LibItem key={l} onClick={() => insert(f())} disabled={sel.kind !== 'step'}>{l}</LibItem>)}
           </Lib>
           <div className="text-[11px] text-muted-foreground">Click to add to the selected step card.</div>
         </div>
@@ -108,7 +114,7 @@ export function VariantC(p: VariantProps) {
         </div>
         {/* inspector */}
         <div className="overflow-auto border-l p-3">
-          {sel.kind === 'settings' && <div className="space-y-4"><H>Setup settings</H><BaseBarEditor setup={setup} mutate={mutate} /><TradingHoursEditor setup={setup} mutate={mutate} /><SessionsEditor setup={setup} mutate={mutate} /><BehaviourEditor setup={setup} mutate={mutate} /><H>Indicators</H><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={usage} /></div>}
+          {sel.kind === 'settings' && <div className="space-y-4"><H>Setup settings</H><BaseBarEditor setup={setup} mutate={mutate} /><TradingHoursEditor setup={setup} mutate={mutate} /><SessionsEditor setup={setup} mutate={mutate} /><BehaviourEditor setup={setup} mutate={mutate} /><H>Indicators</H><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={usage} /><H>Patterns</H><PatternList setup={setup} mutate={mutate} compact /></div>}
           {sel.kind === 'step' && selStep && (
             run ? <Locked what="Signal steps" /> :
             <div className="space-y-3">
@@ -181,6 +187,7 @@ function MiniCond({ c, labels, depth = 0 }: { c: Cond; labels: Record<string, st
     return <div className={cn('space-y-0.5', depth > 0 && 'ml-1 border-l-2 pl-1.5', c.t === 'any' ? 'border-amber-500/60' : 'border-emerald-500/60')}>{depth > 0 && <div className="text-[10px] font-semibold text-muted-foreground">{c.t === 'all' ? 'AND' : 'OR'}</div>}{c.items.map((x) => <MiniCond key={x.id} c={x} labels={labels} depth={depth + 1} />)}{!c.items.length && <div className="text-xs italic text-muted-foreground">empty</div>}</div>;
   }
   if (c.t === 'cmp') return <div className="text-xs">{c.origin && <Badge tone="info" className="mr-1">{c.origin.preset}</Badge>}<Chip>{shortName(c.a, labels)}</Chip> {c.op} {c.mult && c.mult !== 1 ? `${c.mult}×` : ''}<Chip>{shortName(c.b || '?', labels)}</Chip></div>;
+  if (c.t === 'pattern') return <div className="text-xs"><Badge tone="info">{c.side === 'long' ? '▲' : '▼'} {c.ref} forms</Badge></div>;
   if (c.t === 'fvg') return <div className="text-xs"><Badge tone="info">FVG {c.tf} ≥{c.min_gap_ticks}t → {c.capture}</Badge></div>;
   if (c.t === 'draw') return <div className="text-xs"><Badge tone="info">Draw on liquidity ≥ {c.min_framework_points} pts</Badge></div>;
   if (c.t === 'time') return <div className="text-xs">🕒 {c.start}–{c.end}</div>;

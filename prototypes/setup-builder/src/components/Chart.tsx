@@ -109,7 +109,14 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
       add(sel.stop, '#ef4444', 'stop');
       sel.legs.forEach((l) => add(l.price, '#22c55e', `${l.name} ×${l.contracts}`, LineStyle.Dashed));
       if (sel.caps.draw) add(sel.caps.draw.price, '#a78bfa', 'draw', LineStyle.Dotted);
-      if (sel.caps.fvg) { add(sel.caps.fvg.top, 'rgba(56,189,248,0.6)', 'FVG top', LineStyle.Dotted); add(sel.caps.fvg.bottom, 'rgba(56,189,248,0.6)', 'FVG bottom', LineStyle.Dotted); }
+      // every captured pattern: zones (FVG, Order block) as top/bottom, MSS as its broken level, Leg as its two ends
+      for (const [name, v] of Object.entries(sel.caps) as [string, any][]) {
+        if (!v || typeof v !== 'object' || name === 'draw') continue;
+        const col = 'rgba(56,189,248,0.6)';
+        if (typeof v.top === 'number') { add(v.top, col, `${name} top`, LineStyle.Dotted); add(v.bottom, col, `${name} bottom`, LineStyle.Dotted); }
+        else if (typeof v.level === 'number') add(v.level, col, `${name} level`, LineStyle.Dotted);
+        else if (typeof v.start === 'number') { add(v.start, col, `${name} start`, LineStyle.Dotted); add(v.end, col, `${name} end`, LineStyle.Dotted); }
+      }
     }
     (cs as any)._lines = lines;
     c.timeScale().fitContent();
