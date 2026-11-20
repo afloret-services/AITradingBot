@@ -22,7 +22,7 @@ export type Cond =
 
 // ---------- Patterns: declared once per Setup (kind, timeframe, settings), then referenced by name in steps ----------
 export type PatternKind = 'fvg' | 'displacement' | 'order_block' | 'leg' | 'mss' | 'double' | 'triple' | 'head_shoulders' | 'triangle' | 'wedge' | 'flag' | 'pennant' | 'rectangle' | 'channel'
-  | 'engulfing' | 'hammer' | 'star' | 'harami' | 'piercing' | 'soldiers' | 'tweezer' | 'inside_bar';
+  | 'engulfing' | 'hammer' | 'star' | 'harami' | 'piercing' | 'soldiers' | 'tweezer' | 'inside_bar' | 'doji' | 'marubozu';
 export interface Pattern { name: string; kind: PatternKind; tf: TF; params: Record<string, number | boolean>; label?: string }
 type PDef = { title: string; help: string; params: [key: string, label: string, def: number | boolean][]; fields: string[]; bull: string; bear: string; named?: boolean; group?: 'ict' | 'chart' | 'candle' };
 const DISP: PDef['params'] = [['disp_mult', 'range at least × the average range', 1.5], ['disp_body_pct', 'body % at least', 60], ['avg_len', 'average range over bars', 20]];
@@ -105,9 +105,15 @@ export const PATTERN_KINDS: Record<PatternKind, PDef> = {
   inside_bar: { title: 'Inside bar breakout', bull: 'inside bar breaking up', bear: 'inside bar breaking down', named: true, group: 'candle',
     help: 'A candle (the mother bar) followed by one or more candles entirely inside its range, then a close beyond its high (bullish) or its low (bearish). Forms on the breaking close.',
     params: [['max_inside', 'up to N inside candles', 3]], fields: [...CANDLE_FIELDS, 'mother_high', 'mother_low'] },
+  doji: { title: 'Doji', bull: 'doji after a drop', bear: 'doji after a rise', named: true, group: 'candle',
+    help: 'A candle that opens and closes at about the same price: a body that is a small part of its range, showing indecision. On its own it has no direction, so the side means where it appears: after a move down (bullish) or after a move up (bearish). Tick "dragonfly / gravestone only" to require the long wick on the side of the move: a dragonfly (long lower wick) after a drop, a gravestone (long upper wick) after a rise. Forms on its close.',
+    params: [['max_body_pct', 'body ≤ % of the range', 10], ['dragonfly', 'dragonfly / gravestone only', false], ['other_wick_pct', 'short wick ≤ % of the range (dragonfly / gravestone)', 15], ['trend_bars', 'after a move over N bars (0 = any)', 3]], fields: CANDLE_FIELDS },
+  marubozu: { title: 'Marubozu', bull: 'bullish marubozu', bear: 'bearish marubozu', named: true, group: 'candle',
+    help: 'A candle that is almost all body, with little or no wick: it opened near one end and closed near the other, showing one side in control. Bullish: up candle; bearish: down candle. Forms on its close.',
+    params: [['min_body_pct', 'body ≥ % of the range', 90], ['range_mult', 'range ≥ × the average range (0 = any)', 1], ['avg_len', 'average range over bars', 20], ['trend_bars', 'after a move against it over N bars (0 = any)', 0]], fields: CANDLE_FIELDS },
 };
 export function newPattern(kind: PatternKind, tf: TF, taken: string[]): Pattern {
-  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss', double: 'dbl', triple: 'tpl', head_shoulders: 'hs', triangle: 'tri', wedge: 'wdg', flag: 'flag', pennant: 'pen', rectangle: 'rect', channel: 'chan', engulfing: 'eng', hammer: 'pin', star: 'star', harami: 'har', piercing: 'pierce', soldiers: 'three', tweezer: 'tw', inside_bar: 'ib' }[kind];
+  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss', double: 'dbl', triple: 'tpl', head_shoulders: 'hs', triangle: 'tri', wedge: 'wdg', flag: 'flag', pennant: 'pen', rectangle: 'rect', channel: 'chan', engulfing: 'eng', hammer: 'pin', star: 'star', harami: 'har', piercing: 'pierce', soldiers: 'three', tweezer: 'tw', inside_bar: 'ib', doji: 'doji', marubozu: 'maru' }[kind];
   let name = base, n = 2;
   while (taken.includes(name)) name = base + n++;
   return { name, kind, tf, params: Object.fromEntries(PATTERN_KINDS[kind].params.map(([k, , d]) => [k, d])) };

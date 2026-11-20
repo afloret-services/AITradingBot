@@ -99,6 +99,8 @@ export function PatternSchematic({ p }: { p: Pattern }) {
       soldiers: [[44, 52, 43, 51], [50, 60, 49, 59], [58, 69, 57, 68]],
       tweezer: [[62, 64, 44, 47], [47, 60, 44, 58]],
       inside_bar: [[52, 72, 42, 64], [62, 68, 50, 56], [57, 64, 52, 60], [60, 82, 59, 80]],
+      doji: P.dragonfly ? [[60, 60.6, 40, 60.3]] : [[55, 64, 46, 55.4]],
+      marubozu: [[48, 72.3, 47.8, 72]],
     };
     const ks = [...lead, ...sets[p.kind]];
     const vmin = Math.min(...ks.map((k) => k[2])) - 3, vmax = Math.max(...ks.map((k) => k[1])) + 3;

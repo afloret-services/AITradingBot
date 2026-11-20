@@ -601,6 +601,16 @@ export function patternSeries(data: Data, p: Pattern, side: 'long' | 'short') {
         case 'tweezer':
           if (isDn(a) && isUp(b) && Math.abs(a.l - b.l) <= P.tolerance_ticks * TICK + 1e-9 && trendOk(j - 1)) i0 = j - 1;
           break;
+        case 'doji': {
+          const r = rng(b), upper = b.h - Math.max(b.o, b.c);
+          if (r > 0 && body(b) <= (P.max_body_pct / 100) * r + 1e-9 && (!P.dragonfly || upper <= (P.other_wick_pct / 100) * r + 1e-9) && trendOk(j)) i0 = j;
+          break;
+        }
+        case 'marubozu': {
+          const r = rng(b), av = avg[j - 1];
+          if (isUp(b) && r > 0 && body(b) >= (P.min_body_pct / 100) * r - 1e-9 && (!P.range_mult || (av != null && r >= P.range_mult * av - 1e-9)) && trendOk(j)) i0 = j;
+          break;
+        }
         case 'inside_bar':
           for (let k = 1; k <= P.max_inside; k++) {
             const m = j - 1 - k;
