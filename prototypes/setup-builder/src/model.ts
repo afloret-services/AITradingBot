@@ -21,7 +21,7 @@ export type Cond =
   | { id: string; t: 'pattern'; ref: string; side: 'long' | 'short'; origin?: Origin };
 
 // ---------- Patterns: declared once per Setup (kind, timeframe, settings), then referenced by name in steps ----------
-export type PatternKind = 'fvg' | 'displacement' | 'order_block' | 'leg' | 'mss' | 'double' | 'triple' | 'head_shoulders' | 'triangle' | 'wedge' | 'flag';
+export type PatternKind = 'fvg' | 'displacement' | 'order_block' | 'leg' | 'mss' | 'double' | 'triple' | 'head_shoulders' | 'triangle' | 'wedge' | 'flag' | 'pennant' | 'rectangle' | 'channel';
 export interface Pattern { name: string; kind: PatternKind; tf: TF; params: Record<string, number | boolean>; label?: string }
 type PDef = { title: string; help: string; params: [key: string, label: string, def: number | boolean][]; fields: string[]; bull: string; bear: string; named?: boolean; group?: 'ict' | 'chart' };
 const DISP: PDef['params'] = [['disp_mult', 'range at least × the average range', 1.5], ['disp_body_pct', 'body % at least', 60], ['avg_len', 'average range over bars', 20]];
@@ -65,9 +65,21 @@ export const PATTERN_KINDS: Record<PatternKind, PDef> = {
     help: 'A strong move (the pole) followed by a short, shallow pause that drifts against it or sideways (the flag). Bull flag: pole up, forms on the first close above the flag\'s top line; bear flag: the mirror. Target: the pole\'s length projected from the breakout.',
     params: [['pole_points', 'pole ≥ points', 30], ['pole_bars', 'pole within N bars', 10], ['flag_min', 'flag at least N bars', 3], ['flag_max', 'flag at most N bars', 20], ['max_retrace_pct', 'flag gives back ≤ % of the pole', 50]],
     fields: ['line', 'pole', 'pole_start', 'pole_end', 'target', 'breakout'] },
+  pennant: { title: 'Pennant', bull: 'bull pennant', bear: 'bear pennant', named: true, group: 'chart',
+    help: 'Like a flag, but the pause after the pole narrows into a small symmetrical triangle (highs falling, lows rising). Bull pennant: pole up, forms on the first close above its top line; bear pennant: the mirror. Target: the pole\'s length projected from the breakout.',
+    params: [['pole_points', 'pole ≥ points', 30], ['pole_bars', 'pole within N bars', 10], ['flag_min', 'pennant at least N bars', 4], ['flag_max', 'pennant at most N bars', 20], ['max_retrace_pct', 'pennant gives back ≤ % of the pole', 50], ['converge_pct', 'narrows by ≥ % of its height', 30]],
+    fields: ['line', 'pole', 'pole_start', 'pole_end', 'target', 'breakout'] },
+  rectangle: { title: 'Rectangle', bull: 'rectangle breaking up', bear: 'rectangle breaking down', named: true, group: 'chart',
+    help: 'Price moves sideways between a flat top (the last two swing highs at about the same price) and a flat bottom (the last two swing lows). The pattern forms on the first close outside it in the side\'s direction. Target: the rectangle\'s height from the breakout.',
+    params: [['strength', 'swing: bars each side', 3], ['min_height_points', 'height ≥ points', 10], ['max_bars', 'whole pattern within N bars', 80], ['break_within', 'breakout within N bars of the last swing', 20], ['flat_pct', 'a line counts as flat within % of the height', 15]],
+    fields: ['line', 'opposite', 'height', 'target', 'breakout'] },
+  channel: { title: 'Channel', bull: 'channel breaking up', bear: 'channel breaking down', named: true, group: 'chart',
+    help: 'Price moves between two parallel sloping lines, through the last two swing highs and the last two swing lows. The pattern forms on the first close outside it in the side\'s direction: above the top line for bullish, below the bottom line for bearish (with the trend or against it, depending on which way the channel slopes). Target: the channel\'s height from the breakout.',
+    params: [['strength', 'swing: bars each side', 3], ['min_height_points', 'height ≥ points', 10], ['max_bars', 'whole pattern within N bars', 80], ['break_within', 'breakout within N bars of the last swing', 20], ['flat_pct', 'lines count as parallel within % of the height', 15], ['allow_rising', 'rising', true], ['allow_falling', 'falling', true]],
+    fields: ['line', 'opposite', 'height', 'target', 'breakout'] },
 };
 export function newPattern(kind: PatternKind, tf: TF, taken: string[]): Pattern {
-  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss', double: 'dbl', triple: 'tpl', head_shoulders: 'hs', triangle: 'tri', wedge: 'wdg', flag: 'flag' }[kind];
+  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss', double: 'dbl', triple: 'tpl', head_shoulders: 'hs', triangle: 'tri', wedge: 'wdg', flag: 'flag', pennant: 'pen', rectangle: 'rect', channel: 'chan' }[kind];
   let name = base, n = 2;
   while (taken.includes(name)) name = base + n++;
   return { name, kind, tf, params: Object.fromEntries(PATTERN_KINDS[kind].params.map(([k, , d]) => [k, d])) };

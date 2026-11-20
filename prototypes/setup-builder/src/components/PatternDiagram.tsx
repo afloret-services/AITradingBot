@@ -87,11 +87,21 @@ export function PatternSchematic({ p }: { p: Pattern }) {
       <Label x={6} y={14}>{P.displacement ? 'a Displacement closes above the level' : 'a close above the level'}</Label>
     </>;
   }
-  if (p.kind === 'triangle' || p.kind === 'wedge' || p.kind === 'flag') {
+  if (p.kind === 'triangle' || p.kind === 'wedge' || p.kind === 'flag' || p.kind === 'pennant' || p.kind === 'rectangle' || p.kind === 'channel') {
     // drawn as the bullish breakout (the bearish one is its mirror)
     const P2 = p.params as Record<string, any>;
     let pts: [number, number][], up: [number, number, number, number], lo: [number, number, number, number], bx: number, by: number, tgt: number, note: string, pole: [number, number, number, number] | null = null;
-    if (p.kind === 'flag') {
+    if (p.kind === 'pennant') {
+      pole = [20, 20, 90, 78];
+      pts = [[20, 20], [90, 78], [105, 62], [120, 74], [135, 65], [150, 71], [165, 67], [185, 86]];
+      up = [90, 80, 180, 69]; lo = [100, 60, 180, 66]; bx = 182; by = 70; tgt = 70 + 58; note = 'pole, then a small narrowing pause';
+    } else if (p.kind === 'rectangle') {
+      pts = [[15, 30], [45, 75], [75, 40], [105, 76], [135, 39], [165, 75], [190, 55], [212, 85], [235, 95]];
+      up = [45, 76, 205, 76]; lo = [75, 39, 205, 39]; bx = 205; by = 76; tgt = 76 + 37; note = 'flat top and flat bottom';
+    } else if (p.kind === 'channel') {
+      pts = [[15, 12], [40, 40], [62, 22], [92, 55], [115, 36], [145, 70], [170, 50], [200, 88], [225, 97]];
+      up = [40, 40, 205, 82]; lo = [62, 22, 205, 58]; bx = 196; by = 81; tgt = 98; note = 'rising channel shown · falling is its mirror';
+    } else if (p.kind === 'flag') {
       pole = [20, 20, 90, 75];
       pts = [[20, 20], [90, 75], [105, 66], [118, 72], [133, 62], [148, 68], [163, 58], [178, 63], [195, 82]];
       up = [90, 76, 185, 66]; lo = [100, 64, 185, 54]; bx = 190; by = 68; tgt = 66 + 55; note = 'pole, then a pause drifting against it';

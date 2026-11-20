@@ -232,7 +232,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
           for (let q = 1; q < ps.length; q++) sh.push({ k: 'line', t1: tOfMs(ps[q - 1][0]), t2: tOfMs(ps[q][0]), p1: ps[q - 1][1], p2: ps[q][1], stroke: 'rgba(56,189,248,0.85)', width: 1.5, label: q === 1 && v.pole ? `${name} · pole` : undefined });
           for (const [t1, p1, t2, p2] of (v.lines || []) as [number, number, number, number][]) sh.push({ k: 'line', t1: tOfMs(t1), t2: tOfMs(t2), p1, p2, stroke: '#fbbf24', width: 1.5 });
           if (v.neck_t0 != null) sh.push({ k: 'line', t1: tOfMs(v.neck_t0), t2: tOfMs(v.time), p1: v.neck_p0, p2: v.neckline, stroke: '#fbbf24', dash: true, label: `${name} · neckline` });
-          if (v.lines && !v.neck_t0) sh.push({ k: 'line', t1: tOfMs(v.time), t2: tOfMs(v.time), p1: v.line, p2: v.line, stroke: '#fbbf24', label: `${name} · ${v.shape ? v.shape + ' ' : ''}${v.pole ? 'flag' : ''} breakout` });
+          if (v.lines && !v.neck_t0) sh.push({ k: 'line', t1: tOfMs(v.time), t2: tOfMs(v.time), p1: v.line, p2: v.line, stroke: '#fbbf24', label: `${name} · ${v.shape && v.shape !== 'flat' ? v.shape + ' ' : ''}breakout` });
           if (v.target != null) sh.push({ k: 'line', t1: tOfMs(v.time), t2: tEnd, p1: v.target, p2: v.target, stroke: 'rgba(248,113,113,0.8)', dash: true, label: `${name} · target` });
           continue;
         }
