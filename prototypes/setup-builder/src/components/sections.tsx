@@ -200,9 +200,31 @@ export function indicatorUsage(s: Setup) {
 }
 
 // ---------- step limits ----------
-// ---------- what Signal steps do ----------
+// ---------- Basics ----------
 const HelpBox = ({ children }: { children: React.ReactNode }) => <div className="space-y-1 rounded-md border-l-2 border-sky-500/50 bg-sky-500/5 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground">{children}</div>;
 const T = ({ children }: { children: React.ReactNode }) => <span className="font-medium text-foreground">{children}</span>;
+export function BasicsHelp({ setup, what }: { setup: Setup; what: 'intro' | 'name' | 'base_bar' | 'notes' }) {
+  const bb = setup.settings.base_bar, m = tfMinutes(bb);
+  const perDay = Math.round(1380 / m); // CME futures trade 23 hours a day
+  const finer = TFS.filter((t) => tfMinutes(t) < m);
+  const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
+  if (what === 'intro') return (
+    <HelpBox>
+      <div><T>A Setup</T> is one trading strategy written as Rule blocks: when to look (Trading hours), what must happen in order (Signal steps), how to get in (Entry and stop) and how to manage the Trade (Trade settings). It names no instrument: the same Setup can run on MNQ, NQ, ES or MES, chosen when a <T>Run</T> is created.</div>
+      <div>While you build, it is a <T>Draft</T>: it saves with warnings and you can keep changing it. <T>Freeze</T> makes a numbered, unchangeable version (v1, v2…) that Runs and backtests point to; it is refused while there are errors. Steps 1 to 6 build it, step 7 reviews it on MNQ, step 8 creates a Run.</div>
+    </HelpBox>
+  );
+  if (what === 'name') return <HelpBox><div>How the Setup is shown in lists, Runs and the Rule description. Renaming it does not make a new version: the version only changes when something the engine reads changes.</div></HelpBox>;
+  if (what === 'notes') return <HelpBox><div>Free text for you: where the idea comes from, what you are testing, links. The engine never reads it, it is not part of the Rule description, and editing it does not make a new version.</div></HelpBox>;
+  return (
+    <HelpBox>
+      <div>The bar the Setup is checked on: at every close of a {B(bb)} bar the Signal steps are evaluated once. Values on a coarser timeframe (a 15m close, a 1d Bias) are read from their last closed bar; values on a finer one are refused{finer.length ? <> (here {B(finer.join(', '))})</> : ''}, because the Setup never looks inside its own bar.</div>
+      <div>Here: {B(bb)} means about {B(`${perDay.toLocaleString('en-US')} checks`)} per Trading day, and a Signal can come at the earliest {m === 1 ? 'one minute' : `${m} minutes`} after a move starts. A finer Base bar reacts sooner but sees more noise; a coarser one is calmer but enters later.{setup.patterns?.some((p) => tfMinutes(p.tf) < m) ? ' Some declared patterns are finer than this Base bar and will be refused.' : ''}</div>
+    </HelpBox>
+  );
+}
+
+// ---------- what Signal steps do ----------
 const NEW_START: Record<string, [string, string]> = {
   start_another: ['Start another', 'Each time step 1 holds, a new Candidate starts next to the ones already running, so several can be in progress at once and each can become a Signal.'],
   replace: ['Replace', 'Each time step 1 holds, the running Candidates are dropped and a fresh one starts. Only the most recent start can become a Signal.'],

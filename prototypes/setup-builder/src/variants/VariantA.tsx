@@ -5,7 +5,7 @@ import { VariantProps } from '../types';
 import { SetupMap } from '../components/SetupMap';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
-import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp } from '../components/sections';
+import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp } from '../components/sections';
 import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
 import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
@@ -42,11 +42,13 @@ export function VariantA(p: VariantProps) {
           <CardHeader title={`${stage + 1}. ${STAGES[stage]}`} sub={SUBS[stage]} right={<div className="flex gap-1"><Button size="sm" variant="outline" disabled={stage === 0} onClick={() => setStage(stage - 1)}>Back</Button><Button size="sm" disabled={stage === STAGES.length - 1} onClick={() => setStage(stage + 1)}>Next: {STAGES[stage + 1] || ''}</Button></div>} />
           <div className="space-y-4 p-4">
             {stage === 0 && (
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Name"><Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="w-64" /></Field>
-                <BaseBarEditor setup={setup} mutate={mutate} />
-                <Field label="Notes (never in the Rule description)"><textarea value={setup.notes} onChange={(e) => mutate((s) => { s.notes = e.target.value; })} className="h-16 w-full rounded-md border border-input bg-transparent p-2 text-sm" /></Field>
-                <div className="text-xs text-muted-foreground">Rule blocks are instrument-free. The instrument is chosen when a Run is created (stage 8). The review step previews it on MNQ.</div>
+              <div className="space-y-4">
+                <BasicsHelp setup={setup} what="intro" />
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div className="space-y-1.5"><Field label="Name"><Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="w-64" /></Field><BasicsHelp setup={setup} what="name" /></div>
+                  <div className="space-y-1.5"><BaseBarEditor setup={setup} mutate={mutate} /><BasicsHelp setup={setup} what="base_bar" /></div>
+                  <div className="space-y-1.5"><Field label="Notes"><textarea value={setup.notes} onChange={(e) => mutate((s) => { s.notes = e.target.value; })} className="h-16 w-full rounded-md border border-input bg-transparent p-2 text-sm" /></Field><BasicsHelp setup={setup} what="notes" /></div>
+                </div>
               </div>
             )}
             {stage === 1 && <div className="space-y-5">
