@@ -5,7 +5,7 @@ import { VariantProps } from '../types';
 import { SetupMap } from '../components/SetupMap';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
-import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp } from '../components/sections';
+import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp } from '../components/sections';
 import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
 import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
@@ -39,7 +39,7 @@ export function VariantA(p: VariantProps) {
       </nav>
       <main className="min-w-0 space-y-4">
         <Card>
-          <CardHeader title={`${stage + 1}. ${STAGES[stage]}`} sub={SUBS[stage]} right={<div className="flex gap-1"><Button size="sm" variant="outline" disabled={stage === 0} onClick={() => setStage(stage - 1)}>Back</Button><Button size="sm" disabled={stage === STAGES.length - 1} onClick={() => setStage(stage + 1)}>Next: {STAGES[stage + 1] || ''}</Button></div>} />
+          <CardHeader title={`${stage + 1}. ${STAGES[stage]}`} sub={SUBS[stage]} right={<div className="flex gap-1"><Button size="sm" variant="outline" disabled={stage === 0} onClick={() => setStage(stage - 1)}>Back</Button><Button size="sm" disabled={stage === STAGES.length - 1} onClick={() => setStage(stage + 1)}>{stage < STAGES.length - 1 ? `Next: ${STAGES[stage + 1]}` : 'Last step'}</Button></div>} />
           <div className="space-y-4 p-4">
             {stage === 0 && (
               <div className="space-y-4">
@@ -150,9 +150,13 @@ function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
   const ctx = tokenCtx(setup, 0, 99);
   return (
     <div className="space-y-3">
+      <RunHelp setup={setup} what="intro" />
       <div className="flex items-center gap-3"><Field label="Instrument"><Select value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} options={INSTRUMENTS} /></Field>
         <Field label="Binds"><span className="mono text-xs">{setup.setup_id} · Draft (a paper Run needs a frozen version that passed the gate)</span></Field></div>
       {instrumentWarnings(setup, runD.draft.instrument).map((w) => <div key={w} className="text-xs text-amber-300">{w}</div>)}
+      <RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} />
+      <div className="pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Risk overrides</div>
+      <RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} />
       <div className="divide-y rounded-md border">
         {SECTIONS.map((k) => {
           const on = k in runD.draft.overrides;

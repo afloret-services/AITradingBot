@@ -224,6 +224,37 @@ export function BasicsHelp({ setup, what }: { setup: Setup; what: 'intro' | 'nam
   );
 }
 
+// ---------- Create a Run ----------
+const SPECS: Record<string, { pt: number; tick: number; unit: string } | undefined> = {
+  MNQ: { pt: 2, tick: 0.25, unit: 'points' }, NQ: { pt: 20, tick: 0.25, unit: 'points' }, MES: { pt: 5, tick: 0.25, unit: 'points' }, ES: { pt: 50, tick: 0.25, unit: 'points' },
+};
+export function RunHelp({ setup, what, instrument, overrides }: { setup: Setup; what: 'intro' | 'instrument' | 'overrides'; instrument?: string; overrides?: number }) {
+  const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
+  if (what === 'intro') return (
+    <HelpBox>
+      <div><T>A Run</T> executes Setup versions, each bound to the instrument it trades, with its own risk settings. A <T>backtest Run</T> replays history; a <T>paper Run</T> trades on the Paper account (IBKR's simulated account, no real money).</div>
+      <div>A paper Run only takes a <T>Promoted version</T>: a frozen version that passed its Promotion gate on that instrument (a measurable result on the held-out backtest period after costs, plus your review that its Trades match its rules on the chart). This Setup is still a Draft, so here the Run is only a preview on the MNQ bars.</div>
+    </HelpBox>
+  );
+  if (what === 'instrument') {
+    const sp = SPECS[instrument || 'MNQ'];
+    const budget = (setup.trade_settings.risk.capital * setup.trade_settings.risk.pct) / 100;
+    return (
+      <HelpBox>
+        <div>The Rule blocks name no instrument, so the same Setup can trade several. The instrument sets the tick size and the dollars per point, so the same stop in points risks a different amount, and changes the number of contracts.</div>
+        {sp ? <div>Here: {B(instrument)} is {B(`$${sp.pt} a point`)}, tick {sp.tick}. With this Setup's {B(`$${budget.toFixed(0)}`)} Risk per Trade, a 20-point stop risks ${(20 * sp.pt).toFixed(0)} per contract, so {Math.floor(budget / (20 * sp.pt)) >= 1 ? <>it trades {B(`${Math.min(setup.trade_settings.risk.max_contracts, Math.floor(budget / (20 * sp.pt)))} contract(s)`)}</> : <>{B('every such Signal is refused')} ("stop too wide"): raise Risk per Trade in an override or pick the micro contract</>}.</div>
+          : <div>Here: {B(instrument)} is not a CME equity future; its tick and point value differ, and the prototype has no bars for it.</div>}
+      </HelpBox>
+    );
+  }
+  return (
+    <HelpBox>
+      <div>A Run may replace <T>whole Trade-settings sections</T> (Risk per Trade, Stop, Take-profit legs, Break-even, Entry deadline, Expiry and Flatten time, Signal guards): pick Override and the section's full editor opens, starting from the Setup default. It cannot change part of a section, and it cannot touch the Signal steps, the Entry order or the In-position rules: those are the Setup version itself.</div>
+      <div>Overrides make <T>no new version</T>, so a Promoted version stays promoted. When a section is overridden, the line below it shows the Run's value, and the comparison at the bottom re-runs the Setup on the MNQ bars with and without the overrides.{overrides ? <> Here: {B(`${overrides} section${overrides === 1 ? '' : 's'}`)} overridden.</> : <> Here: {B('no override')}; the Run trades the Setup defaults.</>}</div>
+    </HelpBox>
+  );
+}
+
 // ---------- what Signal steps do ----------
 const NEW_START: Record<string, [string, string]> = {
   start_another: ['Start another', 'Each time step 1 holds, a new Candidate starts next to the ones already running, so several can be in progress at once and each can become a Signal.'],
