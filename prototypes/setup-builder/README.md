@@ -47,3 +47,9 @@ A rough evaluator, not the engine. It exists so each step shows its effect on re
 4. **A first step that keeps holding needs "ignore", not "replace".** Otherwise each bar restarts the Candidate and its running capture. Pair "ignore" with an invalidation (the histogram had turned last bar).
 5. **Trading-day expiry of Candidates loses EMA 200 + MACD Signals** whose pullback spans 18:00. This needs a per-Setup (or per-step) "keeps across the Trading-day start" option.
 6. **Guard order:** the stop-width Signal guard is checked before sizing, so the refusal reason matches the lab's.
+
+## Decided so far (your answers while trying it)
+
+- Patterns are declared up front, like indicators, then used by name in steps.
+- In the Wizard, the Setup at a glance and the chart appear only in Review & save.
+- Signal steps read as rules: IF … AND/OR …, THEN … for the next step, ending in the Signal. AND is checked before OR; brackets group explicitly.
