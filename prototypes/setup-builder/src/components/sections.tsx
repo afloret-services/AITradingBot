@@ -1,10 +1,12 @@
 // PROTOTYPE: editors for Setup settings and the Run-overridable Trade-settings sections, shared by the variants.
 import React from 'react';
-import { Setup, Step, TF, TFS, Leg, Guard, InPositionRule, Cond, uid, SECTION_NAMES, condPhrase, Pattern, PatternKind, PATTERN_KINDS, newPattern, patternUsage, patternSettingsPhrase, tfMinutes } from '../model';
+import { labelsOf, phrase } from '../model';
+import { Setup, Step, TF, TFS, Leg, Guard, InPositionRule, Cond, uid, SECTION_NAMES, condPhrase, Pattern, PatternKind, PATTERN_KINDS, newPattern, patternUsage, patternSettingsPhrase, tfMinutes, patternPhrase } from '../model';
 import { TokenPicker, TokenCtx, shortName } from './TokenPicker';
 import { CondEditor, Look } from './CondEditor';
 import { PatternSchematic, PatternExample } from './PatternDiagram';
-import type { Data } from '../engine';
+import type { Data, RunResult } from '../engine';
+import { chartTime } from '../engine';
 import { Button, Field, Input, NumInput, Select, Switch, Badge, cn } from './ui';
 
 export type Mutate = (fn: (s: Setup) => void) => void;
@@ -105,6 +107,9 @@ export function IndicatorList({ setup, mutate, ctx, usage }: { setup: Setup; mut
   );
 }
 // ---------- Patterns, declared once ----------
+const PField = ({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) => (
+  <label className="flex flex-col gap-0.5"><span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground" title={hint}>{label}</span>{children}</label>
+);
 const PKINDS = Object.keys(PATTERN_KINDS) as PatternKind[];
 const DISP_KEYS = ['disp_mult', 'disp_body_pct', 'avg_len'];
 export function PatternList({ setup, mutate, compact, data }: { setup: Setup; mutate: Mutate; compact?: boolean; data?: Data }) {
@@ -120,14 +125,15 @@ export function PatternList({ setup, mutate, compact, data }: { setup: Setup; mu
         const dispOn = p.kind === 'displacement' || p.kind === 'order_block' || !!p.params.displacement;
         return (
           <div key={k} className="rounded-md border p-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <Input value={p.name} onChange={(e) => { const v = e.target.value.trim(); mutate((s) => { renamePattern(s, s.patterns[k].name, v); s.patterns[k].name = v; }); }} className="mono h-7 w-24" title="its name: steps read it as {{capture:name.field}}" />
-              <Select value={p.kind} onChange={(kind: PatternKind) => set(k, (q) => { Object.assign(q, { ...newPattern(kind, q.tf, []), name: q.name, label: q.label }); })} options={PKINDS.map((x) => [x, PATTERN_KINDS[x].title] as [PatternKind, string])} className="h-7" />
-              <span className="text-xs text-muted-foreground">on</span>
-              <Select value={p.tf} onChange={(tf: TF) => set(k, (q) => { q.tf = tf; })} options={tfs.includes(p.tf) ? tfs : [p.tf, ...tfs]} className="h-7" />
-              <span className={cn('text-[11px]', usage[p.name] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[p.name] ? `used ${usage[p.name]}×` : 'unused'}</span>
-              <button className="ml-auto text-muted-foreground hover:text-red-400" title="remove" onClick={() => mutate((s) => { s.patterns.splice(k, 1); })}>×</button>
+            <div className="flex flex-wrap items-end gap-2">
+              <PField label="Name" hint="steps read it as name.field"><Input value={p.name} onChange={(e) => { const v = e.target.value.trim(); mutate((s) => { renamePattern(s, s.patterns[k].name, v); s.patterns[k].name = v; }); }} className="mono h-7 w-24" /></PField>
+              <PField label="Pattern"><Select value={p.kind} onChange={(kind: PatternKind) => set(k, (q) => { Object.assign(q, { ...newPattern(kind, q.tf, []), name: q.name, label: q.label }); })} options={PKINDS.map((x) => [x, PATTERN_KINDS[x].title] as [PatternKind, string])} className="h-7" /></PField>
+              <PField label="Timeframe"><Select value={p.tf} onChange={(tf: TF) => set(k, (q) => { q.tf = tf; })} options={tfs.includes(p.tf) ? tfs : [p.tf, ...tfs]} className="h-7" /></PField>
+              <PField label="Display label (optional)" hint="replaces the kind in descriptions"><Input value={p.label || ''} placeholder={d.title.replace(/ \(.*\)$/, '')} onChange={(e) => set(k, (q) => { q.label = e.target.value || undefined; })} className="h-7 w-48" /></PField>
+              <span className={cn('pb-1.5 text-[11px]', usage[p.name] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[p.name] ? `used ${usage[p.name]}×` : 'unused'}</span>
+              <button className="mb-1.5 ml-auto text-muted-foreground hover:text-red-400" title="remove" onClick={() => mutate((s) => { s.patterns.splice(k, 1); })}>×</button>
             </div>
+            <div className="mt-1 text-[11px] text-muted-foreground">Reads in a step as: <span className="text-foreground">"{patternPhrase(p, 'long')}"</span></div>
             {!compact && <div className="mt-1 text-[11px] text-muted-foreground">{d.help}</div>}
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
               {d.params.filter(([key]) => dispOn || !DISP_KEYS.includes(key)).map(([key, label, def]) =>
@@ -215,16 +221,41 @@ export function StepLimits({ step, onChange, isFirst, ctx, side, look }: { step:
 }
 
 // ---------- Entry block ----------
-export function EntryEditor({ setup, mutate, bi, ctx }: { setup: Setup; mutate: Mutate; bi: number; ctx: TokenCtx }) {
+export function EntryEditor({ setup, mutate, bi, ctx, result, data }: { setup: Setup; mutate: Mutate; bi: number; ctx: TokenCtx; result?: RunResult; data?: Data }) {
   const e = setup.branches[bi].entry;
   const set = (fn: (e: Setup['branches'][0]['entry']) => void) => mutate((s) => fn(s.branches[bi].entry));
   return (
     <div className="space-y-2">
+      {data && <EntryHelp setup={setup} bi={bi} result={result} data={data} />}
       <Field label="Order">
         <Select value={e.order} onChange={(v) => set((x) => { x.order = v; })} options={[['market', "market (next Base bar's open)"], ['limit', 'limit'], ['stop', 'stop entry']]} />
         {e.order !== 'market' && <><span className="text-xs text-muted-foreground">at</span><TokenPicker value={e.price || ''} ctx={ctx} onChange={(v) => set((x) => { x.price = v; })} /></>}
       </Field>
       <StopEditor value={e.stop} onChange={(v) => set((x) => { x.stop = v; })} ctx={ctx} />
+    </div>
+  );
+}
+const ORDER_HELP: Record<string, (long: boolean) => string> = {
+  market: () => "Market: fills at the open of the next Base bar after the Signal. You are always in, at whatever price the market gives.",
+  limit: (long) => `Limit: rests at the price and fills only if price comes back to it (${long ? 'trades at or below it' : 'trades at or above it'}). A better price, but it may never fill; the Entry deadline in Trade settings decides how long it waits.`,
+  stop: (long) => `Stop entry: fills once price trades through the price in the Trade's direction (${long ? 'at or above it' : 'at or below it'}). It waits for the move to confirm, at a worse price than a limit.`,
+};
+/** what the Entry block does, then this branch's numbers on its latest Signal */
+export function EntryHelp({ setup, bi, result, data }: { setup: Setup; bi: number; result?: RunResult; data?: Data }) {
+  const br = setup.branches[bi], e = br.entry, long = br.side === 'long';
+  const labels = labelsOf(setup);
+  const sig = result?.signals.filter((x) => x.branch === bi && !x.refused).slice(-1)[0];
+  const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
+  const when = sig && data ? new Date((chartTime(data.m1[sig.i].t) + 60) * 1000).toISOString() : '';
+  const contracts = sig ? sig.legs.reduce((a, l) => a + l.contracts, 0) : 0;
+  return (
+    <div className="space-y-1 rounded-md border-l-2 border-sky-500/50 bg-sky-500/5 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground">
+      <div><span className="font-medium text-foreground">Order.</span> {ORDER_HELP[e.order](long)}</div>
+      <div><span className="font-medium text-foreground">Stop.</span> Placed {long ? 'below' : 'above'} a level the Setup reads (a captured low or high, a pattern edge…) by an offset: in ticks (on MNQ a tick is 0.25 points) or in × ATR, so it widens when the market is more volatile. The distance from the entry to the stop is the risk, 1R: it sizes the contracts and sets R-multiple legs. An Entry cannot be saved without a stop.</div>
+      <div>Here: {e.order === 'market' ? B('at market') : <>a {B(e.order === 'limit' ? 'limit' : 'stop entry')} at {B(phrase(e.price || '?', labels))}</>}, stop {B(`${e.stop.offset} ${e.stop.unit === 'atr' ? '× ' + phrase(e.stop.atr || 'the ATR', labels) : e.stop.offset === 1 ? 'tick' : 'ticks'}`)} {long ? 'below' : 'above'} {B(phrase(e.stop.token || '?', labels))}{e.stop.unit === 'ticks' ? ` (${(e.stop.offset * 0.25).toFixed(2)} points)` : ''}.
+        {sig && data && <> On its latest Signal ({when.slice(5, 10)} {when.slice(11, 16)} NY): entry {B(sig.entry.toFixed(2))}, stop {B(sig.stop.toFixed(2))}, so {B(`${Math.abs(sig.entry - sig.stop).toFixed(2)} points`)} of risk and {B(`${contracts} contract${contracts === 1 ? '' : 's'}`)}.</>}
+        {!sig && result && <> No Signal of this branch was traded on these bars yet.</>}
+      </div>
     </div>
   );
 }

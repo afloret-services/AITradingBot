@@ -52,7 +52,7 @@ export function newPattern(kind: PatternKind, tf: TF, taken: string[]): Pattern 
 export function patternPhrase(p: Pattern | undefined, side: 'long' | 'short') {
   if (!p) return 'an undeclared pattern';
   const d = PATTERN_KINDS[p.kind];
-  return `${p.label || `a ${p.tf} ${side === 'long' ? d.bull : d.bear} ${d.title.replace(/ \(.*\)$/, '')}`} forms (captured as "${p.name}")`;
+  return `a ${p.tf} ${side === 'long' ? d.bull : d.bear} ${p.label || d.title.replace(/ \(.*\)$/, '')} forms (captured as "${p.name}")`;
 }
 
 export interface Step {

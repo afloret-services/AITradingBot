@@ -136,7 +136,7 @@ export function CondEditor({ cond, onChange, onRemove, ctx, side, look, depth = 
       <div className="flex flex-wrap items-center gap-1 text-sm">
         <Badge tone="info">Pattern</Badge>
         <span className="text-muted-foreground">a {p?.tf || ''} {d ? (cond.side === 'long' ? d.bull : d.bear) : ''}</span>
-        <Select value={cond.ref} onChange={(ref) => onChange({ ...cond, ref })} options={(p ? pats : [{ name: cond.ref } as any, ...pats]).map((q: any) => [q.name, q.kind ? `${q.name}: ${PATTERN_KINDS[q.kind as keyof typeof PATTERN_KINDS].title}` : `${q.name} (not declared)`] as [string, string])} className="h-7" />
+        <Select value={cond.ref} onChange={(ref) => onChange({ ...cond, ref })} options={(p ? pats : [{ name: cond.ref } as any, ...pats]).map((q: any) => [q.name, q.kind ? `${q.name}: ${q.label || PATTERN_KINDS[q.kind as keyof typeof PATTERN_KINDS].title}` : `${q.name} (not declared)`] as [string, string])} className="h-7" />
         <span className="text-muted-foreground">forms</span>
         {!p && <Badge tone="error">not declared</Badge>}
         {p && <span className="text-[11px] text-muted-foreground" title="edit it in Patterns; every step that uses it changes">({patternSettingsPhrase(p)})</span>}

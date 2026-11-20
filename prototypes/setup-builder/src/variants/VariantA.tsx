@@ -87,7 +87,7 @@ export function VariantA(p: VariantProps) {
                 <Button size="sm" variant="outline" onClick={() => { mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: `Step ${s.branches[bi].steps.length + 1}`, cond: { id: uid(), t: 'all', items: [] } }); }); setOpen(br.steps.length); }}>+ then another step</Button>
               </div>
             )}
-            {stage === 4 && setup.branches.map((b, k) => <div key={b.id} className="space-y-2"><Badge>{b.side} branch</Badge><EntryEditor setup={setup} mutate={mutate} bi={k} ctx={tokenCtx(setup, k, b.steps.length)} /></div>)}
+            {stage === 4 && setup.branches.map((b, k) => <div key={b.id} className="space-y-2"><Badge>{b.side} branch</Badge><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={k} ctx={tokenCtx(setup, k, b.steps.length)} /></div>)}
             {stage === 5 && (
               <div className="space-y-4">
                 {SECTIONS.filter((k) => k !== 'stop').map((k) => (

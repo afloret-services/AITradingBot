@@ -129,7 +129,7 @@ export function VariantC(p: VariantProps) {
           )}
           {sel.kind === 'entry' && (
             run ? <div className="space-y-2"><H>Stop · Run override</H><OverrideBox k="stop" setup={setup} runD={runD} /></div> :
-            <div className="space-y-2"><H>Entry · {setup.branches[sel.bi].side}</H><EntryEditor setup={setup} mutate={mutate} bi={sel.bi} ctx={tokenCtx(setup, sel.bi, 99)} /></div>
+            <div className="space-y-2"><H>Entry · {setup.branches[sel.bi].side}</H><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={sel.bi} ctx={tokenCtx(setup, sel.bi, 99)} /></div>
           )}
           {sel.kind === 'trade' && (
             run ? <div className="space-y-2"><H>Create a Run</H><div className="text-xs text-muted-foreground">Pick a section on the Trade card to override it for this Run. Signal steps and In-position rules are locked: changing them makes a new Setup version.</div></div> :
