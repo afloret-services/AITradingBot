@@ -9,7 +9,7 @@ const markEdited = (c: Cond): Cond => (c.origin ? { ...c, origin: { ...c.origin,
 
 export function newCmp(ctx: TokenCtx): Cond { return { id: uid(), t: 'cmp', a: `{{bar:close:${ctx.baseBar}}}`, op: '>', b: '' }; }
 
-export function AddMenu({ onAdd, ctx, side, small }: { onAdd: (c: Cond) => void; ctx: TokenCtx; side: 'long' | 'short'; small?: boolean }) {
+export function AddMenu({ onAdd, ctx, side, small, label = '+ add' }: { onAdd: (c: Cond) => void; ctx: TokenCtx; side: 'long' | 'short'; small?: boolean; label?: string }) {
   const [open, setOpen] = useState(false);
   const tf = ctx.baseBar;
   const items: [string, () => Cond, string][] = [
@@ -26,7 +26,7 @@ export function AddMenu({ onAdd, ctx, side, small }: { onAdd: (c: Cond) => void;
   ];
   return (
     <span className="relative inline-block">
-      <Button size="sm" variant="ghost" className={cn('text-sky-300', small && 'h-6 px-1.5')} onClick={() => setOpen(!open)}>+ add</Button>
+      <Button size="sm" variant="ghost" className={cn('text-sky-300', small && 'h-6 px-1.5')} onClick={() => setOpen(!open)}>{label}</Button>
       {open && (
         <div className="absolute left-0 top-full z-40 mt-1 w-80 rounded-lg border bg-card p-1 shadow-2xl" onMouseLeave={() => setOpen(false)}>
           {!(ctx.patterns || []).length && <div className="px-2 py-1 text-[11px] text-muted-foreground">No patterns declared yet: declare FVG, Order block, Leg, MSS… in Patterns first.</div>}

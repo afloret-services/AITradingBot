@@ -3,11 +3,12 @@
 import React, { useState } from 'react';
 import { VariantProps } from '../types';
 import { SetupMap } from '../components/SetupMap';
+import { RuleEditor } from '../components/RuleEditor';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
 import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp } from '../components/sections';
 import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
-import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step } from '../model';
+import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
 
 const STAGES = ['Basics', 'Indicators & patterns', 'When to trade', 'Signal steps', 'Entry & stop', 'Trade settings', 'Review & save', 'Create a Run'] as const;
@@ -68,17 +69,18 @@ export function VariantA(p: VariantProps) {
                 <ol className="space-y-0">
                   {br.steps.map((st, k) => (
                     <li key={st.id}>
-                      {k > 0 && <div className="ml-4 border-l-2 border-dashed py-1 pl-4 text-xs text-muted-foreground">then, {st.same_bar && st.within_bars === 0 ? 'on the same bar only' : st.same_bar ? 'possibly on the same bar' : 'on a later bar'}{st.within_bars ? `, within ${st.within_bars} bars` : ''}{st.until ? `, until ${st.until}` : ''}</div>}
+                      {k > 0 && <div className="ml-4 border-l-2 border-dashed py-1 pl-4 text-xs text-muted-foreground"><b className="text-sky-300">THEN</b>, {st.same_bar && st.within_bars === 0 ? 'on the same bar only' : st.same_bar ? 'possibly on the same bar' : 'on a later bar'}{st.within_bars ? `, within ${st.within_bars} bars` : ''}{st.until ? `, until ${st.until}` : ''}</div>}
                       <div className={cn('rounded-lg border', open === k && 'border-sky-500/50')}>
                         <button className="flex w-full items-center gap-2 px-3 py-2 text-left" onClick={() => { setOpen(open === k ? -1 : k); p.setFocus({ bi, si: k }); }}>
                           <span className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-black" style={{ background: STEP_COLORS[k % 6] }}>{k + 1}</span>
+                          <span className="w-11 text-xs font-black tracking-wider text-sky-300">{open === k ? '' : k === 0 ? 'IF' : 'THEN'}</span>
                           <Input value={st.name} onClick={(e) => e.stopPropagation()} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-7 w-72 border-transparent bg-transparent font-medium" />
                           <StepStats result={result} bi={bi} si={k} data={data} />
                           <span className="ml-auto text-muted-foreground">{open === k ? '▾' : '▸'}</span>
                         </button>
                         {open === k && (
                           <div className="space-y-2 border-t p-3">
-                            <CondEditor cond={st.cond} ctx={tokenCtx(setup, bi, k)} side={br.side} look="boxes" onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
+                            <RuleEditor cond={st.cond} keyword={k === 0 ? 'IF' : 'THEN'} ctx={tokenCtx(setup, bi, k)} side={br.side} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
                             <StepLimits step={st} isFirst={k === 0} ctx={tokenCtx(setup, bi, k)} side={br.side} look="boxes" onChange={(n: Step) => mutate((s) => { s.branches[bi].steps[k] = n; })} />
                             <div className="flex gap-1"><Button size="sm" variant="ghost" disabled={k === 0} onClick={() => mutate((s) => { const a = s.branches[bi].steps; [a[k - 1], a[k]] = [a[k], a[k - 1]]; })}>↑ move up</Button><Button size="sm" variant="ghost" onClick={() => mutate((s) => { s.branches[bi].steps.splice(k, 1); })}>delete step</Button></div>
                           </div>
@@ -86,6 +88,16 @@ export function VariantA(p: VariantProps) {
                       </div>
                     </li>
                   ))}
+                  {br.steps.length > 0 && (
+                    <li>
+                      <div className="ml-4 border-l-2 border-dashed py-1 pl-4 text-xs text-muted-foreground">when the last step completes</div>
+                      <button onClick={() => setStage(4)} className="flex w-full items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-left text-sm hover:bg-emerald-500/10">
+                        <span className="text-xs font-black tracking-wider text-emerald-300">→ SIGNAL</span>
+                        <span className="text-muted-foreground">{br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labelsOf(setup))}`}, stop {br.entry.stop.offset} {br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} beyond {phrase(br.entry.stop.token || '?', labelsOf(setup))}</span>
+                        <span className="ml-auto text-xs text-sky-300">edit in Entry & stop →</span>
+                      </button>
+                    </li>
+                  )}
                 </ol>
                 <Button size="sm" variant="outline" onClick={() => { mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: `Step ${s.branches[bi].steps.length + 1}`, cond: { id: uid(), t: 'all', items: [] } }); }); setOpen(br.steps.length); }}>+ then another step</Button>
               </div>

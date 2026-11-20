@@ -168,7 +168,7 @@ export function condPhrase(c: Cond, labels: Record<string, string> = {}): string
   switch (c.t) {
     case 'cmp': return `${phrase(c.a, labels)} ${OP_WORDS[c.op]}${c.op === 'within' ? ` ${c.n} points of` : ''} ${c.mult && c.mult !== 1 ? `${c.mult} × ` : ''}${phrase(c.b, labels)}`;
     case 'all': return c.items.map((x) => condPhrase(x, labels)).join(', and ');
-    case 'any': return 'either ' + c.items.map((x) => condPhrase(x, labels)).join(', or ');
+    case 'any': return 'either ' + c.items.map((x) => (x.t === 'all' && x.items.length > 1 && !x.origin ? '(' + condPhrase(x, labels) + ')' : condPhrase(x, labels))).join(', or ');
     case 'not': return `not (${condPhrase(c.item, labels)})`;
     case 'for_n': return `${condPhrase(c.item, labels)} for at least ${c.n} bars`;
     case 'time': return `the ${c.tf || 'Base'} bar opens between ${c.start} and ${c.end} NY`;
