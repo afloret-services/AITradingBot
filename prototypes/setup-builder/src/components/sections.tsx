@@ -4,6 +4,7 @@ import { labelsOf, phrase, parseToken } from '../model';
 import { Setup, Step, TF, TFS, Leg, Guard, InPositionRule, Cond, uid, SECTION_NAMES, condPhrase, Pattern, PatternKind, PATTERN_KINDS, newPattern, patternUsage, patternSettingsPhrase, tfMinutes, patternPhrase } from '../model';
 import { TokenPicker, TokenCtx, shortName } from './TokenPicker';
 import { CondEditor, Look } from './CondEditor';
+import { PatternIcon } from './PatternIcon';
 import { PatternSchematic, PatternExample } from './PatternDiagram';
 import type { Data, RunResult } from '../engine';
 import { chartTime } from '../engine';
@@ -177,6 +178,7 @@ export function PatternList({ setup, mutate, compact, data }: { setup: Setup; mu
         return (
           <div key={k} className="rounded-md border p-2">
             <div className="flex flex-wrap items-end gap-2">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))]" title={d.title}><PatternIcon kind={p.kind} size={26} /></span>
               <PField label="Name" hint="steps read it as name.field"><Input value={p.name} onChange={(e) => { const v = e.target.value.trim(); mutate((s) => { renamePattern(s, s.patterns[k].name, v); s.patterns[k].name = v; }); }} className="mono h-7 w-24" /></PField>
               <PField label="Pattern"><Select value={p.kind} onChange={(kind: PatternKind) => set(k, (q) => { Object.assign(q, { ...newPattern(kind, q.tf, []), name: q.name, label: q.label }); })} options={PKINDS.map((x) => [x, PATTERN_KINDS[x].title] as [PatternKind, string])} className="h-7" /></PField>
               <PField label="Timeframe"><Select value={p.tf} onChange={(tf: TF) => set(k, (q) => { q.tf = tf; })} options={tfs.includes(p.tf) ? tfs : [p.tf, ...tfs]} className="h-7" /></PField>
@@ -203,12 +205,23 @@ export function PatternList({ setup, mutate, compact, data }: { setup: Setup; mu
         );
       })}
       <div className="flex flex-wrap items-center gap-1">
-        <span className="text-xs text-muted-foreground">+ declare</span>
-        {PKINDS.filter((kind) => !PATTERN_KINDS[kind].group || PATTERN_KINDS[kind].group === 'ict').map((kind) => <Button key={kind} size="sm" variant="outline" className="h-7" onClick={() => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })}>{PATTERN_KINDS[kind].title.replace(/ \(.*\)$/, '').replace('Fair value gap', 'FVG')}</Button>)}
-        <span className="ml-2 text-xs text-muted-foreground">chart patterns</span>
-        {PKINDS.filter((kind) => PATTERN_KINDS[kind].group === 'chart').map((kind) => <Button key={kind} size="sm" variant="outline" className="h-7" onClick={() => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })}>{PATTERN_KINDS[kind].title.replace(/ \(.*\)$/, '').replace('Fair value gap', 'FVG')}</Button>)}
-        <span className="ml-2 text-xs text-muted-foreground">candlesticks</span>
-        {PKINDS.filter((kind) => PATTERN_KINDS[kind].group === 'candle').map((kind) => <Button key={kind} size="sm" variant="outline" className="h-7" onClick={() => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })}>{PATTERN_KINDS[kind].title.replace(/ \(.*\)$/, '').replace('Fair value gap', 'FVG')}</Button>)}
+        <div className="w-full space-y-2 pt-1">
+          {([['ict', 'ICT'], ['chart', 'Chart patterns'], ['candle', 'Candlesticks']] as const).map(([g, title]) => (
+            <div key={g}>
+              <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">+ declare · {title}</div>
+              <div className="flex flex-wrap gap-1.5">
+                {PKINDS.filter((kind) => (PATTERN_KINDS[kind].group || 'ict') === g).map((kind) => (
+                  <button key={kind} onClick={() => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })}
+                    title={PATTERN_KINDS[kind].help}
+                    className="flex items-center gap-1.5 rounded-md border border-input bg-card/40 py-1 pl-1.5 pr-2.5 text-xs font-medium transition-colors hover:border-sky-400/60 hover:bg-accent">
+                    <span className="flex h-6 w-6 items-center justify-center rounded bg-[hsl(var(--chart))]"><PatternIcon kind={kind} size={20} /></span>
+                    {PATTERN_KINDS[kind].title.replace(/ \(.*\)$/, '').replace('Fair value gap', 'FVG')}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

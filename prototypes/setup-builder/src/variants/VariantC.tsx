@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { VariantProps } from '../types';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx, AddMenu, newCmp } from '../components/CondEditor';
+import { PatternIcon } from '../components/PatternIcon';
 import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, SectionHelp } from '../components/sections';
 import { shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs } from '../components/ui';
@@ -49,7 +50,7 @@ export function VariantC(p: VariantProps) {
           </Lib>
           <Lib title="Patterns (declared once)">
             {(setup.patterns || []).map((pt) => (
-              <LibItem key={pt.name} onClick={() => insert({ id: uid(), t: 'pattern', ref: pt.name, side: side() })} disabled={sel.kind !== 'step'} hint={`${pt.tf} · used ${patternUsage(setup)[pt.name] || 0}×`}>{pt.name}: {PATTERN_KINDS[pt.kind].title.replace(/ \(.*\)$/, '')}</LibItem>
+              <LibItem key={pt.name} onClick={() => insert({ id: uid(), t: 'pattern', ref: pt.name, side: side() })} disabled={sel.kind !== 'step'} hint={`${pt.tf} · used ${patternUsage(setup)[pt.name] || 0}×`}><span className="inline-flex items-center gap-1.5"><PatternIcon kind={pt.kind} size={16} />{pt.name}: {PATTERN_KINDS[pt.kind].title.replace(/ \(.*\)$/, '')}</span></LibItem>
             ))}
             <button className="text-xs text-sky-300" onClick={() => setSel({ kind: 'settings' })}>manage / declare…</button>
           </Lib>

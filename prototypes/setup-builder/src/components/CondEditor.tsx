@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Cond, OPS, Op, PRESETS, Setup, condPhrase, opWord, uid, captureNames, PATTERN_KINDS, labelsOf, patternSettingsPhrase } from '../model';
 import { TokenPicker, TokenCtx } from './TokenPicker';
+import { PatternIcon } from './PatternIcon';
 import { Badge, Button, Input, NumInput, Select, cn } from './ui';
 
 export type Look = 'boxes' | 'outline' | 'chips';
@@ -32,7 +33,7 @@ export function AddMenu({ onAdd, ctx, side, small, label = '+ add' }: { onAdd: (
           {!(ctx.patterns || []).length && <div className="px-2 py-1 text-[11px] text-muted-foreground">No patterns declared yet: declare FVG, Order block, Leg, MSS… in Patterns first.</div>}
           {items.map(([l, f, h]) => (
             <button key={l} className="block w-full rounded px-2 py-1 text-left text-sm hover:bg-accent" onClick={() => { onAdd(f()); setOpen(false); }}>
-              {l}{h && <span className="ml-1 text-[11px] text-muted-foreground">{h}</span>}
+              <span className="flex items-center gap-1.5">{(() => { const pt = l.startsWith('Pattern: ') ? (ctx.patterns || []).find((q) => q.name === l.slice(9)) : undefined; return pt ? <PatternIcon kind={pt.kind} size={18} /> : null; })()}<span>{l}{h && <span className="ml-1 text-[11px] text-muted-foreground">{h}</span>}</span></span>
             </button>
           ))}
         </div>
@@ -134,7 +135,7 @@ export function CondEditor({ cond, onChange, onRemove, ctx, side, look, depth = 
     const d = p && PATTERN_KINDS[p.kind];
     return (
       <div className="flex flex-wrap items-center gap-1 text-sm">
-        <Badge tone="info">Pattern</Badge>
+        {p ? <span className="flex h-7 w-7 items-center justify-center rounded border bg-[hsl(var(--chart))]" title={PATTERN_KINDS[p.kind].title}><PatternIcon kind={p.kind} size={20} /></span> : <Badge tone="info">Pattern</Badge>}
         <span className="text-muted-foreground">a {p?.tf || ''} {d ? (cond.side === 'long' ? d.bull : d.bear) : ''}</span>
         <Select value={cond.ref} onChange={(ref) => onChange({ ...cond, ref })} options={(p ? pats : [{ name: cond.ref } as any, ...pats]).map((q: any) => [q.name, q.kind ? `${q.name}: ${q.label || PATTERN_KINDS[q.kind as keyof typeof PATTERN_KINDS].title}` : `${q.name} (not declared)`] as [string, string])} className="h-7" />
         <span className="text-muted-foreground">forms</span>

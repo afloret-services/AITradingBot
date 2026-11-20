@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Cond, Setup, Step, captureNames, condPhrase, labelsOf, patternRefs, tokensOf, PATTERN_KINDS, parseToken, patternUsage } from '../model';
 import { Data, RunResult } from '../engine';
 import { shortName } from './TokenPicker';
+import { PatternIcon } from './PatternIcon';
 import { sectionSummary, indicatorUsage } from './sections';
 import { Focus } from './Chart';
 import { STEP_COLORS, cn } from './ui';
@@ -54,7 +55,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
         {(setup.patterns || []).map((p) => (
           <button key={p.name} onMouseEnter={() => setHover({ kind: 'pat', key: p.name })} onMouseLeave={() => setHover(null)} onClick={onDeclared}
             className={cn('flex items-center gap-1 rounded-full border px-2 py-0.5 transition', hover?.key === p.name ? 'border-sky-400 bg-sky-500/10' : 'hover:bg-accent')}>
-            <span className="h-1.5 w-1.5 rotate-45 bg-sky-400" /><span className="mono">{p.name}</span><span className="text-muted-foreground">{p.tf} {PATTERN_KINDS[p.kind].title.replace(/ \(.*\)$/, '')} ·{pu[p.name] || 0}</span>
+            <PatternIcon kind={p.kind} size={16} /><span className="mono">{p.name}</span><span className="text-muted-foreground">{p.tf} {PATTERN_KINDS[p.kind].title.replace(/ \(.*\)$/, '')} ·{pu[p.name] || 0}</span>
           </button>
         ))}
         {!setup.indicators.length && !(setup.patterns || []).length && <span className="italic text-muted-foreground">no indicators or patterns declared yet</span>}
