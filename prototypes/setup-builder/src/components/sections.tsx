@@ -200,8 +200,59 @@ export function indicatorUsage(s: Setup) {
 }
 
 // ---------- step limits ----------
+// ---------- what Signal steps do ----------
+const HelpBox = ({ children }: { children: React.ReactNode }) => <div className="space-y-1 rounded-md border-l-2 border-sky-500/50 bg-sky-500/5 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground">{children}</div>;
+const T = ({ children }: { children: React.ReactNode }) => <span className="font-medium text-foreground">{children}</span>;
+const NEW_START: Record<string, [string, string]> = {
+  start_another: ['Start another', 'Each time step 1 holds, a new Candidate starts next to the ones already running, so several can be in progress at once and each can become a Signal.'],
+  replace: ['Replace', 'Each time step 1 holds, the running Candidates are dropped and a fresh one starts. Only the most recent start can become a Signal.'],
+  ignore: ['Ignore', 'While a Candidate is running, step 1 holding again starts nothing; the first start is kept until it completes or ends. Use it when step 1 keeps holding bar after bar, so the Candidate and its running capture are not restarted every bar.'],
+};
+/** the top of the Signal steps stage: how a branch turns into Signals */
+export function SignalStepsHelp({ setup, bi }: { setup: Setup; bi: number }) {
+  const br = setup.branches[bi];
+  const [title, text] = NEW_START[br?.on_new_start || 'start_another'];
+  return (
+    <HelpBox>
+      <div><T>How steps work.</T> A branch is a Sequence: step 1, then step 2, and so on. At every close of the {setup.settings.base_bar} Base bar the conditions are checked. When step 1 holds, a <T>Candidate</T> starts and waits for step 2; when the last step completes, the Candidate becomes a <T>Signal</T> and goes to the Entry. All the conditions inside a step must hold on the same bar. What a step captures (a pattern's top, the Draw on liquidity, a running low) can be read by the steps after it and by the Entry and stop.</div>
+      <div><T>When a Candidate ends without a Signal:</T> a limit on the next step runs out (too many bars, past its clock time), its invalidation happens, or the Trading day ends at 18:00 NY. A Candidate that completes outside the Trading hours gives no Signal.</div>
+      <div><T>On a new first step while one is running: {title}.</T> {text}</div>
+      <details className="text-[11px]"><summary className="cursor-pointer hover:text-foreground">compare the three, and how to read the counts</summary>
+        <ul className="mt-1 space-y-1 pl-3">{Object.entries(NEW_START).map(([k, [l, t]]) => <li key={k} className={cn(k === br?.on_new_start && 'text-foreground')}><b>{l}</b>: {t}</li>)}</ul>
+        <div className="mt-1.5">Each step shows two counts on the MNQ bars: <T>held alone</T> is how many bars its conditions were true on their own, ignoring the steps before it; <T>completed</T> is how many times it actually completed inside a Candidate. A step that holds often but rarely completes is waiting on the step before it.</div>
+      </details>
+    </HelpBox>
+  );
+}
+/** one step's Sequence limits, in words */
+function limitsSentence(step: Step, isFirst: boolean, labels: Record<string, string>) {
+  const parts: string[] = [];
+  if (isFirst) parts.push('This step starts a Candidate whenever its conditions hold.');
+  else {
+    const when = step.same_bar ? (step.within_bars === 0 ? 'on the same bar as the step before, and only then' : 'on the same bar as the step before or on any later bar') : 'on a later bar than the step before (never the same one)';
+    parts.push(`This step can complete ${when}${step.within_bars ? `, at most ${step.within_bars} Base bars after it` : ''}${step.until ? `, and no later than ${step.until} NY` : ''}.`);
+    if (step.within_bars || step.until) parts.push('If that limit passes first, the Candidate ends.');
+  }
+  if (step.invalidate) parts.push(`While it waits, the Candidate ends as soon as ${condPhrase(step.invalidate, labels) || '(the invalidation is still empty)'}.`);
+  if (step.capture_running) parts.push(`From the bar it completes, it keeps the running ${step.capture_running.field === 'low' ? 'lowest low' : 'highest high'} until the next step completes, readable as ${step.capture_running.name}.${step.capture_running.field}${isFirst ? ' (on a "For at least N bars" step it starts from the first bar of the run)' : ''}.`);
+  return parts.join(' ');
+}
 export function StepLimits({ step, onChange, isFirst, ctx, side, look }: { step: Step; onChange: (s: Step) => void; isFirst: boolean; ctx: TokenCtx; side: 'long' | 'short'; look: Look }) {
   return (
+    <div className="space-y-1.5">
+    <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Sequence limits</div>
+    <HelpBox>
+      <div>{limitsSentence(step, isFirst, ctx.labels)}</div>
+      <details className="text-[11px]"><summary className="cursor-pointer hover:text-foreground">what each control means</summary>
+        <ul className="mt-1 space-y-1 pl-3">
+          <li><b>may complete on the same bar</b>: off, the step waits at least one Base bar after the step before; on, both can happen on one bar (with "within 0 bars", only on that bar).</li>
+          <li><b>within N bars</b>: the step must complete at most N Base bars after the step before, or the Candidate ends. Empty means no limit.</li>
+          <li><b>until hh:mm</b>: the step must complete before this New York time, or the Candidate ends.</li>
+          <li><b>capture running</b>: keeps the lowest low (or highest high) from this step until the next one completes, under a name later steps and the stop can read, e.g. a pullback low.</li>
+          <li><b>invalidation</b>: a condition that, if it holds while the Candidate waits for this step, ends the Candidate.</li>
+        </ul>
+      </details>
+    </HelpBox>
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
       {!isFirst && <Switch checked={!!step.same_bar} onChange={(b) => onChange({ ...step, same_bar: b })} label="may complete on the same bar" />}
       {!isFirst && <span className="flex items-center gap-1">within <NumInput value={step.within_bars} onChange={(n) => onChange({ ...step, within_bars: isNaN(n) ? undefined : n })} className="h-6 w-14" placeholder="∞" /> bars</span>}
@@ -216,6 +267,7 @@ export function StepLimits({ step, onChange, isFirst, ctx, side, look }: { step:
           <CondEditor cond={step.invalidate} ctx={ctx} side={side} look={look} onChange={(c) => onChange({ ...step, invalidate: c })} onRemove={() => onChange({ ...step, invalidate: undefined })} />
         </div>
       )}
+    </div>
     </div>
   );
 }
