@@ -113,7 +113,7 @@ export function VariantB(p: VariantProps) {
         <Card className="p-3">
           <div className="mb-1 text-sm font-semibold">Patterns in this Setup</div>
           <div className="mb-1 text-[11px] text-muted-foreground">Declared up front, then used by name in a sentence ("a bullish fvg forms").</div>
-          <PatternList setup={setup} mutate={mutate} compact />
+          <PatternList setup={setup} mutate={mutate} compact data={data} />
         </Card>
         <Card className="p-3">
           <div className="flex items-center justify-between"><div className="text-sm font-semibold">Save</div>{p.saveBar}</div>

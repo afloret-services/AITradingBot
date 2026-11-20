@@ -3,6 +3,8 @@ import React from 'react';
 import { Setup, Step, TF, TFS, Leg, Guard, InPositionRule, Cond, uid, SECTION_NAMES, condPhrase, Pattern, PatternKind, PATTERN_KINDS, newPattern, patternUsage, patternSettingsPhrase, tfMinutes } from '../model';
 import { TokenPicker, TokenCtx, shortName } from './TokenPicker';
 import { CondEditor, Look } from './CondEditor';
+import { PatternSchematic, PatternExample } from './PatternDiagram';
+import type { Data } from '../engine';
 import { Button, Field, Input, NumInput, Select, Switch, Badge, cn } from './ui';
 
 export type Mutate = (fn: (s: Setup) => void) => void;
@@ -105,7 +107,7 @@ export function IndicatorList({ setup, mutate, ctx, usage }: { setup: Setup; mut
 // ---------- Patterns, declared once ----------
 const PKINDS = Object.keys(PATTERN_KINDS) as PatternKind[];
 const DISP_KEYS = ['disp_mult', 'disp_body_pct', 'avg_len'];
-export function PatternList({ setup, mutate, compact }: { setup: Setup; mutate: Mutate; compact?: boolean }) {
+export function PatternList({ setup, mutate, compact, data }: { setup: Setup; mutate: Mutate; compact?: boolean; data?: Data }) {
   const usage = patternUsage(setup);
   const pats = setup.patterns || [];
   const set = (k: number, fn: (p: Pattern) => void) => mutate((s) => { fn(s.patterns[k]); });
@@ -134,6 +136,12 @@ export function PatternList({ setup, mutate, compact }: { setup: Setup; mutate: 
                   : <span key={key} className="flex items-center gap-1 text-muted-foreground">{label}<NumInput step={key === 'disp_mult' ? 0.1 : 1} value={p.params[key] as number} onChange={(n) => set(k, (q) => { q.params[key] = n; })} className="h-6 w-14" /></span>)}
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">captures <span className="mono">{p.name}.</span>{d.fields.filter((f) => !/^bar[123]\./.test(f)).join(', ')}{p.kind === 'fvg' ? ', bar1…bar3 (open, high, low, close)' : ''} · steps choose bullish or bearish</div>
+            {compact
+              ? <details className="mt-1.5"><summary className="cursor-pointer text-[11px] text-sky-300">what it looks like</summary><div className="mt-1.5 flex flex-wrap gap-2"><PatternSchematic p={p} />{data && <PatternExample p={p} data={data} />}</div></details>
+              : <div className="mt-2 flex flex-wrap items-start gap-3">
+                  <div className="space-y-1"><PatternSchematic p={p} /><div className="text-[11px] text-muted-foreground">the idea, drawn from these settings (bullish; bearish is its mirror)</div></div>
+                  {data && <div><PatternExample p={p} data={data} /><div className="text-[11px] text-muted-foreground">real ones on MNQ with these settings (the white box is the bar where it forms)</div></div>}
+                </div>}
           </div>
         );
       })}
@@ -327,7 +335,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
     case 'signal_guards': return (
       <div className="space-y-1.5 text-sm">
         {value.map((g: Guard, i: number) => (
-          <div key={i} className="flex flex-wrap items-center gap-1.5">refuse the Signal if
+          <div key={i} className="flex flex-wrap items-center gap-1.5">refuse the Signal if{' '}
             {g.kind === 'max_stop' ? <>the stop is wider than <NumInput step={0.5} value={g.n} onChange={(n) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, n } : x)))} className="h-7 w-14" />
               <Select value={g.unit || 'ticks'} onChange={(u) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, unit: u } : x)))} options={[['ticks', 'ticks'], ['atr', '× ATR']]} className="h-7" />
               {g.unit === 'atr' && <TokenPicker value={g.atr || ''} ctx={ctx} compact onChange={(a) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, atr: a } : x)))} />}</>
@@ -340,6 +348,64 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
     );
   }
 }
+// ---------- what each Trade-settings section does, with this Setup's numbers worked through ----------
+const PV = 2; // MNQ $ per point: the preview instrument (the real one is chosen per Run)
+const SECTION_HELP: Record<SectionKey | 'in_position', string> = {
+  risk: "How many contracts a Signal trades. Contracts = Capital × Risk per Trade % ÷ (stop distance × the instrument's $ per point), rounded down and capped at Max contracts. If even 1 contract would risk more than that, the Signal is refused (\"stop too wide\").",
+  stop: 'Where the protective stop sits: a value the Setup reads (a captured low, a pattern edge…) plus an offset in ticks or in × ATR, on the far side from the entry. Every Entry must have one.',
+  legs: "The Trade is split into legs, each with its own take-profit. R multiple: entry ± k × the stop distance. Level ± ticks: a price the Setup reads, e.g. the Draw on liquidity, stopping N ticks short so it fills before the level. Fraction: that part of the way from the entry to a level. Share: the part of the contracts each leg closes; contracts that don't divide evenly go to the first or the last legs.",
+  break_even: 'Moves the stop to the entry (plus an offset in ticks, toward profit) so the rest of the Trade can no longer lose. After leg k: once leg k has filled. At +X R: once price first reaches X times the stop distance in profit. The stop only ever moves toward profit.',
+  entry_deadline: "How long a limit or stop entry may wait for its fill; after that it is cancelled. A market entry fills at the next bar's open and ignores the deadline. \"Cancel if reached first\": if price touches the stop, the first leg or the Draw on liquidity before filling, the entry is cancelled, because the move already happened without you.",
+  expiry_and_flatten: 'Exit open Trades at (optional): any Trade still open at this New York time is closed at market. Flatten time (mandatory): the hard end of the day for this Setup; every position still open is closed at market, whatever its legs and stop.',
+  signal_guards: "Last checks on a Signal before any order. A refused Signal is logged with its reason and opens no Trade. Max stop: refuse when the stop is wider than N ticks or N × ATR (checked before sizing). Min reward:risk: refuse when the legs' average reward, weighted by contracts, divided by the risk is below N.",
+  in_position: "Checked at every Base-bar close while a Trade is open. When a rule holds, its action runs at the next bar's open: close the whole Trade, close one leg, move the stop, or cancel an entry still waiting. Each rule belongs to a branch, and a Run cannot override them.",
+};
+function splitN(n: number, legs: Leg[], leftover: 'first' | 'last') {
+  const out = legs.map((l) => Math.floor(n * l.share));
+  let rest = n - out.reduce((a, b) => a + b, 0);
+  const order = legs.map((_, i) => i); if (leftover === 'last') order.reverse();
+  for (let k = 0; rest > 0 && legs.length; k = (k + 1) % legs.length, rest--) out[order[k]]++;
+  return out;
+}
+function sectionExample(setup: Setup, k: SectionKey | 'in_position'): React.ReactNode {
+  const ts = setup.trade_settings, stopPts = 20;
+  const budget = (ts.risk.capital * ts.risk.pct) / 100;
+  const raw = Math.floor(budget / (stopPts * PV));
+  const contracts = Math.min(ts.risk.max_contracts, raw);
+  const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
+  switch (k) {
+    case 'risk': return <>Here: {B(`$${ts.risk.capital} × ${ts.risk.pct}% = $${budget.toFixed(0)}`)} per Trade. With a 20-point stop on MNQ ($2 a point), 1 contract risks $40, so the Signal trades {B(`${contracts} contract${contracts === 1 ? '' : 's'}`)}{raw > ts.risk.max_contracts ? ' (capped by Max contracts)' : ''}. A stop wider than {B(`${(budget / PV).toFixed(0)} points`)} is refused.</>;
+    case 'legs': {
+      const n = contracts || 1, sp = splitN(n, ts.legs, ts.leftover);
+      return <>Here, with {B(n)} contract{n === 1 ? '' : 's'} (a 20-point stop): {ts.legs.map((l, i) => <span key={i}>{i > 0 && ', '}{B(`${l.name} ×${sp[i]}`)} {l.rule === 'r' ? `at ${l.r}R, ${((l.r || 0) * stopPts).toFixed(0)} points away` : l.rule === 'fraction' ? `${Math.round((l.fraction || 0) * 100)}% of the way to the level` : `${l.offset_ticks || 0} tick${(l.offset_ticks || 0) === 1 ? '' : 's'} before the level`}</span>)}.{sp.some((x) => x === 0) ? ' A leg with 0 contracts is skipped.' : ''}</>;
+    }
+    case 'break_even': {
+      const be = ts.break_even, off = be.offset_ticks ? ` + ${be.offset_ticks} ticks` : '';
+      if (be.trigger === 'off') return <>Here: {B('off')}; the stop stays where it was placed.</>;
+      if (be.trigger === 'after_leg') return <>Here: when {B(ts.legs[(be.k || 1) - 1]?.name || `leg ${be.k}`)} fills, the stop moves to the entry{off}.</>;
+      return <>Here: once price is {B(`+${be.r}R`)} ({((be.r || 1) * stopPts).toFixed(0)} points with a 20-point stop), the stop moves to the entry{off}.</>;
+    }
+    case 'entry_deadline': {
+      const d = ts.entry_deadline;
+      const wait = d.kind === 'clock' ? `until ${d.value} NY` : d.kind === 'bars' ? `${d.value} Base bars (${Number(d.value) * tfMinutes(setup.settings.base_bar)} minutes)` : d.kind === 'end_of_hours' ? 'until the Trading hours end' : 'until the Trading day ends';
+      return <>Here: the entry waits {B(wait)}{ts.cancel_if.length ? <>, and is cancelled earlier if the {B(ts.cancel_if.map((c) => c.replace('_', ' ')).join(' or '))} is reached first</> : ''}.{setup.branches.every((b) => b.entry.order === 'market') ? ' This Setup enters at market, so the deadline never comes into play.' : ''}</>;
+    }
+    case 'expiry_and_flatten': return <>Here: {ts.expiry ? <>Trades still open at {B(ts.expiry)} are closed, and </> : ''}everything is flat by {B(ts.flatten_time)} NY.</>;
+    case 'signal_guards': return ts.signal_guards.length
+      ? <>Here: {ts.signal_guards.map((g, i) => <span key={i}>{i > 0 && '; '}{B(g.kind === 'max_stop' ? `stop ≤ ${g.n} ${g.unit === 'atr' ? '× ATR' : 'ticks'}` : `reward:risk ≥ ${g.n}`)}{g.kind === 'max_stop' && g.unit !== 'atr' ? ` (${(g.n * 0.25).toFixed(2)} points)` : g.kind === 'min_rr' ? ` (a 20-point stop needs ${(g.n * stopPts).toFixed(0)} points of average reward)` : ''}</span>)}.</>
+      : <>Here: {B('no guards')}; every Signal that can be sized is traded.</>;
+    case 'in_position': return <>Here: {B(`${setup.in_position_rules.length} rule${setup.in_position_rules.length === 1 ? '' : 's'}`)}.</>;
+    default: return null;
+  }
+}
+export function SectionHelp({ setup, k }: { setup: Setup; k: SectionKey | 'in_position' }) {
+  return (
+    <div className="mb-2 rounded-md border-l-2 border-sky-500/50 bg-sky-500/5 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground">
+      {SECTION_HELP[k]} <span className="mt-1 block">{sectionExample(setup, k)}</span>
+    </div>
+  );
+}
+
 function ctxCaps(setup: Setup, bi: number, ctx: TokenCtx) {
   const out: { name: string; fields: string[] }[] = [];
   setup.branches[bi]?.steps.forEach((st) => {

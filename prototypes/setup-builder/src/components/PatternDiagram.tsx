@@ -1,0 +1,138 @@
+// PROTOTYPE: what a declared pattern looks like. A schematic drawn from its kind and settings (always the bullish
+// side; the bearish one is its mirror), and real examples found with those settings on the MNQ bars.
+import React, { useMemo, useState } from 'react';
+import { Pattern, PATTERN_KINDS } from '../model';
+import { Data, bars, patternSeries, chartTime } from '../engine';
+import { cn } from './ui';
+
+const W = 260, H = 150;
+const UP = '#26a69a', DOWN = '#ef5350', ZONE = '#38bdf8', LVL = '#fbbf24';
+type C = [o: number, h: number, l: number, c: number];
+
+function Candle({ x, k, y, w = 14, hi }: { x: number; k: C; y: (v: number) => number; w?: number; hi?: string }) {
+  const [o, h, l, c] = k, up = c >= o, col = up ? UP : DOWN;
+  return (
+    <g>
+      {hi && <rect x={x - w / 2 - 3} y={y(h) - 3} width={w + 6} height={y(l) - y(h) + 6} rx={3} fill="none" stroke={hi} strokeDasharray="2 2" />}
+      <line x1={x} x2={x} y1={y(h)} y2={y(l)} stroke={col} strokeWidth={1.5} />
+      <rect x={x - w / 2} y={y(Math.max(o, c))} width={w} height={Math.max(1.5, Math.abs(y(o) - y(c)))} fill={col} rx={1} />
+    </g>
+  );
+}
+const Label = ({ x, y, children, color = '#94a3b8', anchor = 'start' }: { x: number; y: number; children: React.ReactNode; color?: string; anchor?: 'start' | 'end' | 'middle' }) => <text x={x} y={y} fontSize={9.5} fill={color} textAnchor={anchor} fontFamily="Inter, sans-serif">{children}</text>;
+
+/** the schematic: values are on a 0–100 price scale */
+export function PatternSchematic({ p }: { p: Pattern }) {
+  const y = (v: number) => H - 14 - (v / 100) * (H - 28);
+  const P = p.params as Record<string, any>;
+  const disp = p.kind === 'displacement' || p.kind === 'order_block' || !!P.displacement;
+  const big = disp ? 1 : 0.55; // a Displacement candle is drawn tall
+  let body: React.ReactNode = null;
+  if (p.kind === 'fvg') {
+    const c1: C = [30, 42, 26, 40], c2: C = [40, 40 + 45 * big, 38, 38 + 43 * big], c3: C = [c2[3] - 4, c2[3] + 10, 50 + 14 * big, c2[3] + 6];
+    const top = c3[2], bot = c1[1];
+    body = <>
+      <rect x={70} y={y(top)} width={170} height={y(bot) - y(top)} fill={ZONE} opacity={0.15} stroke={ZONE} strokeDasharray="3 3" />
+      <Candle x={80} k={c1} y={y} /><Candle x={110} k={c2} y={y} hi={disp ? LVL : undefined} /><Candle x={140} k={c3} y={y} />
+      <Label x={80} y={y(c1[2]) + 11} anchor="middle">1</Label><Label x={110} y={y(c2[2]) + 11} anchor="middle">2</Label><Label x={140} y={y(c3[2]) + 11} anchor="middle">3</Label>
+      <Label x={244} y={y(top) - 3} color={ZONE} anchor="end">{p.name}.top</Label><Label x={244} y={y(bot) + 10} color={ZONE} anchor="end">{p.name}.bottom</Label>
+      <Label x={158} y={(y(top) + y(bot)) / 2 + 3} color="#cbd5e1">gap ≥ {P.min_gap_ticks} ticks</Label>
+      {disp && <Label x={6} y={14} color={LVL}>candle 2 is a Displacement</Label>}
+      {P.middle_closes_gap_way && !disp && <Label x={6} y={14}>candle 2 closes up</Label>}
+    </>;
+  } else if (p.kind === 'displacement') {
+    const small: C[] = [[40, 46, 37, 43], [43, 47, 39, 41], [41, 46, 38, 44], [44, 48, 40, 42]];
+    body = <>
+      {small.map((k, i) => <Candle key={i} x={30 + i * 26} k={k} y={y} />)}
+      <line x1={18} x2={128} y1={y(49)} y2={y(49)} stroke="#64748b" strokeDasharray="2 3" /><line x1={18} x2={128} y1={y(37)} y2={y(37)} stroke="#64748b" strokeDasharray="2 3" />
+      <Label x={20} y={y(52)}>average range of {P.avg_len} bars</Label>
+      <Candle x={160} k={[42, 92, 40, 89]} y={y} w={18} hi={LVL} />
+      <line x1={182} x2={182} y1={y(92)} y2={y(40)} stroke={LVL} /><Label x={186} y={y(70)} color={LVL}>range ≥ {P.disp_mult}×</Label><Label x={186} y={y(70) + 11} color={LVL}>body ≥ {P.disp_body_pct}%</Label>
+    </>;
+  } else if (p.kind === 'order_block') {
+    const ob: C = [50, 53, 40, 43];
+    const top = P.use_body ? 50 : 53, bot = P.use_body ? 43 : 40;
+    body = <>
+      <rect x={92} y={y(top)} width={150} height={y(bot) - y(top)} fill={ZONE} opacity={0.15} stroke={ZONE} strokeDasharray="3 3" />
+      <Candle x={40} k={[58, 62, 52, 55]} y={y} /><Candle x={70} k={[55, 57, 47, 50]} y={y} /><Candle x={100} k={ob} y={y} />
+      <Candle x={130} k={[44, 90, 42, 88]} y={y} w={16} hi={LVL} />
+      <Label x={100} y={y(40) + 12} anchor="middle" color={ZONE}>last down candle</Label>
+      <Label x={150} y={y(80)} color={LVL}>Displacement</Label><Label x={150} y={y(80) + 11} color={LVL}>closes above it</Label>
+      <Label x={244} y={y(top) - 3} color={ZONE} anchor="end">{p.name}.top</Label><Label x={244} y={y(bot) + 10} color={ZONE} anchor="end">{p.name}.bottom</Label>
+      <Label x={6} y={14}>zone = {P.use_body ? 'the body' : 'high to low'} · within {P.lookback} bars</Label>
+    </>;
+  } else if (p.kind === 'leg') {
+    const pts = [[20, 60], [50, 40], [80, 52], [110, 18], [150, 55], [185, 45], [215, 85], [245, 70]];
+    const s = pts[3], e = pts[6];
+    body = <>
+      <polyline points={pts.map(([px, v]) => `${px},${y(v)}`).join(' ')} fill="none" stroke="#64748b" strokeWidth={1.5} />
+      <line x1={s[0]} y1={y(s[1])} x2={e[0]} y2={y(e[1])} stroke={LVL} strokeWidth={2.5} />
+      <line x1={e[0]} x2={250} y1={y((s[1] + e[1]) / 2)} y2={y((s[1] + e[1]) / 2)} stroke={LVL} strokeDasharray="3 3" opacity={0.7} />
+      <circle cx={s[0]} cy={y(s[1])} r={3.5} fill={LVL} /><circle cx={e[0]} cy={y(e[1])} r={3.5} fill={LVL} />
+      <Label x={s[0]} y={y(s[1]) + 13} anchor="middle" color={LVL}>{p.name}.start (swing low)</Label>
+      <Label x={e[0] - 4} y={y(e[1]) - 6} anchor="end" color={LVL}>{p.name}.end (swing high)</Label>
+      <Label x={250} y={y((s[1] + e[1]) / 2) - 3} anchor="end" color={LVL}>50%</Label>
+      <Label x={6} y={14}>swings: {P.strength} bars each side · size ≥ {P.min_size_points} pts</Label>
+    </>;
+  } else if (p.kind === 'mss') {
+    const ks: C[] = [[40, 50, 38, 48], [48, 62, 46, 58], [58, 60, 50, 52], [52, 54, 42, 45], [45, 49, 34, 37], [37, 46, 35, 44], [44, 52, 42, 50]];
+    const lvl = 62;
+    body = <>
+      <line x1={66} x2={250} y1={y(lvl)} y2={y(lvl)} stroke={LVL} strokeDasharray="4 3" />
+      {ks.map((k, i) => <Candle key={i} x={24 + i * 24} k={k} y={y} w={11} />)}
+      <Candle x={24 + 7 * 24 + 4} k={[50, 82, 48, 79]} y={y} w={14} hi={P.displacement ? LVL : '#64748b'} />
+      <circle cx={48} cy={y(62)} r={3} fill={LVL} /><circle cx={120} cy={y(34)} r={3} fill="#94a3b8" />
+      <Label x={6} y={y(lvl) - 5} color={LVL}>{p.name}.level (last swing high)</Label>
+      <Label x={120} y={y(34) + 13} anchor="middle">{p.name}.swing_low</Label>
+      <Label x={6} y={14}>{P.displacement ? 'a Displacement closes above the level' : 'a close above the level'}</Label>
+    </>;
+  }
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="h-[150px] w-[260px] shrink-0 rounded-md border bg-[hsl(var(--chart))]">
+      {body}
+    </svg>
+  );
+}
+
+/** real occurrences with these settings on the MNQ bars, one at a time */
+export function PatternExample({ p, data }: { p: Pattern; data: Data }) {
+  const [side, setSide] = useState<'long' | 'short'>('long');
+  const series = useMemo(() => patternSeries(data, p, side), [data, p, side]);
+  const hits = useMemo(() => series.map((c, j) => (c ? j : -1)).filter((j) => j >= 0), [series]);
+  const [k, setK] = useState(-1);
+  const idx = hits.length ? hits[(k < 0 ? hits.length - 1 : k) % hits.length] : -1;
+  const kk = k < 0 ? hits.length - 1 : k % Math.max(1, hits.length);
+  const B = bars(data, p.tf);
+  const d = PATTERN_KINDS[p.kind];
+  if (idx < 0) return <div className="flex h-[150px] w-[300px] items-center justify-center rounded-md border text-xs text-muted-foreground">no {side === 'long' ? d.bull : d.bear} {d.title} with these settings on these bars</div>;
+  const caps = series[idx]!;
+  const startT: number = caps.bar1?.time ?? caps.start_time ?? caps.swing_time ?? caps.time ?? B[idx].t;
+  let j0 = idx; while (j0 > 0 && B[j0].t > startT) j0--;
+  const from = Math.max(0, Math.min(j0 - 3, idx - 10)), to = Math.min(B.length - 1, idx + 6);
+  const win = B.slice(from, to + 1);
+  const lo = Math.min(...win.map((b) => b.l)), hi = Math.max(...win.map((b) => b.h));
+  const w = 300, h = 150, padY = 12;
+  const y = (v: number) => padY + ((hi - v) / (hi - lo || 1)) * (h - 2 * padY);
+  const step = (w - 50) / win.length, x = (j: number) => 8 + (j - from + 0.5) * step;
+  const xt = (t: number) => { let j = from; while (j < to && B[j + 1].t <= t) j++; return x(j); };
+  const day = new Date((chartTime(B[idx].t)) * 1000).toISOString();
+  return (
+    <div className="space-y-1">
+      <svg viewBox={`0 0 ${w} ${h}`} className="h-[150px] w-[300px] rounded-md border bg-[hsl(var(--chart))]">
+        {typeof caps.top === 'number' && <rect x={xt(startT) - step / 2} y={y(caps.top)} width={w - 42 - xt(startT) + step / 2} height={Math.max(1, y(caps.bottom) - y(caps.top))} fill={ZONE} opacity={0.18} stroke={ZONE} strokeDasharray="3 3" />}
+        {typeof caps.level === 'number' && <line x1={xt(caps.swing_time)} x2={w - 42} y1={y(caps.level)} y2={y(caps.level)} stroke={LVL} strokeDasharray="4 3" />}
+        {typeof caps.start === 'number' && caps.start_time != null && <line x1={xt(caps.start_time)} y1={y(caps.start)} x2={xt(caps.end_time)} y2={y(caps.end)} stroke={LVL} strokeWidth={2} />}
+        {win.map((b, i) => <Candle key={i} x={x(from + i)} k={[b.o, b.h, b.l, b.c]} y={y} w={Math.max(3, step * 0.6)} hi={from + i === idx ? '#e2e8f0' : undefined} />)}
+        <text x={w - 4} y={y(hi) + 4} fontSize={9} fill="#64748b" textAnchor="end">{hi.toFixed(2)}</text>
+        <text x={w - 4} y={y(lo)} fontSize={9} fill="#64748b" textAnchor="end">{lo.toFixed(2)}</text>
+      </svg>
+      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <div className="flex rounded border">{(['long', 'short'] as const).map((s) => <button key={s} onClick={() => { setSide(s); setK(-1); }} className={cn('px-1.5', side === s && 'bg-accent text-foreground')}>{s === 'long' ? d.bull : d.bear}</button>)}</div>
+        <button className="rounded border px-1.5 hover:bg-accent" onClick={() => setK((kk - 1 + hits.length) % hits.length)}>‹</button>
+        <span className="tabular-nums">{kk + 1} / {hits.length}</span>
+        <button className="rounded border px-1.5 hover:bg-accent" onClick={() => setK((kk + 1) % hits.length)}>›</button>
+        <span className="mono">{day.slice(5, 10)} {day.slice(11, 16)} NY</span>
+      </div>
+    </div>
+  );
+}

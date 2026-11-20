@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { VariantProps } from '../types';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx, AddMenu, newCmp } from '../components/CondEditor';
-import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList } from '../components/sections';
+import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, SectionHelp } from '../components/sections';
 import { shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs } from '../components/ui';
 import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN_KINDS, patternUsage, labelsOf } from '../model';
@@ -114,7 +114,7 @@ export function VariantC(p: VariantProps) {
         </div>
         {/* inspector */}
         <div className="overflow-auto border-l p-3">
-          {sel.kind === 'settings' && <div className="space-y-4"><H>Setup settings</H><BaseBarEditor setup={setup} mutate={mutate} /><TradingHoursEditor setup={setup} mutate={mutate} /><SessionsEditor setup={setup} mutate={mutate} /><BehaviourEditor setup={setup} mutate={mutate} /><H>Indicators</H><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={usage} /><H>Patterns</H><PatternList setup={setup} mutate={mutate} compact /></div>}
+          {sel.kind === 'settings' && <div className="space-y-4"><H>Setup settings</H><BaseBarEditor setup={setup} mutate={mutate} /><TradingHoursEditor setup={setup} mutate={mutate} /><SessionsEditor setup={setup} mutate={mutate} /><BehaviourEditor setup={setup} mutate={mutate} /><H>Indicators</H><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={usage} /><H>Patterns</H><PatternList setup={setup} mutate={mutate} compact data={data} /></div>}
           {sel.kind === 'step' && selStep && (
             run ? <Locked what="Signal steps" /> :
             <div className="space-y-3">
@@ -137,7 +137,7 @@ export function VariantC(p: VariantProps) {
           )}
           {sel.kind === 'section' && (
             run ? <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Run override</H><OverrideBox k={sel.k} setup={setup} runD={runD} /></div> :
-            <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Setup default</H><SectionEditor k={sel.k} value={getSection(setup, sel.k)} setup={setup} ctx={tokenCtx(setup, 0, 99)} onChange={(v) => mutate((s) => { setSection(s, sel.k, v); })} /></div>
+            <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Setup default</H><SectionHelp setup={setup} k={sel.k} /><SectionEditor k={sel.k} value={getSection(setup, sel.k)} setup={setup} ctx={tokenCtx(setup, 0, 99)} onChange={(v) => mutate((s) => { setSection(s, sel.k, v); })} /></div>
           )}
         </div>
       </div>

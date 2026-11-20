@@ -5,7 +5,7 @@ import { VariantProps } from '../types';
 import { SetupMap } from '../components/SetupMap';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
-import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection } from '../components/sections';
+import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp } from '../components/sections';
 import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
 import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
@@ -51,7 +51,7 @@ export function VariantA(p: VariantProps) {
             )}
             {stage === 1 && <div className="space-y-5">
               <div><div className="mb-1 text-sm font-semibold">Indicators</div><div className="mb-2 text-sm text-muted-foreground">Declare each indicator once. Steps pick from this list; changing one here changes every step that reads it.</div><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={indicatorUsage(setup)} /></div>
-              <div><div className="mb-1 text-sm font-semibold">Patterns</div><div className="mb-2 text-sm text-muted-foreground">Declare each pattern once: its kind, timeframe and settings, and a name. A step then says "a bullish <span className="mono">fvg</span> forms" and reads what it captured, e.g. <span className="mono">fvg.top</span>. The long and short branches share the same declaration.</div><PatternList setup={setup} mutate={mutate} /></div>
+              <div><div className="mb-1 text-sm font-semibold">Patterns</div><div className="mb-2 text-sm text-muted-foreground">Declare each pattern once: its kind, timeframe and settings, and a name. A step then says "a bullish <span className="mono">fvg</span> forms" and reads what it captured, e.g. <span className="mono">fvg.top</span>. The long and short branches share the same declaration.</div><PatternList setup={setup} mutate={mutate} data={data} /></div>
             </div>}
             {stage === 2 && <div className="space-y-4"><TradingHoursEditor setup={setup} mutate={mutate} /><SessionsEditor setup={setup} mutate={mutate} /><BehaviourEditor setup={setup} mutate={mutate} /></div>}
             {stage === 3 && (
@@ -92,10 +92,11 @@ export function VariantA(p: VariantProps) {
               <div className="space-y-4">
                 {SECTIONS.filter((k) => k !== 'stop').map((k) => (
                   <div key={k}><div className="mb-1 text-sm font-medium">{SECTION_NAMES[k]}</div>
+                    <SectionHelp setup={setup} k={k} />
                     <SectionEditor k={k} value={getSection(setup, k)} setup={setup} ctx={tokenCtx(setup, 0, 99)} onChange={(v) => mutate((s) => { setSection(s, k, v); })} /></div>
                 ))}
                 <div><div className="mb-1 text-sm font-medium">In-position rules <span className="text-xs font-normal text-muted-foreground">(part of the Setup version; a Run cannot override them)</span></div>
-                  <InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="boxes" /></div>
+                  <SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="boxes" /></div>
               </div>
             )}
             {stage === 6 && (
