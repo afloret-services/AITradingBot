@@ -43,19 +43,47 @@ export function SessionsEditor({ setup, mutate }: { setup: Setup; mutate: Mutate
     </Field>
   );
 }
+const ONE_AT_A_TIME: Record<string, [string, string]> = {
+  off: ['Off: several Trades at once', 'Every Candidate that completes gives a Signal, even while another Trade of this Setup is open, so Trades can overlap.'],
+  ignore_new_starts: ['Ignore new starts', 'While a Trade is live (from its Signal until its last exit), a first step that holds starts no new Candidate, and a Candidate already running cannot complete into a Signal. Once the Trade is over, the Setup looks for fresh starts.'],
+  skip_completions: ['Skip completions', 'While a Trade is live, Candidates keep starting and moving through their steps, but one that completes is dropped (no Signal). After the Trade ends, a Candidate still running can complete normally, so a setup that formed during the Trade can still be taken.'],
+};
+const NEWS: Record<string, [string, string]> = {
+  off: ['Off', 'Economic releases change nothing: Signals are taken on News days like any other day.'],
+  whole_day: ['Whole Trading day', 'On a News day (a release of a type you switched on), every Signal of this Setup is suppressed: logged with the reason, but no Trade opens.'],
+  span: ['A span around the release', 'Only Signals inside the window around each release are suppressed: from N minutes before to M minutes after its New York time. Signals outside the window trade normally.'],
+};
 export function BehaviourEditor({ setup, mutate }: { setup: Setup; mutate: Mutate }) {
   const n = setup.settings.news_rule;
+  const oat = setup.settings.one_at_a_time;
+  const desc = (title: string, text: string, extra?: React.ReactNode) => (
+    <div className="mt-1.5 rounded-md border-l-2 border-sky-500/50 bg-sky-500/5 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground"><span className="font-medium text-foreground">{title}.</span> {text}{extra}</div>
+  );
   return (
-    <div className="flex flex-wrap gap-6">
-      <Field label="One at a time">
-        <Select value={setup.settings.one_at_a_time} onChange={(v) => mutate((s) => { s.settings.one_at_a_time = v; })} options={[['off', 'off'], ['ignore_new_starts', 'ignore new starts while a Signal is live'], ['skip_completions', 'skip Candidates that complete while live']]} />
-      </Field>
-      <Field label="News rule">
-        <Select value={n.mode} onChange={(v) => mutate((s) => { s.settings.news_rule.mode = v; })} options={[['off', 'off'], ['whole_day', 'whole Trading day'], ['span', 'a span around the release']]} />
-        {n.mode === 'span' && <><NumInput value={n.before} onChange={(x) => mutate((s) => { s.settings.news_rule.before = x; })} className="w-14" /><span className="text-xs">min before</span><NumInput value={n.after} onChange={(x) => mutate((s) => { s.settings.news_rule.after = x; })} className="w-14" /><span className="text-xs">after</span></>}
-      </Field>
+    <div className="grid gap-5 md:grid-cols-2">
+      <div>
+        <Field label="One at a time" hint="What happens to new setups while a Trade of this Setup is live.">
+          <Select value={oat} onChange={(v) => mutate((s) => { s.settings.one_at_a_time = v as any; })} options={Object.entries(ONE_AT_A_TIME).map(([k, [l]]) => [k, l] as [string, string])} />
+        </Field>
+        {desc(...ONE_AT_A_TIME[oat])}
+        <details className="mt-1.5 text-[11px] text-muted-foreground"><summary className="cursor-pointer hover:text-foreground">compare the three</summary>
+          <ul className="mt-1 space-y-1 pl-3">{Object.entries(ONE_AT_A_TIME).map(([k, [l, t]]) => <li key={k} className={cn(k === oat && 'text-foreground')}><b>{l}</b>: {t}</li>)}</ul>
+        </details>
+      </div>
+      <div>
+        <Field label="News rule" hint="Which Signals an Economic release suppresses on a News day.">
+          <Select value={n.mode} onChange={(v) => mutate((s) => { s.settings.news_rule.mode = v as any; })} options={Object.entries(NEWS).map(([k, [l]]) => [k, l] as [string, string])} />
+          {n.mode === 'span' && <><NumInput value={n.before} onChange={(x) => mutate((s) => { s.settings.news_rule.before = x; })} className="w-14" /><span className="text-xs">min before</span><NumInput value={n.after} onChange={(x) => mutate((s) => { s.settings.news_rule.after = x; })} className="w-14" /><span className="text-xs">min after</span></>}
+        </Field>
+        {desc(...NEWS[n.mode], n.mode === 'span' ? <> Here: from <b className="text-foreground">{n.before ?? 0} min</b> before to <b className="text-foreground">{n.after ?? 0} min</b> after; a 08:30 release blocks {spanText(n.before ?? 0, n.after ?? 0)}.</> : undefined)}
+        <div className="mt-1.5 text-[11px] text-muted-foreground">Which release types count (CPI, NFP, FOMC…) is chosen once for the whole bot, not per Setup. The prototype's chart does not apply the news rule.</div>
+      </div>
     </div>
   );
+}
+function spanText(before: number, after: number) {
+  const f = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  return `Signals from ${f(8 * 60 + 30 - before)} to ${f(8 * 60 + 30 + after)}`;
 }
 
 // ---------- indicators declared once ----------
