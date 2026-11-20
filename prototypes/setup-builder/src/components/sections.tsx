@@ -259,6 +259,51 @@ export function RunHelp({ setup, what, instrument, overrides }: { setup: Setup; 
   );
 }
 
+// ---------- Review & save ----------
+export function ReviewHelp({ setup, what, issues, result, versions }: { setup: Setup; what: 'intro' | 'map' | 'rule' | 'checks' | 'save' | 'chart'; issues?: { level: string }[]; result?: RunResult; versions?: number }) {
+  const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
+  if (what === 'intro') return (
+    <HelpBox>
+      <div><T>Read the whole Setup once before you freeze it.</T> At the top, the Setup at a glance; then the Rule description it will be stored with, the checks and the save buttons; at the bottom, what it did on the MNQ bars. Anything wrong: click it to go back to that step.</div>
+    </HelpBox>
+  );
+  if (what === 'map') return (
+    <HelpBox>
+      <div>Each branch as a flow, left to right: <T>When</T> (Base bar, Trading hours), its <T>steps</T>, the <T>Entry</T> and the <T>Trade</T> settings. A step card lists its conditions with a tag (pattern, compare, time…), what it reads from earlier steps (<span className="mono">← name</span>) and what it captures for later ones (<span className="mono">→ name</span>), and how often it completed on the bars. The arrows between steps carry the Sequence limits. Hover a declared indicator or pattern at the top to light up the steps that read it.</div>
+    </HelpBox>
+  );
+  if (what === 'rule') return (
+    <HelpBox>
+      <div>Written from the Rule blocks, never by hand, so it always says exactly what the engine will do. It is stored with the version at Freeze, and it is what you check the Trades against on the chart for the Promotion gate. Notes are never part of it.</div>
+    </HelpBox>
+  );
+  if (what === 'checks') {
+    const e = (issues || []).filter((i) => i.level === 'error').length, w = (issues || []).length - e;
+    return (
+      <HelpBox>
+        <div><span className="text-red-300">✕ Errors</span> block Freeze: something the engine cannot run (no stop, a value read before a step captures it, a timeframe finer than the Base bar…). <span className="text-amber-300">! Warnings</span> do not: the Draft still saves and freezes, but have a look (an unused pattern, leg shares that do not add up to 100%…).</div>
+        <div>Here: {e || w ? <>{B(`${e} error${e === 1 ? '' : 's'}`)} and {B(`${w} warning${w === 1 ? '' : 's'}`)}.</> : B('nothing to fix, ready to freeze.')}</div>
+      </HelpBox>
+    );
+  }
+  if (what === 'save') return (
+    <HelpBox>
+      <div><T>Save Draft</T> keeps your working copy, warnings and all; it is refused if someone else saved this Draft in the meantime, so nobody overwrites anyone. <T>Freeze → v{(versions || 0) + 1}</T> makes a numbered version that never changes, identified by a SHA-256 hash of what the engine reads; Runs and backtests point to versions, never to the Draft. It is refused while there are errors, and when nothing the engine reads has changed since the last version (renaming, notes and labels do not count). <T>Export file</T> downloads the Setup file with its Rule description; <T>Show file</T> shows it here.</div>
+      <div className="text-[11px]">In this prototype nothing is kept: a reload starts over.</div>
+    </HelpBox>
+  );
+  const sigs = result?.signals || [];
+  const taken = sigs.filter((x) => !x.refused && x.trade?.r != null);
+  const r = taken.reduce((a, x) => a + (x.trade!.r || 0), 0);
+  const wins = taken.filter((x) => (x.trade!.r || 0) > 0).length;
+  return (
+    <HelpBox>
+      <div><T>Signals</T>: every time the last step completed inside the Trading hours. <T>Refused</T>: Signals a guard or the sizing turned down (the reason is in the Signal's panel). <T>Trades</T>: Signals that filled; a cancelled entry is not a Trade. <T>Win rate</T>: Trades that ended in profit. <T>Total</T>: the sum of the Trades' results in R, where 1R is what each Trade risked at its stop.</div>
+      <div>Here: {B(`${sigs.length} Signal${sigs.length === 1 ? "" : "s"}`)}, {B(`${taken.length} Trade${taken.length === 1 ? "" : "s"}`)}, {taken.length ? <>{B(`${Math.round((wins / taken.length) * 100)}%`)} winners and </> : ''}{B(`${r >= 0 ? '+' : ''}${r.toFixed(2)}R`)} on 35 Trading days. Use the day arrows or "next Signal day", click a Signal to see its zones and its risk and reward, and ▶ Replay to step through it. This is a rough simulation on 1-minute bars; a backtest Run is the real measure.</div>
+    </HelpBox>
+  );
+}
+
 // ---------- what Signal steps do ----------
 const NEW_START: Record<string, [string, string]> = {
   start_another: ['Start another', 'Each time step 1 holds, a new Candidate starts next to the ones already running, so several can be in progress at once and each can become a Signal.'],

@@ -6,7 +6,7 @@ import { SetupMap } from '../components/SetupMap';
 import { RuleEditor } from '../components/RuleEditor';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
-import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp } from '../components/sections';
+import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp, ReviewHelp } from '../components/sections';
 import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
 import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
@@ -116,16 +116,19 @@ export function VariantA(p: VariantProps) {
             )}
             {stage === 6 && (
               <div className="space-y-5">
+              <ReviewHelp setup={setup} what="intro" />
               <div>
-                <div className="mb-2"><div className="text-sm font-semibold">Setup at a glance</div><div className="text-xs text-muted-foreground">Every branch from first step to Trade. Click a step to go back and edit it; hover a declared indicator or pattern to see which steps read it.</div></div>
+                <div className="mb-2 space-y-1.5"><div className="text-sm font-semibold">Setup at a glance</div><ReviewHelp setup={setup} what="map" /></div>
                 <SetupMap setup={setup} result={result} data={data} focus={p.focus} onStep={(f) => { setStage(3); setBi(f.bi); setOpen(f.si); p.setFocus(f); }} onDeclared={() => setStage(1)} />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <div><div className="mb-1 text-sm font-medium">Rule description (generated, stored at Freeze)</div><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{ruleDescription(setup)}</pre></div>
+                <div><div className="mb-1 text-sm font-medium">Rule description (generated, stored at Freeze)</div><div className="mb-2"><ReviewHelp setup={setup} what="rule" /></div><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{ruleDescription(setup)}</pre></div>
                 <div className="space-y-2"><div className="text-sm font-medium">Checks</div>
+                  <ReviewHelp setup={setup} what="checks" issues={issues} />
                   {issues.length === 0 && <Badge tone="ok">Ready to freeze</Badge>}
                   {issues.map((i, k) => <div key={k} className={cn('text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.level === 'error' ? '✕' : '!'} {i.where}: {i.text}</div>)}
-                  <RunSummary result={result} data={data} />
+                  <div className="pt-2 text-sm font-medium">Save</div>
+                  <ReviewHelp setup={setup} what="save" />
                   {p.saveBar}
                 </div>
               </div>
@@ -136,6 +139,8 @@ export function VariantA(p: VariantProps) {
         </Card>
         {stage === 6 && (
           <Card className="p-4">
+            <div className="mb-2 text-sm font-semibold">What it did on MNQ</div>
+            <div className="mb-3"><ReviewHelp setup={setup} what="chart" result={chartResult} /></div>
             <div className="mb-3 flex items-center justify-between"><RunSummary result={chartResult} data={data} /></div>
             <Chart data={data} setup={setup} result={chartResult} day={p.day} setDay={p.setDay} focus={p.focus} selected={p.selected} setSelected={p.setSelected} />
           </Card>
