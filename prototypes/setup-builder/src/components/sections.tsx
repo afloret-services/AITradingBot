@@ -255,6 +255,35 @@ export function indicatorUsage(s: Setup) {
 }
 
 // ---------- step limits ----------
+// ---------- When to trade ----------
+export function WhenHelp({ setup, what }: { setup: Setup; what: 'intro' | 'hours' | 'sessions' }) {
+  const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
+  const th = setup.settings.trading_hours;
+  const WDN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  if (what === 'intro') return (
+    <HelpBox>
+      <div><T>When this Setup may trade.</T> The Trading hours say when a Signal may be taken; the sessions are the named windows that session levels (the Asia high, the London low…) are measured over; One at a time and the News rule say what happens while a Trade is live and around economic releases. Times are New York time throughout.</div>
+    </HelpBox>
+  );
+  if (what === 'hours') {
+    const mins = th.ranges.reduce((a, r) => { const [h1, m1] = r.start.split(':').map(Number), [h2, m2] = r.end.split(':').map(Number); let d = h2 * 60 + (m2 || 0) - (h1 * 60 + (m1 || 0)); if (d <= 0) d += 1440; return a + d; }, 0);
+    const days = th.weekdays.length === 5 && [1, 2, 3, 4, 5].every((d) => th.weekdays.includes(d)) ? 'Monday to Friday' : th.weekdays.map((d) => WDN[d]).join(', ') || 'every day';
+    return (
+      <HelpBox>
+        <div>A Signal is only taken when the bar its last step completes on opens inside one of these ranges, on a ticked weekday. The steps before it may complete earlier (a pullback can start before the window opens); only the Signal is checked. A range may cross midnight (18:00–16:00 covers the whole futures day), you can add several, and no range means all day. "End of Trading hours" in the Entry deadline means the end of these ranges.</div>
+        <div>Here: {th.ranges.length ? B(th.ranges.map((r) => `${r.start}–${r.end}`).join(' and ')) : B('all day')} NY{th.ranges.length ? <> ({B(`${Math.floor(mins / 60)}h${mins % 60 ? String(mins % 60).padStart(2, '0') : ''}`)} a day)</> : ''}, {B(days)}.</div>
+      </HelpBox>
+    );
+  }
+  const ss = Object.entries(setup.settings.sessions);
+  return (
+    <HelpBox>
+      <div>The Asia, London and New York windows, used by session levels: "the Asia high" is the highest price of that window on the current Trading day once it has ended, and of the previous Trading day while it is still running. The Draw on liquidity and any step that compares with a session high or low read these. The times are copied into the Setup, so changing the bot's defaults later never changes a frozen version.</div>
+      <div>Here: {ss.map(([n, r], i) => <span key={n}>{i > 0 && ', '}{B(`${n.replace('_', ' ')} ${r.start}–${r.end}`)}</span>)}. <span className="text-[11px]">In this prototype the session levels still use the default times; editing them changes the file, not the chart.</span></div>
+    </HelpBox>
+  );
+}
+
 // ---------- Basics ----------
 const HelpBox = ({ children }: { children: React.ReactNode }) => <div className="space-y-1 rounded-md border-l-2 border-sky-500/50 bg-sky-500/5 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground">{children}</div>;
 const T = ({ children }: { children: React.ReactNode }) => <span className="font-medium text-foreground">{children}</span>;

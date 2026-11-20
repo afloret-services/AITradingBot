@@ -6,7 +6,7 @@ import { SetupMap } from '../components/SetupMap';
 import { RuleEditor } from '../components/RuleEditor';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
-import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp, ReviewHelp, IndicatorsHelp, PatternsHelp, IndicatorsPatternsIntro } from '../components/sections';
+import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp, ReviewHelp, IndicatorsHelp, PatternsHelp, IndicatorsPatternsIntro, WhenHelp } from '../components/sections';
 import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
 import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
@@ -57,7 +57,12 @@ export function VariantA(p: VariantProps) {
               <div><div className="mb-1 text-sm font-semibold">Indicators</div><div className="mb-2"><IndicatorsHelp setup={setup} /></div><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={indicatorUsage(setup)} /></div>
               <div><div className="mb-1 text-sm font-semibold">Patterns</div><div className="mb-2"><PatternsHelp setup={setup} /></div><PatternList setup={setup} mutate={mutate} data={data} /></div>
             </div>}
-            {stage === 2 && <div className="space-y-4"><TradingHoursEditor setup={setup} mutate={mutate} /><SessionsEditor setup={setup} mutate={mutate} /><BehaviourEditor setup={setup} mutate={mutate} /></div>}
+            {stage === 2 && <div className="space-y-5">
+              <WhenHelp setup={setup} what="intro" />
+              <div className="space-y-1.5"><TradingHoursEditor setup={setup} mutate={mutate} /><WhenHelp setup={setup} what="hours" /></div>
+              <div className="space-y-1.5"><SessionsEditor setup={setup} mutate={mutate} /><WhenHelp setup={setup} what="sessions" /></div>
+              <BehaviourEditor setup={setup} mutate={mutate} />
+            </div>}
             {stage === 3 && (
               <div className="space-y-3">
                 <SignalStepsHelp setup={setup} bi={bi} />
