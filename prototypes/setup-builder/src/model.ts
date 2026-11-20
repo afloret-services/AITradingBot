@@ -21,11 +21,12 @@ export type Cond =
   | { id: string; t: 'pattern'; ref: string; side: 'long' | 'short'; origin?: Origin };
 
 // ---------- Patterns: declared once per Setup (kind, timeframe, settings), then referenced by name in steps ----------
-export type PatternKind = 'fvg' | 'displacement' | 'order_block' | 'leg' | 'mss' | 'double' | 'triple' | 'head_shoulders';
+export type PatternKind = 'fvg' | 'displacement' | 'order_block' | 'leg' | 'mss' | 'double' | 'triple' | 'head_shoulders' | 'triangle' | 'wedge' | 'flag';
 export interface Pattern { name: string; kind: PatternKind; tf: TF; params: Record<string, number | boolean>; label?: string }
 type PDef = { title: string; help: string; params: [key: string, label: string, def: number | boolean][]; fields: string[]; bull: string; bear: string; named?: boolean; group?: 'ict' | 'chart' };
 const DISP: PDef['params'] = [['disp_mult', 'range at least × the average range', 1.5], ['disp_body_pct', 'body % at least', 60], ['avg_len', 'average range over bars', 20]];
 const CHART_PARAMS: PDef['params'] = [['strength', 'swing: bars each side', 3], ['tolerance_pct', 'peaks equal within % of the height', 20], ['min_height_points', 'height ≥ points', 10], ['min_sep', 'peaks at least N bars apart', 5], ['max_bars', 'whole pattern within N bars', 80], ['break_within', 'neckline break within N bars of the last peak', 30]];
+const LINE_PARAMS: PDef['params'] = [['strength', 'swing: bars each side', 3], ['min_height_points', 'opening height ≥ points', 10], ['max_bars', 'whole pattern within N bars', 80], ['break_within', 'breakout within N bars of the last swing', 20], ['converge_pct', 'narrows by ≥ % of its height', 30], ['flat_pct', 'a line counts as flat within % of the height', 15]];
 const BAR3 = ['bar1', 'bar2', 'bar3'].flatMap((b) => ['open', 'high', 'low', 'close'].map((f) => `${b}.${f}`));
 export const PATTERN_KINDS: Record<PatternKind, PDef> = {
   fvg: { title: 'Fair value gap (FVG)', bull: 'bullish', bear: 'bearish', help: 'Three candles; candle 1 and candle 3 leave a gap. Forms when candle 3 closes.',
@@ -53,9 +54,20 @@ export const PATTERN_KINDS: Record<PatternKind, PDef> = {
   head_shoulders: { title: 'Head and shoulders', bull: 'inverse head and shoulders', bear: 'head and shoulders', named: true, group: 'chart',
     help: 'Three swing highs where the middle one (the head) is clearly higher than the two shoulders, which are at about the same price (bearish); the inverse, with lows, is bullish. The neckline joins the two lows between them and may slope; the pattern forms on the first close through it.',
     params: [...CHART_PARAMS, ['head_margin_pct', 'head beyond the shoulders by ≥ % of the height', 15]], fields: ['neckline', 'height', 'target', 'left_shoulder', 'head', 'right_shoulder'] },
+  triangle: { title: 'Triangle', bull: 'triangle breaking up', bear: 'triangle breaking down', named: true, group: 'chart',
+    help: 'Price narrows between two lines through the recent swing highs and swing lows. Ascending: flat top, rising bottom. Descending: falling top, flat bottom. Symmetrical: falling top, rising bottom. The pattern forms on the first close through the line in the side\'s direction (above the top line for bullish, below the bottom line for bearish). Target: the triangle\'s opening height from the breakout.',
+    params: [...LINE_PARAMS, ['allow_ascending', 'ascending', true], ['allow_descending', 'descending', true], ['allow_symmetrical', 'symmetrical', true]],
+    fields: ['line', 'opposite', 'height', 'target', 'breakout'] },
+  wedge: { title: 'Wedge', bull: 'falling wedge', bear: 'rising wedge', named: true, group: 'chart',
+    help: 'Both lines slope the same way and converge. A falling wedge (both down) is bullish and forms on the first close above its top line; a rising wedge (both up) is bearish and forms on the first close below its bottom line. Target: the wedge\'s opening height from the breakout.',
+    params: LINE_PARAMS, fields: ['line', 'opposite', 'height', 'target', 'breakout'] },
+  flag: { title: 'Flag', bull: 'bull flag', bear: 'bear flag', named: true, group: 'chart',
+    help: 'A strong move (the pole) followed by a short, shallow pause that drifts against it or sideways (the flag). Bull flag: pole up, forms on the first close above the flag\'s top line; bear flag: the mirror. Target: the pole\'s length projected from the breakout.',
+    params: [['pole_points', 'pole ≥ points', 30], ['pole_bars', 'pole within N bars', 10], ['flag_min', 'flag at least N bars', 3], ['flag_max', 'flag at most N bars', 20], ['max_retrace_pct', 'flag gives back ≤ % of the pole', 50]],
+    fields: ['line', 'pole', 'pole_start', 'pole_end', 'target', 'breakout'] },
 };
 export function newPattern(kind: PatternKind, tf: TF, taken: string[]): Pattern {
-  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss', double: 'dbl', triple: 'tpl', head_shoulders: 'hs' }[kind];
+  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss', double: 'dbl', triple: 'tpl', head_shoulders: 'hs', triangle: 'tri', wedge: 'wdg', flag: 'flag' }[kind];
   let name = base, n = 2;
   while (taken.includes(name)) name = base + n++;
   return { name, kind, tf, params: Object.fromEntries(PATTERN_KINDS[kind].params.map(([k, , d]) => [k, d])) };
@@ -63,7 +75,7 @@ export function newPattern(kind: PatternKind, tf: TF, taken: string[]): Pattern 
 export function patternPhrase(p: Pattern | undefined, side: 'long' | 'short') {
   if (!p) return 'an undeclared pattern';
   const d = PATTERN_KINDS[p.kind];
-  if (d.named) return `a ${p.tf} ${side === 'long' ? d.bull : d.bear}${p.label ? ` (${p.label})` : ''} completes on its neckline break (captured as "${p.name}")`;
+  if (d.named) return `a ${p.tf} ${side === 'long' ? d.bull : d.bear}${p.label ? ` (${p.label})` : ''} completes on its ${['double', 'triple', 'head_shoulders'].includes(p.kind) ? 'neckline break' : 'breakout'} (captured as "${p.name}")`;
   return `a ${p.tf} ${side === 'long' ? d.bull : d.bear} ${p.label || d.title.replace(/ \(.*\)$/, '')} forms (captured as "${p.name}")`;
 }
 

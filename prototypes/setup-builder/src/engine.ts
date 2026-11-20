@@ -467,6 +467,75 @@ export function patternSeries(data: Data, p: Pattern, side: 'long' | 'short') {
       else hs.forEach((h, k) => (caps[['first', 'second', 'third'][k]] = back(h.p)));
       out[j] = caps;
     }
+  } else if (p.kind === 'triangle' || p.kind === 'wedge' || p.kind === 'flag') {
+    // written for the bearish side (a break down); the bullish side runs it on upside-down bars, real = sg × flipped
+    const sg = long ? -1 : 1;
+    const F = long ? B.map((b) => ({ ...b, o: -b.o, h: -b.l, l: -b.h, c: -b.c })) : B;
+    const back = (x: number) => sg * x;
+    const T = (i: number) => B[Math.max(0, Math.min(B.length - 1, i))].t;
+    if (p.kind === 'flag') {
+      // bear flag on F: pole down (high → low), then a pause drifting up or sideways, then a close below its bottom line
+      let lastPoleEnd = -1;
+      for (let j = P.flag_min + 1; j < B.length; j++) {
+        let e = -1;
+        for (let k = Math.max(1, j - P.flag_max); k <= j - P.flag_min; k++) if (e < 0 || F[k].l < F[e].l) e = k;
+        if (e < 0 || e === lastPoleEnd) continue;
+        let st = -1;
+        for (let k = Math.max(0, e - P.pole_bars); k < e; k++) if (st < 0 || F[k].h > F[st].h) st = k;
+        if (st < 0) continue;
+        const pole = F[st].h - F[e].l;
+        if (pole < P.pole_points - 1e-9) continue;
+        let hi = -Infinity; for (let k = e + 1; k < j; k++) hi = Math.max(hi, F[k].h);
+        if (hi - F[e].l > (P.max_retrace_pct / 100) * pole + 1e-9) continue;
+        // the flag's bottom line: least squares through the lows from the pole's end
+        const xs: number[] = [], ys: number[] = [];
+        for (let k = e; k < j; k++) { xs.push(k); ys.push(F[k].l); }
+        const mx = xs.reduce((a, b) => a + b, 0) / xs.length, my = ys.reduce((a, b) => a + b, 0) / ys.length;
+        const slope = xs.reduce((a, x, q) => a + (x - mx) * (ys[q] - my), 0) / (xs.reduce((a, x) => a + (x - mx) ** 2, 0) || 1);
+        const lineAt = (k: number) => my + slope * (k - mx);
+        if (slope < -0.05 * pole / Math.max(1, j - e)) continue; // must drift against the pole, or sideways
+        let early = false; for (let k = e + 1; k < j; k++) if (F[k].c < lineAt(k)) { early = true; break; }
+        if (early || !(F[j].c < lineAt(j))) continue;
+        lastPoleEnd = e;
+        let topAt = -Infinity; for (let k = e + 1; k < j; k++) topAt = Math.max(topAt, F[k].h);
+        out[j] = { line: back(lineAt(j)), pole, pole_start: back(F[st].h), pole_end: back(F[e].l), target: back(F[j].c - pole), breakout: B[j].c, time: B[j].t,
+          path: [[T(st), back(F[st].h)], [T(e), back(F[e].l)]], lines: [[T(e), back(lineAt(e)), T(j), back(lineAt(j))], [T(e + 1), back(topAt), T(j), back(topAt + slope * (j - e - 1))]] };
+      }
+    } else {
+      const n = Number(P.strength) || 3;
+      const H: { i: number; p: number }[] = [], L: { i: number; p: number }[] = [];
+      const used = new Set<string>();
+      for (let j = 0; j < B.length; j++) {
+        const s0 = j - n;
+        if (s0 >= 0 && isSwing(F, s0, n, 'high')) H.push({ i: s0, p: F[s0].h });
+        if (s0 >= 0 && isSwing(F, s0, n, 'low')) L.push({ i: s0, p: F[s0].l });
+        if (H.length < 2 || L.length < 2) continue;
+        const [hA, hB] = H.slice(-2), [lA, lB] = L.slice(-2);
+        const start = Math.min(hA.i, lA.i), end = Math.max(hB.i, lB.i);
+        if (j - start > P.max_bars || j <= end || j - end > P.break_within) continue;
+        const key = `${hB.i}:${lB.i}`;
+        if (used.has(key)) continue;
+        const su = (hB.p - hA.p) / (hB.i - hA.i), sl = (lB.p - lA.p) / (lB.i - lA.i);
+        const up = (k: number) => hA.p + su * (k - hA.i), lo = (k: number) => lA.p + sl * (k - lA.i);
+        const w0 = up(start) - lo(start), w1 = up(end) - lo(end);
+        if (w0 < P.min_height_points - 1e-9 || w1 <= 0 || w1 > w0 * (1 - P.converge_pct / 100)) continue;
+        const flat = (sl0: number) => Math.abs(sl0 * (end - start)) <= (P.flat_pct / 100) * w0;
+        const uF = flat(su), lF = flat(sl);
+        let shape = '';
+        if (p.kind === 'triangle') {
+          if (uF && !lF && sl > 0) shape = 'ascending'; else if (!uF && su < 0 && lF) shape = 'descending'; else if (!uF && !lF && su < 0 && sl > 0) shape = 'symmetrical';
+          if (long && shape !== 'symmetrical') shape = shape === 'ascending' ? 'descending' : shape === 'descending' ? 'ascending' : shape; // names are for the real chart
+          if (!shape || !P[`allow_${shape}`]) continue;
+        } else if (!(su > 0 && sl > 0 && !uF && !lF)) continue; // a rising wedge on F (a falling one for bullish)
+        // inside until now, first close below the bottom line now
+        let out0 = false; for (let k = end + 1; k < j; k++) if (F[k].c < lo(k) || F[k].c > up(k)) { out0 = true; break; }
+        if (out0) { used.add(key); continue; }
+        if (!(F[j].c < lo(j))) continue;
+        used.add(key);
+        out[j] = { line: back(lo(j)), opposite: back(up(j)), height: w0, target: back(lo(j) - w0), breakout: B[j].c, shape: p.kind === 'triangle' ? shape : long ? 'falling' : 'rising', time: B[j].t,
+          lines: [[T(hA.i), back(hA.p), T(j), back(up(j))], [T(lA.i), back(lA.p), T(j), back(lo(j))]], path: [] };
+      }
+    }
   }
   patCache.set(key, out);
   return out;

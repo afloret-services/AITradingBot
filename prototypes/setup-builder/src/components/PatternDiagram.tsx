@@ -87,6 +87,37 @@ export function PatternSchematic({ p }: { p: Pattern }) {
       <Label x={6} y={14}>{P.displacement ? 'a Displacement closes above the level' : 'a close above the level'}</Label>
     </>;
   }
+  if (p.kind === 'triangle' || p.kind === 'wedge' || p.kind === 'flag') {
+    // drawn as the bullish breakout (the bearish one is its mirror)
+    const P2 = p.params as Record<string, any>;
+    let pts: [number, number][], up: [number, number, number, number], lo: [number, number, number, number], bx: number, by: number, tgt: number, note: string, pole: [number, number, number, number] | null = null;
+    if (p.kind === 'flag') {
+      pole = [20, 20, 90, 75];
+      pts = [[20, 20], [90, 75], [105, 66], [118, 72], [133, 62], [148, 68], [163, 58], [178, 63], [195, 82]];
+      up = [90, 76, 185, 66]; lo = [100, 64, 185, 54]; bx = 190; by = 68; tgt = 66 + 55; note = 'pole, then a pause drifting against it';
+    } else if (p.kind === 'wedge') {
+      pts = [[15, 90], [45, 55], [70, 78], [100, 45], [125, 62], [150, 38], [170, 50], [195, 70], [215, 85]];
+      up = [15, 92, 190, 52]; lo = [45, 55, 190, 30]; bx = 190; by = 55; tgt = 55 + 40; note = 'falling wedge · the rising wedge is its mirror';
+    } else {
+      const asc = P2.allow_ascending && !P2.allow_symmetrical && !P2.allow_descending;
+      pts = asc ? [[15, 25], [45, 80], [75, 40], [105, 80], [135, 55], [160, 80], [180, 66], [205, 92], [225, 100]]
+        : [[15, 15], [45, 85], [75, 30], [105, 75], [135, 42], [160, 66], [180, 52], [205, 80], [225, 92]];
+      up = asc ? [45, 80, 200, 80] : [45, 85, 200, 60]; lo = asc ? [75, 40, 200, 70] : [75, 30, 200, 55];
+      bx = 200; by = asc ? 80 : 61; tgt = by + (up[1] - (asc ? 40 : 30)); note = asc ? 'ascending: flat top, rising bottom' : 'symmetrical · ascending/descending: one flat line';
+    }
+    body = <>
+      {pole && <line x1={pole[0]} y1={y(pole[1])} x2={pole[2]} y2={y(pole[3])} stroke={ZONE} strokeWidth={2.5} />}
+      <polyline points={pts.map(([x, v]) => `${x},${y(v)}`).join(' ')} fill="none" stroke="#cbd5e1" strokeWidth={1.6} strokeLinejoin="round" />
+      <line x1={up[0]} y1={y(up[1])} x2={up[2]} y2={y(up[3])} stroke={LVL} strokeWidth={1.5} />
+      <line x1={lo[0]} y1={y(lo[1])} x2={lo[2]} y2={y(lo[3])} stroke={LVL} strokeWidth={1.5} />
+      <circle cx={bx} cy={y(by)} r={4} fill="none" stroke="#26a69a" strokeWidth={1.5} />
+      <Label x={bx - 6} y={y(by) + 14} anchor="end" color="#86efac">forms here</Label>
+      <line x1={bx} x2={252} y1={y(Math.min(98, tgt))} y2={y(Math.min(98, tgt))} stroke="#26a69a" strokeDasharray="2 3" />
+      <Label x={252} y={y(Math.min(98, tgt)) + 11} anchor="end" color="#86efac">{p.name}.target</Label>
+      {pole && <Label x={24} y={y(30)} color={ZONE}>{p.name}.pole</Label>}
+      <Label x={6} y={12}>{note}</Label>
+    </>;
+  }
   if (p.kind === 'double' || p.kind === 'triple' || p.kind === 'head_shoulders') {
     // drawn as the bearish top: bullish is the same upside down
     const pts: [number, number][] = p.kind === 'double'
@@ -130,7 +161,7 @@ export function PatternExample({ p, data }: { p: Pattern; data: Data }) {
   const d = PATTERN_KINDS[p.kind];
   if (idx < 0) return <div className="flex h-[150px] w-[300px] items-center justify-center rounded-md border text-xs text-muted-foreground">no {side === 'long' ? d.bull : d.bear} {d.title} with these settings on these bars</div>;
   const caps = series[idx]!;
-  const startT: number = caps.path?.[0]?.[0] ?? caps.bar1?.time ?? caps.start_time ?? caps.swing_time ?? caps.time ?? B[idx].t;
+  const startT: number = caps.path?.[0]?.[0] ?? caps.lines?.[0]?.[0] ?? caps.bar1?.time ?? caps.start_time ?? caps.swing_time ?? caps.time ?? B[idx].t;
   let j0 = idx; while (j0 > 0 && B[j0].t > startT) j0--;
   const from = Math.max(0, Math.min(j0 - 3, idx - 10)), to = Math.min(B.length - 1, idx + (caps.path ? 4 : 6));
   const win = B.slice(from, to + 1);
@@ -145,7 +176,8 @@ export function PatternExample({ p, data }: { p: Pattern; data: Data }) {
     <div className="space-y-1">
       <svg viewBox={`0 0 ${w} ${h}`} className="h-[150px] w-[300px] rounded-md border bg-[hsl(var(--chart))]">
         {caps.path && <polyline points={caps.path.map(([t, v]: [number, number]) => `${xt(t)},${y(v)}`).join(' ')} fill="none" stroke={ZONE} strokeWidth={1.6} opacity={0.9} />}
-        {caps.path && <line x1={xt(caps.neck_t0)} y1={y(caps.neck_p0)} x2={xt(caps.time)} y2={y(caps.neckline)} stroke={LVL} strokeDasharray="4 3" />}
+        {caps.neck_t0 != null && <line x1={xt(caps.neck_t0)} y1={y(caps.neck_p0)} x2={xt(caps.time)} y2={y(caps.neckline)} stroke={LVL} strokeDasharray="4 3" />}
+        {caps.lines && caps.lines.map(([t1, p1, t2, p2]: number[], q: number) => <line key={q} x1={xt(t1)} y1={y(p1)} x2={xt(t2)} y2={y(p2)} stroke={LVL} strokeWidth={1.5} />)}
         {caps.path && <line x1={xt(caps.time)} x2={w - 42} y1={y(caps.target)} y2={y(caps.target)} stroke="#ef5350" strokeDasharray="2 3" />}
         {typeof caps.top === 'number' && <rect x={xt(startT) - step / 2} y={y(caps.top)} width={w - 42 - xt(startT) + step / 2} height={Math.max(1, y(caps.bottom) - y(caps.top))} fill={ZONE} opacity={0.18} stroke={ZONE} strokeDasharray="3 3" />}
         {typeof caps.level === 'number' && <line x1={xt(caps.swing_time)} x2={w - 42} y1={y(caps.level)} y2={y(caps.level)} stroke={LVL} strokeDasharray="4 3" />}
