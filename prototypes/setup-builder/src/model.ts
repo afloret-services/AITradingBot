@@ -21,12 +21,15 @@ export type Cond =
   | { id: string; t: 'pattern'; ref: string; side: 'long' | 'short'; origin?: Origin };
 
 // ---------- Patterns: declared once per Setup (kind, timeframe, settings), then referenced by name in steps ----------
-export type PatternKind = 'fvg' | 'displacement' | 'order_block' | 'leg' | 'mss' | 'double' | 'triple' | 'head_shoulders' | 'triangle' | 'wedge' | 'flag' | 'pennant' | 'rectangle' | 'channel';
+export type PatternKind = 'fvg' | 'displacement' | 'order_block' | 'leg' | 'mss' | 'double' | 'triple' | 'head_shoulders' | 'triangle' | 'wedge' | 'flag' | 'pennant' | 'rectangle' | 'channel'
+  | 'engulfing' | 'hammer' | 'star' | 'harami' | 'piercing' | 'soldiers' | 'tweezer' | 'inside_bar';
 export interface Pattern { name: string; kind: PatternKind; tf: TF; params: Record<string, number | boolean>; label?: string }
-type PDef = { title: string; help: string; params: [key: string, label: string, def: number | boolean][]; fields: string[]; bull: string; bear: string; named?: boolean; group?: 'ict' | 'chart' };
+type PDef = { title: string; help: string; params: [key: string, label: string, def: number | boolean][]; fields: string[]; bull: string; bear: string; named?: boolean; group?: 'ict' | 'chart' | 'candle' };
 const DISP: PDef['params'] = [['disp_mult', 'range at least × the average range', 1.5], ['disp_body_pct', 'body % at least', 60], ['avg_len', 'average range over bars', 20]];
 const CHART_PARAMS: PDef['params'] = [['strength', 'swing: bars each side', 3], ['tolerance_pct', 'peaks equal within % of the height', 20], ['min_height_points', 'height ≥ points', 10], ['min_sep', 'peaks at least N bars apart', 5], ['max_bars', 'whole pattern within N bars', 80], ['break_within', 'neckline break within N bars of the last peak', 30]];
 const LINE_PARAMS: PDef['params'] = [['strength', 'swing: bars each side', 3], ['min_height_points', 'opening height ≥ points', 10], ['max_bars', 'whole pattern within N bars', 80], ['break_within', 'breakout within N bars of the last swing', 20], ['converge_pct', 'narrows by ≥ % of its height', 30], ['flat_pct', 'a line counts as flat within % of the height', 15]];
+const TREND: PDef['params'][number] = ['trend_bars', 'after a move against it over N bars (0 = any)', 3];
+const CANDLE_FIELDS = ['high', 'low', 'open', 'close', 'mid'];
 const BAR3 = ['bar1', 'bar2', 'bar3'].flatMap((b) => ['open', 'high', 'low', 'close'].map((f) => `${b}.${f}`));
 export const PATTERN_KINDS: Record<PatternKind, PDef> = {
   fvg: { title: 'Fair value gap (FVG)', bull: 'bullish', bear: 'bearish', help: 'Three candles; candle 1 and candle 3 leave a gap. Forms when candle 3 closes.',
@@ -77,9 +80,34 @@ export const PATTERN_KINDS: Record<PatternKind, PDef> = {
     help: 'Price moves between two parallel sloping lines, through the last two swing highs and the last two swing lows. The pattern forms on the first close outside it in the side\'s direction: above the top line for bullish, below the bottom line for bearish (with the trend or against it, depending on which way the channel slopes). Target: the channel\'s height from the breakout.',
     params: [['strength', 'swing: bars each side', 3], ['min_height_points', 'height ≥ points', 10], ['max_bars', 'whole pattern within N bars', 80], ['break_within', 'breakout within N bars of the last swing', 20], ['flat_pct', 'lines count as parallel within % of the height', 15], ['allow_rising', 'rising', true], ['allow_falling', 'falling', true]],
     fields: ['line', 'opposite', 'height', 'target', 'breakout'] },
+  // candlestick patterns: the side picks the bullish or the bearish one; they form on the close of their last candle
+  engulfing: { title: 'Engulfing', bull: 'bullish engulfing', bear: 'bearish engulfing', named: true, group: 'candle',
+    help: 'Two candles: a down candle, then an up candle whose body covers the whole body of the first (bullish); the mirror is bearish. Forms on the close of the second candle.',
+    params: [['min_ratio', 'second body ≥ × the first body', 1], ['include_wicks', 'must also cover the first candle\'s wicks', false], TREND], fields: CANDLE_FIELDS },
+  hammer: { title: 'Hammer / shooting star', bull: 'hammer', bear: 'shooting star', named: true, group: 'candle',
+    help: 'One candle with a long wick on one side and a small body at the other end. Hammer (bullish): long lower wick, body near the high. Shooting star (bearish): long upper wick, body near the low. Forms on its close.',
+    params: [['wick_mult', 'long wick ≥ × the body', 2], ['other_wick_pct', 'other wick ≤ % of the range', 25], TREND], fields: [...CANDLE_FIELDS, 'wick'] },
+  star: { title: 'Morning / evening star', bull: 'morning star', bear: 'evening star', named: true, group: 'candle',
+    help: 'Three candles: a large down candle, a small-bodied candle, then a large up candle that closes well into the first one\'s body (morning star, bullish); the mirror is the evening star. Forms on the close of the third candle.',
+    params: [['small_body_pct', 'middle body ≤ % of the first body', 30], ['close_into_pct', 'third closes ≥ % into the first body', 50], TREND], fields: CANDLE_FIELDS },
+  harami: { title: 'Harami', bull: 'bullish harami', bear: 'bearish harami', named: true, group: 'candle',
+    help: 'Two candles: a large down candle, then a small up candle whose body sits inside the first body (bullish); the mirror is bearish. Forms on the close of the second candle.',
+    params: [['max_body_pct', 'second body ≤ % of the first body', 60], TREND], fields: CANDLE_FIELDS },
+  piercing: { title: 'Piercing line / dark cloud cover', bull: 'piercing line', bear: 'dark cloud cover', named: true, group: 'candle',
+    help: 'Two candles: a down candle, then an up candle that opens below its close and closes past the middle of its body, but not above its open (piercing line, bullish); the mirror is dark cloud cover. Forms on the close of the second candle.',
+    params: [['close_into_pct', 'second closes ≥ % into the first body', 50], TREND], fields: CANDLE_FIELDS },
+  soldiers: { title: 'Three soldiers / three crows', bull: 'three white soldiers', bear: 'three black crows', named: true, group: 'candle',
+    help: 'Three up candles in a row, each closing higher than the one before, with solid bodies (three white soldiers, bullish); the mirror is three black crows. Forms on the close of the third candle.',
+    params: [['min_body_pct', 'each body ≥ % of its range', 50], TREND], fields: CANDLE_FIELDS },
+  tweezer: { title: 'Tweezer bottom / top', bull: 'tweezer bottom', bear: 'tweezer top', named: true, group: 'candle',
+    help: 'Two candles with lows at about the same price, the first down and the second up (tweezer bottom, bullish); the mirror, with highs, is the tweezer top. Forms on the close of the second candle.',
+    params: [['tolerance_ticks', 'lows equal within N ticks', 2], TREND], fields: CANDLE_FIELDS },
+  inside_bar: { title: 'Inside bar breakout', bull: 'inside bar breaking up', bear: 'inside bar breaking down', named: true, group: 'candle',
+    help: 'A candle (the mother bar) followed by one or more candles entirely inside its range, then a close beyond its high (bullish) or its low (bearish). Forms on the breaking close.',
+    params: [['max_inside', 'up to N inside candles', 3]], fields: [...CANDLE_FIELDS, 'mother_high', 'mother_low'] },
 };
 export function newPattern(kind: PatternKind, tf: TF, taken: string[]): Pattern {
-  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss', double: 'dbl', triple: 'tpl', head_shoulders: 'hs', triangle: 'tri', wedge: 'wdg', flag: 'flag', pennant: 'pen', rectangle: 'rect', channel: 'chan' }[kind];
+  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss', double: 'dbl', triple: 'tpl', head_shoulders: 'hs', triangle: 'tri', wedge: 'wdg', flag: 'flag', pennant: 'pen', rectangle: 'rect', channel: 'chan', engulfing: 'eng', hammer: 'pin', star: 'star', harami: 'har', piercing: 'pierce', soldiers: 'three', tweezer: 'tw', inside_bar: 'ib' }[kind];
   let name = base, n = 2;
   while (taken.includes(name)) name = base + n++;
   return { name, kind, tf, params: Object.fromEntries(PATTERN_KINDS[kind].params.map(([k, , d]) => [k, d])) };
@@ -87,6 +115,7 @@ export function newPattern(kind: PatternKind, tf: TF, taken: string[]): Pattern 
 export function patternPhrase(p: Pattern | undefined, side: 'long' | 'short') {
   if (!p) return 'an undeclared pattern';
   const d = PATTERN_KINDS[p.kind];
+  if (d.group === 'candle') return `a ${p.tf} ${side === 'long' ? d.bull : d.bear}${p.label ? ` (${p.label})` : ''} forms (captured as "${p.name}")`;
   if (d.named) return `a ${p.tf} ${side === 'long' ? d.bull : d.bear}${p.label ? ` (${p.label})` : ''} completes on its ${['double', 'triple', 'head_shoulders'].includes(p.kind) ? 'neckline break' : 'breakout'} (captured as "${p.name}")`;
   return `a ${p.tf} ${side === 'long' ? d.bull : d.bear} ${p.label || d.title.replace(/ \(.*\)$/, '')} forms (captured as "${p.name}")`;
 }

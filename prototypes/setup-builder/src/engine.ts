@@ -1,7 +1,7 @@
 // PROTOTYPE, throwaway. A rough Rule-block evaluator over the strategy-lab MNQ 1m bars, so each builder step
 // shows its effect on real bars. It is NOT the engine (#78 rebuilds the three Setups and matches Trade lists).
 import type { Setup, Cond, Step, Branch, TF, Leg, Pattern } from './model';
-import { tfMinutes, parseToken, mirrorFieldSide } from './model';
+import { tfMinutes, parseToken, mirrorFieldSide, PATTERN_KINDS } from './model';
 
 export const TICK = 0.25;
 export const MIN = 60000;
@@ -563,6 +563,59 @@ export function patternSeries(data: Data, p: Pattern, side: 'long' | 'short') {
         out[j] = { line: back(lo(j)), opposite: back(up(j)), height: w0, target: back(lo(j) - w0), breakout: B[j].c, shape: p.kind === 'wedge' ? (long ? 'falling' : 'rising') : shape, time: B[j].t,
           lines: [[T(hA.i), back(hA.p), T(j), back(up(j))], [T(lA.i), back(lA.p), T(j), back(lo(j))]], path: [] };
       }
+    }
+  } else if (PATTERN_KINDS[p.kind]?.group === 'candle') {
+    // written for the bullish version; the bearish one runs it on upside-down bars. Captured prices come from the real bars.
+    const F = long ? B : B.map((b) => ({ ...b, o: -b.o, h: -b.l, l: -b.h, c: -b.c }));
+    const body = (b: Bar) => Math.abs(b.c - b.o), isUp = (b: Bar) => b.c > b.o, isDn = (b: Bar) => b.c < b.o, rng = (b: Bar) => b.h - b.l;
+    const tb = Number(P.trend_bars) || 0;
+    const trendOk = (i0: number) => !tb || (i0 - 1 - tb >= 0 && F[i0 - 1].c < F[i0 - 1 - tb].c);
+    for (let j = 3; j < B.length; j++) {
+      let i0 = -1, extra: Record<string, number> = {};
+      const a = F[j - 1], b = F[j];
+      switch (p.kind) {
+        case 'engulfing':
+          if (isDn(a) && isUp(b) && b.o <= a.c && b.c >= a.o && body(b) >= P.min_ratio * body(a) - 1e-9 && (!P.include_wicks || (b.h >= a.h && b.l <= a.l)) && trendOk(j - 1)) i0 = j - 1;
+          break;
+        case 'hammer': {
+          const lower = Math.min(b.o, b.c) - b.l, upper = b.h - Math.max(b.o, b.c);
+          if (rng(b) > 0 && lower >= P.wick_mult * Math.max(body(b), TICK) - 1e-9 && upper <= (P.other_wick_pct / 100) * rng(b) + 1e-9 && trendOk(j)) { i0 = j; extra = { wick: lower }; }
+          break;
+        }
+        case 'star': {
+          const c1 = F[j - 2], m = F[j - 1];
+          if (isDn(c1) && body(c1) >= 0.5 * rng(c1) && body(m) <= (P.small_body_pct / 100) * body(c1) + 1e-9 && isUp(b) && b.c >= c1.c + (c1.o - c1.c) * (P.close_into_pct / 100) - 1e-9 && trendOk(j - 2)) i0 = j - 2;
+          break;
+        }
+        case 'harami':
+          if (isDn(a) && isUp(b) && b.o >= a.c && b.c <= a.o && body(b) <= (P.max_body_pct / 100) * body(a) + 1e-9 && trendOk(j - 1)) i0 = j - 1;
+          break;
+        case 'piercing':
+          if (isDn(a) && isUp(b) && b.o < a.c && b.c >= a.c + (a.o - a.c) * (P.close_into_pct / 100) - 1e-9 && b.c < a.o && trendOk(j - 1)) i0 = j - 1;
+          break;
+        case 'soldiers': {
+          const t = [F[j - 2], F[j - 1], F[j]];
+          if (t.every((x) => isUp(x) && rng(x) > 0 && body(x) >= (P.min_body_pct / 100) * rng(x) - 1e-9) && t[1].c > t[0].c && t[2].c > t[1].c && trendOk(j - 2)) i0 = j - 2;
+          break;
+        }
+        case 'tweezer':
+          if (isDn(a) && isUp(b) && Math.abs(a.l - b.l) <= P.tolerance_ticks * TICK + 1e-9 && trendOk(j - 1)) i0 = j - 1;
+          break;
+        case 'inside_bar':
+          for (let k = 1; k <= P.max_inside; k++) {
+            const m = j - 1 - k;
+            if (m < 0) break;
+            let inside = true;
+            for (let q = m + 1; q < j; q++) if (F[q].h > F[m].h || F[q].l < F[m].l) { inside = false; break; }
+            if (!inside) break;
+            if (F[j].c > F[m].h && F[j - 1].c <= F[m].h) { i0 = m; extra = { mother_high: B[m].h, mother_low: B[m].l }; break; }
+          }
+          break;
+      }
+      if (i0 < 0) continue;
+      let hi = -Infinity, lo = Infinity;
+      for (let k = i0; k <= j; k++) { hi = Math.max(hi, B[k].h); lo = Math.min(lo, B[k].l); }
+      out[j] = { high: hi, low: lo, open: B[i0].o, close: B[j].c, mid: (hi + lo) / 2, ...extra, top: hi, bottom: lo, time: B[i0].t, end_time: B[j].t };
     }
   }
   patCache.set(key, out);

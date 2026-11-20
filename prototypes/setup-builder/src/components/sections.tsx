@@ -153,9 +153,11 @@ export function PatternList({ setup, mutate, compact, data }: { setup: Setup; mu
       })}
       <div className="flex flex-wrap items-center gap-1">
         <span className="text-xs text-muted-foreground">+ declare</span>
-        {PKINDS.filter((kind) => PATTERN_KINDS[kind].group !== 'chart').map((kind) => <Button key={kind} size="sm" variant="outline" className="h-7" onClick={() => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })}>{PATTERN_KINDS[kind].title.replace(/ \(.*\)$/, '').replace('Fair value gap', 'FVG')}</Button>)}
+        {PKINDS.filter((kind) => !PATTERN_KINDS[kind].group || PATTERN_KINDS[kind].group === 'ict').map((kind) => <Button key={kind} size="sm" variant="outline" className="h-7" onClick={() => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })}>{PATTERN_KINDS[kind].title.replace(/ \(.*\)$/, '').replace('Fair value gap', 'FVG')}</Button>)}
         <span className="ml-2 text-xs text-muted-foreground">chart patterns</span>
         {PKINDS.filter((kind) => PATTERN_KINDS[kind].group === 'chart').map((kind) => <Button key={kind} size="sm" variant="outline" className="h-7" onClick={() => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })}>{PATTERN_KINDS[kind].title.replace(/ \(.*\)$/, '').replace('Fair value gap', 'FVG')}</Button>)}
+        <span className="ml-2 text-xs text-muted-foreground">candlesticks</span>
+        {PKINDS.filter((kind) => PATTERN_KINDS[kind].group === 'candle').map((kind) => <Button key={kind} size="sm" variant="outline" className="h-7" onClick={() => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })}>{PATTERN_KINDS[kind].title.replace(/ \(.*\)$/, '').replace('Fair value gap', 'FVG')}</Button>)}
       </div>
     </div>
   );

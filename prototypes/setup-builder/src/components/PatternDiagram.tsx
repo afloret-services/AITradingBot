@@ -87,6 +87,35 @@ export function PatternSchematic({ p }: { p: Pattern }) {
       <Label x={6} y={14}>{P.displacement ? 'a Displacement closes above the level' : 'a close above the level'}</Label>
     </>;
   }
+  if (PATTERN_KINDS[p.kind].group === 'candle') {
+    // the bullish version; the bearish one is its mirror. Two down candles before it show "after a move against it".
+    const lead: C[] = P.trend_bars ? [[82, 84, 74, 76], [76, 78, 66, 68]] : [];
+    const sets: Record<string, C[]> = {
+      engulfing: [[64, 65, 56, 58], [56, 70, 55, 68]],
+      hammer: [[60, 62, 38, 61]],
+      star: [[68, 69, 48, 50], [47, 49, 43, 46], [49, 66, 48, 64]],
+      harami: [[70, 71, 46, 48], [52, 60, 51, 59]],
+      piercing: [[66, 67, 50, 52], [48, 62, 46, 61]],
+      soldiers: [[44, 52, 43, 51], [50, 60, 49, 59], [58, 69, 57, 68]],
+      tweezer: [[62, 64, 44, 47], [47, 60, 44, 58]],
+      inside_bar: [[52, 72, 42, 64], [62, 68, 50, 56], [57, 64, 52, 60], [60, 82, 59, 80]],
+    };
+    const ks = [...lead, ...sets[p.kind]];
+    const vmin = Math.min(...ks.map((k) => k[2])) - 3, vmax = Math.max(...ks.map((k) => k[1])) + 3;
+    const y2 = (v: number) => 22 + ((vmax - v) / (vmax - vmin)) * (H - 46);
+    const x0 = 128 - (ks.length - 1) * 16;
+    const first = lead.length, last = ks.length - 1;
+    const hi = Math.max(...ks.slice(first).map((k) => k[1])), lo = Math.min(...ks.slice(first).map((k) => k[2]));
+    body = <>
+      <rect x={x0 + first * 32 - 12} y={y2(hi) - 4} width={(last - first) * 32 + 24} height={y2(lo) - y2(hi) + 8} rx={3} fill={ZONE} opacity={0.12} stroke={ZONE} strokeDasharray="3 3" />
+      {ks.map((k, i) => <Candle key={i} x={x0 + i * 32} k={k} y={y2} w={18} />)}
+      <Label x={x0 + last * 32 + 14} y={y2(hi) + 3} color={ZONE}>{p.name}.high</Label>
+      <Label x={x0 + last * 32 + 14} y={y2(lo) + 3} color={ZONE}>{p.name}.low</Label>
+      {p.kind === 'inside_bar' && <><line x1={x0 - 10} x2={x0 + last * 32 + 10} y1={y2(72)} y2={y2(72)} stroke={LVL} strokeDasharray="3 3" /><Label x={x0 - 10} y={y2(72) - 4} color={LVL}>mother bar's high</Label></>}
+      <Label x={6} y={12}>{PATTERN_KINDS[p.kind].bull} · the bearish one is its mirror</Label>
+      {P.trend_bars ? <Label x={6} y={H - 4}>after a move down over {P.trend_bars} bars</Label> : null}
+    </>;
+  }
   if (p.kind === 'triangle' || p.kind === 'wedge' || p.kind === 'flag' || p.kind === 'pennant' || p.kind === 'rectangle' || p.kind === 'channel') {
     // drawn as the bullish breakout (the bearish one is its mirror)
     const P2 = p.params as Record<string, any>;
@@ -189,7 +218,7 @@ export function PatternExample({ p, data }: { p: Pattern; data: Data }) {
         {caps.neck_t0 != null && <line x1={xt(caps.neck_t0)} y1={y(caps.neck_p0)} x2={xt(caps.time)} y2={y(caps.neckline)} stroke={LVL} strokeDasharray="4 3" />}
         {caps.lines && caps.lines.map(([t1, p1, t2, p2]: number[], q: number) => <line key={q} x1={xt(t1)} y1={y(p1)} x2={xt(t2)} y2={y(p2)} stroke={LVL} strokeWidth={1.5} />)}
         {caps.path && <line x1={xt(caps.time)} x2={w - 42} y1={y(caps.target)} y2={y(caps.target)} stroke="#ef5350" strokeDasharray="2 3" />}
-        {typeof caps.top === 'number' && <rect x={xt(startT) - step / 2} y={y(caps.top)} width={w - 42 - xt(startT) + step / 2} height={Math.max(1, y(caps.bottom) - y(caps.top))} fill={ZONE} opacity={0.18} stroke={ZONE} strokeDasharray="3 3" />}
+        {typeof caps.top === 'number' && <rect x={xt(startT) - step / 2} y={y(caps.top)} width={(caps.end_time != null ? xt(caps.end_time) + step / 2 : w - 42) - xt(startT) + step / 2} height={Math.max(1, y(caps.bottom) - y(caps.top))} fill={ZONE} opacity={0.18} stroke={ZONE} strokeDasharray="3 3" />}
         {typeof caps.level === 'number' && <line x1={xt(caps.swing_time)} x2={w - 42} y1={y(caps.level)} y2={y(caps.level)} stroke={LVL} strokeDasharray="4 3" />}
         {typeof caps.start === 'number' && caps.start_time != null && <line x1={xt(caps.start_time)} y1={y(caps.start)} x2={xt(caps.end_time)} y2={y(caps.end)} stroke={LVL} strokeWidth={2} />}
         {win.map((b, i) => <Candle key={i} x={x(from + i)} k={[b.o, b.h, b.l, b.c]} y={y} w={Math.max(3, step * 0.6)} hi={from + i === idx ? '#e2e8f0' : undefined} />)}
