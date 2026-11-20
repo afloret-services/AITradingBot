@@ -17,7 +17,6 @@ export function VariantA(p: VariantProps) {
   const [stage, setStage] = useState(0);
   const [bi, setBi] = useState(0);
   const [open, setOpen] = useState(0);
-  const [mapOpen, setMapOpen] = useState(true);
   const issues = validate(setup);
   const stageIssues = (k: number) => issues.filter((i) => (k === 3 ? /step|branch$|Signals/.test(i.where) : k === 4 ? /Entry/.test(i.where) : k === 5 ? /legs|Flatten|deadline|Trade settings/i.test(i.where) : false));
   const br = setup.branches[bi] || setup.branches[0];
@@ -39,13 +38,6 @@ export function VariantA(p: VariantProps) {
         })}
       </nav>
       <main className="min-w-0 space-y-4">
-        <Card className="p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <div><div className="text-[15px] font-semibold tracking-tight">Setup at a glance</div><div className="text-xs text-muted-foreground">Every branch from first step to Trade. Click a step to edit it; hover a declared indicator or pattern to see who reads it.</div></div>
-            <Button size="sm" variant="ghost" onClick={() => setMapOpen(!mapOpen)}>{mapOpen ? 'Hide' : 'Show'}</Button>
-          </div>
-          {mapOpen && <SetupMap setup={setup} result={result} data={data} focus={p.focus} onStep={(f) => { setStage(3); setBi(f.bi); setOpen(f.si); p.setFocus(f); }} onDeclared={() => setStage(1)} />}
-        </Card>
         <Card>
           <CardHeader title={`${stage + 1}. ${STAGES[stage]}`} sub={SUBS[stage]} right={<div className="flex gap-1"><Button size="sm" variant="outline" disabled={stage === 0} onClick={() => setStage(stage - 1)}>Back</Button><Button size="sm" disabled={stage === STAGES.length - 1} onClick={() => setStage(stage + 1)}>Next: {STAGES[stage + 1] || ''}</Button></div>} />
           <div className="space-y-4 p-4">
@@ -54,7 +46,7 @@ export function VariantA(p: VariantProps) {
                 <Field label="Name"><Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="w-64" /></Field>
                 <BaseBarEditor setup={setup} mutate={mutate} />
                 <Field label="Notes (never in the Rule description)"><textarea value={setup.notes} onChange={(e) => mutate((s) => { s.notes = e.target.value; })} className="h-16 w-full rounded-md border border-input bg-transparent p-2 text-sm" /></Field>
-                <div className="text-xs text-muted-foreground">Rule blocks are instrument-free. The instrument is chosen when a Run is created (stage 8). The preview below runs on MNQ.</div>
+                <div className="text-xs text-muted-foreground">Rule blocks are instrument-free. The instrument is chosen when a Run is created (stage 8). The review step previews it on MNQ.</div>
               </div>
             )}
             {stage === 1 && <div className="space-y-5">
@@ -107,6 +99,11 @@ export function VariantA(p: VariantProps) {
               </div>
             )}
             {stage === 6 && (
+              <div className="space-y-5">
+              <div>
+                <div className="mb-2"><div className="text-sm font-semibold">Setup at a glance</div><div className="text-xs text-muted-foreground">Every branch from first step to Trade. Click a step to go back and edit it; hover a declared indicator or pattern to see which steps read it.</div></div>
+                <SetupMap setup={setup} result={result} data={data} focus={p.focus} onStep={(f) => { setStage(3); setBi(f.bi); setOpen(f.si); p.setFocus(f); }} onDeclared={() => setStage(1)} />
+              </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div><div className="mb-1 text-sm font-medium">Rule description (generated, stored at Freeze)</div><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{ruleDescription(setup)}</pre></div>
                 <div className="space-y-2"><div className="text-sm font-medium">Checks</div>
@@ -116,14 +113,15 @@ export function VariantA(p: VariantProps) {
                   {p.saveBar}
                 </div>
               </div>
+              </div>
             )}
             {stage === 7 && <RunStage {...p} runD={runD} />}
           </div>
         </Card>
-        {(
+        {stage === 6 && (
           <Card className="p-4">
-            <div className="mb-3 flex items-center justify-between"><RunSummary result={chartResult} data={data} />{stage === 3 && p.focus && <span className="text-xs text-muted-foreground">dots: step {p.focus.si + 1} completed · grey squares: held alone</span>}</div>
-            <Chart data={data} setup={stage === 7 ? runD.effective : setup} result={chartResult} day={p.day} setDay={p.setDay} focus={stage === 3 ? p.focus : null} selected={p.selected} setSelected={p.setSelected} />
+            <div className="mb-3 flex items-center justify-between"><RunSummary result={chartResult} data={data} /></div>
+            <Chart data={data} setup={setup} result={chartResult} day={p.day} setDay={p.setDay} focus={p.focus} selected={p.selected} setSelected={p.setSelected} />
           </Card>
         )}
       </main>
@@ -136,10 +134,10 @@ const SUBS = [
   'Name the Setup and declare its Base bar, the bar the evaluator runs on.',
   'Every indicator and pattern the Setup reads, declared once. Steps pick from these lists.',
   'Trading hours, sessions, one-at-a-time and the news rule.',
-  'First A, then B: each step is one Sequence link. Open a step to see what it matches on the chart.',
+  'First A, then B: each step is one Sequence link. The counts show how often each step held and completed on MNQ.',
   'The Entry block: order type, price and the mandatory stop.',
   'The Setup defaults a Run may override section by section, plus In-position rules.',
-  'What the engine will read, and what still blocks a Freeze.',
+  'The whole Setup at a glance, what it did on MNQ, what the engine will read, and what still blocks a Freeze.',
   'Bind this Setup to an instrument and override whole sections. Overrides make no new version.',
 ];
 
