@@ -52,4 +52,5 @@ A rough evaluator, not the engine. It exists so each step shows its effect on re
 
 - Patterns are declared up front, like indicators, then used by name in steps.
 - In the Wizard, the Setup at a glance and the chart appear only in Review & save.
+- Chart patterns (double top / bottom, triple top / bottom, head and shoulders and its inverse) are pattern kinds like the ICT ones: declared once, used by name, the side picks top or bottom; they form on the first close through the neckline and capture the neckline, height and measured-move target. Starter "Double bottom (chart-pattern demo)" trades one.
 - Signal steps read as rules: IF … AND/OR …, THEN … for the next step, ending in the Signal. AND is checked before OR; brackets group explicitly.

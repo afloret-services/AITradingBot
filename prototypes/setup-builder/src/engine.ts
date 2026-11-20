@@ -418,6 +418,55 @@ export function patternSeries(data: Data, p: Pattern, side: 'long' | 'short') {
         }
       }
     }
+  } else if (p.kind === 'double' || p.kind === 'triple' || p.kind === 'head_shoulders') {
+    // detect the "top" version on (for bullish, upside-down) bars, then map prices back: real = sg × flipped
+    const sg = long ? -1 : 1;
+    const F = long ? B.map((b) => ({ ...b, o: -b.o, h: -b.l, l: -b.h, c: -b.c })) : B;
+    const n = Number(P.strength) || 3, K = p.kind === 'double' ? 2 : 3;
+    const highs: { i: number; p: number; used?: boolean }[] = [];
+    const lowBetween = (a: number, b: number) => { let m = Infinity, mi = a; for (let k = a + 1; k < b; k++) if (F[k].l < m) { m = F[k].l; mi = k; } return { p: m, i: mi }; };
+    const back = (x: number) => sg * x;
+    for (let j = 0; j < B.length; j++) {
+      const s0 = j - n;
+      if (s0 >= 0 && isSwing(F, s0, n, 'high')) highs.push({ i: s0, p: F[s0].h });
+      if (highs.length < K || j < 1) continue;
+      const hs = highs.slice(-K), last = hs[K - 1];
+      if (last.used || j <= last.i || j - last.i > P.break_within) continue;
+      if (last.i - hs[0].i > P.max_bars || hs.some((h, k) => k > 0 && h.i - hs[k - 1].i < P.min_sep)) continue;
+      let neckAt: (k: number) => number, top: number, height: number, troughs: { p: number; i: number }[];
+      if (p.kind === 'head_shoulders') {
+        const [a, b, c] = hs, t1 = lowBetween(a.i, b.i), t2 = lowBetween(b.i, c.i);
+        troughs = [t1, t2];
+        neckAt = (k) => t1.p + ((t2.p - t1.p) * (k - t1.i)) / Math.max(1, t2.i - t1.i);
+        top = b.p; height = b.p - neckAt(b.i);
+        if (height < P.min_height_points - 1e-9) continue;
+        if (b.p - Math.max(a.p, c.p) < (P.head_margin_pct / 100) * height - 1e-9) continue;
+        if (Math.abs(a.p - c.p) > (P.tolerance_pct / 100) * height + 1e-9) continue;
+      } else {
+        const nk = lowBetween(hs[0].i, last.i);
+        troughs = K === 2 ? [nk] : [lowBetween(hs[0].i, hs[1].i), lowBetween(hs[1].i, hs[2].i)];
+        neckAt = () => nk.p;
+        top = Math.max(...hs.map((h) => h.p)); height = top - nk.p;
+        if (height < P.min_height_points - 1e-9) continue;
+        if (top - Math.min(...hs.map((h) => h.p)) > (P.tolerance_pct / 100) * height + 1e-9) continue;
+      }
+      // nothing above the pattern after its last peak, and this close is the first one through the neckline
+      let broke = false;
+      for (let k = last.i + 1; k < j; k++) if (F[k].h > top + 1e-9 || F[k].c < neckAt(k)) { broke = true; break; }
+      if (broke) { last.used = true; continue; }
+      if (!(F[j].c < neckAt(j))) continue;
+      last.used = true;
+      const neck = neckAt(j);
+      const pts: [number, number][] = [];
+      hs.forEach((h, k) => { pts.push([B[h.i].t, back(h.p)]); if (k < troughs.length) pts.push([B[troughs[k].i].t, back(troughs[k].p)]); });
+      pts.sort((x, y) => x[0] - y[0]);
+      pts.push([B[j].t, B[j].c]);
+      const n0 = p.kind === 'head_shoulders' ? troughs[0] : { i: hs[0].i, p: neckAt(hs[0].i) };
+      const caps: Record<string, any> = { neckline: back(neck), height, target: back(neck - height), extreme: back(top), path: pts, neck_t0: B[n0.i].t, neck_p0: back(neckAt(n0.i)), time: B[j].t };
+      if (p.kind === 'head_shoulders') Object.assign(caps, { left_shoulder: back(hs[0].p), head: back(hs[1].p), right_shoulder: back(hs[2].p) });
+      else hs.forEach((h, k) => (caps[['first', 'second', 'third'][k]] = back(h.p)));
+      out[j] = caps;
+    }
   }
   patCache.set(key, out);
   return out;

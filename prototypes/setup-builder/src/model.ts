@@ -21,10 +21,11 @@ export type Cond =
   | { id: string; t: 'pattern'; ref: string; side: 'long' | 'short'; origin?: Origin };
 
 // ---------- Patterns: declared once per Setup (kind, timeframe, settings), then referenced by name in steps ----------
-export type PatternKind = 'fvg' | 'displacement' | 'order_block' | 'leg' | 'mss';
+export type PatternKind = 'fvg' | 'displacement' | 'order_block' | 'leg' | 'mss' | 'double' | 'triple' | 'head_shoulders';
 export interface Pattern { name: string; kind: PatternKind; tf: TF; params: Record<string, number | boolean>; label?: string }
-type PDef = { title: string; help: string; params: [key: string, label: string, def: number | boolean][]; fields: string[]; bull: string; bear: string };
+type PDef = { title: string; help: string; params: [key: string, label: string, def: number | boolean][]; fields: string[]; bull: string; bear: string; named?: boolean; group?: 'ict' | 'chart' };
 const DISP: PDef['params'] = [['disp_mult', 'range at least × the average range', 1.5], ['disp_body_pct', 'body % at least', 60], ['avg_len', 'average range over bars', 20]];
+const CHART_PARAMS: PDef['params'] = [['strength', 'swing: bars each side', 3], ['tolerance_pct', 'peaks equal within % of the height', 20], ['min_height_points', 'height ≥ points', 10], ['min_sep', 'peaks at least N bars apart', 5], ['max_bars', 'whole pattern within N bars', 80], ['break_within', 'neckline break within N bars of the last peak', 30]];
 const BAR3 = ['bar1', 'bar2', 'bar3'].flatMap((b) => ['open', 'high', 'low', 'close'].map((f) => `${b}.${f}`));
 export const PATTERN_KINDS: Record<PatternKind, PDef> = {
   fvg: { title: 'Fair value gap (FVG)', bull: 'bullish', bear: 'bearish', help: 'Three candles; candle 1 and candle 3 leave a gap. Forms when candle 3 closes.',
@@ -42,9 +43,19 @@ export const PATTERN_KINDS: Record<PatternKind, PDef> = {
   mss: { title: 'Market structure shift (MSS)', bull: 'bullish', bear: 'bearish', help: 'A close beyond the last confirmed Swing high (bullish) or Swing low (bearish). Forms on the breaking candle.',
     params: [['strength', 'swing: bars each side', 2], ['displacement', 'breaking candle is a Displacement', true], ...DISP],
     fields: ['level', 'swing_low', 'swing_high', 'high', 'low', 'close'] },
+  // classic chart patterns: the side picks which one (bullish = the bottom, bearish = the top); all form on the neckline break
+  double: { title: 'Double top / bottom', bull: 'double bottom', bear: 'double top', named: true, group: 'chart',
+    help: 'Two swing highs at about the same price with a low between them (double top, bearish), or two swing lows with a high between them (double bottom, bullish). The neckline is the extreme between the two; the pattern forms on the first close through it. Target: the height measured from the neckline.',
+    params: CHART_PARAMS, fields: ['neckline', 'height', 'target', 'first', 'second', 'extreme'] },
+  triple: { title: 'Triple top / bottom', bull: 'triple bottom', bear: 'triple top', named: true, group: 'chart',
+    help: 'Three swing highs (triple top, bearish) or three swing lows (triple bottom, bullish) at about the same price. The neckline is the extreme between the first and the third; the pattern forms on the first close through it.',
+    params: CHART_PARAMS, fields: ['neckline', 'height', 'target', 'first', 'second', 'third', 'extreme'] },
+  head_shoulders: { title: 'Head and shoulders', bull: 'inverse head and shoulders', bear: 'head and shoulders', named: true, group: 'chart',
+    help: 'Three swing highs where the middle one (the head) is clearly higher than the two shoulders, which are at about the same price (bearish); the inverse, with lows, is bullish. The neckline joins the two lows between them and may slope; the pattern forms on the first close through it.',
+    params: [...CHART_PARAMS, ['head_margin_pct', 'head beyond the shoulders by ≥ % of the height', 15]], fields: ['neckline', 'height', 'target', 'left_shoulder', 'head', 'right_shoulder'] },
 };
 export function newPattern(kind: PatternKind, tf: TF, taken: string[]): Pattern {
-  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss' }[kind];
+  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss', double: 'dbl', triple: 'tpl', head_shoulders: 'hs' }[kind];
   let name = base, n = 2;
   while (taken.includes(name)) name = base + n++;
   return { name, kind, tf, params: Object.fromEntries(PATTERN_KINDS[kind].params.map(([k, , d]) => [k, d])) };
@@ -52,6 +63,7 @@ export function newPattern(kind: PatternKind, tf: TF, taken: string[]): Pattern 
 export function patternPhrase(p: Pattern | undefined, side: 'long' | 'short') {
   if (!p) return 'an undeclared pattern';
   const d = PATTERN_KINDS[p.kind];
+  if (d.named) return `a ${p.tf} ${side === 'long' ? d.bull : d.bear}${p.label ? ` (${p.label})` : ''} completes on its neckline break (captured as "${p.name}")`;
   return `a ${p.tf} ${side === 'long' ? d.bull : d.bear} ${p.label || d.title.replace(/ \(.*\)$/, '')} forms (captured as "${p.name}")`;
 }
 
@@ -203,7 +215,7 @@ export function ruleDescription(s: Setup): string {
     lines.push(`  Enter ${e.order === 'market' ? "at market at the next bar's open" : `with a ${e.order} at ${phrase(e.price || '?', labels)}`}; stop ${e.stop.offset} ${e.stop.unit === 'atr' ? `× ${phrase(e.stop.atr || '?', labels)}` : 'ticks'} beyond ${phrase(e.stop.token || '?', labels)}.`);
   }
   const ts = s.trade_settings;
-  lines.push(`Legs: ${ts.legs.map((l) => `${l.name} ${l.rule === 'r' ? `at ${l.r}R` : l.rule === 'fraction' ? `${(l.fraction ?? 0) * 100}% of the way to ${phrase(l.level || '?')}` : `${l.offset_ticks ? `${l.offset_ticks} tick before ` : 'at '}${phrase(l.level || '?')}`} (${Math.round(l.share * 100)}%)`).join('; ')}.`);
+  lines.push(`Legs: ${ts.legs.map((l) => `${l.name} ${l.rule === 'r' ? `at ${l.r}R` : l.rule === 'fraction' ? `${(l.fraction ?? 0) * 100}% of the way to ${phrase(l.level || '?')}` : `${l.offset_ticks ? `${l.offset_ticks} tick${l.offset_ticks === 1 ? "" : "s"} before ` : 'at '}${phrase(l.level || '?')}`} (${Math.round(l.share * 100)}%)`).join('; ')}.`);
   for (const r of s.in_position_rules) lines.push(`While in a Trade: when ${condPhrase(r.when, labels)}, ${r.action === 'close_trade' ? 'close the Trade' : r.action === 'close_leg' ? `close leg ${r.leg}` : r.action.replace('_', ' ')}.`);
   return lines.join('\n');
 }
@@ -478,4 +490,24 @@ export function emaMacd(): Setup {
   return s;
 }
 
-export const STARTERS: Record<string, () => Setup> = { blank: blankSetup, silver_bullet: silverBullet, ema_macd: emaMacd };
+/** a demo of the chart patterns: a 5m double bottom, entered with a limit on the neckline retest after the break, target the measured move; mirrored for the double top */
+export function doubleBottom(): Setup {
+  const s = blankSetup();
+  s.setup_id = 'stp_double_bottom'; s.name = 'Double bottom breakout';
+  s.notes = 'Prototype demo of a chart pattern, not a locked Setup.';
+  s.settings.base_bar = '5m';
+  s.settings.trading_hours.ranges = [{ start: '09:30', end: '15:30' }];
+  s.patterns = [{ name: 'dbl', kind: 'double', tf: '5m', params: { strength: 3, tolerance_pct: 20, min_height_points: 15, min_sep: 5, max_bars: 80, break_within: 30 } }];
+  s.branches = [{
+    id: uid('br'), side: 'long', on_new_start: 'start_another',
+    steps: [{ id: uid('st'), name: 'Double bottom breaks its neckline', cond: { id: uid(), t: 'all', items: [{ id: uid(), t: 'pattern', ref: 'dbl', side: 'long' }] } }],
+    entry: { order: 'limit', price: '{{capture:dbl.neckline}}', stop: { token: '{{capture:dbl.extreme}}', offset: 4, unit: 'ticks' } },
+  }];
+  s.trade_settings.legs = [{ name: 'TP1', rule: 'level', level: '{{capture:dbl.target}}', offset_ticks: 2, share: 1 }];
+  s.trade_settings.entry_deadline = { kind: 'bars', value: '6' };
+  s.trade_settings.cancel_if = ['stop', 'first_leg'];
+  s.trade_settings.signal_guards = [];
+  addMirror(s);
+  return s;
+}
+export const STARTERS: Record<string, () => Setup> = { blank: blankSetup, silver_bullet: silverBullet, ema_macd: emaMacd, double_bottom: doubleBottom };

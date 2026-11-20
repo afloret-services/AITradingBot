@@ -87,6 +87,30 @@ export function PatternSchematic({ p }: { p: Pattern }) {
       <Label x={6} y={14}>{P.displacement ? 'a Displacement closes above the level' : 'a close above the level'}</Label>
     </>;
   }
+  if (p.kind === 'double' || p.kind === 'triple' || p.kind === 'head_shoulders') {
+    // drawn as the bearish top: bullish is the same upside down
+    const pts: [number, number][] = p.kind === 'double'
+      ? [[10, 30], [60, 80], [100, 50], [140, 79], [175, 50], [200, 35], [230, 20]]
+      : p.kind === 'triple' ? [[10, 30], [45, 80], [75, 52], [105, 79], [135, 52], [165, 80], [195, 45], [225, 25]]
+      : [[10, 30], [45, 68], [75, 50], [110, 88], [145, 48], [175, 67], [200, 42], [230, 22]];
+    const neck = p.kind === 'head_shoulders' ? [[75, 50], [200, 44]] : [[40, 50], [235, 50]];
+    const breakX = p.kind === 'double' ? 175 : p.kind === 'triple' ? 195 : 200;
+    const peaks = p.kind === 'double' ? [1, 3] : p.kind === 'triple' ? [1, 3, 5] : [1, 3, 5];
+    const names = p.kind === 'head_shoulders' ? ['left shoulder', 'head', 'right shoulder'] : ['1', '2', '3'];
+    const top = p.kind === 'head_shoulders' ? 88 : 80, nk = 50, target = nk - (top - nk);
+    body = <>
+      <polyline points={pts.map(([x, v]) => `${x},${y(v)}`).join(' ')} fill="none" stroke="#cbd5e1" strokeWidth={1.8} strokeLinejoin="round" />
+      <line x1={neck[0][0]} y1={y(neck[0][1])} x2={neck[1][0]} y2={y(neck[1][1])} stroke={LVL} strokeDasharray="4 3" />
+      <Label x={neck[1][0] - 2} y={y(neck[1][1]) - 4} anchor="end" color={LVL}>{p.name}.neckline</Label>
+      {peaks.map((k, i) => <g key={k}><circle cx={pts[k][0]} cy={y(pts[k][1])} r={3} fill={ZONE} /><Label x={pts[k][0]} y={y(pts[k][1]) - 6} anchor="middle" color={ZONE}>{names[i]}</Label></g>)}
+      <circle cx={breakX} cy={y(p.kind === 'head_shoulders' ? 43 : 50)} r={4} fill="none" stroke="#ef5350" strokeWidth={1.5} />
+      <Label x={breakX - 4} y={y(28)} anchor="end" color="#fca5a5">forms here</Label>
+      <line x1={breakX} x2={250} y1={y(target)} y2={y(target)} stroke="#ef5350" strokeDasharray="2 3" opacity={0.8} />
+      <Label x={250} y={y(target) - 3} anchor="end" color="#fca5a5">{p.name}.target</Label>
+      <line x1={18} x2={18} y1={y(top)} y2={y(nk)} stroke="#64748b" /><Label x={22} y={y((top + nk) / 2)}>height</Label>
+      <Label x={6} y={12}>{PATTERN_KINDS[p.kind].bear} shown · {PATTERN_KINDS[p.kind].bull} is its mirror</Label>
+    </>;
+  }
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-[150px] w-[260px] shrink-0 rounded-md border bg-[hsl(var(--chart))]">
       {body}
@@ -106,11 +130,12 @@ export function PatternExample({ p, data }: { p: Pattern; data: Data }) {
   const d = PATTERN_KINDS[p.kind];
   if (idx < 0) return <div className="flex h-[150px] w-[300px] items-center justify-center rounded-md border text-xs text-muted-foreground">no {side === 'long' ? d.bull : d.bear} {d.title} with these settings on these bars</div>;
   const caps = series[idx]!;
-  const startT: number = caps.bar1?.time ?? caps.start_time ?? caps.swing_time ?? caps.time ?? B[idx].t;
+  const startT: number = caps.path?.[0]?.[0] ?? caps.bar1?.time ?? caps.start_time ?? caps.swing_time ?? caps.time ?? B[idx].t;
   let j0 = idx; while (j0 > 0 && B[j0].t > startT) j0--;
-  const from = Math.max(0, Math.min(j0 - 3, idx - 10)), to = Math.min(B.length - 1, idx + 6);
+  const from = Math.max(0, Math.min(j0 - 3, idx - 10)), to = Math.min(B.length - 1, idx + (caps.path ? 4 : 6));
   const win = B.slice(from, to + 1);
-  const lo = Math.min(...win.map((b) => b.l)), hi = Math.max(...win.map((b) => b.h));
+  const extra = caps.target != null ? [caps.target] : [];
+  const lo = Math.min(...win.map((b) => b.l), ...extra), hi = Math.max(...win.map((b) => b.h), ...extra);
   const w = 300, h = 150, padY = 12;
   const y = (v: number) => padY + ((hi - v) / (hi - lo || 1)) * (h - 2 * padY);
   const step = (w - 50) / win.length, x = (j: number) => 8 + (j - from + 0.5) * step;
@@ -119,6 +144,9 @@ export function PatternExample({ p, data }: { p: Pattern; data: Data }) {
   return (
     <div className="space-y-1">
       <svg viewBox={`0 0 ${w} ${h}`} className="h-[150px] w-[300px] rounded-md border bg-[hsl(var(--chart))]">
+        {caps.path && <polyline points={caps.path.map(([t, v]: [number, number]) => `${xt(t)},${y(v)}`).join(' ')} fill="none" stroke={ZONE} strokeWidth={1.6} opacity={0.9} />}
+        {caps.path && <line x1={xt(caps.neck_t0)} y1={y(caps.neck_p0)} x2={xt(caps.time)} y2={y(caps.neckline)} stroke={LVL} strokeDasharray="4 3" />}
+        {caps.path && <line x1={xt(caps.time)} x2={w - 42} y1={y(caps.target)} y2={y(caps.target)} stroke="#ef5350" strokeDasharray="2 3" />}
         {typeof caps.top === 'number' && <rect x={xt(startT) - step / 2} y={y(caps.top)} width={w - 42 - xt(startT) + step / 2} height={Math.max(1, y(caps.bottom) - y(caps.top))} fill={ZONE} opacity={0.18} stroke={ZONE} strokeDasharray="3 3" />}
         {typeof caps.level === 'number' && <line x1={xt(caps.swing_time)} x2={w - 42} y1={y(caps.level)} y2={y(caps.level)} stroke={LVL} strokeDasharray="4 3" />}
         {typeof caps.start === 'number' && caps.start_time != null && <line x1={xt(caps.start_time)} y1={y(caps.start)} x2={xt(caps.end_time)} y2={y(caps.end)} stroke={LVL} strokeWidth={2} />}

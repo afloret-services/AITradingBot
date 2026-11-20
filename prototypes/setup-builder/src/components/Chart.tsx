@@ -224,9 +224,16 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
       for (const [name, v] of Object.entries(sel.caps) as [string, any][]) {
         if (!v || typeof v !== 'object' || name === 'draw') continue;
         const title = v.kind ? PATTERN_KINDS[v.kind as keyof typeof PATTERN_KINDS]?.title.replace(/ \(.*\)$/, '') : name;
-        const startMs = v.bar1?.time ?? v.time ?? v.start_time ?? v.swing_time ?? v.formed;
+        const startMs = v.path?.[0]?.[0] ?? v.bar1?.time ?? v.time ?? v.start_time ?? v.swing_time ?? v.formed;
         if (startMs != null && startMs > data.m1[cutI ?? data.m1.length - 1].t) continue;
         const t0 = startMs != null ? tOfMs(startMs) : tSig;
+        if (Array.isArray(v.path)) {
+          const ps = v.path as [number, number][];
+          for (let q = 1; q < ps.length; q++) sh.push({ k: 'line', t1: tOfMs(ps[q - 1][0]), t2: tOfMs(ps[q][0]), p1: ps[q - 1][1], p2: ps[q][1], stroke: 'rgba(56,189,248,0.85)', width: 1.5 });
+          sh.push({ k: 'line', t1: tOfMs(v.neck_t0), t2: tOfMs(v.time), p1: v.neck_p0, p2: v.neckline, stroke: '#fbbf24', dash: true, label: `${name} · neckline` });
+          sh.push({ k: 'line', t1: tOfMs(v.time), t2: tEnd, p1: v.target, p2: v.target, stroke: 'rgba(248,113,113,0.8)', dash: true, label: `${name} · target` });
+          continue;
+        }
         if (typeof v.top === 'number') sh.push({ k: 'rect', t1: t0, t2: tEnd, p1: v.top, p2: v.bottom, fill: 'rgba(56,189,248,0.12)', stroke: 'rgba(56,189,248,0.7)', dash: true, label: `${name} · ${title}` });
         else if (typeof v.level === 'number') sh.push({ k: 'line', t1: tOfMs(v.swing_time ?? startMs), t2: tOfMs(v.time ?? v.formed), p1: v.level, p2: v.level, stroke: '#fbbf24', dash: true, label: `${name} · MSS` });
         else if (typeof v.start === 'number' && v.start_time != null) { sh.push({ k: 'line', t1: tOfMs(v.start_time), t2: tOfMs(v.end_time), p1: v.start, p2: v.end, stroke: '#fbbf24', width: 2, label: `${name} · Leg` }); sh.push({ k: 'line', t1: tOfMs(v.end_time), t2: tEnd, p1: v.mid, p2: v.mid, stroke: 'rgba(251,191,36,0.5)', dash: true, label: '50%' }); }
