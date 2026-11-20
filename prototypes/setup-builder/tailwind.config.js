@@ -12,6 +12,7 @@ export default {
       destructive: { DEFAULT: 'hsl(var(--destructive))' },
       card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
     },
-    borderRadius: { lg: '0.5rem', md: '0.375rem', sm: '0.25rem' },
+    borderRadius: { xl: '0.875rem', lg: '0.625rem', md: '0.5rem', sm: '0.3rem' },
+    boxShadow: { card: '0 1px 0 0 hsl(0 0% 100% / 0.03) inset, 0 8px 24px -12px rgb(0 0 0 / 0.6)' },
   } },
 };

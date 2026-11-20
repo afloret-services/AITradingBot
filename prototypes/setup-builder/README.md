@@ -24,6 +24,10 @@ Three structurally different builders over one shared Setup model, switched with
 
 `?setup=silver_bullet | ema_macd | blank` picks the starting Setup. Both built Setups are the locked rules of #42, rebuilt from Rule blocks.
 
+**Setup at a glance** (A and B, at the top): every branch as a flow, When → Step → Step → Entry → Trade. Each step card lists its conditions with a kind tag (pattern, compare, time, draw, preset), what it reads from earlier steps (`← fvg`) and what it captures (`→ draw`), and how often it completed on the bars. The connectors carry the Sequence limits ("same bar only", "within 3 bars", "until 11:00", "can be invalidated"). The Entry and Trade nodes summarise the order, stop, legs, Break-even, deadline, Flatten time and Signal guards, and each branch shows its Signals, Trades and total R. Hovering a declared indicator or pattern lights up the steps that read it; clicking a step opens it. C's lanes already are this view.
+
+**The chart**: a legend with OHLC and every declared indicator's value under the crosshair; Trading hours shaded; only the focused step's completions as dots (all of them at once is noise). Clicking a Signal draws its pattern zones as boxes (FVG, Order block), an MSS as its broken level, a Leg as a line with its 50%, the Draw on liquidity, and the Trade as risk and reward areas with the legs. The Signal panel lists its events (each step's completion, the Signal, the fill, the exits) and replays them one at a time, hiding the bars that come after.
+
 Common to all three: a live chart (TradingView Lightweight Charts) on the Base bar, with each step's completions as coloured dots, the focused step's "held alone" bars as grey squares, Signals with a rough Trade result, and the selected Signal's entry, stop, legs and draw. Also common: Draft save with warnings, Freeze → v1 (SHA-256 over what the engine reads, refused on errors or on an identical hash), Export file, a JSON view, and "duplicate as mirrored short".
 
 ## The evaluator in `src/engine.ts`

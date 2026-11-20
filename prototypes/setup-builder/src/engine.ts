@@ -351,7 +351,7 @@ function patternAt(ctx: Ctx, c: Extract<Cond, { t: 'pattern' }>): Hit {
   const j = closedAt(ctx.data, p.tf)[ctx.i];
   if (j < 0) return { ok: false };
   const caps = patternSeries(ctx.data, p, c.side)[j];
-  return caps ? { ok: true, caps: { [p.name]: caps } } : { ok: false };
+  return caps ? { ok: true, caps: { [p.name]: { ...caps, kind: p.kind, formed: bars(ctx.data, p.tf)[j].t } } } : { ok: false };
 }
 export function patternSeries(data: Data, p: Pattern, side: 'long' | 'short') {
   const key = JSON.stringify([p.kind, p.tf, p.params, side]);
@@ -380,7 +380,7 @@ export function patternSeries(data: Data, p: Pattern, side: 'long' | 'short') {
       out[j] = { top, bottom, mid: (top + bottom) / 2, size: top - bottom, bar1: bar(c1), bar2: bar(c2), bar3: bar(c3) };
     }
   } else if (p.kind === 'displacement') {
-    for (let j = 1; j < B.length; j++) if (isDisp(j)) { const b = B[j]; out[j] = { open: b.o, high: b.h, low: b.l, close: b.c, range: b.h - b.l, mid: (b.h + b.l) / 2 }; }
+    for (let j = 1; j < B.length; j++) if (isDisp(j)) { const b = B[j]; out[j] = { open: b.o, high: b.h, low: b.l, close: b.c, range: b.h - b.l, mid: (b.h + b.l) / 2, time: b.t }; }
   } else if (p.kind === 'order_block') {
     for (let j = 1; j < B.length; j++) {
       if (!isDisp(j)) continue;
@@ -400,8 +400,8 @@ export function patternSeries(data: Data, p: Pattern, side: 'long' | 'short') {
       const newHigh = s0 >= 0 && isSwing(B, s0, n, 'high'), newLow = s0 >= 0 && isSwing(B, s0, n, 'low');
       if (p.kind === 'leg') {
         // up leg: the last swing low, then this newly confirmed swing high (down leg: the reverse)
-        if (long && newHigh && sl != null && sl < s0 && B[s0].h - B[sl].l >= P.min_size_points - 1e-9) out[j] = { start: B[sl].l, end: B[s0].h, low: B[sl].l, high: B[s0].h, size: B[s0].h - B[sl].l, mid: (B[s0].h + B[sl].l) / 2 };
-        if (!long && newLow && sh != null && sh < s0 && B[sh].h - B[s0].l >= P.min_size_points - 1e-9) out[j] = { start: B[sh].h, end: B[s0].l, low: B[s0].l, high: B[sh].h, size: B[sh].h - B[s0].l, mid: (B[sh].h + B[s0].l) / 2 };
+        if (long && newHigh && sl != null && sl < s0 && B[s0].h - B[sl].l >= P.min_size_points - 1e-9) out[j] = { start: B[sl].l, end: B[s0].h, low: B[sl].l, high: B[s0].h, size: B[s0].h - B[sl].l, mid: (B[s0].h + B[sl].l) / 2, start_time: B[sl].t, end_time: B[s0].t };
+        if (!long && newLow && sh != null && sh < s0 && B[sh].h - B[s0].l >= P.min_size_points - 1e-9) out[j] = { start: B[sh].h, end: B[s0].l, low: B[s0].l, high: B[sh].h, size: B[sh].h - B[s0].l, mid: (B[sh].h + B[s0].l) / 2, start_time: B[sh].t, end_time: B[s0].t };
       }
       if (newHigh) { sh = s0; if (long) broken = false; }
       if (newLow) { sl = s0; if (!long) broken = false; }
@@ -414,7 +414,7 @@ export function patternSeries(data: Data, p: Pattern, side: 'long' | 'short') {
           if (P.displacement && !isDisp(j)) continue;
           let lo = Infinity, hi = -Infinity;
           for (let k = ref; k <= j; k++) { lo = Math.min(lo, B[k].l); hi = Math.max(hi, B[k].h); }
-          out[j] = { level: lvl, swing_low: long ? lo : B[sl ?? ref].l, swing_high: long ? B[ref].h : hi, high: B[j].h, low: B[j].l, close: B[j].c };
+          out[j] = { level: lvl, swing_low: long ? lo : B[sl ?? ref].l, swing_high: long ? B[ref].h : hi, high: B[j].h, low: B[j].l, close: B[j].c, swing_time: B[ref].t, time: B[j].t };
         }
       }
     }
@@ -454,7 +454,7 @@ function drawAt(ctx: Ctx, c: Extract<Cond, { t: 'draw' }>): Hit {
 // ---------- the Sequence runner ----------
 export interface StepHit { step: number; i: number }
 export interface Signal { branch: number; side: 'long' | 'short'; i: number; caps: Record<string, any>; entry: number; stop: number; legs: { name: string; price: number; contracts: number }[]; refused?: string; trade?: TradeResult; stepBars: number[] }
-export interface TradeResult { fillI?: number; exitI?: number; r?: number; outcome: string; exits: { i: number; price: number; why: string }[] }
+export interface TradeResult { fillI?: number; exitI?: number; cancelI?: number; r?: number; outcome: string; exits: { i: number; price: number; why: string }[] }
 export interface RunResult {
   base: Int32Array;
   stepHeld: number[][][]; // [branch][step] -> 1m indices where the step's condition held on its own
@@ -649,12 +649,12 @@ function simulate(data: Data, setup: Setup, br: Branch, sig: Signal, base: Int32
   // the entry rests (limit) or fills at the next bar's open (market)
   if (br.entry.order === 'market') fill = i;
   else for (; i < M.length; i++) {
-    if (deadline(i) || M[i].di !== day) { res.outcome = 'entry cancelled at the deadline'; return res; }
+    if (deadline(i) || M[i].di !== day) { res.outcome = 'entry cancelled at the deadline'; res.cancelI = i; return res; }
     const b = M[i];
     if (long ? b.l <= sig.entry : b.h >= sig.entry) { fill = i; break; }
     for (const cx of ts.cancel_if) {
       const lv = cx === 'stop' ? sig.stop : cx === 'first_leg' ? firstLeg : cx === 'draw' ? sig.caps.draw?.price : undefined;
-      if (lv != null && (long ? (cx === 'stop' ? b.l <= lv : b.h >= lv) : cx === 'stop' ? b.h >= lv : b.l <= lv)) { res.outcome = `entry cancelled: ${cx.replace('_', ' ')} reached first`; return res; }
+      if (lv != null && (long ? (cx === 'stop' ? b.l <= lv : b.h >= lv) : cx === 'stop' ? b.h >= lv : b.l <= lv)) { res.outcome = `entry cancelled: ${cx.replace('_', ' ')} reached first`; res.cancelI = i; return res; }
     }
   }
   if (fill < 0) { res.outcome = 'no fill'; return res; }

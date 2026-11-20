@@ -2,6 +2,7 @@
 // Order: basics → indicators → when to trade → Signal steps → entry & stop → Trade settings → review → create a Run.
 import React, { useState } from 'react';
 import { VariantProps } from '../types';
+import { SetupMap } from '../components/SetupMap';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
 import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection } from '../components/sections';
@@ -16,6 +17,7 @@ export function VariantA(p: VariantProps) {
   const [stage, setStage] = useState(0);
   const [bi, setBi] = useState(0);
   const [open, setOpen] = useState(0);
+  const [mapOpen, setMapOpen] = useState(true);
   const issues = validate(setup);
   const stageIssues = (k: number) => issues.filter((i) => (k === 3 ? /step|branch$|Signals/.test(i.where) : k === 4 ? /Entry/.test(i.where) : k === 5 ? /legs|Flatten|deadline|Trade settings/i.test(i.where) : false));
   const br = setup.branches[bi] || setup.branches[0];
@@ -24,7 +26,7 @@ export function VariantA(p: VariantProps) {
 
   return (
     <div className="mx-auto grid max-w-[1400px] grid-cols-[220px_1fr] gap-4 p-4">
-      <nav className="sticky top-4 h-fit space-y-0.5">
+      <nav className="sticky top-16 h-fit space-y-0.5">
         <div className="mb-3 px-2"><div className="text-lg font-semibold">{setup.name}</div><div className="text-xs text-muted-foreground">Draft · Base bar {setup.settings.base_bar}</div></div>
         {STAGES.map((s, k) => {
           const n = stageIssues(k).filter((i) => i.level === 'error').length;
@@ -37,6 +39,13 @@ export function VariantA(p: VariantProps) {
         })}
       </nav>
       <main className="min-w-0 space-y-4">
+        <Card className="p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <div><div className="text-[15px] font-semibold tracking-tight">Setup at a glance</div><div className="text-xs text-muted-foreground">Every branch from first step to Trade. Click a step to edit it; hover a declared indicator or pattern to see who reads it.</div></div>
+            <Button size="sm" variant="ghost" onClick={() => setMapOpen(!mapOpen)}>{mapOpen ? 'Hide' : 'Show'}</Button>
+          </div>
+          {mapOpen && <SetupMap setup={setup} result={result} data={data} focus={p.focus} onStep={(f) => { setStage(3); setBi(f.bi); setOpen(f.si); p.setFocus(f); }} onDeclared={() => setStage(1)} />}
+        </Card>
         <Card>
           <CardHeader title={`${stage + 1}. ${STAGES[stage]}`} sub={SUBS[stage]} right={<div className="flex gap-1"><Button size="sm" variant="outline" disabled={stage === 0} onClick={() => setStage(stage - 1)}>Back</Button><Button size="sm" disabled={stage === STAGES.length - 1} onClick={() => setStage(stage + 1)}>Next: {STAGES[stage + 1] || ''}</Button></div>} />
           <div className="space-y-4 p-4">
@@ -111,9 +120,9 @@ export function VariantA(p: VariantProps) {
             {stage === 7 && <RunStage {...p} runD={runD} />}
           </div>
         </Card>
-        {stage >= 1 && (
-          <Card className="p-3">
-            <div className="mb-2 flex items-center justify-between"><RunSummary result={chartResult} data={data} />{stage === 3 && p.focus && <span className="text-xs text-muted-foreground">dots: step {p.focus.si + 1} completed · grey squares: held alone</span>}</div>
+        {(
+          <Card className="p-4">
+            <div className="mb-3 flex items-center justify-between"><RunSummary result={chartResult} data={data} />{stage === 3 && p.focus && <span className="text-xs text-muted-foreground">dots: step {p.focus.si + 1} completed · grey squares: held alone</span>}</div>
             <Chart data={data} setup={stage === 7 ? runD.effective : setup} result={chartResult} day={p.day} setDay={p.setDay} focus={stage === 3 ? p.focus : null} selected={p.selected} setSelected={p.setSelected} />
           </Card>
         )}

@@ -29,7 +29,7 @@ export function VariantC(p: VariantProps) {
   const selStep = sel.kind === 'step' ? setup.branches[sel.bi]?.steps[sel.si] : null;
 
   return (
-    <div className="flex h-[calc(100vh-40px)] flex-col">
+    <div className="flex h-[calc(100vh-50px)] flex-col">
       {/* toolbar */}
       <div className="flex flex-wrap items-center gap-3 border-b px-3 py-2 text-xs">
         <Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="h-7 w-48 font-semibold" />
@@ -65,8 +65,8 @@ export function VariantC(p: VariantProps) {
           <div className="text-[11px] text-muted-foreground">Click to add to the selected step card.</div>
         </div>
         {/* lanes + chart */}
-        <div className="flex min-w-0 flex-col overflow-hidden">
-          <div className="min-h-0 flex-1 space-y-4 overflow-auto p-3">
+        <div className="min-w-0 overflow-auto">
+          <div className="space-y-4 p-3">
             {setup.branches.map((br, bi) => (
               <div key={br.id}>
                 <div className="mb-1 flex items-center gap-2 text-xs"><Badge tone={br.side === 'long' ? 'ok' : 'error'}>{br.side.toUpperCase()}</Badge><span className="text-muted-foreground">a new first step while one runs: {br.on_new_start.replace('_', ' ')}</span>
@@ -107,9 +107,9 @@ export function VariantC(p: VariantProps) {
               </div>
             ))}
           </div>
-          <div className="border-t p-2">
-            <div className="mb-1"><RunSummary result={shown} data={data} /></div>
-            <Chart data={data} setup={setup} result={shown} day={p.day} setDay={p.setDay} focus={p.focus} selected={p.selected} setSelected={p.setSelected} height={260} compactBar />
+          <div className="border-t p-3">
+            <div className="mb-2"><RunSummary result={shown} data={data} /></div>
+            <Chart data={data} setup={setup} result={shown} day={p.day} setDay={p.setDay} focus={p.focus} selected={p.selected} setSelected={p.setSelected} height={420} compactBar />
           </div>
         </div>
         {/* inspector */}

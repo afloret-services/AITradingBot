@@ -3,6 +3,7 @@
 // (and a stubbed "Claude suggests" for the rest). The chart is pinned on the right and follows the line you point at.
 import React, { useState } from 'react';
 import { VariantProps } from '../types';
+import { SetupMap } from '../components/SetupMap';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
 import { StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList } from '../components/sections';
@@ -23,6 +24,10 @@ export function VariantB(p: VariantProps) {
 
   return (
     <div className="mx-auto grid max-w-[1500px] grid-cols-[minmax(0,1fr)_560px] gap-6 p-6">
+      <Card className="col-span-2 p-4">
+        <div className="mb-3"><div className="text-[15px] font-semibold tracking-tight">Setup at a glance</div><div className="text-xs text-muted-foreground">The document below, as a flow. Click a step to jump to its sentence.</div></div>
+        <SetupMap setup={setup} result={result} data={data} focus={p.focus} compact onStep={(f) => { p.setFocus(f); document.getElementById(`step-${setup.branches[f.bi].steps[f.si].id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} />
+      </Card>
       <article className="min-w-0 space-y-6 leading-relaxed">
         <header className="space-y-2">
           <Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="h-auto border-transparent bg-transparent px-0 text-3xl font-bold" />
@@ -48,7 +53,7 @@ export function VariantB(p: VariantProps) {
               {setup.branches.length > 1 && <button className="ml-auto text-xs text-muted-foreground hover:text-red-400" onClick={() => mutate((s) => { s.branches.splice(bi, 1); })}>remove branch</button>}
             </h2>
             {br.steps.map((st, k) => (
-              <div key={st.id} onMouseEnter={() => p.setFocus({ bi, si: k })} className={cn('group relative rounded-md border-l-4 py-1 pl-4', p.focus?.bi === bi && p.focus?.si === k ? 'bg-accent/40' : '')} style={{ borderColor: STEP_COLORS[k % 6] }}>
+              <div key={st.id} id={`step-${st.id}`} onMouseEnter={() => p.setFocus({ bi, si: k })} className={cn('group relative rounded-md border-l-4 py-1 pl-4', p.focus?.bi === bi && p.focus?.si === k ? 'bg-accent/40' : '')} style={{ borderColor: STEP_COLORS[k % 6] }}>
                 <div className="flex flex-wrap items-baseline gap-2">
                   <span className="text-[15px] font-semibold">{k === 0 ? 'First,' : st.same_bar ? 'Then, on the same bar or later,' : 'Then, on a later bar,'}</span>
                   <Input value={st.name} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-6 w-auto min-w-[200px] border-transparent bg-transparent px-0 text-[15px] italic text-muted-foreground" />
@@ -87,7 +92,7 @@ export function VariantB(p: VariantProps) {
         </section>
       </article>
 
-      <aside className="sticky top-4 h-[calc(100vh-6rem)] space-y-3 overflow-auto">
+      <aside className="sticky top-16 h-[calc(100vh-6rem)] space-y-3 overflow-auto">
         <Card className="p-3">
           <div className="mb-2 flex items-center justify-between"><RunSummary result={runMode && runD.result ? runD.result : result} data={data} /></div>
           <Chart data={data} setup={setup} result={runMode && runD.result ? runD.result : result} day={p.day} setDay={p.setDay} focus={p.focus} selected={p.selected} setSelected={p.setSelected} height={300} />

@@ -2,18 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 :root {
-  --background: 0 0% 100%; --foreground: 222 47% 11%; --card: 0 0% 100%; --card-foreground: 222 47% 11%;
-  --primary: 222 47% 11%; --primary-foreground: 210 40% 98%; --secondary: 210 40% 96%; --secondary-foreground: 222 47% 11%;
-  --muted: 210 40% 96%; --muted-foreground: 215 16% 47%; --accent: 210 40% 94%; --accent-foreground: 222 47% 11%;
-  --destructive: 0 72% 51%; --border: 214 32% 91%; --input: 214 32% 85%; --ring: 222 84% 60%;
+  --background: 220 20% 97%; --foreground: 224 30% 12%; --card: 0 0% 100%; --card-foreground: 224 30% 12%;
+  --primary: 217 91% 55%; --primary-foreground: 0 0% 100%; --secondary: 220 16% 93%; --secondary-foreground: 224 30% 12%;
+  --muted: 220 16% 94%; --muted-foreground: 220 9% 45%; --accent: 220 16% 92%; --accent-foreground: 224 30% 12%;
+  --destructive: 0 72% 51%; --border: 220 14% 88%; --input: 220 14% 82%; --ring: 217 91% 60%; --chart: 220 20% 98%;
 }
 .dark {
-  --background: 224 20% 7%; --foreground: 210 30% 96%; --card: 224 18% 10%; --card-foreground: 210 30% 96%;
-  --primary: 210 40% 96%; --primary-foreground: 222 47% 11%; --secondary: 222 16% 16%; --secondary-foreground: 210 30% 96%;
-  --muted: 222 16% 15%; --muted-foreground: 217 12% 64%; --accent: 222 16% 19%; --accent-foreground: 210 30% 96%;
-  --destructive: 0 63% 52%; --border: 222 14% 20%; --input: 222 14% 26%; --ring: 212 90% 60%;
+  --background: 228 22% 6%; --foreground: 220 25% 94%; --card: 228 20% 9%; --card-foreground: 220 25% 94%;
+  --primary: 213 94% 62%; --primary-foreground: 228 30% 8%; --secondary: 228 16% 14%; --secondary-foreground: 220 25% 94%;
+  --muted: 228 16% 12%; --muted-foreground: 222 10% 60%; --accent: 228 16% 16%; --accent-foreground: 220 25% 94%;
+  --destructive: 0 70% 56%; --border: 228 14% 17%; --input: 228 14% 23%; --ring: 213 94% 62%; --chart: 228 22% 7%;
 }
 * { border-color: hsl(var(--border)); }
-body { background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; }
-.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+body {
+  background: radial-gradient(1200px 600px at 10% -10%, hsl(213 60% 18% / 0.35), transparent 60%), hsl(var(--background));
+  background-attachment: fixed; color: hsl(var(--foreground));
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px;
+  font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiased;
+}
+.mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.95em; }
 select, input { color-scheme: dark; }
+::-webkit-scrollbar { width: 10px; height: 10px; } ::-webkit-scrollbar-thumb { background: hsl(var(--input)); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
