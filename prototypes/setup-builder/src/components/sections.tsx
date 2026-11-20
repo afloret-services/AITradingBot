@@ -279,7 +279,7 @@ export function WhenHelp({ setup, what }: { setup: Setup; what: 'intro' | 'hours
   return (
     <HelpBox>
       <div>The Asia, London and New York windows, used by session levels: "the Asia high" is the highest price of that window on the current Trading day once it has ended, and of the previous Trading day while it is still running. The Draw on liquidity and any step that compares with a session high or low read these. The times are copied into the Setup, so changing the bot's defaults later never changes a frozen version.</div>
-      <div>Here: {ss.map(([n, r], i) => <span key={n}>{i > 0 && ', '}{B(`${n.replace('_', ' ')} ${r.start}–${r.end}`)}</span>)}. <span className="text-[11px]">In this prototype the session levels still use the default times; editing them changes the file, not the chart.</span></div>
+      <div>Here: {ss.map(([n, r], i) => <span key={n}>{i > 0 && ', '}{B(`${n.replace('_', ' ')} ${r.start}–${r.end}`)}</span>)}. Change a time and the chart and Signals follow at once.</div>
     </HelpBox>
   );
 }

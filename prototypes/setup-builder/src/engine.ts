@@ -60,7 +60,7 @@ export function parseCsv(text: string): Data {
     m1.push({ ...r, first: i, last: i, td, di: days.length - 1, min: nyMin(r.t) });
   }
   const data: Data = { m1, days, tfBars: { '1m': m1 }, closedAt: {}, sessions: [] };
-  data.sessions = days.map((d) => sessionStats(data, d));
+  data.sessions = days.map((d) => sessionStats(data, d, SESSION_DEFS));
   return data;
 }
 
@@ -69,9 +69,18 @@ export function inRange(min: number, start: string, end: string) {
   const s = hm(start), e = hm(end);
   return s <= e ? min >= s && min < e : min >= s || min < e; // may cross midnight
 }
-function sessionStats(data: Data, d: Day): SessionStats {
+// the session windows of the Setup being run (set by run()); session levels are computed per set of windows and cached
+let SESS: Record<string, [string, string]> = SESSION_DEFS;
+const sessCache = new Map<string, SessionStats[]>();
+function sess(data: Data): SessionStats[] {
+  const key = JSON.stringify(SESS);
+  if (key === JSON.stringify(SESSION_DEFS)) return data.sessions;
+  if (!sessCache.has(key)) sessCache.set(key, data.days.map((d) => sessionStats(data, d, SESS)));
+  return sessCache.get(key)!;
+}
+function sessionStats(data: Data, d: Day, defs: Record<string, [string, string]>): SessionStats {
   const out: SessionStats = {};
-  for (const [name, [s, e]] of Object.entries(SESSION_DEFS)) {
+  for (const [name, [s, e]] of Object.entries(defs)) {
     let st: any;
     for (let i = d.from; i <= d.to; i++) {
       const b = data.m1[i];
@@ -226,9 +235,11 @@ function levelValue(data: Data, parts: string[], i: number): number | null {
   }
   if (parts[1] === 'session') {
     const name = parts[2];
-    const cur = data.sessions[di]?.[name];
-    if (cur && cur.endI < i && !inRange(data.m1[i].min, ...SESSION_DEFS[name])) return f(cur);
-    const prev = di > 0 ? data.sessions[di - 1]?.[name] : undefined;
+    const S = sess(data), win = SESS[name];
+    if (!win) return null;
+    const cur = S[di]?.[name];
+    if (cur && cur.endI < i && !inRange(data.m1[i].min, ...win)) return f(cur);
+    const prev = di > 0 ? S[di - 1]?.[name] : undefined;
     return f(prev);
   }
   return null;
@@ -238,9 +249,10 @@ function levelFormedAt(data: Data, tok: string, i: number): number {
   const di = data.m1[i].di;
   if (p.parts[1] === 'prev_day') return data.days[di].from;
   if (p.parts[1] === 'session') {
-    const cur = data.sessions[di]?.[p.parts[2]];
-    if (cur && cur.endI < i && !inRange(data.m1[i].min, ...SESSION_DEFS[p.parts[2]])) return cur.endI + 1;
-    return di > 0 ? (data.sessions[di - 1]?.[p.parts[2]]?.endI ?? 0) + 1 : 0;
+    const S = sess(data), win = SESS[p.parts[2]];
+    const cur = S[di]?.[p.parts[2]];
+    if (cur && win && cur.endI < i && !inRange(data.m1[i].min, ...win)) return cur.endI + 1;
+    return di > 0 ? (S[di - 1]?.[p.parts[2]]?.endI ?? 0) + 1 : 0;
   }
   return i;
 }
@@ -687,6 +699,9 @@ export function run(data: Data, setup: Setup): RunResult {
   const base = baseCloses(data, setup.settings.base_bar);
   const res: RunResult = { base, stepHeld: [], stepDone: [], signals: [], ms: 0, errors };
   PATS = Object.fromEntries((setup.patterns || []).map((p) => [p.name, p]));
+  const okT = (x: string) => /^\d{1,2}:\d{2}$/.test(x);
+  SESS = Object.fromEntries(Object.entries({ ...Object.fromEntries(Object.entries(SESSION_DEFS).map(([n, [a, b]]) => [n, { start: a, end: b }])), ...(setup.settings.sessions || {}) })
+    .map(([n, r]: [string, any]) => [n, (okT(r.start) && okT(r.end) ? [r.start, r.end] : SESSION_DEFS[n] || [r.start, r.end]) as [string, string]]));
   setup.branches.forEach((br, bi) => {
     res.stepHeld[bi] = br.steps.map(() => []);
     res.stepDone[bi] = br.steps.map(() => []);
