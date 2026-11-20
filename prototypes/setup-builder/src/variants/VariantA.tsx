@@ -6,7 +6,7 @@ import { SetupMap } from '../components/SetupMap';
 import { RuleEditor } from '../components/RuleEditor';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
-import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp, ReviewHelp } from '../components/sections';
+import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp, ReviewHelp, IndicatorsHelp, PatternsHelp, IndicatorsPatternsIntro } from '../components/sections';
 import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
 import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
@@ -53,8 +53,9 @@ export function VariantA(p: VariantProps) {
               </div>
             )}
             {stage === 1 && <div className="space-y-5">
-              <div><div className="mb-1 text-sm font-semibold">Indicators</div><div className="mb-2 text-sm text-muted-foreground">Declare each indicator once. Steps pick from this list; changing one here changes every step that reads it.</div><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={indicatorUsage(setup)} /></div>
-              <div><div className="mb-1 text-sm font-semibold">Patterns</div><div className="mb-2 text-sm text-muted-foreground">Declare each pattern once: its kind, timeframe and settings, and a name. A step then says "a bullish <span className="mono">fvg</span> forms" and reads what it captured, e.g. <span className="mono">fvg.top</span>. The long and short branches share the same declaration.</div><PatternList setup={setup} mutate={mutate} data={data} /></div>
+              <IndicatorsPatternsIntro />
+              <div><div className="mb-1 text-sm font-semibold">Indicators</div><div className="mb-2"><IndicatorsHelp setup={setup} /></div><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={indicatorUsage(setup)} /></div>
+              <div><div className="mb-1 text-sm font-semibold">Patterns</div><div className="mb-2"><PatternsHelp setup={setup} /></div><PatternList setup={setup} mutate={mutate} data={data} /></div>
             </div>}
             {stage === 2 && <div className="space-y-4"><TradingHoursEditor setup={setup} mutate={mutate} /><SessionsEditor setup={setup} mutate={mutate} /><BehaviourEditor setup={setup} mutate={mutate} /></div>}
             {stage === 3 && (

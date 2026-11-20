@@ -1,6 +1,6 @@
 // PROTOTYPE: editors for Setup settings and the Run-overridable Trade-settings sections, shared by the variants.
 import React from 'react';
-import { labelsOf, phrase } from '../model';
+import { labelsOf, phrase, parseToken } from '../model';
 import { Setup, Step, TF, TFS, Leg, Guard, InPositionRule, Cond, uid, SECTION_NAMES, condPhrase, Pattern, PatternKind, PATTERN_KINDS, newPattern, patternUsage, patternSettingsPhrase, tfMinutes, patternPhrase } from '../model';
 import { TokenPicker, TokenCtx, shortName } from './TokenPicker';
 import { CondEditor, Look } from './CondEditor';
@@ -91,16 +91,67 @@ function spanText(before: number, after: number) {
 }
 
 // ---------- indicators declared once ----------
+// ---------- Indicators & patterns: what each one is ----------
+function indHelp(token: string): string {
+  const pt = parseToken(token);
+  const [, name, params = '', tf = '', out] = pt.parts;
+  const n = params.split(',')[0];
+  switch (name) {
+    case 'ema': return `Exponential moving average of the last ${n} ${tf} closes: recent closes weigh more, so it turns sooner than an SMA. Read as a price (close above it, it rising over N bars…).`;
+    case 'sma': return `Simple moving average: the plain average of the last ${n} ${tf} closes. Read as a price.`;
+    case 'macd': { const [f = '12', sl = '26', sg = '9'] = params.split(','); return `MACD ${f} / ${sl} / ${sg} on ${tf}: the ${out === 'signal' ? `signal line, a ${sg}-bar EMA of the MACD line` : out === 'hist' ? 'histogram, the MACD line minus its signal line (above 0: momentum up)' : `MACD line, the ${f}-bar EMA minus the ${sl}-bar EMA of the close (above 0: the fast average is above the slow one)`}. Read as a number around 0.`; }
+    case 'atr': return `Average true range over ${n} ${tf} bars: how far price typically moves in one bar, gaps included. Used to size stops and guards in × ATR.`;
+    case 'adx': return `ADX over ${n} ${tf} bars: trend strength from 0 to 100, whatever the direction. Above 20–25 is usually read as trending.`;
+    case 'rsi': return `RSI over ${n} ${tf} bars: momentum from 0 to 100. Above 70 is usually read as overbought, below 30 as oversold; it mirrors around 50.`;
+    case 'avg_range': return `The average high-to-low range of the last ${n} ${tf} bars. Used as a yardstick, e.g. "this candle's range is at least 1.5 × the average".`;
+    case 'avg_body': return `The average body (open to close) of the last ${n} ${tf} bars. A yardstick for "a big body".`;
+    default: return '';
+  }
+}
+export function IndicatorsHelp({ setup }: { setup: Setup }) {
+  const used = indicatorUsage(setup);
+  const unused = setup.indicators.filter((i) => !used[i.token]).length;
+  const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
+  return (
+    <HelpBox>
+      <div>An indicator is declared once by what it is: its kind, its settings and its timeframe (e.g. EMA 200 on 15m, MACD 12/26/9 on 15m, its signal line). Steps, the stop and the guards pick it from this list, and the same declaration serves both branches; change it here and every place that reads it changes. On a timeframe coarser than the Base bar, it is read from its last closed bar; finer ones are refused.</div>
+      <div>A <T>display label</T> ("the EMA 200") replaces the token in the Rule description and on the chart legend. Available: EMA, SMA, MACD (line, signal, histogram), ATR, ADX, RSI, average range and average body.</div>
+      <div>Here: {B(`${setup.indicators.length} declared`)}{unused ? <>, {B(`${unused} unused`)}</> : ''}.{!setup.indicators.length ? ' This Setup reads no indicator; patterns and candle values need none.' : ''}</div>
+    </HelpBox>
+  );
+}
+export function PatternsHelp({ setup }: { setup: Setup }) {
+  const pats = setup.patterns || [];
+  const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
+  return (
+    <HelpBox>
+      <div>A pattern is declared once with a <T>name</T>, a <T>kind</T>, a <T>timeframe</T> and its settings. A step then says "a bullish <span className="mono">fvg</span> forms", and later steps, the Entry and the stop read what it captured: <span className="mono">fvg.top</span>, <span className="mono">dbl.neckline</span>, <span className="mono">eng.low</span>… The declaration has no side: the step picks bullish or bearish, so both branches share it, and "duplicate as mirrored" just flips the side.</div>
+      <div>Three families. <T>ICT</T>: FVG, Displacement, Order block, Leg, MSS. <T>Chart patterns</T>: doubles, triples, head and shoulders, triangles, wedges, flags, pennants, rectangles, channels; they form on the first close through their neckline or line and capture a measured-move target. <T>Candlesticks</T>: engulfing, hammer, stars, harami, piercing, soldiers, tweezers, inside bar, doji, marubozu; they form on the close of their last candle. Each one below shows its idea and real examples on MNQ with your settings.</div>
+      <div>Here: {pats.length ? <>{pats.map((q, i) => <span key={q.name}>{i > 0 && ', '}{B(q.name)} ({q.tf} {PATTERN_KINDS[q.kind].title.replace(/ \(.*\)$/, '')})</span>)}.</> : B('none declared yet.')}</div>
+    </HelpBox>
+  );
+}
+export function IndicatorsPatternsIntro() {
+  return (
+    <HelpBox>
+      <div><T>Declare first, use later.</T> Everything a step will read that needs computing (an indicator, a pattern) is declared here once, with its timeframe and settings. The Signal steps then pick from these lists, so a setting lives in one place and the Rule description lists each one once. Plain candle values (a 15m close, a candle's range), levels (the previous day's high, a session high) and the Bias need no declaration.</div>
+    </HelpBox>
+  );
+}
+
 export function IndicatorList({ setup, mutate, ctx, usage }: { setup: Setup; mutate: Mutate; ctx: TokenCtx; usage?: Record<string, number> }) {
   return (
     <div className="space-y-1.5">
       {setup.indicators.map((ind, k) => (
-        <div key={k} className="flex flex-wrap items-center gap-2">
+        <React.Fragment key={k}>
+        <div className="flex flex-wrap items-center gap-2">
           <TokenPicker value={ind.token} ctx={{ ...ctx, inlineDeclare: true, onDeclare: undefined, onlyIndicator: true }} compact onChange={(t) => mutate((s) => { const old = s.indicators[k].token; s.indicators[k].token = t.replace(/\.prev\[\d+\]$/, ''); renameToken(s, old, s.indicators[k].token); })} />
           <Input placeholder="display label (optional)" value={ind.label || ''} onChange={(e) => mutate((s) => { s.indicators[k].label = e.target.value || undefined; })} className="h-7 w-48" />
           {usage && <span className="text-[11px] text-muted-foreground">used {usage[ind.token] || 0}×</span>}
           <button className="text-muted-foreground hover:text-red-400" onClick={() => mutate((s) => { s.indicators.splice(k, 1); })}>×</button>
         </div>
+          {indHelp(ind.token) && <div className="-mt-0.5 mb-1 pl-1 text-[11px] text-muted-foreground">{indHelp(ind.token)}</div>}
+        </React.Fragment>
       ))}
       <Button size="sm" variant="ghost" onClick={() => mutate((s) => { s.indicators.push({ token: `{{indicator:ema:200:${s.settings.base_bar}}}` }); })}>+ declare an indicator</Button>
     </div>
