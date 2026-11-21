@@ -576,7 +576,7 @@ export function patternSeries(data: Data, p: Pattern, side: 'long' | 'short') {
           lines: [[T(hA.i), back(hA.p), T(j), back(up(j))], [T(lA.i), back(lA.p), T(j), back(lo(j))]], path: [] };
       }
     }
-  } else if (['broadening', 'broadening_wedge', 'cup_handle', 'diamond', 'rounding', 'island', 'bump_run', 'measured_move', 'parabolic', 'wyckoff', 'wyckoff_re'].includes(p.kind)) {
+  } else if (['broadening', 'broadening_wedge', 'cup_handle', 'diamond', 'rounding', 'island', 'bump_run', 'measured_move', 'parabolic', 'wyckoff', 'wyckoff_re', 'adam_eve', 'hs_complex'].includes(p.kind)) {
     // written for the bullish side on G; the bearish side runs on upside-down bars. Real price = sg × G price.
     const sg = long ? 1 : -1;
     const G = long ? B : B.map((b) => ({ ...b, o: -b.o, h: -b.l, l: -b.h, c: -b.c }));
@@ -712,6 +712,42 @@ export function patternSeries(data: Data, p: Pattern, side: 'long' | 'short') {
         cooldown = j + N;
         out[j] = { line: R(G[j - 1].h), extreme: R(ext.p), move, target: R(ext.p + move / 2), breakout: B[j].c, time: B[j].t,
           path: [[T(st), R(G[st].c)], [T(st + third), R(G[st + third].c)], [T(ext.i), R(ext.p)], [T(j), B[j].c]], lines: [] };
+      } else if (k === 'adam_eve') {
+        // on G, the bottom version: Adam (sharp) then Eve (rounded); the top version runs upside down
+        if (L.length < 2) continue;
+        const [A, E] = L.slice(-2), key = `${A.i}:${E.i}`;
+        if (used.has(key) || E.i - A.i < P.min_sep || j - A.i > P.max_bars || j <= E.i || j - E.i > P.break_within) continue;
+        const nk = highMax(A.i, E.i), height = nk.p - Math.min(A.p, E.p);
+        if (height < P.min_height_points - 1e-9 || Math.abs(A.p - E.p) > (P.tolerance_pct / 100) * height + 1e-9) continue;
+        const width = (lw: { i: number; p: number }) => {
+          const lim = lw.p + (P.width_pct / 100) * height;
+          let a = lw.i, b = lw.i;
+          while (a - 1 >= 0 && G[a - 1].l <= lim) a--;
+          while (b + 1 < j && G[b + 1].l <= lim) b++;
+          return b - a + 1;
+        };
+        if (width(A) > P.adam_max_bars || width(E) < P.eve_min_bars) continue;
+        if (!firstUp(j, () => nk.p, E.i + 1)) continue;
+        used.add(key);
+        out[j] = { neckline: R(nk.p), height, target: R(nk.p + height), adam: R(A.p), eve: R(E.p), extreme: R(Math.min(A.p, E.p)), breakout: B[j].c, time: B[j].t,
+          path: [[T(A.i), R(A.p)], [T(nk.i), R(nk.p)], [T(E.i), R(E.p)], [T(j), B[j].c]], neck_t0: T(A.i), neck_p0: R(nk.p), neckline_at: R(nk.p) };
+      } else if (k === 'hs_complex') {
+        // on G, the inverse version: five swing lows, the middle one the head
+        if (L.length < 5) continue;
+        const lw = L.slice(-5), head = lw[2], sh = [lw[0], lw[1], lw[3], lw[4]], key = String(lw[4].i);
+        if (used.has(key) || j - lw[0].i > P.max_bars || j <= lw[4].i || j - lw[4].i > P.break_within) continue;
+        const p1 = highMax(lw[1].i, head.i), p2 = highMax(head.i, lw[3].i);
+        const neck = (q: number) => p1.p + ((p2.p - p1.p) * (q - p1.i)) / Math.max(1, p2.i - p1.i);
+        const height = neck(head.i) - head.p;
+        if (height < P.min_height_points - 1e-9) continue;
+        const shP = sh.map((x) => x.p);
+        if (Math.min(...shP) - head.p < (P.head_margin_pct / 100) * height - 1e-9) continue;
+        if (Math.max(...shP) - Math.min(...shP) > (P.tolerance_pct / 100) * height + 1e-9) continue;
+        if (Math.max(...shP) >= Math.min(p1.p, p2.p)) continue; // shoulders stay below the neckline
+        if (!firstUp(j, neck, lw[4].i + 1)) continue;
+        used.add(key);
+        out[j] = { neckline: R(neck(j)), height, target: R(neck(j) + height), head: R(head.p), extreme: R(head.p), breakout: B[j].c, time: B[j].t,
+          path: [...lw.map((x) => [T(x.i), R(x.p)] as [number, number]), [T(j), B[j].c]].sort((x, y) => x[0] - y[0]), neck_t0: T(p1.i), neck_p0: R(p1.p) };
       } else if (k === 'wyckoff' || k === 'wyckoff_re') {
         const W = Math.max(15, Number(P.range_bars) || 60), r0 = j - W, tb = Number(P.trend_bars) || 40;
         if (r0 - tb < 0) continue;

@@ -45,6 +45,8 @@ const GLYPHS: Record<PatternKind, React.ReactNode> = {
   measured_move: <><L d="M2 21 L9 9 L13 14 L21 2" /><L d="M9 9 H22" color={LV} dash w={1} /><circle cx={2.5} cy={20.5} r={1.4} fill={ZN} /><circle cx={9} cy={9} r={1.4} fill={ZN} /><circle cx={13} cy={14} r={1.4} fill={ZN} /></>,
   parabolic: <><L d="M2 3 Q12 4 16 20 L19 13 L22 15" /></>,
   wyckoff: <><L d="M2 2 L6 12 L9 8 L12 13 L14 18 L16 10 L19 12 L22 3" /><L d="M5 7 H21" color={LV} w={1.1} /><L d="M5 15 H21" color={LV} w={1.1} /></>,
+  adam_eve: <><L d="M2 4 L6 19 L9 6 L12 11 Q16 22 20 11 L22 3" /><L d="M3 6 H22" color={LV} dash w={1} /></>,
+  hs_complex: <><L d="M1 20 L3 12 L5 16 L7 11 L9 15 L12 3 L15 15 L17 11 L19 16 L21 12 L23 20" /><L d="M2 15 H23" color={LV} dash w={1} /></>,
   wyckoff_re: <><L d="M2 21 L6 9 L9 13 L12 9 L14 16 L16 10 L19 12 L22 2" /><L d="M5 8 H21" color={LV} w={1.1} /><L d="M5 15 H21" color={LV} w={1.1} /></>,
 };
 
