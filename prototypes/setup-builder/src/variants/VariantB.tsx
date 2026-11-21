@@ -25,8 +25,8 @@ export function VariantB(p: VariantProps) {
   const usage = indicatorUsage(setup);
 
   return (
-    <div className="mx-auto grid max-w-[1500px] grid-cols-[minmax(0,1fr)_560px] gap-6 p-6">
-      <Card className="col-span-2 p-4">
+    <div className="mx-auto grid max-w-[1500px] grid-cols-1 gap-6 p-3 lg:grid-cols-[minmax(0,1fr)_560px] lg:p-6">
+      <Card className="min-w-0 p-4 lg:col-span-2">
         <div className="mb-3"><div className="text-[15px] font-semibold tracking-tight">Setup at a glance</div><div className="text-xs text-muted-foreground">The document below, as a flow. Click a step to jump to its sentence.</div></div>
         <div className="mb-2"><Explain><ReviewHelp setup={setup} what="map" /></Explain></div>
         <SetupMap setup={setup} result={result} data={data} focus={p.focus} compact onStep={(f) => { p.setFocus(f); document.getElementById(`step-${setup.branches[f.bi].steps[f.si].id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} />
@@ -90,12 +90,12 @@ export function VariantB(p: VariantProps) {
         <section className="space-y-3">
           <h2 className="text-xl font-semibold">Managing the Trade</h2>
           {SECTIONS.filter((k) => k !== 'stop').map((k) => (
-            <div key={k} className="grid grid-cols-[150px_1fr] items-start gap-3">
+            <div key={k} className="grid grid-cols-1 items-start gap-1 sm:grid-cols-[150px_1fr] sm:gap-3">
               <div className="flex items-center gap-1.5 pt-1 text-sm font-medium text-muted-foreground"><SectionIcon k={k} size={18} />{SECTION_NAMES[k]}</div>
               <div className="space-y-1"><SectionEditor k={k} value={getSection(setup, k)} setup={setup} ctx={ctxFor(0, 99)} onChange={(v) => mutate((s) => { setSection(s, k, v); })} /><Explain><SectionHelp setup={setup} k={k} /></Explain></div>
             </div>
           ))}
-          <div className="grid grid-cols-[150px_1fr] items-start gap-3"><div className="flex items-center gap-1.5 pt-1 text-sm font-medium text-muted-foreground"><SectionIcon k="in_position" size={18} />While in a Trade</div><div className="space-y-1"><InPositionRules setup={setup} mutate={mutate} ctx={ctxFor(0, 99)} look="outline" /><Explain><SectionHelp setup={setup} k="in_position" /></Explain></div></div>
+          <div className="grid grid-cols-1 items-start gap-1 sm:grid-cols-[150px_1fr] sm:gap-3"><div className="flex items-center gap-1.5 pt-1 text-sm font-medium text-muted-foreground"><SectionIcon k="in_position" size={18} />While in a Trade</div><div className="space-y-1"><InPositionRules setup={setup} mutate={mutate} ctx={ctxFor(0, 99)} look="outline" /><Explain><SectionHelp setup={setup} k="in_position" /></Explain></div></div>
         </section>
         <section className="space-y-1">
           <h2 className="text-xl font-semibold">Notes</h2>
@@ -104,7 +104,7 @@ export function VariantB(p: VariantProps) {
         </section>
       </article>
 
-      <aside className="sticky top-16 h-[calc(100vh-6rem)] space-y-3 overflow-auto">
+      <aside className="min-w-0 space-y-3 lg:sticky lg:top-16 lg:h-[calc(100vh-6rem)] lg:overflow-auto">
         <Card className="p-3">
           <div className="mb-2 flex items-center justify-between"><RunSummary result={runMode && runD.result ? runD.result : result} data={data} /></div>
           <Chart data={data} setup={setup} result={runMode && runD.result ? runD.result : result} day={p.day} setDay={p.setDay} focus={p.focus} selected={p.selected} setSelected={p.setSelected} height={300} />

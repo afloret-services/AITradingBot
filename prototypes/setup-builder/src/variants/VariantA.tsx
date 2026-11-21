@@ -26,8 +26,8 @@ export function VariantA(p: VariantProps) {
   const chartResult = stage === 7 && runD.result ? runD.result : result;
 
   return (
-    <div className="mx-auto grid max-w-[1400px] grid-cols-[220px_1fr] gap-4 p-4">
-      <nav className="sticky top-16 h-fit space-y-0.5">
+    <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 p-3 md:grid-cols-[220px_1fr] md:p-4">
+      <nav className="h-fit space-y-0.5 md:sticky md:top-16">
         <div className="mb-3 px-2"><div className="text-lg font-semibold">{setup.name}</div><div className="text-xs text-muted-foreground">Draft · Base bar {setup.settings.base_bar}</div></div>
         {STAGES.map((s, k) => {
           const n = stageIssues(k).filter((i) => i.level === 'error').length;

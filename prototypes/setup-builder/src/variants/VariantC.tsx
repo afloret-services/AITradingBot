@@ -31,7 +31,7 @@ export function VariantC(p: VariantProps) {
   const selStep = sel.kind === 'step' ? setup.branches[sel.bi]?.steps[sel.si] : null;
 
   return (
-    <div className="flex h-[calc(100vh-50px)] flex-col">
+    <div className="flex flex-col lg:h-[calc(100vh-50px)]">
       {/* toolbar */}
       <div className="flex flex-wrap items-center gap-3 border-b px-3 py-2 text-xs">
         <Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="h-7 w-48 font-semibold" />
@@ -40,7 +40,7 @@ export function VariantC(p: VariantProps) {
         {run && <><Select value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} options={INSTRUMENTS} className="h-7" />{instrumentWarnings(setup, runD.draft.instrument).map((w) => <span key={w} className="text-amber-300">{w}</span>)}</>}
         <div className="ml-auto">{p.saveBar}</div>
       </div>
-      <div className="grid min-h-0 flex-1 grid-cols-[230px_minmax(0,1fr)_380px]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[230px_minmax(0,1fr)_380px]">
         {/* library */}
         <div className={cn('space-y-3 overflow-auto border-r p-3 text-sm', run && 'pointer-events-none opacity-40')}>
           <Lib title="Indicators (declared once)">

@@ -31,8 +31,8 @@ export default function App() {
   const result = useMemo(() => (data ? run(data, deferred) : null), [data, deferred]);
   useEffect(() => { if (result && data && day === 0 && result.signals.length) setDay(data.m1[result.signals[0].i].di); }, [result, data]);
   useEffect(() => { setSelected(null); }, [day]);
-  const setV = (v: string) => { setVariant(v); const q = qs(); q.set('variant', v); history.replaceState(null, '', '?' + q); };
-  const loadStarter = (k: string) => { setStarter(k); setSetup(STARTERS[k]()); setVersions([]); setSaved(''); setFocus(null); setDay(0); const q = qs(); q.set('setup', k); history.replaceState(null, '', '?' + q); };
+  const setV = (v: string) => { setVariant(v); const q = qs(); q.set('variant', v); try { history.replaceState(null, '', '?' + q); } catch { /* a published page has no address bar to update */ } };
+  const loadStarter = (k: string) => { setStarter(k); setSetup(STARTERS[k]()); setVersions([]); setSaved(''); setFocus(null); setDay(0); const q = qs(); q.set('setup', k); try { history.replaceState(null, '', '?' + q); } catch { /* a published page has no address bar to update */ } };
   const issues = validate(setup);
   const errors = issues.filter((i) => i.level === 'error');
   const flash = (t: string) => { setToast(t); setTimeout(() => setToast(''), 3500); };
@@ -67,7 +67,7 @@ export default function App() {
   const props = { data, setup, mutate, result, day, setDay, focus, setFocus, selected, setSelected, saveBar };
   return (
     <div className="min-h-screen pb-20">
-      <div className="sticky top-0 z-40 flex flex-wrap items-center gap-2 border-b bg-background/80 px-4 py-2 text-xs backdrop-blur">
+      <div className="z-40 flex flex-wrap items-center gap-2 border-b bg-background/80 px-4 py-2 text-xs backdrop-blur md:sticky md:top-0">
         <span className="flex items-center gap-2 pr-2 text-sm font-semibold tracking-tight"><span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-sky-400 to-indigo-500 text-[11px] font-bold text-white">S</span>Setup builder</span>
         <Badge tone="warn">PROTOTYPE · throwaway</Badge>
         <span className="text-muted-foreground">Start from</span>
