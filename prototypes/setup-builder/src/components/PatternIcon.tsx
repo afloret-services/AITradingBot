@@ -8,6 +8,11 @@ const K = ({ x, o, h, l, c, w = 4 }: { x: number; o: number; h: number; l: numbe
   const col = c < o ? UP : DN;
   return <g><line x1={x} x2={x} y1={h} y2={l} stroke={col} strokeWidth={1.2} /><rect x={x - w / 2} y={Math.min(o, c)} width={w} height={Math.max(1, Math.abs(o - c))} fill={col} rx={0.6} /></g>;
 };
+/** a bold candle for the candlestick glyphs */
+const KB = ({ x, o, h, l, c, w = 6 }: { x: number; o: number; h: number; l: number; c: number; w?: number }) => {
+  const col = c < o ? UP : c > o ? DN : '#cbd5e1';
+  return <g><line x1={x} x2={x} y1={h} y2={l} stroke={col} strokeWidth={1.7} strokeLinecap="round" /><rect x={x - w / 2} y={Math.min(o, c)} width={w} height={Math.max(1.6, Math.abs(o - c))} fill={col} rx={0.8} /></g>;
+};
 const L = ({ d, color = 'currentColor', w = 1.6, dash }: { d: string; color?: string; w?: number; dash?: boolean }) => <path d={d} fill="none" stroke={color} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={dash ? '2 1.6' : undefined} />;
 
 const GLYPHS: Record<PatternKind, React.ReactNode> = {
@@ -25,16 +30,16 @@ const GLYPHS: Record<PatternKind, React.ReactNode> = {
   pennant: <><L d="M3 21 L10 5" color={ZN} w={2.2} /><L d="M10 5 L12 10 L14 6 L16 9 L18 7 L22 2" /><L d="M10 4 L19 7.5" color={LV} w={1.2} /><L d="M11 11 L19 8" color={LV} w={1.2} /></>,
   rectangle: <><L d="M2 18 L6 7 L10 17 L14 7 L18 17 L22 3" /><L d="M3 7 H20" color={LV} w={1.2} /><L d="M3 17 H20" color={LV} w={1.2} /></>,
   channel: <><L d="M2 21 L6 12 L9 17 L13 8 L16 13 L20 4 L22 1" /><L d="M3 14 L21 2" color={LV} w={1.2} /><L d="M5 20 L22 9" color={LV} w={1.2} /></>,
-  engulfing: <><K x={8} o={9} h={7} l={15} c={14} /><K x={16} o={16} h={3} l={17} c={5} w={6} /></>,
-  hammer: <><K x={12} o={7} h={5} l={21} c={5} w={6} /></>,
-  star: <><K x={5} o={4} h={3} l={15} c={14} /><K x={12} o={17} h={16} l={20} c={18} w={3} /><K x={19} o={15} h={5} l={16} c={7} /></>,
-  harami: <><K x={8} o={4} h={3} l={20} c={19} w={6} /><K x={16} o={14} h={10} l={15} c={10} w={3} /></>,
-  piercing: <><K x={8} o={4} h={3} l={15} c={14} /><K x={16} o={18} h={7} l={19} c={8} /></>,
-  soldiers: <><K x={5} o={19} h={14} l={20} c={15} /><K x={12} o={15} h={9} l={16} c={10} /><K x={19} o={10} h={3} l={11} c={4} /></>,
-  tweezer: <><K x={8} o={5} h={4} l={20} c={17} /><K x={16} o={17} h={6} l={20} c={7} /><L d="M4 20 H20" color={LV} dash w={1} /></>,
-  inside_bar: <><K x={6} o={18} h={3} l={21} c={6} w={5} /><K x={12} o={10} h={8} l={15} c={13} w={3} /><K x={18} o={12} h={1} l={13} c={2} /><L d="M3 3 H22" color={LV} dash w={1} /></>,
-  doji: <><L d="M12 3 V21" color="#cbd5e1" w={1.3} /><L d="M8 12 H16" color="#cbd5e1" w={2} /></>,
-  marubozu: <><rect x={8} y={3} width={8} height={18} fill={UP} rx={0.8} /></>,
+  engulfing: <><KB x={7} o={9} h={7} l={16} c={14} w={5} /><KB x={16} o={17} h={2} l={20} c={4} w={8} /></>,
+  hammer: <><KB x={12} o={8} h={3} l={22} c={4} w={9} /></>,
+  star: <><KB x={4.5} o={2} h={1} l={14} c={13} w={5} /><KB x={12} o={18} h={16} l={21} c={19} w={4} /><KB x={19.5} o={13} h={3} l={14} c={4} w={5} /></>,
+  harami: <><KB x={8} o={2} h={1} l={23} c={22} w={8} /><KB x={18} o={15} h={8} l={16} c={9} w={4} /></>,
+  piercing: <><KB x={7.5} o={2} h={1} l={14} c={13} w={7} /><KB x={16.5} o={19} h={6} l={21} c={7} w={7} /><L d="M3 7.5 H21" color={LV} dash w={0.9} /></>,
+  soldiers: <><KB x={4.5} o={21} h={15} l={22} c={16} w={5} /><KB x={12} o={16} h={9} l={17} c={10} w={5} /><KB x={19.5} o={10} h={2} l={11} c={3} w={5} /></>,
+  tweezer: <><KB x={8} o={4} h={2} l={21} c={17} w={7} /><KB x={16} o={17} h={4} l={21} c={6} w={7} /><L d="M2 21.5 H22" color={LV} dash w={1} /></>,
+  inside_bar: <><KB x={5} o={20} h={2} l={22} c={6} w={6} /><KB x={12} o={11} h={9} l={16} c={14} w={4} /><KB x={19} o={13} h={0.8} l={14} c={1.5} w={5} /><L d="M2 2 H23" color={LV} dash w={0.9} /></>,
+  doji: <><line x1={12} x2={12} y1={2} y2={22} stroke="#cbd5e1" strokeWidth={1.8} strokeLinecap="round" /><rect x={5} y={11} width={14} height={2} fill="#cbd5e1" rx={0.6} /></>,
+  marubozu: <><rect x={7} y={2} width={10} height={20} fill={UP} rx={1} /></>,
   broadening: <><L d="M2 12 L5 9 L8 15 L12 6 L16 18 L19 4 L22 1" /><L d="M3 10 L20 3" color={LV} w={1.2} /><L d="M3 14 L20 19" color={LV} w={1.2} /></>,
   broadening_wedge: <><L d="M2 6 L5 9 L8 5 L12 14 L15 7 L18 20 L22 3" /><L d="M3 5 L20 6" color={LV} w={1.2} /><L d="M3 9 L20 21" color={LV} w={1.2} /></>,
   cup_handle: <><L d="M2 6 Q4 18 12 18 Q19 18 19 6 L21 9 L23 3" /><L d="M2 6 H23" color={LV} dash w={1} /></>,
