@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Cond, Setup, Step, captureNames, condPhrase, labelsOf, patternRefs, tokensOf, PATTERN_KINDS, parseToken, patternUsage } from '../model';
 import { Data, RunResult } from '../engine';
 import { shortName } from './TokenPicker';
-import { PatternIcon } from './PatternIcon';
+import { PatternIcon, IndicatorIcon } from './PatternIcon';
 import { sectionSummary, indicatorUsage } from './sections';
 import { Focus } from './Chart';
 import { STEP_COLORS, cn } from './ui';
@@ -49,7 +49,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
         {setup.indicators.map((i) => (
           <button key={i.token} onMouseEnter={() => setHover({ kind: 'ind', key: i.token })} onMouseLeave={() => setHover(null)} onClick={onDeclared}
             className={cn('flex items-center gap-1 rounded-full border px-2 py-0.5 transition', hover?.key === i.token ? 'border-amber-400 bg-amber-500/10' : 'hover:bg-accent')}>
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />{i.label?.replace(/^the /, '') || shortName(i.token, {})}<span className="text-muted-foreground">·{iu[i.token] || 0}</span>
+            <IndicatorIcon token={i.token} size={16} />{i.label?.replace(/^the /, '') || shortName(i.token, {})}<span className="text-muted-foreground">·{iu[i.token] || 0}</span>
           </button>
         ))}
         {(setup.patterns || []).map((p) => (

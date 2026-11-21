@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { VariantProps } from '../types';
 import { SetupMap } from '../components/SetupMap';
+import { IndicatorIcon } from '../components/PatternIcon';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
 import { StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList } from '../components/sections';
@@ -104,7 +105,7 @@ export function VariantB(p: VariantProps) {
           {setup.indicators.length === 0 && <div className="text-xs italic text-muted-foreground">none yet</div>}
           {setup.indicators.map((ind, k) => (
             <div key={ind.token} className="flex items-center gap-2 py-0.5 text-xs">
-              <span className="mono w-40 truncate" title={ind.token}>{shortName(ind.token, {})}</span>
+              <IndicatorIcon token={ind.token} size={18} /><span className="mono w-36 truncate" title={ind.token}>{shortName(ind.token, {})}</span>
               <Input value={ind.label || ''} placeholder="label" onChange={(e) => mutate((s) => { s.indicators[k].label = e.target.value || undefined; })} className="h-6 flex-1" />
               <span className={cn('w-14 text-right', usage[ind.token] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[ind.token] ? `used ${usage[ind.token]}×` : 'unused'}</span>
             </div>

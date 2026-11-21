@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { VariantProps } from '../types';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx, AddMenu, newCmp } from '../components/CondEditor';
-import { PatternIcon } from '../components/PatternIcon';
+import { PatternIcon, IndicatorIcon } from '../components/PatternIcon';
 import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, SectionHelp } from '../components/sections';
 import { shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs } from '../components/ui';
@@ -44,7 +44,7 @@ export function VariantC(p: VariantProps) {
         <div className={cn('space-y-3 overflow-auto border-r p-3 text-sm', run && 'pointer-events-none opacity-40')}>
           <Lib title="Indicators (declared once)">
             {setup.indicators.map((i) => (
-              <LibItem key={i.token} onClick={() => insert({ id: uid(), t: 'cmp', a: i.token, op: '>', b: '' })} disabled={sel.kind !== 'step'} hint={`used ${usage[i.token] || 0}×`}>{i.label || shortName(i.token, {})}</LibItem>
+              <LibItem key={i.token} onClick={() => insert({ id: uid(), t: 'cmp', a: i.token, op: '>', b: '' })} disabled={sel.kind !== 'step'} hint={`used ${usage[i.token] || 0}×`}><span className="inline-flex items-center gap-1.5"><IndicatorIcon token={i.token} size={16} />{i.label || shortName(i.token, {})}</span></LibItem>
             ))}
             <button className="text-xs text-sky-300" onClick={() => setSel({ kind: 'settings' })}>manage / declare…</button>
           </Lib>

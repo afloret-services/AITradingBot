@@ -4,7 +4,7 @@ import { labelsOf, phrase, parseToken } from '../model';
 import { Setup, Step, TF, TFS, Leg, Guard, InPositionRule, Cond, uid, SECTION_NAMES, condPhrase, Pattern, PatternKind, PATTERN_KINDS, newPattern, patternUsage, patternSettingsPhrase, tfMinutes, patternPhrase } from '../model';
 import { TokenPicker, TokenCtx, shortName } from './TokenPicker';
 import { CondEditor, Look } from './CondEditor';
-import { PatternIcon } from './PatternIcon';
+import { PatternIcon, IndicatorIcon } from './PatternIcon';
 import { PatternSchematic, PatternExample } from './PatternDiagram';
 import type { Data, RunResult } from '../engine';
 import { chartTime } from '../engine';
@@ -146,6 +146,7 @@ export function IndicatorList({ setup, mutate, ctx, usage }: { setup: Setup; mut
       {setup.indicators.map((ind, k) => (
         <React.Fragment key={k}>
         <div className="flex flex-wrap items-center gap-2">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))]"><IndicatorIcon token={ind.token} size={22} /></span>
           <TokenPicker value={ind.token} ctx={{ ...ctx, inlineDeclare: true, onDeclare: undefined, onlyIndicator: true }} compact onChange={(t) => mutate((s) => { const old = s.indicators[k].token; s.indicators[k].token = t.replace(/\.prev\[\d+\]$/, ''); renameToken(s, old, s.indicators[k].token); })} />
           <Input placeholder="display label (optional)" value={ind.label || ''} onChange={(e) => mutate((s) => { s.indicators[k].label = e.target.value || undefined; })} className="h-7 w-48" />
           {usage && <span className="text-[11px] text-muted-foreground">used {usage[ind.token] || 0}×</span>}

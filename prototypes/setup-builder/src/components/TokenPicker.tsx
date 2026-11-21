@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { TFS, TF, isToken, parseToken, phrase, withPrev, Pattern } from '../model';
 import { Button, Input, NumInput, Select, cn } from './ui';
+import { IndicatorIcon } from './PatternIcon';
 
 export interface TokenCtx {
   baseBar: TF;
@@ -45,7 +46,7 @@ export function TokenPicker({ value, onChange, ctx, placeholder = 'pick a value'
   return (
     <span ref={ref} className={cn('relative inline-block', className)}>
       <button onClick={() => setOpen(!open)} title={value} className={cn('rounded border px-1.5 py-0.5 text-left text-[13px] hover:border-sky-400', empty ? 'border-dashed border-amber-400/70 text-amber-300' : isToken(value) ? 'border-sky-500/40 bg-sky-500/10 text-sky-200' : 'border-input bg-muted')}>
-        {empty ? placeholder : compact ? shortName(value, ctx.labels) : phrase(value, ctx.labels)}
+        {!empty && /^\{\{indicator:/.test(value) && <IndicatorIcon token={value} size={15} className="-mt-0.5 mr-1 inline-block align-middle" />}{empty ? placeholder : compact ? shortName(value, ctx.labels) : phrase(value, ctx.labels)}
       </button>
       {open && <div className="absolute left-0 top-full z-50 mt-1 w-[340px] rounded-lg border bg-card p-3 shadow-2xl"><Editor value={value} onChange={onChange} ctx={ctx} /><div className="mt-2 flex justify-end"><Button size="sm" variant="secondary" onClick={() => setOpen(false)}>Done</Button></div></div>}
     </span>
