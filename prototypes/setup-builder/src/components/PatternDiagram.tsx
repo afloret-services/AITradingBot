@@ -87,6 +87,40 @@ export function PatternSchematic({ p }: { p: Pattern }) {
       <Label x={6} y={14}>{P.displacement ? 'a Displacement closes above the level' : 'a close above the level'}</Label>
     </>;
   }
+  const MORE: Partial<Record<string, { pts: [number, number][]; lines: [number, number, number, number][]; bx: number; by: number; tgt?: number; note: string; marks?: [number, number, string][] }>> = {
+    broadening: { pts: [[15, 50], [40, 62], [65, 40], [95, 72], [125, 30], [160, 82], [195, 22], [225, 92]], lines: [[40, 62, 225, 90], [65, 40, 225, 18]], bx: 216, by: 88, tgt: 98, note: 'higher highs, lower lows' },
+    broadening_wedge: { pts: [[15, 75], [40, 68], [65, 72], [95, 52], [125, 66], [160, 32], [190, 62], [222, 80]], lines: [[15, 76, 210, 62], [40, 68, 210, 22]], bx: 205, by: 64, tgt: 98, note: 'descending broadening wedge' },
+    cup_handle: { pts: [[15, 82], [40, 52], [70, 32], [105, 30], [140, 48], [170, 80], [188, 70], [205, 76], [228, 92]], lines: [[15, 82, 235, 82]], bx: 214, by: 82, tgt: 98, note: 'cup, then a shallow handle', marks: [[15, 82, 'rim'], [105, 30, 'depth']] },
+    diamond: { pts: [[12, 85], [40, 55], [70, 70], [100, 40], [130, 82], [160, 50], [185, 68], [210, 60], [232, 88]], lines: [[40, 55, 100, 40], [100, 40, 215, 66], [70, 70, 130, 82], [130, 82, 185, 68]], bx: 204, by: 68, tgt: 98, note: 'widens, then narrows' },
+    rounding: { pts: [[12, 80], [40, 52], [70, 36], [100, 30], [130, 33], [160, 46], [190, 70], [210, 82], [232, 92]], lines: [[12, 80, 235, 80]], bx: 206, by: 80, tgt: 98, note: 'a slow U-turn', marks: [[12, 80, 'rim']] },
+    island: { pts: [], lines: [], bx: 0, by: 0, note: 'gap down, a few bars alone, gap up' },
+    bump_run: { pts: [[12, 88], [45, 78], [80, 68], [105, 50], [125, 25], [145, 20], [165, 40], [190, 64], [225, 85]], lines: [[12, 92, 235, 50]], bx: 186, by: 59, note: 'lead-in, bump, run back through the line' },
+    measured_move: { pts: [[15, 15], [75, 60], [110, 40], [180, 88]], lines: [[75, 60, 235, 60]], bx: 128, by: 60, tgt: 98, note: 'second leg ≈ first leg', marks: [[15, 15, 'A'], [75, 60, 'B'], [110, 40, 'C']] },
+    parabolic: { pts: [[12, 90], [70, 84], [110, 72], [140, 52], [158, 28], [168, 10], [178, 26], [200, 34], [225, 45]], lines: [], bx: 178, by: 26, note: 'a fall that speeds up, then a sharp turn' },
+    wyckoff: { pts: [[10, 95], [30, 55], [50, 72], [70, 52], [95, 70], [120, 55], [140, 72], [158, 44], [175, 66], [198, 74], [222, 90]], lines: [[25, 74, 205, 74], [25, 52, 205, 52]], bx: 196, by: 74, tgt: 96, note: 'fall, range, spring, sign of strength', marks: [[158, 44, 'spring']] },
+    wyckoff_re: { pts: [[10, 15], [30, 55], [50, 72], [70, 52], [95, 70], [120, 55], [140, 72], [158, 44], [175, 66], [198, 74], [222, 90]], lines: [[25, 74, 205, 74], [25, 52, 205, 52]], bx: 196, by: 74, tgt: 96, note: 'rise, range, spring, rise resumes', marks: [[158, 44, 'spring']] },
+  };
+  const mo = MORE[p.kind];
+  if (mo) {
+    if (p.kind === 'island') {
+      body = <>
+        {([[30, 82, 74, 78], [55, 80, 70, 72], [80, 72, 76, 70], [115, 40, 30, 32], [140, 36, 28, 34], [165, 38, 32, 30], [200, 70, 80, 76], [225, 78, 88, 84]] as number[][]).map(([x, o, h, c], i) => <Candle key={i} x={x} k={[o > c ? o : o, Math.max(o, h, c) + 2, Math.min(o, c) - 3, c] as any} y={y} w={14} />)}
+        <line x1={20} x2={240} y1={y(56)} y2={y(56)} stroke={LVL} strokeDasharray="3 3" />
+        <Label x={95} y={y(60)} color={LVL}>gap</Label><Label x={180} y={y(60)} color={LVL}>gap</Label>
+        <Label x={6} y={12}>{mo.note}</Label>
+      </>;
+    } else {
+      body = <>
+        <polyline points={mo.pts.map(([x, v]) => `${x},${y(v)}`).join(' ')} fill="none" stroke="#cbd5e1" strokeWidth={1.6} strokeLinejoin="round" />
+        {mo.lines.map(([x1, v1, x2, v2], i) => <line key={i} x1={x1} y1={y(v1)} x2={x2} y2={y(v2)} stroke={LVL} strokeWidth={1.4} strokeDasharray={p.kind === 'cup_handle' || p.kind === 'rounding' || p.kind === 'measured_move' ? '3 3' : undefined} />)}
+        {(mo.marks || []).map(([x, v, t], i) => <g key={i}><circle cx={x} cy={y(v)} r={2.5} fill={ZONE} /><Label x={x + 4} y={y(v) + (v > 50 ? -5 : 12)} color={ZONE}>{t}</Label></g>)}
+        <circle cx={mo.bx} cy={y(mo.by)} r={4} fill="none" stroke="#26a69a" strokeWidth={1.5} />
+        <Label x={mo.bx - 6} y={y(mo.by) + 14} anchor="end" color="#86efac">forms here</Label>
+        {mo.tgt != null && <><line x1={mo.bx} x2={252} y1={y(mo.tgt)} y2={y(mo.tgt)} stroke="#26a69a" strokeDasharray="2 3" /><Label x={252} y={y(mo.tgt) + 11} anchor="end" color="#86efac">{p.name}.target</Label></>}
+        <Label x={6} y={12}>{PATTERN_KINDS[p.kind].bull}: {mo.note}</Label>
+      </>;
+    }
+  }
   if (PATTERN_KINDS[p.kind].group === 'candle') {
     // the bullish version; the bearish one is its mirror. Two down candles before it show "after a move against it".
     const lead: C[] = P.trend_bars ? [[82, 84, 74, 76], [76, 78, 66, 68]] : [];
@@ -219,7 +253,7 @@ export function PatternExample({ p, data }: { p: Pattern; data: Data }) {
         {caps.path && <polyline points={caps.path.map(([t, v]: [number, number]) => `${xt(t)},${y(v)}`).join(' ')} fill="none" stroke={ZONE} strokeWidth={1.6} opacity={0.9} />}
         {caps.neck_t0 != null && <line x1={xt(caps.neck_t0)} y1={y(caps.neck_p0)} x2={xt(caps.time)} y2={y(caps.neckline)} stroke={LVL} strokeDasharray="4 3" />}
         {caps.lines && caps.lines.map(([t1, p1, t2, p2]: number[], q: number) => <line key={q} x1={xt(t1)} y1={y(p1)} x2={xt(t2)} y2={y(p2)} stroke={LVL} strokeWidth={1.5} />)}
-        {caps.path && <line x1={xt(caps.time)} x2={w - 42} y1={y(caps.target)} y2={y(caps.target)} stroke="#ef5350" strokeDasharray="2 3" />}
+        {caps.target != null && <line x1={xt(caps.time)} x2={w - 42} y1={y(caps.target)} y2={y(caps.target)} stroke="#ef5350" strokeDasharray="2 3" />}
         {typeof caps.top === 'number' && <rect x={xt(startT) - step / 2} y={y(caps.top)} width={(caps.end_time != null ? xt(caps.end_time) + step / 2 : w - 42) - xt(startT) + step / 2} height={Math.max(1, y(caps.bottom) - y(caps.top))} fill={ZONE} opacity={0.18} stroke={ZONE} strokeDasharray="3 3" />}
         {typeof caps.level === 'number' && <line x1={xt(caps.swing_time)} x2={w - 42} y1={y(caps.level)} y2={y(caps.level)} stroke={LVL} strokeDasharray="4 3" />}
         {typeof caps.start === 'number' && caps.start_time != null && <line x1={xt(caps.start_time)} y1={y(caps.start)} x2={xt(caps.end_time)} y2={y(caps.end)} stroke={LVL} strokeWidth={2} />}

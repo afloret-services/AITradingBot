@@ -576,6 +576,156 @@ export function patternSeries(data: Data, p: Pattern, side: 'long' | 'short') {
           lines: [[T(hA.i), back(hA.p), T(j), back(up(j))], [T(lA.i), back(lA.p), T(j), back(lo(j))]], path: [] };
       }
     }
+  } else if (['broadening', 'broadening_wedge', 'cup_handle', 'diamond', 'rounding', 'island', 'bump_run', 'measured_move', 'parabolic', 'wyckoff', 'wyckoff_re'].includes(p.kind)) {
+    // written for the bullish side on G; the bearish side runs on upside-down bars. Real price = sg × G price.
+    const sg = long ? 1 : -1;
+    const G = long ? B : B.map((b) => ({ ...b, o: -b.o, h: -b.l, l: -b.h, c: -b.c }));
+    const R = (x: number) => sg * x;
+    const T = (i: number) => B[Math.max(0, Math.min(B.length - 1, i))].t;
+    const n = Number(P.strength) || 3;
+    const H: { i: number; p: number }[] = [], L: { i: number; p: number }[] = [];
+    const used = new Set<string>();
+    let cooldown = -1;
+    const lowMin = (a: number, b: number) => { let m = Infinity, mi = a; for (let k = a; k <= b; k++) if (G[k].l < m) { m = G[k].l; mi = k; } return { p: m, i: mi }; };
+    const highMax = (a: number, b: number) => { let m = -Infinity, mi = a; for (let k = a; k <= b; k++) if (G[k].h > m) { m = G[k].h; mi = k; } return { p: m, i: mi }; };
+    const firstUp = (j: number, lvl: (k: number) => number, from: number) => { for (let k = from; k < j; k++) if (G[k].c > lvl(k)) return false; return G[j].c > lvl(j); };
+    for (let j = 2; j < B.length; j++) {
+      const s0 = j - n;
+      if (s0 >= 0 && isSwing(G, s0, n, 'high')) H.push({ i: s0, p: G[s0].h });
+      if (s0 >= 0 && isSwing(G, s0, n, 'low')) L.push({ i: s0, p: G[s0].l });
+      if (j <= cooldown) continue;
+      const k = p.kind;
+      if (k === 'broadening' || k === 'broadening_wedge') {
+        if (H.length < 2 || L.length < 2) continue;
+        const [hA, hB] = H.slice(-2), [lA, lB] = L.slice(-2);
+        const start = Math.min(hA.i, lA.i), end = Math.max(hB.i, lB.i), key = `${hB.i}:${lB.i}`;
+        if (used.has(key) || j - start > P.max_bars || j <= end || j - end > P.break_within) continue;
+        const su = (hB.p - hA.p) / (hB.i - hA.i), sl = (lB.p - lA.p) / (lB.i - lA.i);
+        const up = (q: number) => hA.p + su * (q - hA.i), lo = (q: number) => lA.p + sl * (q - lA.i);
+        const w0 = up(start) - lo(start), w1 = up(end) - lo(end);
+        if (w1 < P.min_height_points - 1e-9 || w0 <= 0 || w1 < w0 * (1 + P.diverge_pct / 100)) continue;
+        if (k === 'broadening' ? !(su > 0 && sl < 0) : !(su < 0 && sl < 0)) continue;
+        if (!firstUp(j, up, end + 1)) continue;
+        used.add(key);
+        const wj = up(j) - lo(j);
+        out[j] = { line: R(up(j)), opposite: R(lo(j)), height: wj, target: R(up(j) + wj), breakout: B[j].c, time: B[j].t, path: [],
+          lines: [[T(hA.i), R(hA.p), T(j), R(up(j))], [T(lA.i), R(lA.p), T(j), R(lo(j))]] };
+      } else if (k === 'cup_handle') {
+        const Rr = H[H.length - 1];
+        if (!Rr || j - Rr.i < 2 || j - Rr.i > P.handle_bars || used.has(String(Rr.i))) continue;
+        const hl = lowMin(Rr.i + 1, j - 1);
+        for (let q = H.length - 2; q >= 0; q--) {
+          const Lr = H[q], w = Rr.i - Lr.i;
+          if (w < P.min_bars) continue;
+          if (w > P.max_bars) break;
+          const bot = lowMin(Lr.i, Rr.i), depth = Math.min(Lr.p, Rr.p) - bot.p, rim = Math.max(Lr.p, Rr.p);
+          if (depth < P.min_depth_points - 1e-9 || Math.abs(Lr.p - Rr.p) > (P.rim_tolerance_pct / 100) * depth + 1e-9) continue;
+          const pos = (bot.i - Lr.i) / w;
+          if (pos < 0.25 || pos > 0.75) continue;
+          if (Rr.p - hl.p <= 0 || Rr.p - hl.p > (P.handle_max_pct / 100) * depth + 1e-9 || hl.p < bot.p + depth / 2) continue;
+          if (!(G[j].c > rim && G[j - 1].c <= rim)) continue;
+          used.add(String(Rr.i));
+          out[j] = { rim: R(rim), extreme: R(bot.p), depth, handle: R(hl.p), line: R(rim), target: R(rim + depth), breakout: B[j].c, time: B[j].t,
+            path: [[T(Lr.i), R(Lr.p)], [T(bot.i), R(bot.p)], [T(Rr.i), R(Rr.p)], [T(hl.i), R(hl.p)], [T(j), B[j].c]], lines: [[T(Lr.i), R(rim), T(j), R(rim)]] };
+          break;
+        }
+      } else if (k === 'diamond') {
+        if (H.length < 3 || L.length < 3) continue;
+        const h = H.slice(-3), l = L.slice(-3);
+        const start = Math.min(h[0].i, l[0].i), end = Math.max(h[2].i, l[2].i), key = `${h[2].i}:${l[2].i}`;
+        if (used.has(key) || j - start > P.max_bars || j <= end || j - end > P.break_within) continue;
+        if (!(h[1].p > h[0].p && l[1].p < l[0].p && h[2].p < h[1].p && l[2].p > l[1].p)) continue;
+        const height = h[1].p - l[1].p;
+        if (height < P.min_height_points - 1e-9) continue;
+        const up = (q: number) => h[1].p + ((h[2].p - h[1].p) * (q - h[1].i)) / Math.max(1, h[2].i - h[1].i);
+        if (!firstUp(j, up, end + 1)) continue;
+        used.add(key);
+        out[j] = { line: R(up(j)), height, target: R(up(j) + height), breakout: B[j].c, time: B[j].t, path: [],
+          lines: [[T(h[0].i), R(h[0].p), T(h[1].i), R(h[1].p)], [T(h[1].i), R(h[1].p), T(j), R(up(j))], [T(l[0].i), R(l[0].p), T(l[1].i), R(l[1].p)], [T(l[1].i), R(l[1].p), T(l[2].i), R(l[2].p)]] };
+      } else if (k === 'rounding') {
+        const W = Math.max(10, Number(P.bars) || 40), a0 = j - W;
+        if (a0 < 1) continue;
+        // least squares y = a x² + b x + c over the window's closes, x in [0, 1]
+        let S0 = 0, S1 = 0, S2 = 0, S3 = 0, S4 = 0, Y0 = 0, Y1 = 0, Y2 = 0;
+        for (let q = a0; q < j; q++) { const x = (q - a0) / (W - 1), y = G[q].c; S0++; S1 += x; S2 += x * x; S3 += x ** 3; S4 += x ** 4; Y0 += y; Y1 += x * y; Y2 += x * x * y; }
+        const det = (m: number[][]) => m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+        const M = [[S4, S3, S2], [S3, S2, S1], [S2, S1, S0]], D = det(M);
+        if (!D) continue;
+        const a = det([[Y2, S3, S2], [Y1, S2, S1], [Y0, S1, S0]]) / D, b = det([[S4, Y2, S2], [S3, Y1, S1], [S2, Y0, S0]]) / D, c = det([[S4, S3, Y2], [S3, S2, Y1], [S2, S1, Y0]]) / D;
+        if (a <= 0) continue;
+        const xv = -b / (2 * a);
+        if (xv < 0.3 || xv > 0.7) continue;
+        const f = (x: number) => a * x * x + b * x + c, mean = Y0 / S0;
+        let ssr = 0, sst = 0; for (let q = a0; q < j; q++) { const x = (q - a0) / (W - 1); ssr += (G[q].c - f(x)) ** 2; sst += (G[q].c - mean) ** 2; }
+        if (!sst || 1 - ssr / sst < P.min_fit_pct / 100) continue;
+        const rim = Math.max(f(0), G[a0].c), depth = rim - f(xv);
+        if (depth < P.min_depth_points - 1e-9 || !(G[j].c > rim && G[j - 1].c <= rim)) continue;
+        cooldown = j + W;
+        const pts: [number, number][] = []; for (let t = 0; t <= 8; t++) pts.push([T(a0 + Math.round((t / 8) * (W - 1))), R(f(t / 8))]);
+        pts.push([T(j), B[j].c]);
+        out[j] = { rim: R(rim), extreme: R(f(xv)), depth, line: R(rim), target: R(rim + depth), breakout: B[j].c, time: B[j].t, path: pts, lines: [[T(a0), R(rim), T(j), R(rim)]] };
+      } else if (k === 'island') {
+        const gap = P.gap_ticks * TICK;
+        for (let st = j - 1; st >= Math.max(1, j - P.max_bars); st--) {
+          const top = highMax(st, j - 1);
+          if (G[j].l - top.p >= gap - 1e-9 && G[st - 1].l - top.p >= gap - 1e-9) {
+            const bot = lowMin(st, j - 1);
+            out[j] = { line: R(top.p), extreme: R(bot.p), breakout: B[j].c, time: B[j].t, path: [],
+              lines: [[T(st - 1), R(G[st - 1].l), T(st), R(G[st - 1].l)], [T(j - 1), R(G[j].l), T(j), R(G[j].l)], [T(st), R(top.p), T(j - 1), R(top.p)]] };
+            break;
+          }
+        }
+      } else if (k === 'bump_run') {
+        const LB = Number(P.lead_bars) || 30, BB = Number(P.bump_bars) || 15, a0 = j - LB - BB;
+        if (a0 < 0) continue;
+        let mx = 0, my = 0; for (let q = a0; q < a0 + LB; q++) { mx += q; my += G[q].c; } mx /= LB; my /= LB;
+        let num = 0, den = 0; for (let q = a0; q < a0 + LB; q++) { num += (q - mx) * (G[q].c - my); den += (q - mx) ** 2; }
+        const sl = den ? num / den : 0, line = (q: number) => my + sl * (q - mx);
+        if (sl >= 0) continue; // a falling lead-in for the bullish side
+        let dev = 0; for (let q = a0; q < a0 + LB; q++) dev += Math.abs(G[q].c - line(q)); dev /= LB;
+        const bump = lowMin(a0 + LB, j - 1), dist = line(bump.i) - bump.p;
+        if (dist < Math.max(P.min_bump_points, P.bump_mult * dev) - 1e-9) continue;
+        if (!(G[j].c > line(j) && G[j - 1].c <= line(j - 1))) continue;
+        cooldown = j + BB;
+        out[j] = { line: R(line(j)), extreme: R(bump.p), breakout: B[j].c, time: B[j].t, path: [], lines: [[T(a0), R(line(a0)), T(j), R(line(j))]] };
+      } else if (k === 'measured_move') {
+        const C = L[L.length - 1];
+        if (!C || j - C.i > P.break_within || used.has(String(C.i))) continue;
+        const Bq = [...H].reverse().find((h) => h.i < C.i);
+        if (!Bq) continue;
+        const A = [...L].reverse().find((l) => l.i < Bq.i);
+        if (!A) continue;
+        const leg = Bq.p - A.p, r = leg > 0 ? (Bq.p - C.p) / leg : 0;
+        if (leg < P.min_leg_points - 1e-9 || r < P.min_retrace_pct / 100 - 1e-9 || r > P.max_retrace_pct / 100 + 1e-9) continue;
+        if (!(G[j].c > Bq.p && G[j - 1].c <= Bq.p)) continue;
+        used.add(String(C.i));
+        out[j] = { line: R(Bq.p), leg, a: R(A.p), b: R(Bq.p), c: R(C.p), target: R(C.p + leg), breakout: B[j].c, time: B[j].t,
+          path: [[T(A.i), R(A.p)], [T(Bq.i), R(Bq.p)], [T(C.i), R(C.p)], [T(j), B[j].c]], lines: [[T(Bq.i), R(Bq.p), T(j), R(Bq.p)]] };
+      } else if (k === 'parabolic') {
+        const N = Math.max(6, Number(P.run_bars) || 15), st = j - 1 - N, av = avg[j - 1];
+        if (st < 0 || av == null) continue;
+        const ext = lowMin(st, j - 1), move = G[st].c - ext.p;
+        if (move < P.move_mult * av - 1e-9) continue;
+        const third = Math.floor(N / 3), d1 = G[st].c - G[st + third].c, d3 = G[j - 1 - third].c - G[j - 1].c;
+        if (d1 <= 0 || d3 < P.accel * d1 - 1e-9) continue;
+        if (!(G[j].c > G[j - 1].h)) continue;
+        cooldown = j + N;
+        out[j] = { line: R(G[j - 1].h), extreme: R(ext.p), move, target: R(ext.p + move / 2), breakout: B[j].c, time: B[j].t,
+          path: [[T(st), R(G[st].c)], [T(st + third), R(G[st + third].c)], [T(ext.i), R(ext.p)], [T(j), B[j].c]], lines: [] };
+      } else if (k === 'wyckoff' || k === 'wyckoff_re') {
+        const W = Math.max(15, Number(P.range_bars) || 60), r0 = j - W, tb = Number(P.trend_bars) || 40;
+        if (r0 - tb < 0) continue;
+        const top = highMax(r0, j - 1), sup = lowMin(r0, r0 + Math.floor((2 * W) / 3)), height = top.p - sup.p;
+        if (height < P.min_height_points - 1e-9 || !(G[j].c > top.p && G[j - 1].c <= top.p)) continue;
+        let spring = -1; for (let q = r0 + Math.floor((2 * W) / 3); q < j; q++) if (G[q].l < sup.p - P.spring_ticks * TICK && G[q].c > sup.p) { spring = q; break; }
+        if (spring < 0) continue;
+        const into = G[r0].c - G[r0 - tb].c; // rose into the range (> 0) or fell into it (< 0)
+        if (k === 'wyckoff' ? into > -height : into < height) continue;
+        cooldown = j + W;
+        out[j] = { line: R(top.p), opposite: R(sup.p), spring: R(G[spring].l), height, target: R(top.p + height), breakout: B[j].c, time: B[j].t,
+          path: [[T(r0 - tb), R(G[r0 - tb].c)], [T(r0), R(G[r0].c)], [T(spring), R(G[spring].l)], [T(j), B[j].c]], lines: [[T(r0), R(top.p), T(j), R(top.p)], [T(r0), R(sup.p), T(j), R(sup.p)]] };
+      }
+    }
   } else if (PATTERN_KINDS[p.kind]?.group === 'candle') {
     // written for the bullish version; the bearish one runs it on upside-down bars. Captured prices come from the real bars.
     const F = long ? B : B.map((b) => ({ ...b, o: -b.o, h: -b.l, l: -b.h, c: -b.c }));

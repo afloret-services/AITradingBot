@@ -35,6 +35,17 @@ const GLYPHS: Record<PatternKind, React.ReactNode> = {
   inside_bar: <><K x={6} o={18} h={3} l={21} c={6} w={5} /><K x={12} o={10} h={8} l={15} c={13} w={3} /><K x={18} o={12} h={1} l={13} c={2} /><L d="M3 3 H22" color={LV} dash w={1} /></>,
   doji: <><L d="M12 3 V21" color="#cbd5e1" w={1.3} /><L d="M8 12 H16" color="#cbd5e1" w={2} /></>,
   marubozu: <><rect x={8} y={3} width={8} height={18} fill={UP} rx={0.8} /></>,
+  broadening: <><L d="M2 12 L5 9 L8 15 L12 6 L16 18 L19 4 L22 1" /><L d="M3 10 L20 3" color={LV} w={1.2} /><L d="M3 14 L20 19" color={LV} w={1.2} /></>,
+  broadening_wedge: <><L d="M2 6 L5 9 L8 5 L12 14 L15 7 L18 20 L22 3" /><L d="M3 5 L20 6" color={LV} w={1.2} /><L d="M3 9 L20 21" color={LV} w={1.2} /></>,
+  cup_handle: <><L d="M2 6 Q4 18 12 18 Q19 18 19 6 L21 9 L23 3" /><L d="M2 6 H23" color={LV} dash w={1} /></>,
+  diamond: <><L d="M2 4 L6 12 L9 7 L12 19 L15 8 L18 15 L22 3" /><L d="M4 11 L12 4 L20 10" color={LV} w={1.2} /><L d="M4 13 L12 20 L20 14" color={LV} w={1.2} /></>,
+  rounding: <><L d="M2 5 Q12 25 22 5" /><L d="M2 5 H22" color={LV} dash w={1} /></>,
+  island: <><K x={4} o={5} h={4} l={8} c={7} w={3} /><K x={10} o={15} h={13} l={20} c={17} w={3} /><K x={14} o={17} h={14} l={20} c={15} w={3} /><K x={20} o={7} h={3} l={8} c={4} w={3} /><L d="M2 11 H22" color={LV} dash w={1} /></>,
+  bump_run: <><L d="M2 4 L10 9 Q14 22 17 16 L22 4" /><L d="M2 3 L22 15" color={LV} w={1.2} /></>,
+  measured_move: <><L d="M2 21 L9 9 L13 14 L21 2" /><L d="M9 9 H22" color={LV} dash w={1} /><circle cx={2.5} cy={20.5} r={1.4} fill={ZN} /><circle cx={9} cy={9} r={1.4} fill={ZN} /><circle cx={13} cy={14} r={1.4} fill={ZN} /></>,
+  parabolic: <><L d="M2 3 Q12 4 16 20 L19 13 L22 15" /></>,
+  wyckoff: <><L d="M2 2 L6 12 L9 8 L12 13 L14 18 L16 10 L19 12 L22 3" /><L d="M5 7 H21" color={LV} w={1.1} /><L d="M5 15 H21" color={LV} w={1.1} /></>,
+  wyckoff_re: <><L d="M2 21 L6 9 L9 13 L12 9 L14 16 L16 10 L19 12 L22 2" /><L d="M5 8 H21" color={LV} w={1.1} /><L d="M5 15 H21" color={LV} w={1.1} /></>,
 };
 
 export function PatternIcon({ kind, size = 18, className }: { kind: PatternKind; size?: number; className?: string }) {

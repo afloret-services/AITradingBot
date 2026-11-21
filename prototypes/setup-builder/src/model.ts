@@ -22,7 +22,8 @@ export type Cond =
 
 // ---------- Patterns: declared once per Setup (kind, timeframe, settings), then referenced by name in steps ----------
 export type PatternKind = 'fvg' | 'displacement' | 'order_block' | 'leg' | 'mss' | 'double' | 'triple' | 'head_shoulders' | 'triangle' | 'wedge' | 'flag' | 'pennant' | 'rectangle' | 'channel'
-  | 'engulfing' | 'hammer' | 'star' | 'harami' | 'piercing' | 'soldiers' | 'tweezer' | 'inside_bar' | 'doji' | 'marubozu';
+  | 'engulfing' | 'hammer' | 'star' | 'harami' | 'piercing' | 'soldiers' | 'tweezer' | 'inside_bar' | 'doji' | 'marubozu'
+  | 'broadening' | 'broadening_wedge' | 'cup_handle' | 'diamond' | 'rounding' | 'island' | 'bump_run' | 'measured_move' | 'parabolic' | 'wyckoff' | 'wyckoff_re';
 export interface Pattern { name: string; kind: PatternKind; tf: TF; params: Record<string, number | boolean>; label?: string }
 type PDef = { title: string; help: string; params: [key: string, label: string, def: number | boolean][]; fields: string[]; bull: string; bear: string; named?: boolean; group?: 'ict' | 'chart' | 'candle'; cat?: PatternCat };
 /** categories as on The Chart Guys' chart-pattern cheat sheet (Type, Bias, Classical / Lesser-Known, Consolidation, Typically breaks);
@@ -114,9 +115,65 @@ export const PATTERN_KINDS: Record<PatternKind, PDef> = {
   marubozu: { title: 'Marubozu', bull: 'bullish marubozu', bear: 'bearish marubozu', named: true, group: 'candle', cat: { types: ['continuation'], bull: 'bullish', bear: 'bearish', classical: false, source: 'usual' },
     help: 'A candle that is almost all body, with little or no wick: it opened near one end and closed near the other, showing one side in control. Bullish: up candle; bearish: down candle. Forms on its close.',
     params: [['min_body_pct', 'body ≥ % of the range', 90], ['range_mult', 'range ≥ × the average range (0 = any)', 1], ['avg_len', 'average range over bars', 20], ['trend_bars', 'after a move against it over N bars (0 = any)', 0]], fields: CANDLE_FIELDS },
+  // the rest of The Chart Guys' cheat sheet
+  broadening: { title: 'Broadening formation / megaphone', bull: 'megaphone breaking up', bear: 'megaphone breaking down', named: true, group: 'chart',
+    cat: { types: ['indeterminate'], bull: 'neutral', bear: 'neutral', classical: true, consolidation: 'No', breaks: 'Up or down', source: 'chartguys' },
+    help: 'Swings get wider: higher highs and lower lows, between a rising top line and a falling bottom line. Control keeps changing hands. The pattern forms on the first close outside the lines in the side\'s direction. Target: the megaphone\'s width at the breakout.',
+    params: [['strength', 'swing: bars each side', 3], ['min_height_points', 'width ≥ points', 10], ['max_bars', 'whole pattern within N bars', 80], ['break_within', 'breakout within N bars of the last swing', 20], ['diverge_pct', 'widens by ≥ % of its width', 30]],
+    fields: ['line', 'opposite', 'height', 'target', 'breakout'] },
+  broadening_wedge: { title: 'Broadening wedge', bull: 'descending broadening wedge', bear: 'ascending broadening wedge', named: true, group: 'chart',
+    cat: { types: ['reversal'], bull: 'bullish', bear: 'bearish', classical: false, consolidation: 'No', breaks: 'Up or down', source: 'chartguys', note: 'Ascending broadening wedge: Bearish Reversal. Descending broadening wedge: Bullish Reversal. Both are whippy; the cheat sheet asks for several touches per side.' },
+    help: 'Both lines slope the same way and spread apart. A descending broadening wedge (bullish) forms on the first close above its top line; an ascending broadening wedge (bearish) on the first close below its bottom line. Target: its width at the breakout.',
+    params: [['strength', 'swing: bars each side', 3], ['min_height_points', 'width ≥ points', 10], ['max_bars', 'whole pattern within N bars', 80], ['break_within', 'breakout within N bars of the last swing', 20], ['diverge_pct', 'widens by ≥ % of its width', 30]],
+    fields: ['line', 'opposite', 'height', 'target', 'breakout'] },
+  cup_handle: { title: 'Cup and handle', bull: 'cup and handle', bear: 'inverse cup and handle', named: true, group: 'chart',
+    cat: { types: ['continuation'], bull: 'bullish', bear: 'bearish', classical: true, consolidation: 'Prolonged', breaks: 'Up (cup) / Down (inverse)', source: 'chartguys' },
+    help: 'A rounded dip between two swing highs at about the same price (the cup), then a small shallow pullback (the handle), then a close above the rim. The inverse, upside down, is bearish. Target: the cup\'s depth from the rim.',
+    params: [['strength', 'swing: bars each side', 3], ['min_depth_points', 'cup depth ≥ points', 15], ['min_bars', 'cup at least N bars wide', 15], ['max_bars', 'cup at most N bars wide', 120], ['rim_tolerance_pct', 'rims equal within % of the depth', 25], ['handle_bars', 'handle at most N bars', 20], ['handle_max_pct', 'handle gives back ≤ % of the depth', 50]],
+    fields: ['rim', 'extreme', 'depth', 'handle', 'target', 'breakout'] },
+  diamond: { title: 'Diamond top / bottom', bull: 'diamond bottom', bear: 'diamond top', named: true, group: 'chart',
+    cat: { types: ['reversal'], bull: 'bullish', bear: 'bearish', classical: true, consolidation: 'Yes', breaks: 'Up (bottom) / Down (top)', source: 'chartguys' },
+    help: 'Swings first widen (a higher high and a lower low), then narrow (a lower high and a higher low), drawing a diamond. A diamond bottom forms on the first close above its upper-right line, a diamond top on the first close below its lower-right line. Target: the diamond\'s widest height.',
+    params: [['strength', 'swing: bars each side', 3], ['min_height_points', 'widest height ≥ points', 15], ['max_bars', 'whole pattern within N bars', 100], ['break_within', 'breakout within N bars of the last swing', 20]],
+    fields: ['line', 'height', 'target', 'breakout'] },
+  rounding: { title: 'Rounding bottom / top', bull: 'rounding bottom (saucer)', bear: 'rounding top', named: true, group: 'chart',
+    cat: { types: ['reversal'], bull: 'bullish', bear: 'bearish', classical: false, consolidation: 'Prolonged', breaks: 'Up (bottom) / Down (top)', source: 'chartguys' },
+    help: 'A slow, smooth turn: over a long stretch, the closes follow a U (bottom) or an upside-down U (top), with the turn near the middle. Forms on the first close beyond the level where the curve started (the rim). Target: the curve\'s depth from the rim.',
+    params: [['bars', 'curve over N bars', 40], ['min_depth_points', 'depth ≥ points', 15], ['min_fit_pct', 'closes fit the curve ≥ % (R²)', 70]],
+    fields: ['rim', 'extreme', 'depth', 'target', 'breakout'] },
+  island: { title: 'Island reversal', bull: 'bullish island reversal', bear: 'bearish island reversal', named: true, group: 'chart',
+    cat: { types: ['reversal'], bull: 'bullish', bear: 'bearish', classical: false, consolidation: 'Brief', breaks: 'Up (bullish) / Down (bearish)', source: 'chartguys' },
+    help: 'A small cluster of bars cut off by a gap on each side: price gaps down, trades a few bars, then gaps back up, leaving the cluster alone below (bullish); the mirror is bearish. Forms on the bar that opens the second gap. On futures, gaps mostly come at the session reopen.',
+    params: [['max_bars', 'island at most N bars', 10], ['gap_ticks', 'each gap ≥ N ticks', 1]],
+    fields: ['line', 'extreme', 'breakout'] },
+  bump_run: { title: 'Bump-and-run reversal', bull: 'bullish bump-and-run', bear: 'bearish bump-and-run', named: true, group: 'chart',
+    cat: { types: ['reversal'], bull: 'bullish', bear: 'bearish', classical: false, consolidation: 'No', breaks: 'Up (bullish) / Down (bearish)', source: 'chartguys' },
+    help: 'A steady trend (the lead-in), then a sudden, steeper move the same way that pulls far away from its trend line (the bump), then a run back the other way through that line. Bullish: after a falling lead-in and a bump down, a close above the trend line; the mirror is bearish.',
+    params: [['lead_bars', 'lead-in over N bars', 30], ['bump_bars', 'bump over N bars', 15], ['bump_mult', 'bump ≥ × the lead-in\'s usual distance from its line', 2], ['min_bump_points', 'bump ≥ points from the line', 10]],
+    fields: ['line', 'extreme', 'breakout'] },
+  measured_move: { title: 'Measured move', bull: 'measured move up', bear: 'measured move down', named: true, group: 'chart',
+    cat: { types: ['continuation'], bull: 'bullish', bear: 'bearish', classical: true, consolidation: 'Sometimes', breaks: 'Up / Down', source: 'chartguys' },
+    help: 'A first leg (A to B), a pullback (B to C) that gives back part of it, then a second leg expected to match the first. Forms on the first close beyond B. Target: C plus the length of the first leg.',
+    params: [['strength', 'swing: bars each side', 3], ['min_leg_points', 'first leg ≥ points', 15], ['min_retrace_pct', 'pullback ≥ % of the first leg', 30], ['max_retrace_pct', 'pullback ≤ % of the first leg', 70], ['break_within', 'break of B within N bars of C', 30]],
+    fields: ['line', 'leg', 'a', 'b', 'c', 'target', 'breakout'] },
+  parabolic: { title: 'Parabolic blow-off / capitulation', bull: 'parabolic capitulation bottom', bear: 'parabolic blow-off top', named: true, group: 'chart',
+    cat: { types: ['reversal'], bull: 'bullish', bear: 'bearish', classical: false, consolidation: 'No', breaks: 'Up (capitulation) / Down (blow-off)', source: 'chartguys' },
+    help: 'A run that keeps speeding up (each part steeper than the one before) and covers a long way fast, then a sharp turn: a close beyond the previous bar\'s extreme the other way. Capitulation bottom (bullish) after a fall; blow-off top (bearish) after a rise. Target here: half of the run back.',
+    params: [['run_bars', 'run over N bars', 15], ['move_mult', 'run ≥ × the average range', 6], ['accel', 'last third ≥ × as steep as the first', 1.5], ['avg_len', 'average range over bars', 20]],
+    fields: ['line', 'extreme', 'move', 'target', 'breakout'] },
+  wyckoff: { title: 'Wyckoff accumulation / distribution', bull: 'Wyckoff accumulation', bear: 'Wyckoff distribution', named: true, group: 'chart',
+    cat: { types: ['reversal'], bull: 'bullish', bear: 'bearish', classical: false, consolidation: 'Prolonged', breaks: 'Up (accumulation) / Down (distribution)', source: 'chartguys' },
+    help: 'After a fall, a long sideways range; near its end a false break below support that closes back inside (the spring); then a close above the range (sign of strength). Distribution is the mirror after a rise, with an upthrust above resistance. Target: the range height from the breakout.',
+    params: [['range_bars', 'range over N bars', 60], ['min_height_points', 'range height ≥ points', 15], ['spring_ticks', 'spring goes ≥ N ticks beyond the range', 2], ['trend_bars', 'trend into the range over N bars', 40]],
+    fields: ['line', 'opposite', 'spring', 'height', 'target', 'breakout'] },
+  wyckoff_re: { title: 'Wyckoff re-accumulation / re-distribution', bull: 'Wyckoff re-accumulation', bear: 'Wyckoff re-distribution', named: true, group: 'chart',
+    cat: { types: ['continuation'], bull: 'bullish', bear: 'bearish', classical: false, consolidation: 'Prolonged', breaks: 'Up (re-accumulation) / Down (re-distribution)', source: 'chartguys' },
+    help: 'The same range, spring and breakout as accumulation, but in the middle of a rise (re-accumulation, bullish) or of a fall (re-distribution, bearish): a pause before the trend resumes. Target: the range height from the breakout.',
+    params: [['range_bars', 'range over N bars', 60], ['min_height_points', 'range height ≥ points', 15], ['spring_ticks', 'spring goes ≥ N ticks beyond the range', 2], ['trend_bars', 'trend into the range over N bars', 40]],
+    fields: ['line', 'opposite', 'spring', 'height', 'target', 'breakout'] },
 };
 export function newPattern(kind: PatternKind, tf: TF, taken: string[]): Pattern {
-  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss', double: 'dbl', triple: 'tpl', head_shoulders: 'hs', triangle: 'tri', wedge: 'wdg', flag: 'flag', pennant: 'pen', rectangle: 'rect', channel: 'chan', engulfing: 'eng', hammer: 'pin', star: 'star', harami: 'har', piercing: 'pierce', soldiers: 'three', tweezer: 'tw', inside_bar: 'ib', doji: 'doji', marubozu: 'maru' }[kind];
+  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss', double: 'dbl', triple: 'tpl', head_shoulders: 'hs', triangle: 'tri', wedge: 'wdg', flag: 'flag', pennant: 'pen', rectangle: 'rect', channel: 'chan', engulfing: 'eng', hammer: 'pin', star: 'star', harami: 'har', piercing: 'pierce', soldiers: 'three', tweezer: 'tw', inside_bar: 'ib', doji: 'doji', marubozu: 'maru', broadening: 'mega', broadening_wedge: 'bwdg', cup_handle: 'cup', diamond: 'dia', rounding: 'rnd', island: 'isl', bump_run: 'barr', measured_move: 'mm', parabolic: 'para', wyckoff: 'wyk', wyckoff_re: 'wykre' }[kind];
   let name = base, n = 2;
   while (taken.includes(name)) name = base + n++;
   return { name, kind, tf, params: Object.fromEntries(PATTERN_KINDS[kind].params.map(([k, , d]) => [k, d])) };
