@@ -187,6 +187,7 @@ export function PatternList({ setup, mutate, compact, data }: { setup: Setup; mu
               <button className="mb-1.5 ml-auto text-muted-foreground hover:text-red-400" title="remove" onClick={() => mutate((s) => { s.patterns.splice(k, 1); })}>×</button>
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">Reads in a step as: <span className="text-foreground">"{patternPhrase(p, 'long')}"</span></div>
+            {d.cat && <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]"><PatternCatChips kind={p.kind} full />{d.cat.note && <span className="text-muted-foreground">{d.cat.note}</span>}</div>}
             {!compact && <div className="mt-1 text-[11px] text-muted-foreground">{d.help}</div>}
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
               {d.params.filter(([key]) => dispOn || !DISP_KEYS.includes(key)).map(([key, label, def]) =>
@@ -205,24 +206,73 @@ export function PatternList({ setup, mutate, compact, data }: { setup: Setup; mu
         );
       })}
       <div className="flex flex-wrap items-center gap-1">
-        <div className="w-full space-y-2 pt-1">
-          {([['ict', 'ICT'], ['chart', 'Chart patterns'], ['candle', 'Candlesticks']] as const).map(([g, title]) => (
-            <div key={g}>
-              <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">+ declare · {title}</div>
-              <div className="flex flex-wrap gap-1.5">
-                {PKINDS.filter((kind) => (PATTERN_KINDS[kind].group || 'ict') === g).map((kind) => (
-                  <button key={kind} onClick={() => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })}
-                    title={PATTERN_KINDS[kind].help}
-                    className="flex items-center gap-1.5 rounded-md border border-input bg-card/40 py-1 pl-1.5 pr-2.5 text-xs font-medium transition-colors hover:border-sky-400/60 hover:bg-accent">
-                    <span className="flex h-6 w-6 items-center justify-center rounded bg-[hsl(var(--chart))]"><PatternIcon kind={kind} size={20} /></span>
-                    {PATTERN_KINDS[kind].title.replace(/ \(.*\)$/, '').replace('Fair value gap', 'FVG')}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+        <PatternPalette onPick={(kind) => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })} />
       </div>
+    </div>
+  );
+}
+const TYPE_TONE: Record<string, string> = { reversal: 'bg-violet-500/15 text-violet-300', continuation: 'bg-sky-500/15 text-sky-300', indeterminate: 'bg-slate-500/20 text-slate-300' };
+const BIAS_TONE: Record<string, string> = { bullish: 'bg-emerald-500/15 text-emerald-300', bearish: 'bg-red-500/15 text-red-300', neutral: 'bg-slate-500/20 text-slate-300' };
+const cap = (x: string) => x[0].toUpperCase() + x.slice(1);
+export function PatternCatChips({ kind, full }: { kind: PatternKind; full?: boolean }) {
+  const c = PATTERN_KINDS[kind].cat;
+  if (!c) return null;
+  const biases = [...new Set([c.bull, c.bear])];
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1 text-[10px] font-medium">
+      {c.types.map((t) => <span key={t} className={cn('rounded px-1 py-px', TYPE_TONE[t])}>{cap(t)}</span>)}
+      {biases.map((b) => <span key={b} className={cn('rounded px-1 py-px', BIAS_TONE[b])}>{cap(b)}</span>)}
+      {full && <span className="rounded bg-muted px-1 py-px text-muted-foreground">{c.classical ? 'Classical' : 'Lesser-Known'}</span>}
+      {full && c.consolidation && <span className="text-muted-foreground">consolidation: {c.consolidation}</span>}
+      {full && c.breaks && <span className="text-muted-foreground">· typically breaks: {c.breaks}</span>}
+    </span>
+  );
+}
+/** the "+ declare" palette, with the cheat sheet's filters: Type, Bias, Classical / Lesser-Known */
+function PatternPalette({ onPick }: { onPick: (k: PatternKind) => void }) {
+  const [type, setType] = React.useState<string>('all');
+  const [bias, setBias] = React.useState<string>('all');
+  const [pop, setPop] = React.useState<string>('all');
+  const keep = (k: PatternKind) => {
+    const c = PATTERN_KINDS[k].cat;
+    if (!c) return type === 'all' && bias === 'all' && pop === 'all';
+    if (type !== 'all' && !c.types.includes(type as any)) return false;
+    if (bias !== 'all' && c.bull !== bias && c.bear !== bias) return false;
+    if (pop !== 'all' && (pop === 'classical') !== c.classical) return false;
+    return true;
+  };
+  const Seg = ({ value, set, opts }: { value: string; set: (v: string) => void; opts: [string, string][] }) => (
+    <div className="inline-flex rounded-md border p-0.5">{opts.map(([v, l]) => <button key={v} onClick={() => set(v)} className={cn('rounded px-2 py-0.5 text-[11px]', value === v ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground')}>{l}</button>)}</div>
+  );
+  const groups = [['ict', 'ICT'], ['chart', 'Chart patterns'], ['candle', 'Candlesticks']] as const;
+  return (
+    <div className="w-full space-y-2 pt-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">+ declare</span>
+        <Seg value={type} set={setType} opts={[['all', 'All'], ['continuation', 'Continuation'], ['reversal', 'Reversal'], ['indeterminate', 'Indeterminate']]} />
+        <Seg value={bias} set={setBias} opts={[['all', 'All'], ['bullish', 'Bullish'], ['bearish', 'Bearish'], ['neutral', 'Neutral']]} />
+        <Seg value={pop} set={setPop} opts={[['all', 'All'], ['classical', 'Classical'], ['lesser', 'Lesser-Known']]} />
+      </div>
+      {groups.map(([g, title]) => {
+        const ks = PKINDS.filter((k) => (PATTERN_KINDS[k].group || 'ict') === g && keep(k));
+        if (!ks.length) return null;
+        return (
+          <div key={g}>
+            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
+            <div className="flex flex-wrap gap-1.5">
+              {ks.map((kind) => (
+                <button key={kind} onClick={() => onPick(kind)} title={PATTERN_KINDS[kind].help}
+                  className="flex items-center gap-2 rounded-md border border-input bg-card/40 py-1 pl-1.5 pr-2.5 text-left text-xs font-medium transition-colors hover:border-sky-400/60 hover:bg-accent">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-[hsl(var(--chart))]"><PatternIcon kind={kind} size={22} /></span>
+                  <span className="flex flex-col gap-0.5"><span>{PATTERN_KINDS[kind].title.replace(/ \(.*\)$/, '').replace('Fair value gap', 'FVG')}</span><PatternCatChips kind={kind} /></span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+      {groups.every(([g]) => !PKINDS.some((k) => (PATTERN_KINDS[k].group || 'ict') === g && keep(k))) && <div className="text-xs italic text-muted-foreground">No pattern matches these filters.</div>}
+      <div className="text-[10px] text-muted-foreground">Chart-pattern categories follow The Chart Guys' chart-pattern cheat sheet; candlesticks, which it does not cover, use the usual reading. ICT patterns have no category and show only under "All".</div>
     </div>
   );
 }
