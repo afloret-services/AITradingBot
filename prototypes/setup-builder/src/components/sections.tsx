@@ -58,14 +58,14 @@ const NEWS: Record<string, [string, string]> = {
   whole_day: ['Whole Trading day', 'On a News day (a release of a type you switched on), every Signal of this Setup is suppressed: logged with the reason, but no Trade opens.'],
   span: ['A span around the release', 'Only Signals inside the window around each release are suppressed: from N minutes before to M minutes after its New York time. Signals outside the window trade normally.'],
 };
-export function BehaviourEditor({ setup, mutate }: { setup: Setup; mutate: Mutate }) {
+export function BehaviourEditor({ setup, mutate, stacked }: { setup: Setup; mutate: Mutate; stacked?: boolean }) {
   const n = setup.settings.news_rule;
   const oat = setup.settings.one_at_a_time;
   const desc = (title: string, text: string, extra?: React.ReactNode) => (
     <div className="mt-1.5 rounded-md border-l-2 border-sky-500/50 bg-sky-500/5 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground"><span className="font-medium text-foreground">{title}.</span> {text}{extra}</div>
   );
   return (
-    <div className="grid gap-5 md:grid-cols-2">
+    <div className={cn('grid gap-5', !stacked && 'md:grid-cols-2')}>
       <div>
         <Field label="One at a time" hint="What happens to new setups while a Trade of this Setup is live.">
           <Select value={oat} onChange={(v) => mutate((s) => { s.settings.one_at_a_time = v as any; })} options={Object.entries(ONE_AT_A_TIME).map(([k, [l]]) => [k, l] as [string, string])} />
@@ -346,6 +346,16 @@ export function WhenHelp({ setup, what }: { setup: Setup; what: 'intro' | 'hours
       <div>Here: {ss.map(([n, r], i) => <span key={n}>{i > 0 && ', '}{B(`${n.replace('_', ' ')} ${r.start}–${r.end}`)}</span>)}. Change a time and the chart and Signals follow at once.</div>
     </HelpBox>
   );
+}
+
+/** a description behind a "what this means" toggle, for the denser layouts */
+export function Explain({ children, label = 'what this means' }: { children: React.ReactNode; label?: string }) {
+  return <details className="text-[11px]"><summary className="cursor-pointer select-none text-sky-300/80 hover:text-sky-300">{label}</summary><div className="mt-1.5 space-y-1.5">{children}</div></details>;
+}
+/** the One-at-a-time and News-rule descriptions for the current choices */
+export function BehaviourHelp({ setup }: { setup: Setup }) {
+  const o = ONE_AT_A_TIME[setup.settings.one_at_a_time], n = NEWS[setup.settings.news_rule.mode];
+  return <HelpBox><div><T>One at a time: {o[0]}.</T> {o[1]}</div><div><T>News rule: {n[0]}.</T> {n[1]}</div></HelpBox>;
 }
 
 // ---------- Basics ----------

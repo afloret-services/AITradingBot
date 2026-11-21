@@ -6,7 +6,8 @@ import { VariantProps } from '../types';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx, AddMenu, newCmp } from '../components/CondEditor';
 import { PatternIcon, IndicatorIcon, SectionIcon } from '../components/PatternIcon';
-import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, SectionHelp } from '../components/sections';
+import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, SectionHelp, Explain, BasicsHelp, WhenHelp, IndicatorsHelp, PatternsHelp, SignalStepsHelp, ReviewHelp, RunHelp } from '../components/sections';
+import { RuleEditor, appendAnd } from '../components/RuleEditor';
 import { shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs } from '../components/ui';
 import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN_KINDS, patternUsage, labelsOf } from '../model';
@@ -22,7 +23,7 @@ export function VariantC(p: VariantProps) {
   const labels = labelsOf(setup);
   const insert = (c: Cond) => {
     if (sel.kind !== 'step') return;
-    mutate((s) => { (s.branches[sel.bi].steps[sel.si].cond as any).items.push(c); });
+    mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = appendAnd(s.branches[sel.bi].steps[sel.si].cond, c); });
   };
   const run = mode === 'run';
   const shown = run && runD.result ? runD.result : result;
@@ -77,7 +78,7 @@ export function VariantC(p: VariantProps) {
                     <React.Fragment key={st.id}>
                       {si > 0 && <Connector st={st} />}
                       <LaneCard color={STEP_COLORS[si % 6]} selected={sel.kind === 'step' && sel.bi === bi && sel.si === si} locked={run} onClick={() => { setSel({ kind: 'step', bi, si }); p.setFocus({ bi, si }); }}
-                        title={<><span className="mr-1 inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold text-black" style={{ background: STEP_COLORS[si % 6] }}>{si + 1}</span>{st.name}</>}
+                        title={<><span className="mr-1 inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold text-black" style={{ background: STEP_COLORS[si % 6] }}>{si + 1}</span><span className="mr-1.5 text-[11px] font-black tracking-wider text-sky-300">{si === 0 ? 'IF' : 'THEN'}</span>{st.name}</>}
                         foot={<StepStats result={result} bi={bi} si={si} data={data} />}>
                         <MiniCond c={st.cond} labels={labels} />
                         {st.capture_running && <div className="mt-1 text-[11px] text-muted-foreground">captures <span className="mono">{st.capture_running.name}</span> (running {st.capture_running.field})</div>}
@@ -110,19 +111,27 @@ export function VariantC(p: VariantProps) {
           </div>
           <div className="border-t p-3">
             <div className="mb-2"><RunSummary result={shown} data={data} /></div>
+            <div className="mb-2"><Explain><ReviewHelp setup={setup} what="chart" result={shown} /></Explain></div>
             <Chart data={data} setup={setup} result={shown} day={p.day} setDay={p.setDay} focus={p.focus} selected={p.selected} setSelected={p.setSelected} height={420} compactBar />
           </div>
         </div>
         {/* inspector */}
         <div className="overflow-auto border-l p-3">
-          {sel.kind === 'settings' && <div className="space-y-4"><H>Setup settings</H><BaseBarEditor setup={setup} mutate={mutate} /><TradingHoursEditor setup={setup} mutate={mutate} /><SessionsEditor setup={setup} mutate={mutate} /><BehaviourEditor setup={setup} mutate={mutate} /><H>Indicators</H><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={usage} /><H>Patterns</H><PatternList setup={setup} mutate={mutate} compact data={data} /></div>}
+          {sel.kind === 'settings' && <div className="space-y-4"><H>Setup settings</H><Explain><BasicsHelp setup={setup} what="intro" /><WhenHelp setup={setup} what="intro" /></Explain>
+            <BaseBarEditor setup={setup} mutate={mutate} /><Explain><BasicsHelp setup={setup} what="base_bar" /></Explain>
+            <TradingHoursEditor setup={setup} mutate={mutate} /><Explain><WhenHelp setup={setup} what="hours" /></Explain>
+            <SessionsEditor setup={setup} mutate={mutate} /><Explain><WhenHelp setup={setup} what="sessions" /></Explain>
+            <BehaviourEditor setup={setup} mutate={mutate} stacked />
+            <H>Indicators</H><Explain><IndicatorsHelp setup={setup} /></Explain><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={usage} />
+            <H>Patterns</H><Explain><PatternsHelp setup={setup} /></Explain><PatternList setup={setup} mutate={mutate} compact data={data} /></div>}
           {sel.kind === 'step' && selStep && (
             run ? <Locked what="Signal steps" /> :
             <div className="space-y-3">
               <H>Step {sel.si + 1} · {setup.branches[sel.bi].side}</H>
+              <Explain label="how steps work"><SignalStepsHelp setup={setup} bi={sel.bi} /></Explain>
               <Input value={selStep.name} onChange={(e) => mutate((s) => { s.branches[sel.bi].steps[sel.si].name = e.target.value; })} className="w-full" />
-              <CondEditor cond={selStep.cond} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} look="chips" onChange={(c) => mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = c; })} />
-              <div className="rounded-md border p-2"><div className="mb-1 text-xs font-medium">Sequence limits</div><StepLimits step={selStep} isFirst={sel.si === 0} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} look="chips" onChange={(n: Step) => mutate((s) => { s.branches[sel.bi].steps[sel.si] = n; })} /></div>
+              <RuleEditor cond={selStep.cond} keyword={sel.si === 0 ? 'IF' : 'THEN'} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} onChange={(c) => mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = c; })} />
+              <div className="rounded-md border p-2"><StepLimits step={selStep} isFirst={sel.si === 0} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} look="chips" onChange={(n: Step) => mutate((s) => { s.branches[sel.bi].steps[sel.si] = n; })} /></div>
               {sel.si === 0 && <div className="flex items-center gap-2 text-xs">a new first step while one runs <Select value={setup.branches[sel.bi].on_new_start} onChange={(v) => mutate((s) => { s.branches[sel.bi].on_new_start = v; })} options={[['start_another', 'start another'], ['replace', 'replace'], ['ignore', 'ignore']]} className="h-7" /></div>}
               <div className="flex gap-1"><Button size="sm" variant="ghost" disabled={sel.si === 0} onClick={() => { mutate((s) => { const a = s.branches[sel.bi].steps; [a[sel.si - 1], a[sel.si]] = [a[sel.si], a[sel.si - 1]]; }); setSel({ ...sel, si: sel.si - 1 }); }}>← move earlier</Button><Button size="sm" variant="ghost" onClick={() => { mutate((s) => { s.branches[sel.bi].steps.splice(sel.si, 1); }); setSel({ kind: 'trade' }); }}>delete</Button></div>
               <div className="rounded bg-muted p-2 text-[11px] text-muted-foreground">{condPhrase(selStep.cond, labels)}</div>
@@ -133,11 +142,11 @@ export function VariantC(p: VariantProps) {
             <div className="space-y-2"><H>Entry · {setup.branches[sel.bi].side}</H><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={sel.bi} ctx={tokenCtx(setup, sel.bi, 99)} /></div>
           )}
           {sel.kind === 'trade' && (
-            run ? <div className="space-y-2"><H>Create a Run</H><div className="text-xs text-muted-foreground">Pick a section on the Trade card to override it for this Run. Signal steps and In-position rules are locked: changing them makes a new Setup version.</div></div> :
-            <div className="space-y-3"><H>Trade</H><div className="text-xs text-muted-foreground">Pick a section on the card, or edit In-position rules here.</div><H>In-position rules</H><InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="chips" /></div>
+            run ? <div className="space-y-2"><H>Create a Run</H><div className="text-xs text-muted-foreground">Pick a section on the Trade card to override it for this Run. Signal steps and In-position rules are locked: changing them makes a new Setup version.</div><RunHelp setup={setup} what="intro" /><RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></div> :
+            <div className="space-y-3"><H>Trade</H><div className="text-xs text-muted-foreground">Pick a section on the card, or edit In-position rules here.</div><H><span className="inline-flex items-center gap-1.5"><SectionIcon k="in_position" size={16} />In-position rules</span></H><SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="chips" /></div>
           )}
           {sel.kind === 'section' && (
-            run ? <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Run override</H><OverrideBox k={sel.k} setup={setup} runD={runD} /></div> :
+            run ? <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Run override</H><Explain><SectionHelp setup={setup} k={sel.k} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></Explain><OverrideBox k={sel.k} setup={setup} runD={runD} /></div> :
             <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Setup default</H><SectionHelp setup={setup} k={sel.k} /><SectionEditor k={sel.k} value={getSection(setup, sel.k)} setup={setup} ctx={tokenCtx(setup, 0, 99)} onChange={(v) => mutate((s) => { setSection(s, sel.k, v); })} /></div>
           )}
         </div>

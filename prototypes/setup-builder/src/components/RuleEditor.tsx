@@ -102,3 +102,9 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested }: { con
     </div>
   );
 }
+
+/** add a condition to a step with AND, whatever shape its tree has */
+export function appendAnd(c: Cond, add: Cond): Cond {
+  const ls = toLines(c);
+  return fromLines([...ls, { cond: add, join: 'and' }], c.id, (c as any).label);
+}
