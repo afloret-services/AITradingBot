@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { VariantProps } from '../types';
 import { SetupMap } from '../components/SetupMap';
-import { IndicatorIcon } from '../components/PatternIcon';
+import { IndicatorIcon, SectionIcon } from '../components/PatternIcon';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
 import { StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList } from '../components/sections';
@@ -81,7 +81,7 @@ export function VariantB(p: VariantProps) {
           <h2 className="text-xl font-semibold">Managing the Trade</h2>
           {SECTIONS.filter((k) => k !== 'stop').map((k) => (
             <div key={k} className="grid grid-cols-[150px_1fr] items-start gap-3">
-              <div className="pt-1 text-sm font-medium text-muted-foreground">{SECTION_NAMES[k]}</div>
+              <div className="flex items-center gap-1.5 pt-1 text-sm font-medium text-muted-foreground"><SectionIcon k={k} size={18} />{SECTION_NAMES[k]}</div>
               <SectionEditor k={k} value={getSection(setup, k)} setup={setup} ctx={ctxFor(0, 99)} onChange={(v) => mutate((s) => { setSection(s, k, v); })} />
             </div>
           ))}
@@ -143,7 +143,7 @@ function RunDiff({ setup, runD, ctx }: { setup: Setup; runD: ReturnType<typeof u
             return (
               <React.Fragment key={k}>
                 <tr className={cn('border-t align-top', on && 'bg-sky-500/5')}>
-                  <td className="py-1 pr-2 font-medium">{SECTION_NAMES[k]}</td>
+                  <td className="py-1 pr-2 font-medium"><span className="inline-flex items-center gap-1.5"><SectionIcon k={k} size={16} />{SECTION_NAMES[k]}</span></td>
                   <td className={cn('pr-2', on && 'text-red-300/80 line-through')}>{sectionSummary(setup, k)}</td>
                   <td>{on ? <span className="text-emerald-300">{sectionSummary(runD.effective, k)}</span> : <span className="text-muted-foreground">same</span>}
                     <div className="flex gap-2"><button className="text-sky-300" onClick={() => { if (!on) runD.override(k, true); setEditing(editing === k ? null : k); }}>{on ? 'edit' : 'override'}</button>{on && <button className="text-muted-foreground" onClick={() => { runD.override(k, false); setEditing(null); }}>reset</button>}</div></td>

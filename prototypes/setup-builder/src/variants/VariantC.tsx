@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { VariantProps } from '../types';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx, AddMenu, newCmp } from '../components/CondEditor';
-import { PatternIcon, IndicatorIcon } from '../components/PatternIcon';
+import { PatternIcon, IndicatorIcon, SectionIcon } from '../components/PatternIcon';
 import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, SectionHelp } from '../components/sections';
 import { shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs } from '../components/ui';
@@ -97,7 +97,7 @@ export function VariantC(p: VariantProps) {
                         const ov = run && k in runD.draft.overrides;
                         return (
                           <button key={k} onClick={(e) => { e.stopPropagation(); setSel({ kind: 'section', k }); }} className={cn('block w-full rounded px-1 py-0.5 text-left text-[11px] hover:bg-accent', sel.kind === 'section' && sel.k === k && 'bg-accent', ov && 'bg-sky-500/10')}>
-                            <span className="font-medium">{SECTION_NAMES[k]}</span> <span className="text-muted-foreground">{sectionSummary(ov ? runD.effective : setup, k)}</span>{ov && <Badge tone="info" className="ml-1">override</Badge>}
+                            <SectionIcon k={k} size={14} className="-mt-0.5 mr-1 inline-block align-middle" /><span className="font-medium">{SECTION_NAMES[k]}</span> <span className="text-muted-foreground">{sectionSummary(ov ? runD.effective : setup, k)}</span>{ov && <Badge tone="info" className="ml-1">override</Badge>}
                           </button>
                         );
                       })}

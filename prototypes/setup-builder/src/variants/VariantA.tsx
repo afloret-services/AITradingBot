@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { VariantProps } from '../types';
 import { SetupMap } from '../components/SetupMap';
 import { RuleEditor } from '../components/RuleEditor';
+import { SectionIcon } from '../components/PatternIcon';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
 import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp, ReviewHelp, IndicatorsHelp, PatternsHelp, IndicatorsPatternsIntro, WhenHelp } from '../components/sections';
@@ -112,11 +113,11 @@ export function VariantA(p: VariantProps) {
             {stage === 5 && (
               <div className="space-y-4">
                 {SECTIONS.filter((k) => k !== 'stop').map((k) => (
-                  <div key={k}><div className="mb-1 text-sm font-medium">{SECTION_NAMES[k]}</div>
+                  <div key={k}><div className="mb-1.5 flex items-center gap-2 text-sm font-medium"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={k} size={18} /></span>{SECTION_NAMES[k]}</div>
                     <SectionHelp setup={setup} k={k} />
                     <SectionEditor k={k} value={getSection(setup, k)} setup={setup} ctx={tokenCtx(setup, 0, 99)} onChange={(v) => mutate((s) => { setSection(s, k, v); })} /></div>
                 ))}
-                <div><div className="mb-1 text-sm font-medium">In-position rules <span className="text-xs font-normal text-muted-foreground">(part of the Setup version; a Run cannot override them)</span></div>
+                <div><div className="mb-1.5 flex items-center gap-2 text-sm font-medium"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={'in_position'} size={18} /></span>In-position rules <span className="text-xs font-normal text-muted-foreground">(part of the Setup version; a Run cannot override them)</span></div>
                   <SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="boxes" /></div>
               </div>
             )}
@@ -186,7 +187,7 @@ function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
           return (
             <div key={k} className="p-3">
               <div className="flex items-center gap-3">
-                <div className="w-44 text-sm font-medium">{SECTION_NAMES[k]}</div>
+                <div className="flex w-52 items-center gap-2 text-sm font-medium"><SectionIcon k={k} size={18} />{SECTION_NAMES[k]}</div>
                 <label className="flex items-center gap-1 text-xs"><input type="radio" checked={!on} onChange={() => runD.override(k, false)} />Setup default</label>
                 <label className="flex items-center gap-1 text-xs"><input type="radio" checked={on} onChange={() => runD.override(k, true)} />Override</label>
                 <span className={cn('text-xs', on ? 'text-muted-foreground line-through' : 'text-muted-foreground')}>{sectionSummary(setup, k)}</span>

@@ -87,3 +87,31 @@ export function IndicatorIcon({ token, name, size = 18, className }: { token?: s
     </svg>
   );
 }
+
+// ---------- Trade settings sections ----------
+const G_ = '#26a69a', RD = '#ef5350', WH = '#e2e8f0', AM = '#fbbf24', SK = '#38bdf8';
+const SEC_GLYPHS: Record<string, React.ReactNode> = {
+  // a pie: the share of capital risked per Trade
+  risk: <><circle cx={12} cy={12} r={9} fill="none" stroke={PR} strokeWidth={1.6} /><path d="M12 12 L12 3 A9 9 0 0 1 20.5 9 Z" fill={AM} /><text x={12} y={17.5} fontSize={7} textAnchor="middle" fill={WH} fontFamily="Inter, sans-serif" fontWeight={700}>%</text></>,
+  // price falling onto the red stop line
+  stop: <><L d="M2 4 L7 8 L10 6 L15 13 L18 17" color={PR} w={1.5} /><L d="M1 18 H23" color={RD} w={2.2} /><path d="M17.5 14.5 l3 3 m0 -3 l-3 3" stroke={RD} strokeWidth={1.6} strokeLinecap="round" /></>,
+  // the entry, then two take-profit levels above it
+  legs: <><L d="M1 20 H23" color={WH} w={1.4} dash /><L d="M1 12 H23" color={G_} w={1.6} /><L d="M1 4 H23" color={G_} w={1.6} /><path d="M18 12 v-5 l4 1.6 -4 1.6" fill={G_} stroke={G_} strokeWidth={0.8} /><path d="M10 4 v-3.5 l3.5 1.4 -3.5 1.4" fill={G_} stroke={G_} strokeWidth={0.8} /><L d="M4 20 L8 12" color={PR} w={1.2} /></>,
+  // the stop moving up to the entry
+  break_even: <><L d="M1 20 H23" color={RD} w={1.4} dash /><L d="M1 9 H23" color={WH} w={1.8} /><L d="M12 18 V12" color={AM} w={1.8} /><path d="M9 13 L12 10 L15 13" fill="none" stroke={AM} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" /></>,
+  // an hourglass: how long the entry may wait
+  entry_deadline: <><path d="M6 2 H18 M6 22 H18 M7 2 C7 9, 12 10, 12 12 C12 14, 7 15, 7 22 M17 2 C17 9, 12 10, 12 12 C12 14, 17 15, 17 22" fill="none" stroke={SK} strokeWidth={1.6} strokeLinecap="round" /><path d="M9 20 C10 17, 14 17, 15 20 Z" fill={AM} /></>,
+  // a clock over a flat line: everything closed by a time
+  expiry_and_flatten: <><circle cx={12} cy={10} r={7.5} fill="none" stroke={SK} strokeWidth={1.6} /><L d="M12 5.5 V10 L15 12" color={WH} w={1.6} /><L d="M2 21 H22" color={AM} w={2} /></>,
+  // a shield with a check: guards that refuse a Signal
+  signal_guards: <><path d="M12 2 L20 5 V11 C20 16.5, 16.5 20, 12 22 C7.5 20, 4 16.5, 4 11 V5 Z" fill="none" stroke={SK} strokeWidth={1.6} strokeLinejoin="round" /><path d="M8 12 L11 15 L16 9" fill="none" stroke={G_} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></>,
+  // an open position with an exit arrow: rules that act while in a Trade
+  in_position: <><rect x={2} y={7} width={11} height={10} rx={1.5} fill={G_} opacity={0.3} stroke={G_} strokeWidth={1.4} /><L d="M10 12 H22" color={WH} w={1.8} /><path d="M18 8 L22 12 L18 16" fill="none" stroke={WH} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" /></>,
+};
+export function SectionIcon({ k, size = 18, className }: { k: string; size?: number; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true">
+      {SEC_GLYPHS[k] ?? <circle cx={12} cy={12} r={4} fill={AM} />}
+    </svg>
+  );
+}

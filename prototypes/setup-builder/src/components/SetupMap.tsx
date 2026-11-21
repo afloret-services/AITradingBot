@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Cond, Setup, Step, captureNames, condPhrase, labelsOf, patternRefs, tokensOf, PATTERN_KINDS, parseToken, patternUsage } from '../model';
 import { Data, RunResult } from '../engine';
 import { shortName } from './TokenPicker';
-import { PatternIcon, IndicatorIcon } from './PatternIcon';
+import { PatternIcon, IndicatorIcon, SectionIcon } from './PatternIcon';
 import { sectionSummary, indicatorUsage } from './sections';
 import { Focus } from './Chart';
 import { STEP_COLORS, cn } from './ui';
@@ -129,17 +129,17 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
               <Arrow lines={['Signal']} />
               <Node title="Entry" tone={long ? 'long' : 'short'} compact={compact}>
                 <Line k="order" v={br.entry.order === 'market' ? 'market, next bar' : `${br.entry.order} at ${shortName(br.entry.price || '?', labels)}`} />
-                <Line k="stop" v={`${br.entry.stop.offset} ${br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} beyond ${shortName(br.entry.stop.token || '?', labels)}`} bad={!br.entry.stop.token} />
+                <Line k="stop" icon="stop" v={`${br.entry.stop.offset} ${br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} beyond ${shortName(br.entry.stop.token || '?', labels)}`} bad={!br.entry.stop.token} />
               </Node>
               <Arrow lines={['fill']} />
               <Node title="Trade" tone="muted" compact={compact} wide>
-                <Line k="risk" v={sectionSummary(setup, 'risk')} />
-                <Line k="legs" v={sectionSummary(setup, 'legs')} />
-                <Line k="break-even" v={sectionSummary(setup, 'break_even')} />
-                {!compact && <Line k="deadline" v={sectionSummary(setup, 'entry_deadline')} />}
-                <Line k="flatten" v={ts.flatten_time} />
-                {!compact && ts.signal_guards.length > 0 && <Line k="guards" v={sectionSummary(setup, 'signal_guards')} />}
-                {setup.in_position_rules.filter((x) => x.branch === undefined || x.branch === bi).length > 0 && <Line k="in position" v={`${setup.in_position_rules.filter((x) => x.branch === undefined || x.branch === bi).length} rule(s)`} />}
+                <Line k="risk" icon="risk" v={sectionSummary(setup, 'risk')} />
+                <Line k="legs" icon="legs" v={sectionSummary(setup, 'legs')} />
+                <Line k="break-even" icon="break_even" v={sectionSummary(setup, 'break_even')} />
+                {!compact && <Line k="deadline" icon="entry_deadline" v={sectionSummary(setup, 'entry_deadline')} />}
+                <Line k="flatten" icon="expiry_and_flatten" v={ts.flatten_time} />
+                {!compact && ts.signal_guards.length > 0 && <Line k="guards" icon="signal_guards" v={sectionSummary(setup, 'signal_guards')} />}
+                {setup.in_position_rules.filter((x) => x.branch === undefined || x.branch === bi).length > 0 && <Line k="in position" icon="in_position" v={`${setup.in_position_rules.filter((x) => x.branch === undefined || x.branch === bi).length} rule(s)`} />}
               </Node>
             </div>
           </div>
@@ -158,8 +158,8 @@ function Node({ title, tone, children, compact, wide }: { title: string; tone: '
     </div>
   );
 }
-function Line({ k, v, bad }: { k: string; v: string; bad?: boolean }) {
-  return <div className="text-[11px] leading-snug"><span className="text-muted-foreground">{k} </span><span className={cn(bad && 'text-red-300')}>{v}</span></div>;
+function Line({ k, v, bad, icon }: { k: string; v: string; bad?: boolean; icon?: string }) {
+  return <div className="flex items-start gap-1 text-[11px] leading-snug">{icon && <SectionIcon k={icon} size={13} className="mt-px shrink-0" />}<span><span className="text-muted-foreground">{k} </span><span className={cn(bad && 'text-red-300')}>{v}</span></span></div>;
 }
 function Arrow({ lines, warn }: { lines: string[]; warn?: boolean }) {
   return (
