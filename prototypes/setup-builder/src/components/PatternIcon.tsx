@@ -16,11 +16,11 @@ const KB = ({ x, o, h, l, c, w = 6 }: { x: number; o: number; h: number; l: numb
 const L = ({ d, color = 'currentColor', w = 1.6, dash }: { d: string; color?: string; w?: number; dash?: boolean }) => <path d={d} fill="none" stroke={color} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={dash ? '2 1.6' : undefined} />;
 
 const GLYPHS: Record<PatternKind, React.ReactNode> = {
-  fvg: <><rect x={4} y={9} width={17} height={4} fill={ZN} opacity={0.3} /><K x={6} o={17} h={13} l={19} c={14} /><K x={12} o={15} h={5} l={16} c={6} /><K x={18} o={7} h={4} l={9} c={5} /></>,
-  displacement: <><K x={5} o={14} h={12} l={16} c={13} w={3} /><K x={10} o={13} h={11} l={15} c={14} w={3} /><K x={17} o={19} h={3} l={20} c={4} w={6} /></>,
-  order_block: <><rect x={3} y={11} width={19} height={6} fill={ZN} opacity={0.3} /><K x={8} o={11} h={10} l={17} c={16} /><K x={15} o={16} h={3} l={17} c={4} w={5} /></>,
-  leg: <><L d="M3 15 L7 18 L19 5 L22 8" color="#94a3b8" w={1.2} /><L d="M7 18 L19 5" color={LV} w={2.2} /><circle cx={7} cy={18} r={1.6} fill={LV} /><circle cx={19} cy={5} r={1.6} fill={LV} /></>,
-  mss: <><L d="M2 18 L6 9 L10 15 L14 19 L22 4" /><L d="M5 9 H22" color={LV} dash /></>,
+  fvg: <><rect x={2} y={9.5} width={21} height={5} fill={ZN} opacity={0.35} rx={0.6} /><KB x={5} o={19} h={14.5} l={22} c={16} w={5} /><KB x={12} o={17} h={3} l={18} c={5} w={6} /><KB x={19} o={6} h={1.5} l={9.5} c={3} w={5} /></>,
+  displacement: <><KB x={3.5} o={15} h={13} l={18} c={16} w={3.5} /><KB x={8.5} o={16} h={14} l={18.5} c={14.5} w={3.5} /><KB x={17} o={21} h={1.5} l={22} c={3} w={9} /></>,
+  order_block: <><rect x={3} y={11} width={20} height={9} fill={ZN} opacity={0.35} rx={0.6} /><KB x={7} o={11.5} h={11} l={20} c={19} w={6} /><KB x={16} o={19} h={1.5} l={20} c={3} w={7} /></>,
+  leg: <><L d="M2 13 L5 17 L7 20.5 L19 4 L22 7" color="#94a3b8" w={1.4} /><L d="M7 20.5 L19 4" color={LV} w={2.6} /><circle cx={7} cy={20.5} r={2.2} fill={LV} /><circle cx={19} cy={4} r={2.2} fill={LV} /></>,
+  mss: <><L d="M2 20 L6 9 L10 15 L14 21 L22 2" w={2} /><L d="M4 9 H23" color={LV} dash w={1.2} /><circle cx={6} cy={9} r={1.8} fill={LV} /><circle cx={17.3} cy={9} r={2.2} fill="none" stroke="#26a69a" strokeWidth={1.5} /></>,
   double: <><L d="M2 20 L7 5 L12 13 L17 5 L22 20" /><L d="M3 13 H22" color={LV} dash /></>,
   triple: <><L d="M1 20 L5 5 L8 13 L12 5 L15 13 L19 5 L23 20" /><L d="M2 13 H23" color={LV} dash /></>,
   head_shoulders: <><L d="M1 20 L5 9 L8 14 L12 3 L16 14 L19 9 L23 20" /><L d="M2 14 H23" color={LV} dash /></>,
