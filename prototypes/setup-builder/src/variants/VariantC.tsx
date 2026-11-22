@@ -37,7 +37,7 @@ export function VariantC(p: VariantProps) {
       <div className="flex flex-wrap items-center gap-3 border-b px-3 py-2 text-xs">
         <Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="h-7 w-48 font-semibold" />
         <button onClick={() => setSel({ kind: 'settings' })} className="rounded border px-2 py-1 hover:bg-accent">Base bar <b>{setup.settings.base_bar}</b> · Trading hours <b>{setup.settings.trading_hours.ranges.map((r) => `${r.start}–${r.end}`).join(', ')}</b> · one at a time <b>{setup.settings.one_at_a_time.replace(/_/g, ' ')}</b> · news <b>{setup.settings.news_rule.mode}</b> ✎</button>
-        <Tabs value={mode} onChange={(v) => setMode(v as 'build' | 'run')} tabs={[['build', 'Build the Setup'], ['run', 'Create a Run']]} />
+        <Tabs value={mode} onChange={(v) => { setMode(v as 'build' | 'run'); if (v === 'run') setSel({ kind: 'trade' }); }} tabs={[['build', 'Build the Setup'], ['run', 'Create a Run']]} />
         {run && <><Select value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} options={INSTRUMENTS} className="h-7" />{instrumentWarnings(setup, runD.draft.instrument).map((w) => <span key={w} className="text-amber-300">{w}</span>)}</>}
         <button onClick={() => setSel({ kind: 'review' })} className={cn('ml-auto rounded border px-2 py-1 hover:bg-accent', sel.kind === 'review' && 'border-sky-400 bg-sky-500/10')}>Review & save {issues.some((i) => i.level === 'error') ? <span className="text-red-300">· {issues.filter((i) => i.level === 'error').length} errors</span> : issues.length ? <span className="text-amber-300">· {issues.length} warnings</span> : <span className="text-emerald-300">· ready</span>}</button>
         <div>{p.saveBar}</div>
@@ -153,7 +153,7 @@ export function VariantC(p: VariantProps) {
             </div>
           )}
           {sel.kind === 'entry' && (
-            run ? <div className="space-y-2"><H>Stop · Run override</H><SectionHelp setup={setup} k="stop" /><Explain><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></Explain><OverrideBox k="stop" setup={setup} runD={runD} /></div> :
+            run ? <div className="space-y-2"><H>Stop · Run override</H><SectionHelp setup={setup} k="stop" /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /><OverrideBox k="stop" setup={setup} runD={runD} /></div> :
             <div className="space-y-2"><H>Entry · {setup.branches[sel.bi].side}</H><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={sel.bi} ctx={tokenCtx(setup, sel.bi, 99)} /></div>
           )}
           {sel.kind === 'trade' && (
@@ -167,7 +167,7 @@ export function VariantC(p: VariantProps) {
               ))}<H><span className="inline-flex items-center gap-1.5"><SectionIcon k="in_position" size={16} />In-position rules</span></H><SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="chips" /></div>
           )}
           {sel.kind === 'section' && (
-            run ? <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Run override</H><Explain><SectionHelp setup={setup} k={sel.k} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></Explain><OverrideBox k={sel.k} setup={setup} runD={runD} /></div> :
+            run ? <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Run override</H><SectionHelp setup={setup} k={sel.k} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /><OverrideBox k={sel.k} setup={setup} runD={runD} /></div> :
             <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Setup default</H><SectionHelp setup={setup} k={sel.k} /><SectionEditor k={sel.k} value={getSection(setup, sel.k)} setup={setup} ctx={tokenCtx(setup, 0, 99)} onChange={(v) => mutate((s) => { setSection(s, sel.k, v); })} /></div>
           )}
         </div>

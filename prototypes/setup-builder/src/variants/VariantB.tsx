@@ -144,7 +144,7 @@ export function VariantB(p: VariantProps) {
         </Card>
         <Card className="p-3">
           <div className="flex items-center justify-between"><div className="text-sm font-semibold">Try it as a Run</div><Button size="sm" variant={runMode ? 'default' : 'outline'} onClick={() => setRunMode(!runMode)}>{runMode ? 'Close Run' : 'Create a Run…'}</Button></div>
-          {runMode && <div className="mt-1"><Explain><RunHelp setup={setup} what="intro" /><RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></Explain></div>}
+          {runMode && <div className="mt-2 space-y-2"><RunHelp setup={setup} what="intro" /><RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></div>}
           {runMode && <RunDiff setup={setup} runD={runD} ctx={ctxFor(0, 99)} />}
         </Card>
       </aside>
