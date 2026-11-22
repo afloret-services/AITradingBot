@@ -97,10 +97,10 @@ export function VariantB(p: VariantProps) {
           {SECTIONS.filter((k) => k !== 'stop').map((k) => (
             <div key={k} className="grid grid-cols-1 items-start gap-1 sm:grid-cols-[150px_1fr] sm:gap-3">
               <div className="flex items-center gap-1.5 pt-1 text-sm font-medium text-muted-foreground"><SectionIcon k={k} size={18} />{SECTION_NAMES[k]}</div>
-              <div className="space-y-1"><SectionEditor k={k} value={getSection(setup, k)} setup={setup} ctx={ctxFor(0, 99)} onChange={(v) => mutate((s) => { setSection(s, k, v); })} /><Explain><SectionHelp setup={setup} k={k} /></Explain></div>
+              <div className="space-y-1"><SectionHelp setup={setup} k={k} /><SectionEditor k={k} value={getSection(setup, k)} setup={setup} ctx={ctxFor(0, 99)} onChange={(v) => mutate((s) => { setSection(s, k, v); })} /></div>
             </div>
           ))}
-          <div className="grid grid-cols-1 items-start gap-1 sm:grid-cols-[150px_1fr] sm:gap-3"><div className="flex items-center gap-1.5 pt-1 text-sm font-medium text-muted-foreground"><SectionIcon k="in_position" size={18} />While in a Trade</div><div className="space-y-1"><InPositionRules setup={setup} mutate={mutate} ctx={ctxFor(0, 99)} look="outline" /><Explain><SectionHelp setup={setup} k="in_position" /></Explain></div></div>
+          <div className="grid grid-cols-1 items-start gap-1 sm:grid-cols-[150px_1fr] sm:gap-3"><div className="flex items-center gap-1.5 pt-1 text-sm font-medium text-muted-foreground"><SectionIcon k="in_position" size={18} />While in a Trade</div><div className="space-y-1"><SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={ctxFor(0, 99)} look="outline" /></div></div>
         </section>
         <section className="space-y-1">
           <h2 className="text-xl font-semibold">Notes</h2>

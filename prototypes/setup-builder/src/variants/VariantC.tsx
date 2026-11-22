@@ -149,7 +149,13 @@ export function VariantC(p: VariantProps) {
           )}
           {sel.kind === 'trade' && (
             run ? <div className="space-y-2"><H>Create a Run</H><div className="text-xs text-muted-foreground">Pick a section on the Trade card to override it for this Run. Signal steps and In-position rules are locked: changing them makes a new Setup version.</div><RunHelp setup={setup} what="intro" /><RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></div> :
-            <div className="space-y-3"><H>Trade</H><div className="text-xs text-muted-foreground">Pick a section on the card, or edit In-position rules here.</div><H><span className="inline-flex items-center gap-1.5"><SectionIcon k="in_position" size={16} />In-position rules</span></H><SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="chips" /></div>
+            <div className="space-y-3"><H>Trade settings</H><div className="text-xs text-muted-foreground">The Setup's defaults; a Run may override each section. Click a section to edit it.</div>
+              {SECTIONS.filter((k) => k !== 'stop').map((k) => (
+                <button key={k} onClick={() => setSel({ kind: 'section', k })} className="block w-full space-y-1 rounded-md border p-2 text-left hover:border-sky-400/60">
+                  <div className="flex items-center gap-1.5 text-xs font-medium"><SectionIcon k={k} size={16} className="shrink-0" /><span className="shrink-0 whitespace-nowrap">{SECTION_NAMES[k]}</span><span className="ml-auto min-w-0 truncate text-[11px] font-normal text-muted-foreground">{sectionSummary(setup, k)}</span></div>
+                  <SectionHelp setup={setup} k={k} />
+                </button>
+              ))}<H><span className="inline-flex items-center gap-1.5"><SectionIcon k="in_position" size={16} />In-position rules</span></H><SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="chips" /></div>
           )}
           {sel.kind === 'section' && (
             run ? <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Run override</H><Explain><SectionHelp setup={setup} k={sel.k} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></Explain><OverrideBox k={sel.k} setup={setup} runD={runD} /></div> :
