@@ -138,7 +138,7 @@ export function VariantC(p: VariantProps) {
             </div>
           )}
           {sel.kind === 'entry' && (
-            run ? <div className="space-y-2"><H>Stop · Run override</H><OverrideBox k="stop" setup={setup} runD={runD} /></div> :
+            run ? <div className="space-y-2"><H>Stop · Run override</H><SectionHelp setup={setup} k="stop" /><Explain><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></Explain><OverrideBox k="stop" setup={setup} runD={runD} /></div> :
             <div className="space-y-2"><H>Entry · {setup.branches[sel.bi].side}</H><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={sel.bi} ctx={tokenCtx(setup, sel.bi, 99)} /></div>
           )}
           {sel.kind === 'trade' && (
