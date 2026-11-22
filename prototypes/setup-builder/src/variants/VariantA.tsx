@@ -12,7 +12,7 @@ import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, 
 import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
 
-const STAGES = ['Basics', 'Indicators & patterns', 'When to trade', 'Signal steps', 'Entry & stop', 'Trade settings', 'Review & save', 'Create a Run'] as const;
+const STAGES = ['General', 'Indicators & patterns', 'When to trade', 'Signal steps', 'Entry & stop', 'Trade settings', 'Review & save', 'Create a Run'] as const;
 
 export function VariantA(p: VariantProps) {
   const { setup, mutate, data, result } = p;
