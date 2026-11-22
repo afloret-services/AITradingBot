@@ -90,6 +90,9 @@ export function VariantC(p: VariantProps) {
                   <LaneCard color="#e2e8f0" selected={sel.kind === 'entry' && sel.bi === bi} onClick={() => setSel({ kind: 'entry', bi })} title="Entry" overridable={run} overridden={run && 'stop' in runD.draft.overrides}>
                     <div className="text-xs">{br.entry.order}{br.entry.order !== 'market' && <> at <Chip>{shortName(br.entry.price || '?', labels)}</Chip></>}</div>
                     <div className="mt-1 text-xs">stop {br.entry.stop.offset} {br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} beyond <Chip>{shortName(br.entry.stop.token || '?', labels)}</Chip></div>
+                    <div className="mt-1.5 border-t pt-1 text-[11px] leading-snug text-muted-foreground">{br.entry.order === 'market' ? 'Fills at the next bar\'s open: always in, at the market\'s price.' : br.entry.order === 'limit' ? 'Fills only if price comes back to it: a better price, but it may never fill.' : 'Fills once price breaks through it: waits for confirmation, at a worse price.'} The entry-to-stop distance is 1R.
+                      {(() => { const sg = shown.signals.filter((x) => x.branch === bi && !x.refused).slice(-1)[0]; return sg ? <> Latest Signal: <b className="text-foreground">{Math.abs(sg.entry - sg.stop).toFixed(2)} pts</b> of risk, <b className="text-foreground">{sg.legs.reduce((a, l) => a + l.contracts, 0)}</b> contract(s).</> : null; })()}
+                      <span className="text-sky-300/80"> Click for the full description.</span></div>
                   </LaneCard>
                   {bi === 0 && <>
                     <Connector label="fill" />
