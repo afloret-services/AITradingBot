@@ -5,6 +5,7 @@ import { Setup, Step, TF, TFS, Leg, Guard, InPositionRule, Cond, uid, SECTION_NA
 import { TokenPicker, TokenCtx, shortName } from './TokenPicker';
 import { CondEditor, Look } from './CondEditor';
 import { PatternIcon, IndicatorIcon } from './PatternIcon';
+import { HelpBox, Hideable, withHelpId, useHelp } from './help';
 import { PatternSchematic, PatternExample } from './PatternDiagram';
 import type { Data, RunResult } from '../engine';
 import { chartTime } from '../engine';
@@ -73,8 +74,8 @@ const NEWS: Record<string, [string, string]> = {
 export function BehaviourEditor({ setup, mutate, stacked }: { setup: Setup; mutate: Mutate; stacked?: boolean }) {
   const n = setup.settings.news_rule;
   const oat = setup.settings.one_at_a_time;
-  const desc = (title: string, text: string, extra?: React.ReactNode) => (
-    <div className="mt-1.5 rounded-md border-l-2 border-sky-500/50 bg-sky-500/5 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground"><span className="font-medium text-foreground">{title}.</span> {text}{extra}</div>
+  const desc = (title: string, text: string, extra?: React.ReactNode, id = 'when:behaviour') => (
+    <HelpBox id={id} className="mt-1.5"><div><span className="font-medium text-foreground">{title}.</span> {text}{extra}</div></HelpBox>
   );
   return (
     <div className={cn('grid gap-5', !stacked && 'md:grid-cols-2')}>
@@ -82,7 +83,7 @@ export function BehaviourEditor({ setup, mutate, stacked }: { setup: Setup; muta
         <Field label="One at a time" hint="What happens to new setups while a Trade of this Setup is live.">
           <Select value={oat} onChange={(v) => mutate((s) => { s.settings.one_at_a_time = v as any; })} options={Object.entries(ONE_AT_A_TIME).map(([k, [l]]) => [k, l] as [string, string])} />
         </Field>
-        {desc(...ONE_AT_A_TIME[oat])}
+        {desc(...ONE_AT_A_TIME[oat], undefined, 'when:oat')}
         <details className="mt-1.5 text-[11px] text-muted-foreground"><summary className="cursor-pointer hover:text-foreground">compare the three</summary>
           <ul className="mt-1 space-y-1 pl-3">{Object.entries(ONE_AT_A_TIME).map(([k, [l, t]]) => <li key={k} className={cn(k === oat && 'text-foreground')}><b>{l}</b>: {t}</li>)}</ul>
         </details>
@@ -92,7 +93,7 @@ export function BehaviourEditor({ setup, mutate, stacked }: { setup: Setup; muta
           <Select value={n.mode} onChange={(v) => mutate((s) => { s.settings.news_rule.mode = v as any; })} options={Object.entries(NEWS).map(([k, [l]]) => [k, l] as [string, string])} />
           {n.mode === 'span' && <><NumInput value={n.before} onChange={(x) => mutate((s) => { s.settings.news_rule.before = x; })} className="w-14" /><span className="text-xs">min before</span><NumInput value={n.after} onChange={(x) => mutate((s) => { s.settings.news_rule.after = x; })} className="w-14" /><span className="text-xs">min after</span></>}
         </Field>
-        {desc(...NEWS[n.mode], n.mode === 'span' ? <> Here: from <b className="text-foreground">{n.before ?? 0} min</b> before to <b className="text-foreground">{n.after ?? 0} min</b> after; a 08:30 release blocks {spanText(n.before ?? 0, n.after ?? 0)}.</> : undefined)}
+        {desc(NEWS[n.mode][0], NEWS[n.mode][1], n.mode === 'span' ? <> Here: from <b className="text-foreground">{n.before ?? 0} min</b> before to <b className="text-foreground">{n.after ?? 0} min</b> after; a 08:30 release blocks {spanText(n.before ?? 0, n.after ?? 0)}.</> : undefined, 'when:news')}
         <div className="mt-1.5 text-[11px] text-muted-foreground">Which release types count (CPI, NFP, FOMC…) is chosen once for the whole bot, not per Setup. The prototype's chart does not apply the news rule.</div>
       </div>
     </div>
@@ -121,7 +122,7 @@ function indHelp(token: string): string {
     default: return '';
   }
 }
-export function IndicatorsHelp({ setup }: { setup: Setup }) {
+function IndicatorsHelp_({ setup }: { setup: Setup }) {
   const used = indicatorUsage(setup);
   const unused = setup.indicators.filter((i) => !used[i.token]).length;
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
@@ -133,7 +134,7 @@ export function IndicatorsHelp({ setup }: { setup: Setup }) {
     </HelpBox>
   );
 }
-export function PatternsHelp({ setup }: { setup: Setup }) {
+function PatternsHelp_({ setup }: { setup: Setup }) {
   const pats = setup.patterns || [];
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   return (
@@ -144,7 +145,7 @@ export function PatternsHelp({ setup }: { setup: Setup }) {
     </HelpBox>
   );
 }
-export function IndicatorsPatternsIntro() {
+function IndicatorsPatternsIntro_() {
   return (
     <HelpBox>
       <div><T>Declare first, use later.</T> Everything a step will read that needs computing (an indicator, a pattern) is declared here once, with its timeframe and settings. The Signal steps then pick from these lists, so a setting lives in one place and the Rule description lists each one once. Plain candle values (a 15m close, a candle's range), levels (the previous day's high, a session high) and the Bias need no declaration.</div>
@@ -164,7 +165,7 @@ export function IndicatorList({ setup, mutate, ctx, usage }: { setup: Setup; mut
           {usage && <span className="text-[11px] text-muted-foreground">used {usage[ind.token] || 0}×</span>}
           <button className="text-muted-foreground hover:text-red-400" onClick={() => mutate((s) => { s.indicators.splice(k, 1); })}>×</button>
         </div>
-          {indHelp(ind.token) && <div className="-mt-0.5 mb-1 pl-1 text-[11px] text-muted-foreground">{indHelp(ind.token)}</div>}
+          {indHelp(ind.token) && <Hideable id="indicators:each" className="-mt-0.5 mb-1 pl-1 text-[11px] text-muted-foreground">{indHelp(ind.token)}</Hideable>}
         </React.Fragment>
       ))}
       <Button size="sm" variant="ghost" onClick={() => mutate((s) => { s.indicators.push({ token: `{{indicator:ema:200:${s.settings.base_bar}}}` }); })}>+ declare an indicator</Button>
@@ -201,7 +202,7 @@ export function PatternList({ setup, mutate, compact, data }: { setup: Setup; mu
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">Reads in a step as: <span className="text-foreground">"{patternPhrase(p, 'long')}"</span></div>
             {d.cat && <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]"><PatternCatChips kind={p.kind} full />{d.cat.note && <span className="text-muted-foreground">{d.cat.note}</span>}</div>}
-            {!compact && <div className="mt-1 text-[11px] text-muted-foreground">{d.help}</div>}
+            {!compact && <Hideable id="patterns:each" className="mt-1 text-[11px] text-muted-foreground">{d.help}</Hideable>}
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
               {d.params.filter(([key]) => dispOn || !DISP_KEYS.includes(key)).map(([key, label, def]) =>
                 typeof def === 'boolean'
@@ -332,7 +333,7 @@ export function indicatorUsage(s: Setup) {
 
 // ---------- step limits ----------
 // ---------- When to trade ----------
-export function WhenHelp({ setup, what }: { setup: Setup; what: 'intro' | 'hours' | 'sessions' }) {
+function WhenHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'hours' | 'sessions' }) {
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   const th = setup.settings.trading_hours;
   const WDN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -365,10 +366,12 @@ export function WhenHelp({ setup, what }: { setup: Setup; what: 'intro' | 'hours
 
 /** a description behind a "what this means" toggle, for the denser layouts */
 export function Explain({ children, label = 'what this means' }: { children: React.ReactNode; label?: string }) {
+  const h = useHelp();
+  if (!h.all) return null;
   return <details className="text-[11px]"><summary className="cursor-pointer select-none text-sky-300/80 hover:text-sky-300">{label}</summary><div className="mt-1.5 space-y-1.5">{children}</div></details>;
 }
 /** the One-at-a-time and News-rule descriptions for the current choices */
-export function BehaviourHelp({ setup }: { setup: Setup }) {
+function BehaviourHelp_({ setup }: { setup: Setup }) {
   const oat = setup.settings.one_at_a_time, nr = setup.settings.news_rule;
   const o = ONE_AT_A_TIME[oat], n = NEWS[nr.mode];
   const list = (d: Record<string, [string, string]>, cur: string) => <ul className="mt-1 space-y-1 pl-3">{Object.entries(d).map(([k, [l, t]]) => <li key={k} className={cn(k === cur && 'text-foreground')}><b>{l}</b>: {t}</li>)}</ul>;
@@ -384,9 +387,8 @@ export function BehaviourHelp({ setup }: { setup: Setup }) {
 }
 
 // ---------- Basics ----------
-const HelpBox = ({ children }: { children: React.ReactNode }) => <div className="space-y-1 rounded-md border-l-2 border-sky-500/50 bg-sky-500/5 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground">{children}</div>;
 const T = ({ children }: { children: React.ReactNode }) => <span className="font-medium text-foreground">{children}</span>;
-export function BasicsHelp({ setup, what }: { setup: Setup; what: 'intro' | 'name' | 'base_bar' | 'notes' }) {
+function BasicsHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'name' | 'base_bar' | 'notes' }) {
   const bb = setup.settings.base_bar, m = tfMinutes(bb);
   const perDay = Math.round(1380 / m); // CME futures trade 23 hours a day
   const finer = TFS.filter((t) => tfMinutes(t) < m);
@@ -411,7 +413,7 @@ export function BasicsHelp({ setup, what }: { setup: Setup; what: 'intro' | 'nam
 const SPECS: Record<string, { pt: number; tick: number; unit: string } | undefined> = {
   MNQ: { pt: 2, tick: 0.25, unit: 'points' }, NQ: { pt: 20, tick: 0.25, unit: 'points' }, MES: { pt: 5, tick: 0.25, unit: 'points' }, ES: { pt: 50, tick: 0.25, unit: 'points' },
 };
-export function RunHelp({ setup, what, instrument, overrides }: { setup: Setup; what: 'intro' | 'instrument' | 'overrides'; instrument?: string; overrides?: number }) {
+function RunHelp_({ setup, what, instrument, overrides }: { setup: Setup; what: 'intro' | 'instrument' | 'overrides'; instrument?: string; overrides?: number }) {
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   if (what === 'intro') return (
     <HelpBox>
@@ -439,7 +441,7 @@ export function RunHelp({ setup, what, instrument, overrides }: { setup: Setup; 
 }
 
 // ---------- Review & save ----------
-export function ReviewHelp({ setup, what, issues, result, versions }: { setup: Setup; what: 'intro' | 'map' | 'rule' | 'checks' | 'save' | 'chart'; issues?: { level: string }[]; result?: RunResult; versions?: number }) {
+function ReviewHelp_({ setup, what, issues, result, versions }: { setup: Setup; what: 'intro' | 'map' | 'rule' | 'checks' | 'save' | 'chart'; issues?: { level: string }[]; result?: RunResult; versions?: number }) {
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   if (what === 'intro') return (
     <HelpBox>
@@ -490,7 +492,7 @@ const NEW_START: Record<string, [string, string]> = {
   ignore: ['Ignore', 'While a Candidate is running, step 1 holding again starts nothing; the first start is kept until it completes or ends. Use it when step 1 keeps holding bar after bar, so the Candidate and its running capture are not restarted every bar.'],
 };
 /** the top of the Signal steps stage: how a branch turns into Signals */
-export function SignalStepsHelp({ setup, bi }: { setup: Setup; bi: number }) {
+function SignalStepsHelp_({ setup, bi }: { setup: Setup; bi: number }) {
   const br = setup.branches[bi];
   const [title, text] = NEW_START[br?.on_new_start || 'start_another'];
   return (
@@ -522,7 +524,7 @@ export function StepLimits({ step, onChange, isFirst, ctx, side, look }: { step:
   return (
     <div className="space-y-1.5">
     <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Sequence limits</div>
-    <HelpBox>
+    <HelpBox id="steps:limits">
       <div>{limitsSentence(step, isFirst, ctx.labels)}</div>
       <details className="text-[11px]"><summary className="cursor-pointer hover:text-foreground">what each control means</summary>
         <ul className="mt-1 space-y-1 pl-3">
@@ -574,7 +576,7 @@ const ORDER_HELP: Record<string, (long: boolean) => string> = {
   stop: (long) => `Stop entry: fills once price trades through the price in the Trade's direction (${long ? 'at or above it' : 'at or below it'}). It waits for the move to confirm, at a worse price than a limit.`,
 };
 /** what the Entry block does, then this branch's numbers on its latest Signal */
-export function EntryHelp({ setup, bi, result, data }: { setup: Setup; bi: number; result?: RunResult; data?: Data }) {
+function EntryHelp_({ setup, bi, result, data }: { setup: Setup; bi: number; result?: RunResult; data?: Data }) {
   const br = setup.branches[bi], e = br.entry, long = br.side === 'long';
   const labels = labelsOf(setup);
   const sig = result?.signals.filter((x) => x.branch === bi && !x.refused).slice(-1)[0];
@@ -582,14 +584,14 @@ export function EntryHelp({ setup, bi, result, data }: { setup: Setup; bi: numbe
   const when = sig && data ? new Date((chartTime(data.m1[sig.i].t) + 60) * 1000).toISOString() : '';
   const contracts = sig ? sig.legs.reduce((a, l) => a + l.contracts, 0) : 0;
   return (
-    <div className="space-y-1 rounded-md border-l-2 border-sky-500/50 bg-sky-500/5 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground">
+    <HelpBox>
       <div><span className="font-medium text-foreground">Order.</span> {ORDER_HELP[e.order](long)}</div>
       <div><span className="font-medium text-foreground">Stop.</span> Placed {long ? 'below' : 'above'} a level the Setup reads (a captured low or high, a pattern edge…) by an offset: in ticks (on MNQ a tick is 0.25 points) or in × ATR, so it widens when the market is more volatile. The distance from the entry to the stop is the risk, 1R: it sizes the contracts and sets R-multiple legs. An Entry cannot be saved without a stop.</div>
       <div>Here: {e.order === 'market' ? B('at market') : <>a {B(e.order === 'limit' ? 'limit' : 'stop entry')} at {B(phrase(e.price || '?', labels))}</>}, stop {B(`${e.stop.offset} ${e.stop.unit === 'atr' ? '× ' + phrase(e.stop.atr || 'the ATR', labels) : e.stop.offset === 1 ? 'tick' : 'ticks'}`)} {long ? 'below' : 'above'} {B(phrase(e.stop.token || '?', labels))}{e.stop.unit === 'ticks' ? ` (${(e.stop.offset * 0.25).toFixed(2)} points)` : ''}.
         {sig && data && <> On its latest Signal ({when.slice(5, 10)} {when.slice(11, 16)} NY): entry {B(sig.entry.toFixed(2))}, stop {B(sig.stop.toFixed(2))}, so {B(`${Math.abs(sig.entry - sig.stop).toFixed(2)} points`)} of risk and {B(`${contracts} contract${contracts === 1 ? '' : 's'}`)}.</>}
         {!sig && result && <> No Signal of this branch was traded on these bars yet.</>}
       </div>
-    </div>
+    </HelpBox>
   );
 }
 export function StopEditor({ value, onChange, ctx }: { value: Setup['branches'][0]['entry']['stop']; onChange: (v: Setup['branches'][0]['entry']['stop']) => void; ctx: TokenCtx }) {
@@ -762,11 +764,11 @@ function sectionExample(setup: Setup, k: SectionKey | 'in_position'): React.Reac
     default: return null;
   }
 }
-export function SectionHelp({ setup, k }: { setup: Setup; k: SectionKey | 'in_position' }) {
+function SectionHelp_({ setup, k }: { setup: Setup; k: SectionKey | 'in_position' }) {
   return (
-    <div className="mb-2 rounded-md border-l-2 border-sky-500/50 bg-sky-500/5 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground">
-      {SECTION_HELP[k]} <span className="mt-1 block">{sectionExample(setup, k)}</span>
-    </div>
+    <HelpBox className="mb-2">
+      <div>{SECTION_HELP[k]}</div><div>{sectionExample(setup, k)}</div>
+    </HelpBox>
   );
 }
 
@@ -801,3 +803,15 @@ export function InPositionRules({ setup, mutate, ctx, look }: { setup: Setup; mu
 }
 export const ipPhrase = (r: InPositionRule, labels: Record<string, string>) => `${condPhrase(r.when, labels)} → ${r.action.replace('_', ' ')}`;
 export { SECTION_NAMES };
+
+export const BasicsHelp = withHelpId(BasicsHelp_, (p: any) => 'general:' + p.what);
+export const WhenHelp = withHelpId(WhenHelp_, (p: any) => 'when:' + p.what);
+export const BehaviourHelp = withHelpId(BehaviourHelp_, () => 'when:behaviour');
+export const SignalStepsHelp = withHelpId(SignalStepsHelp_, () => 'steps:how');
+export const ReviewHelp = withHelpId(ReviewHelp_, (p: any) => 'review:' + p.what);
+export const RunHelp = withHelpId(RunHelp_, (p: any) => 'run:' + p.what);
+export const IndicatorsHelp = withHelpId(IndicatorsHelp_, () => 'indicators');
+export const PatternsHelp = withHelpId(PatternsHelp_, () => 'patterns');
+export const IndicatorsPatternsIntro = withHelpId(IndicatorsPatternsIntro_, () => 'indpat:intro');
+export const EntryHelp = withHelpId(EntryHelp_, () => 'entry');
+export const SectionHelp = withHelpId(SectionHelp_, (p: any) => 'trade:' + p.k);

@@ -4,6 +4,7 @@ import { Data, parseCsv, run, Signal } from './engine';
 import { Setup, STARTERS, validate, hashSetup, ruleDescription, addMirror } from './model';
 import { Focus } from './components/Chart';
 import { Switcher } from './components/Switcher';
+import { HelpProvider, HelpToggle } from './components/help';
 import { Badge, Button, Select, cn } from './components/ui';
 import { VariantA } from './variants/VariantA';
 import { VariantB } from './variants/VariantB';
@@ -66,6 +67,7 @@ export default function App() {
   if (!data || !result) return <div className="p-8 text-muted-foreground">Loading 35 Trading days of MNQ 1m bars…</div>;
   const props = { data, setup, mutate, result, day, setDay, focus, setFocus, selected, setSelected, saveBar };
   return (
+    <HelpProvider>
     <div className="min-h-screen pb-20">
       <div className="z-40 flex flex-wrap items-center gap-2 border-b bg-background/80 px-4 py-2 text-xs backdrop-blur md:sticky md:top-0">
         <span className="flex items-center gap-2 pr-2 text-sm font-semibold tracking-tight"><span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-sky-400 to-indigo-500 text-[11px] font-bold text-white">S</span>Setup builder</span>
@@ -74,7 +76,7 @@ export default function App() {
         <Select value={starter} onChange={loadStarter} options={[['silver_bullet', 'Silver Bullet (built)'], ['ema_macd', 'EMA 200 + MACD (built)'], ['double_bottom', 'Double bottom (chart-pattern demo)'], ['blank', 'a blank Setup']]} className="h-7 text-xs" />
         {setup.branches.length === 1 && <Button size="sm" variant="ghost" onClick={() => mutate((s) => { addMirror(s); })}>Duplicate as mirrored {setup.branches[0].side === 'long' ? 'short' : 'long'}</Button>}
         {versions.length > 0 && <span className="text-muted-foreground">versions: {versions.map((v) => <span key={v.v} className="mono mr-1">v{v.v}·{v.hash.slice(0, 8)}</span>)}</span>}
-        <span className="ml-auto text-muted-foreground">nothing is persisted · reload to reset</span>
+        <span className="ml-auto flex flex-wrap items-center gap-3"><HelpToggle /><span className="text-muted-foreground">nothing is persisted · reload to reset</span></span>
       </div>
       {variant === 'A' && <VariantA {...props} />}
       {variant === 'B' && <VariantB {...props} />}
@@ -91,5 +93,6 @@ export default function App() {
       {toast && <div className="fixed left-1/2 top-14 z-[90] -translate-x-1/2 rounded-md border bg-card px-3 py-2 text-sm shadow-xl">{toast}</div>}
       <Switcher variants={VARIANTS} current={variant} onChange={setV} />
     </div>
+    </HelpProvider>
   );
 }
