@@ -9,7 +9,7 @@ import { PatternIcon, IndicatorIcon, SectionIcon } from '../components/PatternIc
 import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, SectionHelp, Explain, BasicsHelp, WhenHelp, IndicatorsHelp, PatternsHelp, SignalStepsHelp, ReviewHelp, RunHelp } from '../components/sections';
 import { RuleEditor, appendAnd } from '../components/RuleEditor';
 import { shortName } from '../components/TokenPicker';
-import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs } from '../components/ui';
+import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs, Field } from '../components/ui';
 import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN_KINDS, patternUsage, labelsOf } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
 
@@ -117,8 +117,11 @@ export function VariantC(p: VariantProps) {
         </div>
         {/* inspector */}
         <div className="overflow-auto border-l p-3">
-          {sel.kind === 'settings' && <div className="space-y-4"><H>Setup settings</H><Explain><BasicsHelp setup={setup} what="intro" /><WhenHelp setup={setup} what="intro" /></Explain>
+          {sel.kind === 'settings' && <div className="space-y-4"><H>General</H><Explain><BasicsHelp setup={setup} what="intro" /></Explain>
+            <Field label="Name"><Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="w-full" /></Field><Explain><BasicsHelp setup={setup} what="name" /></Explain>
             <BaseBarEditor setup={setup} mutate={mutate} /><Explain><BasicsHelp setup={setup} what="base_bar" /></Explain>
+            <Field label="Notes"><textarea value={setup.notes} onChange={(e) => mutate((s) => { s.notes = e.target.value; })} placeholder="Free text. Never part of the Rule description or the hash." className="h-16 w-full rounded-md border border-input bg-transparent p-2 text-sm" /></Field><Explain><BasicsHelp setup={setup} what="notes" /></Explain>
+            <H>When to trade</H><Explain><WhenHelp setup={setup} what="intro" /></Explain>
             <TradingHoursEditor setup={setup} mutate={mutate} /><Explain><WhenHelp setup={setup} what="hours" /></Explain>
             <SessionsEditor setup={setup} mutate={mutate} /><Explain><WhenHelp setup={setup} what="sessions" /></Explain>
             <BehaviourEditor setup={setup} mutate={mutate} stacked />

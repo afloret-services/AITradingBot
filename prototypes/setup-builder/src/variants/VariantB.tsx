@@ -47,6 +47,8 @@ export function VariantB(p: VariantProps) {
           </p>
           <p className="text-xs text-muted-foreground">Sessions used by levels: {Object.entries(setup.settings.sessions).map(([n, r]) => `${n.replace('_', ' ')} ${r.start}–${r.end}`).join(' · ')} (copied into the Setup).</p>
           <Explain>
+            <BasicsHelp setup={setup} what="intro" />
+            <BasicsHelp setup={setup} what="name" />
             <BasicsHelp setup={setup} what="base_bar" />
             <WhenHelp setup={setup} what="hours" />
             <BehaviourHelp setup={setup} />

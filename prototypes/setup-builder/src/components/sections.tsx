@@ -384,7 +384,7 @@ export function BasicsHelp({ setup, what }: { setup: Setup; what: 'intro' | 'nam
   if (what === 'intro') return (
     <HelpBox>
       <div><T>A Setup</T> is one trading strategy written as Rule blocks: when to look (Trading hours), what must happen in order (Signal steps), how to get in (Entry and stop) and how to manage the Trade (Trade settings). It names no instrument: the same Setup can run on MNQ, NQ, ES or MES, chosen when a <T>Run</T> is created.</div>
-      <div>While you build, it is a <T>Draft</T>: it saves with warnings and you can keep changing it. <T>Freeze</T> makes a numbered, unchangeable version (v1, v2…) that Runs and backtests point to; it is refused while there are errors. Steps 1 to 6 build it, step 7 reviews it on MNQ, step 8 creates a Run.</div>
+      <div>While you build, it is a <T>Draft</T>: it saves with warnings and you can keep changing it. <T>Freeze</T> makes a numbered, unchangeable version (v1, v2…) that Runs and backtests point to; it is refused while there are errors. You build it, check what it did on the MNQ bars, freeze it, then create a Run.</div>
     </HelpBox>
   );
   if (what === 'name') return <HelpBox><div>How the Setup is shown in lists, Runs and the Rule description. Renaming it does not make a new version: the version only changes when something the engine reads changes.</div></HelpBox>;
