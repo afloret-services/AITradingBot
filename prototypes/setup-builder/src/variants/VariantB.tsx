@@ -4,10 +4,11 @@
 import React, { useState } from 'react';
 import { VariantProps } from '../types';
 import { SetupMap } from '../components/SetupMap';
+import { Hideable } from '../components/help';
 import { IndicatorIcon, SectionIcon } from '../components/PatternIcon';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
-import { StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, Explain, BehaviourHelp, BasicsHelp, WhenHelp, SessionsEditor, SignalStepsHelp, limitsSentence, SectionHelp, IndicatorsHelp, PatternsHelp, ReviewHelp, RunHelp } from '../components/sections';
+import { StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, Explain, BehaviourHelp, BasicsHelp, WhenHelp, SessionsEditor, SignalStepsHelp, limitsSentence, SectionHelp, IndicatorsHelp, PatternsHelp, ReviewHelp, RunHelp, IndicatorsPatternsIntro, indHelp } from '../components/sections';
 import { RuleEditor, appendAnd } from '../components/RuleEditor';
 import { TokenCtx, shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, NumInput } from '../components/ui';
@@ -119,20 +120,23 @@ export function VariantB(p: VariantProps) {
         <Card className="p-3">
           <div className="mb-1 text-sm font-semibold">Indicators in this Setup</div>
           <div className="mb-1 text-[11px] text-muted-foreground">Declared the first time a step reads them. Give one a label and the description uses it.</div>
-          <div className="mb-1"><Explain><IndicatorsHelp setup={setup} /></Explain></div>
+          <div className="mb-2 space-y-2"><IndicatorsPatternsIntro /><IndicatorsHelp setup={setup} /></div>
           {setup.indicators.length === 0 && <div className="text-xs italic text-muted-foreground">none yet</div>}
           {setup.indicators.map((ind, k) => (
-            <div key={ind.token} className="flex items-center gap-2 py-0.5 text-xs">
+            <React.Fragment key={ind.token}>
+            <div className="flex items-center gap-2 py-0.5 text-xs">
               <IndicatorIcon token={ind.token} size={18} /><span className="mono w-36 truncate" title={ind.token}>{shortName(ind.token, {})}</span>
               <Input value={ind.label || ''} placeholder="label" onChange={(e) => mutate((s) => { s.indicators[k].label = e.target.value || undefined; })} className="h-6 flex-1" />
               <span className={cn('w-14 text-right', usage[ind.token] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[ind.token] ? `used ${usage[ind.token]}×` : 'unused'}</span>
             </div>
+            {indHelp(ind.token) && <Hideable id="indicators:each" className="-mt-0.5 mb-1 pl-6 text-[11px] text-muted-foreground">{indHelp(ind.token)}</Hideable>}
+            </React.Fragment>
           ))}
         </Card>
         <Card className="p-3">
           <div className="mb-1 text-sm font-semibold">Patterns in this Setup</div>
           <div className="mb-1 text-[11px] text-muted-foreground">Declared up front, then used by name in a sentence ("a bullish fvg forms").</div>
-          <div className="mb-1"><Explain><PatternsHelp setup={setup} /></Explain></div>
+          <div className="mb-2"><PatternsHelp setup={setup} /></div>
           <PatternList setup={setup} mutate={mutate} compact data={data} />
         </Card>
         <Card className="p-3">

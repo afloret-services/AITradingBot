@@ -106,7 +106,7 @@ function spanText(before: number, after: number) {
 
 // ---------- indicators declared once ----------
 // ---------- Indicators & patterns: what each one is ----------
-function indHelp(token: string): string {
+export function indHelp(token: string): string {
   const pt = parseToken(token);
   const [, name, params = '', tf = '', out] = pt.parts;
   const n = params.split(',')[0];
@@ -202,7 +202,7 @@ export function PatternList({ setup, mutate, compact, data }: { setup: Setup; mu
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">Reads in a step as: <span className="text-foreground">"{patternPhrase(p, 'long')}"</span></div>
             {d.cat && <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]"><PatternCatChips kind={p.kind} full />{d.cat.note && <span className="text-muted-foreground">{d.cat.note}</span>}</div>}
-            {!compact && <Hideable id="patterns:each" className="mt-1 text-[11px] text-muted-foreground">{d.help}</Hideable>}
+            <Hideable id="patterns:each" className="mt-1 text-[11px] text-muted-foreground">{d.help}</Hideable>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
               {d.params.filter(([key]) => dispOn || !DISP_KEYS.includes(key)).map(([key, label, def]) =>
                 typeof def === 'boolean'

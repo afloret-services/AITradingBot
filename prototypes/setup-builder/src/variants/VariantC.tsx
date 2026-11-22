@@ -6,7 +6,7 @@ import { VariantProps } from '../types';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx, AddMenu, newCmp } from '../components/CondEditor';
 import { PatternIcon, IndicatorIcon, SectionIcon } from '../components/PatternIcon';
-import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, SectionHelp, Explain, BasicsHelp, WhenHelp, IndicatorsHelp, PatternsHelp, SignalStepsHelp, ReviewHelp, RunHelp } from '../components/sections';
+import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, SectionHelp, Explain, BasicsHelp, WhenHelp, IndicatorsHelp, PatternsHelp, SignalStepsHelp, ReviewHelp, RunHelp, IndicatorsPatternsIntro } from '../components/sections';
 import { RuleEditor, appendAnd } from '../components/RuleEditor';
 import { shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs, Field } from '../components/ui';
@@ -137,8 +137,8 @@ export function VariantC(p: VariantProps) {
             <TradingHoursEditor setup={setup} mutate={mutate} /><Explain><WhenHelp setup={setup} what="hours" /></Explain>
             <SessionsEditor setup={setup} mutate={mutate} /><Explain><WhenHelp setup={setup} what="sessions" /></Explain>
             <BehaviourEditor setup={setup} mutate={mutate} stacked />
-            <H>Indicators</H><Explain><IndicatorsHelp setup={setup} /></Explain><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={usage} />
-            <H>Patterns</H><Explain><PatternsHelp setup={setup} /></Explain><PatternList setup={setup} mutate={mutate} compact data={data} /></div>}
+            <H>Indicators & patterns</H><IndicatorsPatternsIntro /><H>Indicators</H><IndicatorsHelp setup={setup} /><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={usage} />
+            <H>Patterns</H><PatternsHelp setup={setup} /><PatternList setup={setup} mutate={mutate} compact data={data} /></div>}
           {sel.kind === 'step' && selStep && (
             run ? <Locked what="Signal steps" /> :
             <div className="space-y-3">
