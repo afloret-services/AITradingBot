@@ -8,7 +8,7 @@ import { PatternIcon, IndicatorIcon } from './PatternIcon';
 import { PatternSchematic, PatternExample } from './PatternDiagram';
 import type { Data, RunResult } from '../engine';
 import { chartTime } from '../engine';
-import { Button, Field, Input, NumInput, Select, Switch, Badge, cn } from './ui';
+import { Button, Field, Input, NumInput, Select, Switch, Badge, Label, cn } from './ui';
 
 export type Mutate = (fn: (s: Setup) => void) => void;
 
@@ -24,28 +24,40 @@ const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export function TradingHoursEditor({ setup, mutate }: { setup: Setup; mutate: Mutate }) {
   const th = setup.settings.trading_hours;
   return (
-    <Field label="Trading hours (NY, checked on the Signal's bar)" hint="Ranges may cross midnight, e.g. 18:00–16:00 for every session.">
-      {th.ranges.map((r, k) => (
-        <span key={k} className="flex items-center gap-1">
-          <Input value={r.start} onChange={(e) => mutate((s) => { s.settings.trading_hours.ranges[k].start = e.target.value; })} className="w-16" />–
-          <Input value={r.end} onChange={(e) => mutate((s) => { s.settings.trading_hours.ranges[k].end = e.target.value; })} className="w-16" />
-          <button className="text-muted-foreground hover:text-red-400" onClick={() => mutate((s) => { s.settings.trading_hours.ranges.splice(k, 1); })}>×</button>
-        </span>
-      ))}
-      <Button size="sm" variant="ghost" onClick={() => mutate((s) => { s.settings.trading_hours.ranges.push({ start: '09:30', end: '16:00' }); })}>+ range</Button>
-      <span className="flex gap-0.5">{WD.map((d, k) => <button key={d} onClick={() => mutate((s) => { const w = s.settings.trading_hours.weekdays; s.settings.trading_hours.weekdays = w.includes(k) ? w.filter((x) => x !== k) : [...w, k].sort(); })} className={cn('rounded px-1 text-[11px]', th.weekdays.includes(k) ? 'bg-sky-500/20 text-sky-200' : 'text-muted-foreground')}>{d}</button>)}</span>
-    </Field>
+    <div className="space-y-1">
+      <Label>Trading hours (NY, checked on the Signal's bar)</Label>
+      <div className="space-y-1.5">
+        {th.ranges.length === 0 && <div className="text-xs italic text-muted-foreground">No range: all day.</div>}
+        {th.ranges.map((r, k) => (
+          <div key={k} className="flex items-center gap-1 text-xs">
+            <span className="w-16 text-muted-foreground">Range {k + 1}</span>
+            <Input value={r.start} onChange={(e) => mutate((s) => { s.settings.trading_hours.ranges[k].start = e.target.value; })} className="h-7 w-14" />–
+            <Input value={r.end} onChange={(e) => mutate((s) => { s.settings.trading_hours.ranges[k].end = e.target.value; })} className="h-7 w-14" />
+            <button className="ml-1 text-muted-foreground hover:text-red-400" title="remove this range" onClick={() => mutate((s) => { s.settings.trading_hours.ranges.splice(k, 1); })}>×</button>
+          </div>
+        ))}
+        <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={() => mutate((s) => { s.settings.trading_hours.ranges.push({ start: '09:30', end: '16:00' }); })}>+ range</Button>
+      </div>
+      <div className="flex items-center gap-1 pt-1 text-xs"><span className="w-16 text-muted-foreground">Days</span>
+        <span className="flex gap-0.5">{WD.map((d, k) => <button key={d} onClick={() => mutate((s) => { const w = s.settings.trading_hours.weekdays; s.settings.trading_hours.weekdays = w.includes(k) ? w.filter((x) => x !== k) : [...w, k].sort(); })} className={cn('rounded px-1 text-[11px]', th.weekdays.includes(k) ? 'bg-sky-500/20 text-sky-200' : 'text-muted-foreground')}>{d}</button>)}</span>
+      </div>
+      <div className="text-[11px] text-muted-foreground">Ranges may cross midnight, e.g. 18:00–16:00 for every session.</div>
+    </div>
   );
 }
 export function SessionsEditor({ setup, mutate }: { setup: Setup; mutate: Mutate }) {
   return (
-    <Field label="Sessions (copied into the Setup, editable)" hint="Session levels (Asia high, …) read these times.">
-      {Object.entries(setup.settings.sessions).map(([n, r]) => (
-        <span key={n} className="flex items-center gap-1 text-xs"><span className="w-14 capitalize">{n.replace('_', ' ')}</span>
-          <Input value={r.start} onChange={(e) => mutate((s) => { s.settings.sessions[n].start = e.target.value; })} className="h-7 w-14" />–
-          <Input value={r.end} onChange={(e) => mutate((s) => { s.settings.sessions[n].end = e.target.value; })} className="h-7 w-14" /></span>
-      ))}
-    </Field>
+    <div className="space-y-1">
+      <Label>Sessions (copied into the Setup, editable)</Label>
+      <div className="space-y-1.5">
+        {Object.entries(setup.settings.sessions).map(([n, r]) => (
+          <div key={n} className="flex items-center gap-1 text-xs"><span className="w-16 capitalize text-muted-foreground">{n.replace('_', ' ')}</span>
+            <Input value={r.start} onChange={(e) => mutate((s) => { s.settings.sessions[n].start = e.target.value; })} className="h-7 w-14" />–
+            <Input value={r.end} onChange={(e) => mutate((s) => { s.settings.sessions[n].end = e.target.value; })} className="h-7 w-14" /></div>
+        ))}
+      </div>
+      <div className="text-[11px] text-muted-foreground">Session levels (Asia high, …) read these times.</div>
+    </div>
   );
 }
 const ONE_AT_A_TIME: Record<string, [string, string]> = {
@@ -330,7 +342,10 @@ export function WhenHelp({ setup, what }: { setup: Setup; what: 'intro' | 'hours
     </HelpBox>
   );
   if (what === 'hours') {
-    const mins = th.ranges.reduce((a, r) => { const [h1, m1] = r.start.split(':').map(Number), [h2, m2] = r.end.split(':').map(Number); let d = h2 * 60 + (m2 || 0) - (h1 * 60 + (m1 || 0)); if (d <= 0) d += 1440; return a + d; }, 0);
+    // minutes covered by the ranges, each counted once (ranges may overlap or cross midnight)
+    const covered = new Set<number>();
+    for (const r of th.ranges) { const [h1, m1] = r.start.split(':').map(Number), [h2, m2] = r.end.split(':').map(Number); const a0 = h1 * 60 + (m1 || 0); let d = h2 * 60 + (m2 || 0) - a0; if (d <= 0) d += 1440; if (isFinite(d)) for (let m = 0; m < d; m++) covered.add((a0 + m) % 1440); }
+    const mins = covered.size;
     const days = th.weekdays.length === 5 && [1, 2, 3, 4, 5].every((d) => th.weekdays.includes(d)) ? 'Monday to Friday' : th.weekdays.map((d) => WDN[d]).join(', ') || 'every day';
     return (
       <HelpBox>
