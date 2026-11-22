@@ -7,11 +7,11 @@ import { SetupMap } from '../components/SetupMap';
 import { IndicatorIcon, SectionIcon } from '../components/PatternIcon';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
-import { StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, Explain, BehaviourHelp, BasicsHelp, WhenHelp, SessionsEditor, SignalStepsHelp, SectionHelp, IndicatorsHelp, PatternsHelp, ReviewHelp, RunHelp } from '../components/sections';
+import { StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, Explain, BehaviourHelp, BasicsHelp, WhenHelp, SessionsEditor, SignalStepsHelp, limitsSentence, SectionHelp, IndicatorsHelp, PatternsHelp, ReviewHelp, RunHelp } from '../components/sections';
 import { RuleEditor, appendAnd } from '../components/RuleEditor';
 import { TokenCtx, shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, NumInput } from '../components/ui';
-import { Cond, Setup, TFS, TF, uid, SECTION_NAMES, validate, Step } from '../model';
+import { Cond, Setup, TFS, TF, uid, SECTION_NAMES, validate, Step, labelsOf } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
 
 export function VariantB(p: VariantProps) {
@@ -66,7 +66,7 @@ export function VariantB(p: VariantProps) {
               <InlineSelect value={br.on_new_start} onChange={(v) => mutate((s) => { s.branches[bi].on_new_start = v; })} options={[['start_another', 'starts another'], ['replace', 'replaces it'], ['ignore', 'is ignored']]} />
               {setup.branches.length > 1 && <button className="ml-auto text-xs text-muted-foreground hover:text-red-400" onClick={() => mutate((s) => { s.branches.splice(bi, 1); })}>remove branch</button>}
             </h2>
-            <Explain label="how steps work"><SignalStepsHelp setup={setup} bi={bi} /></Explain>
+            {bi === 0 ? <SignalStepsHelp setup={setup} bi={bi} /> : <Explain label="how steps work"><SignalStepsHelp setup={setup} bi={bi} /></Explain>}
             {br.steps.map((st, k) => (
               <div key={st.id} id={`step-${st.id}`} onMouseEnter={() => p.setFocus({ bi, si: k })} className={cn('group relative rounded-md border-l-4 py-1 pl-4', p.focus?.bi === bi && p.focus?.si === k ? 'bg-accent/40' : '')} style={{ borderColor: STEP_COLORS[k % 6] }}>
                 <div className="flex flex-wrap items-baseline gap-2">
@@ -78,6 +78,7 @@ export function VariantB(p: VariantProps) {
                   <RuleEditor cond={st.cond} keyword={k === 0 ? 'IF' : 'THEN'} ctx={ctxFor(bi, k)} side={br.side} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
                   <PhraseInput ctx={ctxFor(bi, k)} onAdd={(c, toks) => mutate((s) => { s.branches[bi].steps[k].cond = appendAnd(s.branches[bi].steps[k].cond, c); for (const t of toks) if (!s.indicators.some((i) => i.token === t)) s.indicators.push({ token: t }); })} />
                 </div>
+                <div className="mt-1 text-xs text-muted-foreground">{limitsSentence(st, k === 0, labelsOf(setup))}</div>
                 <details className="mt-1 text-xs"><summary className="cursor-pointer text-muted-foreground">limits, captures and invalidation</summary>
                   <div className="mt-1"><StepLimits step={st} isFirst={k === 0} ctx={ctxFor(bi, k)} side={br.side} look="outline" onChange={(n: Step) => mutate((s) => { s.branches[bi].steps[k] = n; })} /></div></details>
                 <button className="absolute right-0 top-1 hidden text-xs text-muted-foreground hover:text-red-400 group-hover:block" onClick={() => mutate((s) => { s.branches[bi].steps.splice(k, 1); })}>delete step</button>

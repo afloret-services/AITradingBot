@@ -131,7 +131,7 @@ export function VariantC(p: VariantProps) {
             run ? <Locked what="Signal steps" /> :
             <div className="space-y-3">
               <H>Step {sel.si + 1} · {setup.branches[sel.bi].side}</H>
-              <Explain label="how steps work"><SignalStepsHelp setup={setup} bi={sel.bi} /></Explain>
+              <SignalStepsHelp setup={setup} bi={sel.bi} />
               <Input value={selStep.name} onChange={(e) => mutate((s) => { s.branches[sel.bi].steps[sel.si].name = e.target.value; })} className="w-full" />
               <RuleEditor cond={selStep.cond} keyword={sel.si === 0 ? 'IF' : 'THEN'} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} onChange={(c) => mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = c; })} />
               <div className="rounded-md border p-2"><StepLimits step={selStep} isFirst={sel.si === 0} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} look="chips" onChange={(n: Step) => mutate((s) => { s.branches[sel.bi].steps[sel.si] = n; })} /></div>

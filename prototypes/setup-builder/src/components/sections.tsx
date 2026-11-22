@@ -506,7 +506,7 @@ export function SignalStepsHelp({ setup, bi }: { setup: Setup; bi: number }) {
   );
 }
 /** one step's Sequence limits, in words */
-function limitsSentence(step: Step, isFirst: boolean, labels: Record<string, string>) {
+export function limitsSentence(step: Step, isFirst: boolean, labels: Record<string, string>) {
   const parts: string[] = [];
   if (isFirst) parts.push('This step starts a Candidate whenever its conditions hold.');
   else {
