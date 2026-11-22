@@ -369,8 +369,18 @@ export function Explain({ children, label = 'what this means' }: { children: Rea
 }
 /** the One-at-a-time and News-rule descriptions for the current choices */
 export function BehaviourHelp({ setup }: { setup: Setup }) {
-  const o = ONE_AT_A_TIME[setup.settings.one_at_a_time], n = NEWS[setup.settings.news_rule.mode];
-  return <HelpBox><div><T>One at a time: {o[0]}.</T> {o[1]}</div><div><T>News rule: {n[0]}.</T> {n[1]}</div></HelpBox>;
+  const oat = setup.settings.one_at_a_time, nr = setup.settings.news_rule;
+  const o = ONE_AT_A_TIME[oat], n = NEWS[nr.mode];
+  const list = (d: Record<string, [string, string]>, cur: string) => <ul className="mt-1 space-y-1 pl-3">{Object.entries(d).map(([k, [l, t]]) => <li key={k} className={cn(k === cur && 'text-foreground')}><b>{l}</b>: {t}</li>)}</ul>;
+  return (
+    <HelpBox>
+      <div><T>One at a time: {o[0]}.</T> {o[1]}</div>
+      <details className="text-[11px]"><summary className="cursor-pointer hover:text-foreground">compare the three</summary>{list(ONE_AT_A_TIME, oat)}</details>
+      <div><T>News rule: {n[0]}.</T> {n[1]}{nr.mode === 'span' && <> Here: from <b className="text-foreground">{nr.before ?? 0} min</b> before to <b className="text-foreground">{nr.after ?? 0} min</b> after; a 08:30 release blocks {spanText(nr.before ?? 0, nr.after ?? 0)}.</>}</div>
+      <details className="text-[11px]"><summary className="cursor-pointer hover:text-foreground">compare the three</summary>{list(NEWS, nr.mode)}</details>
+      <div className="text-[11px]">Which release types count (CPI, NFP, FOMC…) is chosen once for the whole bot, not per Setup. The prototype's chart does not apply the news rule.</div>
+    </HelpBox>
+  );
 }
 
 // ---------- Basics ----------

@@ -50,6 +50,8 @@ export function VariantB(p: VariantProps) {
             <BasicsHelp setup={setup} what="intro" />
             <BasicsHelp setup={setup} what="name" />
             <BasicsHelp setup={setup} what="base_bar" />
+            <div className="pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">When to trade</div>
+            <WhenHelp setup={setup} what="intro" />
             <WhenHelp setup={setup} what="hours" />
             <BehaviourHelp setup={setup} />
             <SessionsEditor setup={setup} mutate={mutate} />
