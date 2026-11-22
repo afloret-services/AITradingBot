@@ -10,10 +10,10 @@ import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, Ind
 import { RuleEditor, appendAnd } from '../components/RuleEditor';
 import { shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs, Field } from '../components/ui';
-import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN_KINDS, patternUsage, labelsOf } from '../model';
+import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN_KINDS, patternUsage, labelsOf, validate, ruleDescription } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
 
-type Sel = { kind: 'step'; bi: number; si: number } | { kind: 'entry'; bi: number } | { kind: 'trade' } | { kind: 'settings' } | { kind: 'section'; k: SectionKey };
+type Sel = { kind: 'step'; bi: number; si: number } | { kind: 'entry'; bi: number } | { kind: 'trade' } | { kind: 'settings' } | { kind: 'section'; k: SectionKey } | { kind: 'review' };
 
 export function VariantC(p: VariantProps) {
   const { setup, mutate, data, result } = p;
@@ -29,6 +29,7 @@ export function VariantC(p: VariantProps) {
   const shown = run && runD.result ? runD.result : result;
   const usage = indicatorUsage(setup);
   const selStep = sel.kind === 'step' ? setup.branches[sel.bi]?.steps[sel.si] : null;
+  const issues = validate(setup);
 
   return (
     <div className="flex flex-col lg:h-[calc(100vh-50px)]">
@@ -38,7 +39,8 @@ export function VariantC(p: VariantProps) {
         <button onClick={() => setSel({ kind: 'settings' })} className="rounded border px-2 py-1 hover:bg-accent">Base bar <b>{setup.settings.base_bar}</b> · Trading hours <b>{setup.settings.trading_hours.ranges.map((r) => `${r.start}–${r.end}`).join(', ')}</b> · one at a time <b>{setup.settings.one_at_a_time.replace(/_/g, ' ')}</b> · news <b>{setup.settings.news_rule.mode}</b> ✎</button>
         <Tabs value={mode} onChange={(v) => setMode(v as 'build' | 'run')} tabs={[['build', 'Build the Setup'], ['run', 'Create a Run']]} />
         {run && <><Select value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} options={INSTRUMENTS} className="h-7" />{instrumentWarnings(setup, runD.draft.instrument).map((w) => <span key={w} className="text-amber-300">{w}</span>)}</>}
-        <div className="ml-auto">{p.saveBar}</div>
+        <button onClick={() => setSel({ kind: 'review' })} className={cn('ml-auto rounded border px-2 py-1 hover:bg-accent', sel.kind === 'review' && 'border-sky-400 bg-sky-500/10')}>Review & save {issues.some((i) => i.level === 'error') ? <span className="text-red-300">· {issues.filter((i) => i.level === 'error').length} errors</span> : issues.length ? <span className="text-amber-300">· {issues.length} warnings</span> : <span className="text-emerald-300">· ready</span>}</button>
+        <div>{p.saveBar}</div>
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[230px_minmax(0,1fr)_380px]">
         {/* library */}
@@ -114,12 +116,19 @@ export function VariantC(p: VariantProps) {
           </div>
           <div className="border-t p-3">
             <div className="mb-2"><RunSummary result={shown} data={data} /></div>
-            <div className="mb-2"><Explain><ReviewHelp setup={setup} what="chart" result={shown} /></Explain></div>
+            <div className="mb-2"><ReviewHelp setup={setup} what="chart" result={shown} /></div>
             <Chart data={data} setup={setup} result={shown} day={p.day} setDay={p.setDay} focus={p.focus} selected={p.selected} setSelected={p.setSelected} height={420} compactBar />
           </div>
         </div>
         {/* inspector */}
         <div className="overflow-auto border-l p-3">
+          {sel.kind === 'review' && <div className="space-y-3"><H>Review & save</H><ReviewHelp setup={setup} what="intro" /><ReviewHelp setup={setup} what="map" />
+            <H>Checks</H><ReviewHelp setup={setup} what="checks" issues={issues} />
+            {issues.length === 0 && <Badge tone="ok">Ready to freeze</Badge>}
+            {issues.map((i, k) => <div key={k} className={cn('text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.level === 'error' ? '✕' : '!'} {i.where}: {i.text}</div>)}
+            <H>Save</H><ReviewHelp setup={setup} what="save" /><div>{p.saveBar}</div>
+            <H>Rule description (stored at Freeze)</H><ReviewHelp setup={setup} what="rule" /><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-2 text-[11px]">{ruleDescription(setup)}</pre>
+          </div>}
           {sel.kind === 'settings' && <div className="space-y-4"><H>General</H><Explain><BasicsHelp setup={setup} what="intro" /></Explain>
             <Field label="Name"><Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="w-full" /></Field><Explain><BasicsHelp setup={setup} what="name" /></Explain>
             <BaseBarEditor setup={setup} mutate={mutate} /><Explain><BasicsHelp setup={setup} what="base_bar" /></Explain>

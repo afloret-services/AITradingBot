@@ -445,7 +445,7 @@ function ReviewHelp_({ setup, what, issues, result, versions }: { setup: Setup; 
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   if (what === 'intro') return (
     <HelpBox>
-      <div><T>Read the whole Setup once before you freeze it.</T> At the top, the Setup at a glance; then the Rule description it will be stored with, the checks and the save buttons; at the bottom, what it did on the MNQ bars. Anything wrong: click it to go back to that step.</div>
+      <div><T>Read the whole Setup once before you freeze it:</T> the Setup at a glance, the checks, the save buttons, the Rule description it will be stored with, and what it did on the MNQ bars. Anything wrong: click it to go back and edit it.</div>
     </HelpBox>
   );
   if (what === 'map') return (

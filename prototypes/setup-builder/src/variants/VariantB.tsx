@@ -11,7 +11,7 @@ import { StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSectio
 import { RuleEditor, appendAnd } from '../components/RuleEditor';
 import { TokenCtx, shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, NumInput } from '../components/ui';
-import { Cond, Setup, TFS, TF, uid, SECTION_NAMES, validate, Step, labelsOf } from '../model';
+import { Cond, Setup, TFS, TF, uid, SECTION_NAMES, validate, Step, labelsOf, ruleDescription } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
 
 export function VariantB(p: VariantProps) {
@@ -28,7 +28,7 @@ export function VariantB(p: VariantProps) {
     <div className="mx-auto grid max-w-[1500px] grid-cols-1 gap-6 p-3 lg:grid-cols-[minmax(0,1fr)_560px] lg:p-6">
       <Card className="min-w-0 p-4 lg:col-span-2">
         <div className="mb-3"><div className="text-[15px] font-semibold tracking-tight">Setup at a glance</div><div className="text-xs text-muted-foreground">The document below, as a flow. Click a step to jump to its sentence.</div></div>
-        <div className="mb-2"><Explain><ReviewHelp setup={setup} what="map" /></Explain></div>
+        <div className="mb-2"><ReviewHelp setup={setup} what="map" /></div>
         <SetupMap setup={setup} result={result} data={data} focus={p.focus} compact onStep={(f) => { p.setFocus(f); document.getElementById(`step-${setup.branches[f.bi].steps[f.si].id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} />
       </Card>
       <article className="min-w-0 space-y-6 leading-relaxed">
@@ -114,7 +114,7 @@ export function VariantB(p: VariantProps) {
           <div className="mb-2 flex items-center justify-between"><RunSummary result={runMode && runD.result ? runD.result : result} data={data} /></div>
           <Chart data={data} setup={setup} result={runMode && runD.result ? runD.result : result} day={p.day} setDay={p.setDay} focus={p.focus} selected={p.selected} setSelected={p.setSelected} height={300} />
           <div className="mt-1 text-[11px] text-muted-foreground">Point at a step to see it on the chart: coloured dots = it completed, grey squares = it held on its own.</div>
-          <div className="mt-1"><Explain><ReviewHelp setup={setup} what="chart" result={runMode && runD.result ? runD.result : result} /></Explain></div>
+          <div className="mt-1"><ReviewHelp setup={setup} what="chart" result={runMode && runD.result ? runD.result : result} /></div>
         </Card>
         <Card className="p-3">
           <div className="mb-1 text-sm font-semibold">Indicators in this Setup</div>
@@ -136,9 +136,11 @@ export function VariantB(p: VariantProps) {
           <PatternList setup={setup} mutate={mutate} compact data={data} />
         </Card>
         <Card className="p-3">
-          <div className="flex items-center justify-between"><div className="text-sm font-semibold">Save</div>{p.saveBar}</div>
+          <div className="flex flex-wrap items-center justify-between gap-2"><div className="text-sm font-semibold">Review & save</div>{p.saveBar}</div>
           {issues.map((i, k) => <div key={k} className={cn('mt-1 text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.where}: {i.text}</div>)}
-          <div className="mt-1"><Explain><ReviewHelp setup={setup} what="checks" issues={issues} /><ReviewHelp setup={setup} what="save" /><ReviewHelp setup={setup} what="rule" /></Explain></div>
+          <div className="mt-2 space-y-2"><ReviewHelp setup={setup} what="checks" issues={issues} /><ReviewHelp setup={setup} what="save" />
+            <details className="text-xs"><summary className="cursor-pointer font-medium text-foreground">Rule description (stored at Freeze)</summary>
+              <div className="mt-1 space-y-1.5"><ReviewHelp setup={setup} what="rule" /><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-2 text-[11px]">{ruleDescription(setup)}</pre></div></details></div>
         </Card>
         <Card className="p-3">
           <div className="flex items-center justify-between"><div className="text-sm font-semibold">Try it as a Run</div><Button size="sm" variant={runMode ? 'default' : 'outline'} onClick={() => setRunMode(!runMode)}>{runMode ? 'Close Run' : 'Create a Run…'}</Button></div>
