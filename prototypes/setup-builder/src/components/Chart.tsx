@@ -12,8 +12,8 @@ const inR = (m: number, s: number, e: number) => (s <= e ? m >= s && m < e : m >
 export interface Focus { bi: number; si: number }
 export function dayOfSignal(data: Data, s: Signal) { return data.m1[s.i].di; }
 
-const LINE_COLORS = ['#fbbf24', '#f472b6', '#60a5fa', '#34d399'];
-const C = { up: '#26a69a', down: '#ef5350', zone: '#38bdf8', draw: '#a78bfa', risk: '#ef4444', reward: '#22c55e', entry: '#e2e8f0' };
+const LINE_COLORS = ['#fbbf24', '#f472b6', '#b7e4c7', '#34d399'];
+const C = { up: '#26a69a', down: '#ef5350', zone: '#74c69d', draw: '#a78bfa', risk: '#ef4444', reward: '#22c55e', entry: '#e2e8f0' };
 
 type Shape =
   | { k: 'rect'; t1: number; t2: number; p1: number; p2: number; fill: string; stroke?: string; dash?: boolean; label?: string; labelColor?: string; right?: boolean }
@@ -147,7 +147,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
         color = LINE_COLORS[lineN++ % LINE_COLORS.length];
         s = c.addLineSeries({ color, lineWidth: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
       } else if (name === 'macd') {
-        color = out === 'hist' ? '#64748b' : out === 'signal' ? '#f97316' : '#38bdf8';
+        color = out === 'hist' ? '#64748b' : out === 'signal' ? '#f97316' : '#74c69d';
         s = out === 'hist' ? c.addHistogramSeries({ priceScaleId: 'osc', priceLineVisible: false, lastValueVisible: false }) : c.addLineSeries({ priceScaleId: 'osc', color, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
         c.priceScale('osc').applyOptions({ scaleMargins: { top: 0.78, bottom: 0.02 }, visible: false });
       } else if (name === 'adx' || name === 'rsi') {
@@ -213,7 +213,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
     for (let k = from; k <= to + 1; k++) {
       const inH = k <= to && inTradingHours(setup, B[k].min, B[k].t);
       if (inH && run0 < 0) run0 = k;
-      if (!inH && run0 >= 0) { sh.push({ k: 'band', t1: T(run0), t2: T(k - 1), fill: 'rgba(56,189,248,0.045)' }); run0 = -1; }
+      if (!inH && run0 >= 0) { sh.push({ k: 'band', t1: T(run0), t2: T(k - 1), fill: 'rgba(116,198,157,0.045)' }); run0 = -1; }
     }
     const tOf1m = (i: number) => T(barOf(Math.min(i, cutI ?? i)));
     const tOfMs = (ms: number) => { let k = from; while (k < to && B[k + 1].t <= ms) k++; return T(k); };
@@ -229,14 +229,14 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
         const t0 = startMs != null ? tOfMs(startMs) : tSig;
         if (Array.isArray(v.path) || Array.isArray(v.lines)) {
           const ps = (v.path || []) as [number, number][];
-          for (let q = 1; q < ps.length; q++) sh.push({ k: 'line', t1: tOfMs(ps[q - 1][0]), t2: tOfMs(ps[q][0]), p1: ps[q - 1][1], p2: ps[q][1], stroke: 'rgba(56,189,248,0.85)', width: 1.5, label: q === 1 && v.pole ? `${name} · pole` : undefined });
+          for (let q = 1; q < ps.length; q++) sh.push({ k: 'line', t1: tOfMs(ps[q - 1][0]), t2: tOfMs(ps[q][0]), p1: ps[q - 1][1], p2: ps[q][1], stroke: 'rgba(116,198,157,0.85)', width: 1.5, label: q === 1 && v.pole ? `${name} · pole` : undefined });
           for (const [t1, p1, t2, p2] of (v.lines || []) as [number, number, number, number][]) sh.push({ k: 'line', t1: tOfMs(t1), t2: tOfMs(t2), p1, p2, stroke: '#fbbf24', width: 1.5 });
           if (v.neck_t0 != null) sh.push({ k: 'line', t1: tOfMs(v.neck_t0), t2: tOfMs(v.time), p1: v.neck_p0, p2: v.neckline, stroke: '#fbbf24', dash: true, label: `${name} · neckline` });
           if (v.lines && !v.neck_t0) sh.push({ k: 'line', t1: tOfMs(v.time), t2: tOfMs(v.time), p1: v.line, p2: v.line, stroke: '#fbbf24', label: `${name} · ${v.shape && v.shape !== 'flat' ? v.shape + ' ' : ''}breakout` });
           if (v.target != null) sh.push({ k: 'line', t1: tOfMs(v.time), t2: tEnd, p1: v.target, p2: v.target, stroke: 'rgba(248,113,113,0.8)', dash: true, label: `${name} · target` });
           continue;
         }
-        if (typeof v.top === 'number') sh.push({ k: 'rect', t1: t0, t2: v.end_time != null ? tOfMs(v.end_time) : tEnd, p1: v.top, p2: v.bottom, fill: 'rgba(56,189,248,0.12)', stroke: 'rgba(56,189,248,0.7)', dash: true, label: `${name} · ${title}` });
+        if (typeof v.top === 'number') sh.push({ k: 'rect', t1: t0, t2: v.end_time != null ? tOfMs(v.end_time) : tEnd, p1: v.top, p2: v.bottom, fill: 'rgba(116,198,157,0.12)', stroke: 'rgba(116,198,157,0.7)', dash: true, label: `${name} · ${title}` });
         else if (typeof v.level === 'number') sh.push({ k: 'line', t1: tOfMs(v.swing_time ?? startMs), t2: tOfMs(v.time ?? v.formed), p1: v.level, p2: v.level, stroke: '#fbbf24', dash: true, label: `${name} · MSS` });
         else if (typeof v.start === 'number' && v.start_time != null) { sh.push({ k: 'line', t1: tOfMs(v.start_time), t2: tOfMs(v.end_time), p1: v.start, p2: v.end, stroke: '#fbbf24', width: 2, label: `${name} · Swing` }); sh.push({ k: 'line', t1: tOfMs(v.end_time), t2: tEnd, p1: v.mid, p2: v.mid, stroke: 'rgba(251,191,36,0.5)', dash: true, label: '50%' }); }
         else if (typeof v.high === 'number' && v.time != null) sh.push({ k: 'rect', t1: tOfMs(v.time), t2: tOfMs(v.time), p1: v.high, p2: v.low, fill: 'rgba(251,191,36,0.15)', stroke: '#fbbf24', label: name });

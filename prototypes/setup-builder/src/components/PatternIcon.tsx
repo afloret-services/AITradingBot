@@ -2,7 +2,7 @@
 import React from 'react';
 import type { PatternKind } from '../model';
 
-const UP = '#26a69a', DN = '#ef5350', ZN = '#38bdf8', LV = '#fbbf24';
+const UP = '#26a69a', DN = '#ef5350', ZN = '#74c69d', LV = '#fbbf24';
 /** a candle: x, open, high, low, close in a 0–24 grid (y grows down, so a smaller number is higher) */
 const K = ({ x, o, h, l, c, w = 4 }: { x: number; o: number; h: number; l: number; c: number; w?: number }) => {
   const col = c < o ? UP : DN;
@@ -68,8 +68,8 @@ const PR = '#64748b'; // the faint price line behind a moving average
 const IND_GLYPHS: Record<string, React.ReactNode> = {
   ema: <><L d="M1 17 L4 13 L6 16 L9 9 L11 12 L14 6 L16 10 L19 4 L23 7" color={PR} w={1.2} /><L d="M1 18 C7 15, 10 10, 15 8 S21 5, 23 5" color="#fbbf24" w={2.4} /></>,
   sma: <><L d="M1 17 L4 13 L6 16 L9 9 L11 12 L14 6 L16 10 L19 4 L23 7" color={PR} w={1.2} /><L d="M1 18 L23 6" color="#f472b6" w={2.4} /></>,
-  macd: <><L d="M1 12 H23" color={PR} dash w={0.9} /><L d="M1 18 C6 17, 9 6, 14 6 S20 14, 23 15" color="#38bdf8" w={2.2} /><L d="M1 16 C7 16, 10 10, 15 9 S21 11, 23 13" color="#f97316" w={1.6} /></>,
-  macd_signal: <><L d="M1 12 H23" color={PR} dash w={0.9} /><L d="M1 18 C6 17, 9 6, 14 6 S20 14, 23 15" color="#38bdf8" w={1.2} /><L d="M1 16 C7 16, 10 10, 15 9 S21 11, 23 13" color="#f97316" w={2.4} /></>,
+  macd: <><L d="M1 12 H23" color={PR} dash w={0.9} /><L d="M1 18 C6 17, 9 6, 14 6 S20 14, 23 15" color="#74c69d" w={2.2} /><L d="M1 16 C7 16, 10 10, 15 9 S21 11, 23 13" color="#f97316" w={1.6} /></>,
+  macd_signal: <><L d="M1 12 H23" color={PR} dash w={0.9} /><L d="M1 18 C6 17, 9 6, 14 6 S20 14, 23 15" color="#74c69d" w={1.2} /><L d="M1 16 C7 16, 10 10, 15 9 S21 11, 23 13" color="#f97316" w={2.4} /></>,
   macd_hist: <><L d="M1 12 H23" color={PR} w={0.9} />{[[2, 3], [5, 5], [8, 7], [11, 4], [14, -2], [17, -5], [20, -6]].map(([x, v]) => <rect key={x} x={x} y={v > 0 ? 12 - v : 12} width={2.2} height={Math.abs(v)} fill={v > 0 ? '#26a69a' : '#ef5350'} rx={0.3} />)}</>,
   atr: <><L d="M4 5 V19 M2 5 H6 M2 19 H6" color="#94a3b8" w={1.4} /><rect x={9} y={8} width={3} height={8} fill="#26a69a" /><line x1={10.5} x2={10.5} y1={6} y2={18} stroke="#26a69a" strokeWidth={1.2} /><rect x={15} y={9} width={3} height={6} fill="#ef5350" /><line x1={16.5} x2={16.5} y1={5} y2={19} stroke="#ef5350" strokeWidth={1.2} /><L d="M21 5 V19 M19 5 H23 M19 19 H23" color="#94a3b8" w={1.4} /></>,
   adx: <><L d="M1 15 H23" color={PR} dash w={0.9} /><L d="M1 21 C6 20, 8 18, 11 13 S16 5, 23 3" color="#c084fc" w={2.4} /></>,
@@ -89,7 +89,7 @@ export function IndicatorIcon({ token, name, size = 18, className }: { token?: s
 }
 
 // ---------- Trade settings sections ----------
-const G_ = '#26a69a', RD = '#ef5350', WH = '#e2e8f0', AM = '#fbbf24', SK = '#38bdf8';
+const G_ = '#26a69a', RD = '#ef5350', WH = '#e2e8f0', AM = '#fbbf24', SK = '#74c69d';
 const SEC_GLYPHS: Record<string, React.ReactNode> = {
   // a pie: the share of capital risked per Trade
   risk: <><circle cx={12} cy={12} r={9} fill="none" stroke={PR} strokeWidth={1.6} /><path d="M12 12 L12 3 A9 9 0 0 1 20.5 9 Z" fill={AM} /><text x={12} y={17.5} fontSize={7} textAnchor="middle" fill={WH} fontFamily="Inter, sans-serif" fontWeight={700}>%</text></>,
