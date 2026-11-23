@@ -67,17 +67,19 @@ export function PatternIcon({ kind, size = 18, className }: { kind: PatternKind;
 
 // ---------- indicators ----------
 const PR = '#64748b'; // the faint price line behind a moving average
+/** indicator lines in the green palette (d8f3dc…081c15), told apart by lightness; up/down bars keep teal and red */
+const P = { ema: '#95d5b2', sma: '#d8f3dc', macd: '#74c69d', macdDim: '#40916c', signal: '#d8f3dc', osc: '#52b788', band: '#b7e4c7' };
 const IND_GLYPHS: Record<string, React.ReactNode> = {
-  ema: <><L d="M1 17 L4 13 L6 16 L9 9 L11 12 L14 6 L16 10 L19 4 L23 7" color={PR} w={1.2} /><L d="M1 18 C7 15, 10 10, 15 8 S21 5, 23 5" color="#fbbf24" w={2.4} /></>,
-  sma: <><L d="M1 17 L4 13 L6 16 L9 9 L11 12 L14 6 L16 10 L19 4 L23 7" color={PR} w={1.2} /><L d="M1 18 L23 6" color="#f472b6" w={2.4} /></>,
-  macd: <><L d="M1 12 H23" color={PR} dash w={0.9} /><L d="M1 18 C6 17, 9 6, 14 6 S20 14, 23 15" color="#74c69d" w={2.2} /><L d="M1 16 C7 16, 10 10, 15 9 S21 11, 23 13" color="#f97316" w={1.6} /></>,
-  macd_signal: <><L d="M1 12 H23" color={PR} dash w={0.9} /><L d="M1 18 C6 17, 9 6, 14 6 S20 14, 23 15" color="#74c69d" w={1.2} /><L d="M1 16 C7 16, 10 10, 15 9 S21 11, 23 13" color="#f97316" w={2.4} /></>,
+  ema: <><L d="M1 17 L4 13 L6 16 L9 9 L11 12 L14 6 L16 10 L19 4 L23 7" color={PR} w={1.2} /><L d="M1 18 C7 15, 10 10, 15 8 S21 5, 23 5" color={P.ema} w={2.4} /></>,
+  sma: <><L d="M1 17 L4 13 L6 16 L9 9 L11 12 L14 6 L16 10 L19 4 L23 7" color={PR} w={1.2} /><L d="M1 18 L23 6" color={P.sma} w={2.4} /></>,
+  macd: <><L d="M1 12 H23" color={PR} dash w={0.9} /><L d="M1 18 C6 17, 9 6, 14 6 S20 14, 23 15" color={P.macd} w={2.2} /><L d="M1 16 C7 16, 10 10, 15 9 S21 11, 23 13" color={P.signal} w={1.6} /></>,
+  macd_signal: <><L d="M1 12 H23" color={PR} dash w={0.9} /><L d="M1 18 C6 17, 9 6, 14 6 S20 14, 23 15" color={P.macdDim} w={1.2} /><L d="M1 16 C7 16, 10 10, 15 9 S21 11, 23 13" color={P.signal} w={2.4} /></>,
   macd_hist: <><L d="M1 12 H23" color={PR} w={0.9} />{[[2, 3], [5, 5], [8, 7], [11, 4], [14, -2], [17, -5], [20, -6]].map(([x, v]) => <rect key={x} x={x} y={v > 0 ? 12 - v : 12} width={2.2} height={Math.abs(v)} fill={v > 0 ? '#26a69a' : '#ef5350'} rx={0.3} />)}</>,
-  atr: <><L d="M4 5 V19 M2 5 H6 M2 19 H6" color="#94a3b8" w={1.4} /><rect x={9} y={8} width={3} height={8} fill="#26a69a" /><line x1={10.5} x2={10.5} y1={6} y2={18} stroke="#26a69a" strokeWidth={1.2} /><rect x={15} y={9} width={3} height={6} fill="#ef5350" /><line x1={16.5} x2={16.5} y1={5} y2={19} stroke="#ef5350" strokeWidth={1.2} /><L d="M21 5 V19 M19 5 H23 M19 19 H23" color="#94a3b8" w={1.4} /></>,
-  adx: <><L d="M1 15 H23" color={PR} dash w={0.9} /><L d="M1 21 C6 20, 8 18, 11 13 S16 5, 23 3" color="#c084fc" w={2.4} /></>,
-  rsi: <><rect x={1} y={6} width={22} height={12} fill="#c084fc" opacity={0.08} /><L d="M1 6 H23 M1 18 H23" color={PR} dash w={0.9} /><L d="M1 14 C4 3, 7 3, 9 10 S13 22, 16 15 S20 4, 23 8" color="#c084fc" w={2.2} /></>,
-  avg_range: <>{[[4, 6, 18], [10, 8, 15], [16, 4, 20], [21, 9, 15]].map(([x, h, l]) => <line key={x} x1={x} x2={x} y1={h} y2={l} stroke="#94a3b8" strokeWidth={1.8} strokeLinecap="round" />)}<L d="M1 6.5 H23 M1 17.5 H23" color="#fbbf24" dash w={1.1} /></>,
-  avg_body: <>{[[4, 8, 15, '#26a69a'], [10, 10, 14, '#ef5350'], [16, 6, 17, '#26a69a'], [21, 10, 14, '#ef5350']].map(([x, t, b, c]) => <rect key={x as number} x={(x as number) - 2} y={t as number} width={4} height={(b as number) - (t as number)} fill={c as string} rx={0.5} />)}<L d="M1 8.5 H23 M1 15.5 H23" color="#fbbf24" dash w={1.1} /></>,
+  atr: <><L d="M4 5 V19 M2 5 H6 M2 19 H6" color={P.band} w={1.4} /><rect x={9} y={8} width={3} height={8} fill="#26a69a" /><line x1={10.5} x2={10.5} y1={6} y2={18} stroke="#26a69a" strokeWidth={1.2} /><rect x={15} y={9} width={3} height={6} fill="#ef5350" /><line x1={16.5} x2={16.5} y1={5} y2={19} stroke="#ef5350" strokeWidth={1.2} /><L d="M21 5 V19 M19 5 H23 M19 19 H23" color="#94a3b8" w={1.4} /></>,
+  adx: <><L d="M1 15 H23" color={PR} dash w={0.9} /><L d="M1 21 C6 20, 8 18, 11 13 S16 5, 23 3" color={P.osc} w={2.4} /></>,
+  rsi: <><rect x={1} y={6} width={22} height={12} fill={P.osc} opacity={0.1} /><L d="M1 6 H23 M1 18 H23" color={PR} dash w={0.9} /><L d="M1 14 C4 3, 7 3, 9 10 S13 22, 16 15 S20 4, 23 8" color={P.osc} w={2.2} /></>,
+  avg_range: <>{[[4, 6, 18], [10, 8, 15], [16, 4, 20], [21, 9, 15]].map(([x, h, l]) => <line key={x} x1={x} x2={x} y1={h} y2={l} stroke="#94a3b8" strokeWidth={1.8} strokeLinecap="round" />)}<L d="M1 6.5 H23 M1 17.5 H23" color={P.band} dash w={1.1} /></>,
+  avg_body: <>{[[4, 8, 15, '#26a69a'], [10, 10, 14, '#ef5350'], [16, 6, 17, '#26a69a'], [21, 10, 14, '#ef5350']].map(([x, t, b, c]) => <rect key={x as number} x={(x as number) - 2} y={t as number} width={4} height={(b as number) - (t as number)} fill={c as string} rx={0.5} />)}<L d="M1 8.5 H23 M1 15.5 H23" color={P.band} dash w={1.1} /></>,
 };
 /** an indicator's glyph, from its token ({{indicator:name:params:tf[:output]}}) or its name */
 export function IndicatorIcon({ token, name, size = 18, className }: { token?: string; name?: string; size?: number; className?: string }) {
@@ -85,7 +87,7 @@ export function IndicatorIcon({ token, name, size = 18, className }: { token?: s
   if (token) { const parts = token.replace(/\.prev\[\d+\]$/, '').replace(/^\{\{|\}\}$/g, '').split(':'); key = parts[1] + (parts[1] === 'macd' && parts[4] ? '_' + parts[4] : ''); }
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true">
-      {IND_GLYPHS[key] ?? IND_GLYPHS[key.split('_')[0]] ?? <circle cx={12} cy={12} r={4} fill="#fbbf24" />}
+      {IND_GLYPHS[key] ?? IND_GLYPHS[key.split('_')[0]] ?? <circle cx={12} cy={12} r={4} fill={P.macd} />}
     </svg>
   );
 }
