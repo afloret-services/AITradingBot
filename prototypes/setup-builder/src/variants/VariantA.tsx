@@ -161,7 +161,7 @@ export function VariantA(p: VariantProps) {
 const SUBS = [
   'Name the Setup and declare its Base bar, the bar the evaluator runs on.',
   'Every indicator and pattern the Setup reads, declared once. Steps pick from these lists.',
-  'Trading hours, sessions, Trade overlap and the news rule.',
+  'Trading hours, sessions, Trade overlap and the News filter.',
   'First A, then B: each step is one Sequence link. The counts show how often each step held and completed on MNQ.',
   'The Entry block: order type, price and the mandatory stop.',
   'The Setup defaults a Run may override section by section, plus In-position rules.',

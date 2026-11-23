@@ -66,7 +66,7 @@ export const ONE_AT_A_TIME: Record<string, [string, string]> = {
   ignore_new_starts: ['Ignore new starts', 'While a Trade is live (from its Signal until its last exit), a first step that holds starts no new Candidate, and a Candidate already running cannot complete into a Signal. Once the Trade is over, the Setup looks for fresh starts.'],
   skip_completions: ['Skip completions', 'While a Trade is live, Candidates keep starting and moving through their steps, but one that completes is dropped (no Signal). After the Trade ends, a Candidate still running can complete normally, so a setup that formed during the Trade can still be taken.'],
 };
-const NEWS: Record<string, [string, string]> = {
+export const NEWS: Record<string, [string, string]> = {
   off: ['Off', 'Economic releases change nothing: Signals are taken on News days like any other day.'],
   whole_day: ['Whole Trading day', 'On a News day (a release of a type you switched on), every Signal of this Setup is suppressed: logged with the reason, but no Trade opens.'],
   span: ['A span around the release', 'Only Signals inside the window around each release are suppressed: from N minutes before to M minutes after its New York time. Signals outside the window trade normally.'],
@@ -89,12 +89,12 @@ export function BehaviourEditor({ setup, mutate, stacked }: { setup: Setup; muta
         </details>
       </div>
       <div>
-        <Field label="News rule" hint="Which Signals an Economic release suppresses on a News day.">
+        <Field label="News filter" hint="Which Signals an Economic release suppresses on a News day.">
           <Select value={n.mode} onChange={(v) => mutate((s) => { s.settings.news_rule.mode = v as any; })} options={Object.entries(NEWS).map(([k, [l]]) => [k, l] as [string, string])} />
           {n.mode === 'span' && <><NumInput value={n.before} onChange={(x) => mutate((s) => { s.settings.news_rule.before = x; })} className="w-14" /><span className="text-xs">min before</span><NumInput value={n.after} onChange={(x) => mutate((s) => { s.settings.news_rule.after = x; })} className="w-14" /><span className="text-xs">min after</span></>}
         </Field>
         {desc(NEWS[n.mode][0], NEWS[n.mode][1], n.mode === 'span' ? <> Here: from <b className="text-foreground">{n.before ?? 0} min</b> before to <b className="text-foreground">{n.after ?? 0} min</b> after; a 08:30 release blocks {spanText(n.before ?? 0, n.after ?? 0)}.</> : undefined, 'when:news')}
-        <div className="mt-1.5 text-[11px] text-muted-foreground">Which release types count (CPI, NFP, FOMC…) is chosen once for the whole bot, not per Setup. The prototype's chart does not apply the news rule.</div>
+        <div className="mt-1.5 text-[11px] text-muted-foreground">Which release types count (CPI, NFP, FOMC…) is chosen once for the whole bot, not per Setup. The prototype's chart does not apply the news filter.</div>
       </div>
     </div>
   );
@@ -339,7 +339,7 @@ function WhenHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'hours' | 's
   const WDN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   if (what === 'intro') return (
     <HelpBox>
-      <div><T>When this Setup may trade.</T> The Trading hours say when a Signal may be taken; the sessions are the named windows that session levels (the Asia high, the London low…) are measured over; Trade overlap and the News rule say what happens while a Trade is live and around economic releases. Times are New York time throughout.</div>
+      <div><T>When this Setup may trade.</T> The Trading hours say when a Signal may be taken; the sessions are the named windows that session levels (the Asia high, the London low…) are measured over; Trade overlap and the News filter say what happens while a Trade is live and around economic releases. Times are New York time throughout.</div>
     </HelpBox>
   );
   if (what === 'hours') {
@@ -379,9 +379,9 @@ function BehaviourHelp_({ setup }: { setup: Setup }) {
     <HelpBox>
       <div><T>Trade overlap: {o[0]}.</T> {o[1]}</div>
       <details className="text-[11px]"><summary className="cursor-pointer hover:text-foreground">compare the three</summary>{list(ONE_AT_A_TIME, oat)}</details>
-      <div><T>News rule: {n[0]}.</T> {n[1]}{nr.mode === 'span' && <> Here: from <b className="text-foreground">{nr.before ?? 0} min</b> before to <b className="text-foreground">{nr.after ?? 0} min</b> after; a 08:30 release blocks {spanText(nr.before ?? 0, nr.after ?? 0)}.</>}</div>
+      <div><T>News filter: {n[0]}.</T> {n[1]}{nr.mode === 'span' && <> Here: from <b className="text-foreground">{nr.before ?? 0} min</b> before to <b className="text-foreground">{nr.after ?? 0} min</b> after; a 08:30 release blocks {spanText(nr.before ?? 0, nr.after ?? 0)}.</>}</div>
       <details className="text-[11px]"><summary className="cursor-pointer hover:text-foreground">compare the three</summary>{list(NEWS, nr.mode)}</details>
-      <div className="text-[11px]">Which release types count (CPI, NFP, FOMC…) is chosen once for the whole bot, not per Setup. The prototype's chart does not apply the news rule.</div>
+      <div className="text-[11px]">Which release types count (CPI, NFP, FOMC…) is chosen once for the whole bot, not per Setup. The prototype's chart does not apply the news filter.</div>
     </HelpBox>
   );
 }
