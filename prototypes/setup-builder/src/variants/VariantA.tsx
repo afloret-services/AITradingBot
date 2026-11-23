@@ -131,6 +131,14 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                 <Button size="sm" variant="outline" onClick={() => { mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: `Step ${s.branches[bi].steps.length + 1}`, cond: { id: uid(), t: 'all', items: [] } }); }); setOpen(br.steps.length); }}>+ then another step</Button>
               </div>
             )}
+            {stage === 4 && (
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2">
+                <span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black leading-none text-black">→</span>
+                <span className="shrink-0 text-sm font-black tracking-wider text-emerald-300 sm:w-14">SIGNAL</span>
+                <span className="min-w-0 flex-1 text-base font-bold tracking-tight">Enter the Trade</span>
+                <span className="w-full pl-9 text-xs text-muted-foreground">When the last step completes, the Signal places this order with its stop.</span>
+              </div>
+            )}
             {stage === 4 && setup.branches.map((b, k) => <div key={b.id} className="space-y-2"><Badge>{b.side} branch</Badge><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={k} ctx={ctxOf(k, b.steps.length)} /></div>)}
             {stage === 5 && (
               <div className="space-y-4">
