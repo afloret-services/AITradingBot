@@ -153,10 +153,14 @@ export function VariantC(p: VariantProps) {
           {sel.kind === 'step' && selStep && (
             run ? <Locked what="Signal steps" /> :
             <div className="space-y-3">
-              <H>Step {sel.si + 1} · {setup.branches[sel.bi].side}</H>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border bg-card/40 px-3 py-2">
+                <span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-black leading-none text-black" style={{ background: STEP_COLORS[sel.si % 6] }}>{sel.si + 1}</span>
+                <span className="shrink-0 text-sm font-black tracking-wider text-sky-300">{sel.si === 0 ? 'IF' : 'THEN'}</span>
+                <Input value={selStep.name} onChange={(e) => mutate((s) => { s.branches[sel.bi].steps[sel.si].name = e.target.value; })} className="h-8 min-w-0 flex-1 basis-[10rem] border-transparent bg-transparent px-1 text-base font-bold tracking-tight text-foreground" />
+                <span className="w-full pl-9 text-xs text-muted-foreground">{setup.branches[sel.bi].side} branch · {sel.si === 0 ? 'Starts a Candidate when its conditions hold.' : selStep.same_bar ? 'On the same bar as the step before, or later.' : 'On a later bar than the step before.'} · <StepStats result={result} bi={sel.bi} si={sel.si} data={data} /></span>
+              </div>
               <SignalStepsHelp setup={setup} bi={sel.bi} />
-              <Input value={selStep.name} onChange={(e) => mutate((s) => { s.branches[sel.bi].steps[sel.si].name = e.target.value; })} className="w-full" />
-              <RuleEditor cond={selStep.cond} keyword={sel.si === 0 ? 'IF' : 'THEN'} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} onChange={(c) => mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = c; })} />
+              <RuleEditor cond={selStep.cond} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} onChange={(c) => mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = c; })} />
               <div className="rounded-md border p-2"><StepLimits step={selStep} isFirst={sel.si === 0} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} look="chips" onChange={(n: Step) => mutate((s) => { s.branches[sel.bi].steps[sel.si] = n; })} /></div>
               {sel.si === 0 && <div className="flex flex-wrap items-center gap-2 text-xs">a new first step while one runs <Select value={setup.branches[sel.bi].on_new_start} onChange={(v) => mutate((s) => { s.branches[sel.bi].on_new_start = v; })} options={[['start_another', 'start another'], ['replace', 'replace'], ['ignore', 'ignore']]} className="h-7" /></div>}
               <div className="flex gap-1"><Button size="sm" variant="ghost" disabled={sel.si === 0} onClick={() => { mutate((s) => { const a = s.branches[sel.bi].steps; [a[sel.si - 1], a[sel.si]] = [a[sel.si], a[sel.si - 1]]; }); setSel({ ...sel, si: sel.si - 1 }); }}>← move earlier</Button><Button size="sm" variant="ghost" onClick={() => { mutate((s) => { s.branches[sel.bi].steps.splice(sel.si, 1); }); setSel({ kind: 'trade' }); }}>delete</Button></div>
