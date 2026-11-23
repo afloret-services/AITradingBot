@@ -82,24 +82,24 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
               <div className="space-y-3">
                 <SignalStepsHelp setup={setup} bi={bi} />
                 {inline && <div className="rounded-md border border-dashed border-sky-500/40 px-2.5 py-1.5 text-xs text-muted-foreground"><span className="font-medium text-foreground">No declaring step here.</span> In a step, <b className="text-foreground">+ add</b> lists every pattern kind: pick one and it's created with default settings, then open its <b className="text-foreground">settings</b> to change them. Click any value to pick an indicator and set its length and timeframe on the spot. One that no step uses any more is removed.</div>}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Tabs value={String(bi)} onChange={(v) => { setBi(Number(v)); setOpen(0); }} tabs={setup.branches.map((b, k) => [String(k), `${b.side === 'long' ? 'Long' : 'Short'} branch`] as [string, string])} />
                   {setup.branches.length === 1 && <Button size="sm" variant="ghost" onClick={() => mutate((s) => { addMirror(s); })}>Duplicate as mirrored {br.side === 'long' ? 'short' : 'long'}</Button>}
-                  <span className="ml-auto text-xs text-muted-foreground">On a new first step while one is running:</span>
-                  <Select value={br.on_new_start} onChange={(v) => mutate((s) => { s.branches[bi].on_new_start = v; })} options={[['start_another', 'start another'], ['replace', 'replace'], ['ignore', 'ignore']]} className="h-7" />
+                  <span className="flex w-full items-center justify-between gap-2 sm:ml-auto sm:w-auto sm:justify-end"><span className="text-xs text-muted-foreground">On a new first step while one is running:</span>
+                  <Select value={br.on_new_start} onChange={(v) => mutate((s) => { s.branches[bi].on_new_start = v; })} options={[['start_another', 'start another'], ['replace', 'replace'], ['ignore', 'ignore']]} className="h-7 shrink-0" /></span>
                 </div>
                 <ol className="space-y-0">
                   {br.steps.map((st, k) => (
                     <li key={st.id}>
                       {k > 0 && <div className="ml-4 border-l-2 border-dashed py-1 pl-4 text-xs text-muted-foreground"><b className="text-sky-300">THEN</b>, {st.same_bar && st.within_bars === 0 ? 'on the same bar only' : st.same_bar ? 'possibly on the same bar' : 'on a later bar'}{st.within_bars ? `, within ${st.within_bars} bars` : ''}{st.until ? `, until ${st.until}` : ''}</div>}
                       <div className={cn('rounded-lg border', open === k && 'border-sky-500/50')}>
-                        <button className="flex w-full items-center gap-2 px-3 py-2 text-left" onClick={() => { setOpen(open === k ? -1 : k); p.setFocus({ bi, si: k }); }}>
+                        <div role="button" tabIndex={0} className="flex w-full cursor-pointer flex-wrap items-center gap-x-2 gap-y-0.5 px-3 py-2 text-left sm:flex-nowrap" onClick={() => { setOpen(open === k ? -1 : k); p.setFocus({ bi, si: k }); }}>
                           <span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold leading-none text-black" style={{ background: STEP_COLORS[k % 6] }}>{k + 1}</span>
-                          <span className="w-11 text-xs font-black tracking-wider text-sky-300">{open === k ? '' : k === 0 ? 'IF' : 'THEN'}</span>
-                          <Input value={st.name} onClick={(e) => e.stopPropagation()} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-7 w-72 border-transparent bg-transparent font-medium" />
-                          <StepStats result={result} bi={bi} si={k} data={data} />
-                          <span className="ml-auto text-muted-foreground">{open === k ? '▾' : '▸'}</span>
-                        </button>
+                          <span className={cn('shrink-0 text-xs font-black tracking-wider text-sky-300 sm:w-11', open === k && 'hidden sm:inline')}>{open === k ? '' : k === 0 ? 'IF' : 'THEN'}</span>
+                          <Input value={st.name} onClick={(e) => e.stopPropagation()} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-7 min-w-0 flex-1 border-transparent bg-transparent font-medium sm:w-72 sm:flex-none" />
+                          <span className="order-last w-full pl-9 sm:order-none sm:w-auto sm:pl-0"><StepStats result={result} bi={bi} si={k} data={data} /></span>
+                          <span className="shrink-0 text-muted-foreground sm:ml-auto">{open === k ? '▾' : '▸'}</span>
+                        </div>
                         {open === k && (
                           <div className="space-y-2 border-t p-3">
                             <RuleEditor cond={st.cond} keyword={k === 0 ? 'IF' : 'THEN'} ctx={ctxOf(bi, k)} side={br.side} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
@@ -113,10 +113,10 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                   {br.steps.length > 0 && (
                     <li>
                       <div className="ml-4 border-l-2 border-dashed py-1 pl-4 text-xs text-muted-foreground">when the last step completes</div>
-                      <button onClick={() => setStage(4)} className="flex w-full items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-left text-sm hover:bg-emerald-500/10">
-                        <span className="text-xs font-black tracking-wider text-emerald-300">→ SIGNAL</span>
-                        <span className="text-muted-foreground">{br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labelsOf(setup))}`}, stop {br.entry.stop.offset} {br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} {br.side === 'long' ? 'below' : 'above'} {phrase(br.entry.stop.token || '?', labelsOf(setup))}</span>
-                        <span className="ml-auto text-xs text-sky-300">edit in Entry & stop →</span>
+                      <button onClick={() => setStage(4)} className="flex w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-left text-sm hover:bg-emerald-500/10">
+                        <span className="shrink-0 whitespace-nowrap text-xs font-black tracking-wider text-emerald-300">→ SIGNAL</span>
+                        <span className="order-last w-full text-muted-foreground sm:order-none sm:w-auto sm:min-w-0 sm:flex-1">{br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labelsOf(setup))}`}, stop {br.entry.stop.offset} {br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} {br.side === 'long' ? 'below' : 'above'} {phrase(br.entry.stop.token || '?', labelsOf(setup))}</span>
+                        <span className="ml-auto shrink-0 whitespace-nowrap text-xs text-sky-300">edit in Entry & stop →</span>
                       </button>
                     </li>
                   )}
