@@ -88,7 +88,7 @@ export function VariantB(p: VariantProps) {
                   <span className="w-full pl-9 text-xs text-muted-foreground">{k === 0 ? 'Starts a Candidate when its conditions hold.' : st.same_bar ? 'On the same bar as the step before, or later.' : 'On a later bar than the step before.'} · <StepStats result={result} bi={bi} si={k} data={data} /></span>
                 </div>
                 <div className="text-[15px]">
-                  <RuleEditor cond={st.cond} keyword={k === 0 ? 'IF' : 'THEN'} ctx={ctxFor(bi, k)} side={br.side} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
+                  <RuleEditor cond={st.cond} ctx={ctxFor(bi, k)} side={br.side} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
                   <PhraseInput ctx={ctxFor(bi, k)} onAdd={(c, toks) => mutate((s) => { s.branches[bi].steps[k].cond = appendAnd(s.branches[bi].steps[k].cond, c); for (const t of toks) if (!s.indicators.some((i) => i.token === t)) s.indicators.push({ token: t }); })} />
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">{limitsSentence(st, k === 0, labelsOf(setup))}</div>
