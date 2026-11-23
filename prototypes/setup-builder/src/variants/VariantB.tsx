@@ -73,9 +73,9 @@ export function VariantB(p: VariantProps) {
 
         {setup.branches.map((br, bi) => (
           <section key={br.id} className="space-y-3">
-            <h2 className="flex items-center gap-2 text-xl font-semibold">{br.side === 'long' ? 'Going long' : 'Going short'}
-              <span className="text-xs font-normal text-muted-foreground">a new first step while one runs:</span>
-              <InlineSelect value={br.on_new_start} onChange={(v) => mutate((s) => { s.branches[bi].on_new_start = v; })} options={[['start_another', 'starts another'], ['replace', 'replaces it'], ['ignore', 'is ignored']]} />
+            <h2 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xl font-semibold"><span className="whitespace-nowrap">{br.side === 'long' ? 'Going long' : 'Going short'}</span>
+              <span className="flex w-full flex-wrap items-center gap-x-2 sm:w-auto"><span className="text-xs font-normal text-muted-foreground">a new first step while one runs:</span>
+              <InlineSelect value={br.on_new_start} onChange={(v) => mutate((s) => { s.branches[bi].on_new_start = v; })} options={[['start_another', 'starts another'], ['replace', 'replaces it'], ['ignore', 'is ignored']]} /></span>
               {setup.branches.length > 1 && <button className="ml-auto text-xs text-muted-foreground hover:text-red-400" onClick={() => mutate((s) => { s.branches.splice(bi, 1); })}>remove branch</button>}
             </h2>
             {bi === 0 ? <SignalStepsHelp setup={setup} bi={bi} /> : <Explain label="how steps work"><SignalStepsHelp setup={setup} bi={bi} /></Explain>}
@@ -83,8 +83,8 @@ export function VariantB(p: VariantProps) {
               <div key={st.id} id={`step-${st.id}`} onMouseEnter={() => p.setFocus({ bi, si: k })} className={cn('group relative rounded-md border-l-4 py-1 pl-4', p.focus?.bi === bi && p.focus?.si === k ? 'bg-accent/40' : '')} style={{ borderColor: STEP_COLORS[k % 6] }}>
                 <div className="flex flex-wrap items-baseline gap-2">
                   <span className="text-[15px] font-semibold">{k === 0 ? 'First,' : st.same_bar ? 'Then, on the same bar or later,' : 'Then, on a later bar,'}</span>
-                  <Input value={st.name} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-6 w-auto min-w-[200px] border-transparent bg-transparent px-0 text-[15px] italic text-muted-foreground" />
-                  <StepStats result={result} bi={bi} si={k} data={data} />
+                  <Input value={st.name} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-6 min-w-0 flex-1 basis-[12rem] border-transparent bg-transparent px-0 text-[15px] italic text-muted-foreground sm:w-auto sm:min-w-[200px] sm:flex-none sm:basis-auto" />
+                  <span className="w-full sm:w-auto"><StepStats result={result} bi={bi} si={k} data={data} /></span>
                 </div>
                 <div className="text-[15px]">
                   <RuleEditor cond={st.cond} keyword={k === 0 ? 'IF' : 'THEN'} ctx={ctxFor(bi, k)} side={br.side} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />

@@ -73,8 +73,8 @@ export function VariantC(p: VariantProps) {
           <div className="space-y-4 p-3">
             {setup.branches.map((br, bi) => (
               <div key={br.id}>
-                <div className="mb-1 flex items-center gap-2 text-xs"><Badge tone={br.side === 'long' ? 'ok' : 'error'}>{br.side.toUpperCase()}</Badge><span className="text-muted-foreground">a new first step while one runs: {br.on_new_start.replace('_', ' ')}</span>
-                  {setup.branches.length === 1 && !run && <button className="text-sky-300" onClick={() => mutate((s) => { addMirror(s); })}>duplicate as mirrored {br.side === 'long' ? 'short' : 'long'}</button>}</div>
+                <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"><Badge tone={br.side === 'long' ? 'ok' : 'error'}>{br.side.toUpperCase()}</Badge><span className="text-muted-foreground">a new first step while one runs: {br.on_new_start.replace('_', ' ')}</span>
+                  {setup.branches.length === 1 && !run && <button className="text-sky-300 sm:ml-auto" onClick={() => mutate((s) => { addMirror(s); })}>duplicate as mirrored {br.side === 'long' ? 'short' : 'long'}</button>}</div>
                 <div className="flex items-stretch gap-0 overflow-x-auto pb-2">
                   {br.steps.map((st, si) => (
                     <React.Fragment key={st.id}>
@@ -147,7 +147,7 @@ export function VariantC(p: VariantProps) {
               <Input value={selStep.name} onChange={(e) => mutate((s) => { s.branches[sel.bi].steps[sel.si].name = e.target.value; })} className="w-full" />
               <RuleEditor cond={selStep.cond} keyword={sel.si === 0 ? 'IF' : 'THEN'} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} onChange={(c) => mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = c; })} />
               <div className="rounded-md border p-2"><StepLimits step={selStep} isFirst={sel.si === 0} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} look="chips" onChange={(n: Step) => mutate((s) => { s.branches[sel.bi].steps[sel.si] = n; })} /></div>
-              {sel.si === 0 && <div className="flex items-center gap-2 text-xs">a new first step while one runs <Select value={setup.branches[sel.bi].on_new_start} onChange={(v) => mutate((s) => { s.branches[sel.bi].on_new_start = v; })} options={[['start_another', 'start another'], ['replace', 'replace'], ['ignore', 'ignore']]} className="h-7" /></div>}
+              {sel.si === 0 && <div className="flex flex-wrap items-center gap-2 text-xs">a new first step while one runs <Select value={setup.branches[sel.bi].on_new_start} onChange={(v) => mutate((s) => { s.branches[sel.bi].on_new_start = v; })} options={[['start_another', 'start another'], ['replace', 'replace'], ['ignore', 'ignore']]} className="h-7" /></div>}
               <div className="flex gap-1"><Button size="sm" variant="ghost" disabled={sel.si === 0} onClick={() => { mutate((s) => { const a = s.branches[sel.bi].steps; [a[sel.si - 1], a[sel.si]] = [a[sel.si], a[sel.si - 1]]; }); setSel({ ...sel, si: sel.si - 1 }); }}>← move earlier</Button><Button size="sm" variant="ghost" onClick={() => { mutate((s) => { s.branches[sel.bi].steps.splice(sel.si, 1); }); setSel({ kind: 'trade' }); }}>delete</Button></div>
               <div className="rounded bg-muted p-2 text-[11px] text-muted-foreground">{condPhrase(selStep.cond, labels)}</div>
             </div>
