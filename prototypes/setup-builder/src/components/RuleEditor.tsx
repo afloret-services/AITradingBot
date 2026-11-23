@@ -38,11 +38,12 @@ function runs(lines: Line[]) {
   return out;
 }
 
+/** AND / OR as a button: tap to switch */
 const JoinSelect = ({ value, onChange }: { value: Join; onChange: (j: Join) => void }) => (
-  <select value={value} onChange={(e) => onChange(e.target.value as Join)}
-    className={cn('h-6 rounded-md border px-1 text-[11px] font-bold uppercase tracking-wide outline-none', value === 'and' ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300' : 'border-amber-500/40 bg-amber-500/10 text-amber-300')}>
-    <option value="and">AND</option><option value="or">OR</option>
-  </select>
+  <button type="button" onClick={() => onChange(value === 'and' ? 'or' : 'and')} title={value === 'and' ? 'switch to OR' : 'switch to AND'}
+    className={cn('flex h-7 items-center gap-1 rounded-md border px-2 text-[11px] font-black uppercase tracking-wider transition-colors', value === 'and' ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25' : 'border-amber-500/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25')}>
+    {value === 'and' ? 'And' : 'Or'} <span aria-hidden="true">⇄</span>
+  </button>
 );
 
 export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }: { cond: Cond; onChange: (c: Cond) => void; ctx: TokenCtx; side: 'long' | 'short'; keyword?: string; nested?: boolean; group?: 'all' | 'any' }) {
