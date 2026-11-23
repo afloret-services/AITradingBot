@@ -119,9 +119,9 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }
         </React.Fragment>
       ))}
       <div className={cn('flex flex-wrap items-center gap-1.5', group ? 'pl-9' : 'pl-16')}>
-        <AddMenu ctx={ctx} side={side} onAdd={(c) => add(c, 'and')} small />
-        {!group && lines.length > 0 && <AddMenu ctx={ctx} side={side} onAdd={(c) => add(c, 'or')} small label="+ or" />}
-        <button className="ml-1 flex h-8 items-center gap-1 rounded-md border border-cyan-500/50 bg-cyan-500/10 px-3 text-xs font-bold uppercase tracking-wider text-cyan-300 transition-colors hover:bg-cyan-500/20" onClick={() => add(newGroup('all'))} title="a group where every condition must hold"><span aria-hidden="true" className="text-sm leading-none">+</span>All of</button>
+        <AddMenu ctx={ctx} side={side} onAdd={(c) => add(c, 'and')} label="+ Add" title={group ? 'add a condition to this group' : 'add a condition, joined with AND'} buttonClass="flex h-8 items-center rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" />
+        {!group && lines.length > 0 && <AddMenu ctx={ctx} side={side} onAdd={(c) => add(c, 'or')} label="+ Or" title="add a condition joined with OR (starts a new box)" buttonClass="flex h-8 items-center rounded-md border border-amber-500/40 px-3 text-xs font-bold uppercase tracking-wider text-amber-300 transition-colors hover:bg-amber-500/15" />}
+        <button className="flex h-8 items-center gap-1 rounded-md border border-cyan-500/50 bg-cyan-500/10 px-3 text-xs font-bold uppercase tracking-wider text-cyan-300 transition-colors hover:bg-cyan-500/20" onClick={() => add(newGroup('all'))} title="a group where every condition must hold"><span aria-hidden="true" className="text-sm leading-none">+</span>All of</button>
         <button className="flex h-8 items-center gap-1 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 text-xs font-bold uppercase tracking-wider text-amber-300 transition-colors hover:bg-amber-500/20" onClick={() => add(newGroup('any'))} title="a group where at least one condition must hold"><span aria-hidden="true" className="text-sm leading-none">+</span>Any of</button>
       </div>
       {!nested && mixed && <div className="pl-16 text-[11px] text-muted-foreground">AND is checked before OR: each box must hold as a whole, and any one of the boxes is enough. Reads as: {condPhrase(cond, ctx.labels)}.</div>}
