@@ -218,15 +218,15 @@ export function PatternList({ setup, mutate, compact, data, only }: { setup: Set
         const d = PATTERN_KINDS[p.kind];
         const dispOn = p.kind === 'displacement' || p.kind === 'order_block' || !!p.params.displacement;
         return (
-          <div key={k} className="rounded-md border p-2">
-            <div className="flex flex-wrap items-end gap-2">
+          <div key={k} className="relative rounded-md border p-2">
+            <div className={cn('flex flex-wrap items-end gap-2', !only && 'pr-9 sm:pr-0')}>
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))]" title={d.title}><PatternIcon kind={p.kind} size={26} /></span>
               <PField label="Name" hint="steps read it as name.field"><Input value={p.name} onChange={(e) => { const v = e.target.value.trim(); mutate((s) => { renamePattern(s, s.patterns[k].name, v); s.patterns[k].name = v; }); }} className="mono h-7 w-24" /></PField>
               <PField label="Pattern"><Select value={p.kind} onChange={(kind: PatternKind) => set(k, (q) => { Object.assign(q, { ...newPattern(kind, q.tf, []), name: q.name, label: q.label }); })} options={PKINDS.map((x) => [x, PATTERN_KINDS[x].title] as [PatternKind, string])} className="h-7" /></PField>
               <PField label="Timeframe"><Select value={p.tf} onChange={(tf: TF) => set(k, (q) => { q.tf = tf; })} options={tfs.includes(p.tf) ? tfs : [p.tf, ...tfs]} className="h-7" /></PField>
               <PField label="Display label (optional)" hint="replaces the kind in descriptions"><Input value={p.label || ''} placeholder={d.title.replace(/ \(.*\)$/, '')} onChange={(e) => set(k, (q) => { q.label = e.target.value || undefined; })} className="h-7 w-48" /></PField>
               <span className={cn('pb-1.5 text-[11px]', usage[p.name] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[p.name] ? `used ${usage[p.name]}×` : 'unused'}</span>
-              {!only && <button aria-label="remove this pattern" className="mb-1.5 ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" title="remove" onClick={() => mutate((s) => { s.patterns.splice(k, 1); })}>×</button>}
+              {!only && <button aria-label="remove this pattern" className="absolute right-2 top-2 sm:static sm:mb-1.5 sm:ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" title="remove" onClick={() => mutate((s) => { s.patterns.splice(k, 1); })}>×</button>}
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">Reads in a step as: <span className="text-foreground">"{patternPhrase(p, 'long')}"</span></div>
             {d.cat && <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]"><PatternCatChips kind={p.kind} full />{d.cat.note && <span className="text-muted-foreground">{d.cat.note}</span>}</div>}
