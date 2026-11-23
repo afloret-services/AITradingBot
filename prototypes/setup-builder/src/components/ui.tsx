@@ -61,5 +61,5 @@ export const Label = ({ children, className }: { children: React.ReactNode; clas
 export const Field = ({ label, children, hint }: { label: React.ReactNode; children: React.ReactNode; hint?: React.ReactNode }) => (
   <div className="space-y-1"><Label>{label}</Label><div className="flex flex-wrap items-center gap-2">{children}</div>{hint && <div className="text-[11px] text-muted-foreground">{hint}</div>}</div>
 );
-export const STEP_COLORS = ['#74c69d', '#a78bfa', '#f472b6', '#fbbf24', '#34d399', '#fb923c'];
+export const STEP_COLORS = ['#74c69d', '#a78bfa', '#f472b6', '#fbbf24', '#a3e635', '#fb923c'];
 export const SectionTitle = ({ children, right }: { children: React.ReactNode; right?: React.ReactNode }) => <div className="mb-2 flex items-center justify-between"><div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{children}</div>{right}</div>;
