@@ -49,7 +49,7 @@ export function TradingHoursEditor({ setup, mutate }: { setup: Setup; mutate: Mu
 export function SessionsEditor({ setup, mutate }: { setup: Setup; mutate: Mutate }) {
   return (
     <div className="space-y-1">
-      <Label>Sessions (copied into the Setup, editable)</Label>
+      <Label>Market sessions (copied into the Setup, editable)</Label>
       <div className="space-y-1.5">
         {Object.entries(setup.settings.sessions).map(([n, r]) => (
           <div key={n} className="flex items-center gap-1 text-xs"><span className="w-16 capitalize text-muted-foreground">{n.replace('_', ' ')}</span>
@@ -339,7 +339,7 @@ function WhenHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'hours' | 's
   const WDN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   if (what === 'intro') return (
     <HelpBox>
-      <div><T>When this Setup may trade.</T> The Trading window says when a Signal may be taken; the sessions are the named windows that session levels (the Asia high, the London low…) are measured over; Trade overlap and the News filter say what happens while a Trade is live and around economic releases. Times are New York time throughout.</div>
+      <div><T>When this Setup may trade.</T> The Trading window says when a Signal may be taken; the Market sessions are the named windows that session levels (the Asia high, the London low…) are measured over; Trade overlap and the News filter say what happens while a Trade is live and around economic releases. Times are New York time throughout.</div>
     </HelpBox>
   );
   if (what === 'hours') {
@@ -358,7 +358,7 @@ function WhenHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'hours' | 's
   const ss = Object.entries(setup.settings.sessions);
   return (
     <HelpBox>
-      <div>The Asia, London and New York windows, used by session levels: "the Asia high" is the highest price of that window on the current Trading day once it has ended, and of the previous Trading day while it is still running. The Draw on liquidity and any step that compares with a session high or low read these. The times are copied into the Setup, so changing the bot's defaults later never changes a frozen version.</div>
+      <div><T>Market sessions</T>: the Asia, London and New York windows, used by session levels: "the Asia high" is the highest price of that window on the current Trading day once it has ended, and of the previous Trading day while it is still running. The Draw on liquidity and any step that compares with a session high or low read these. The times are copied into the Setup, so changing the bot's defaults later never changes a frozen version.</div>
       <div>Here: {ss.map(([n, r], i) => <span key={n}>{i > 0 && ', '}{B(`${n.replace('_', ' ')} ${r.start}–${r.end}`)}</span>)}. Change a time and the chart and Signals follow at once.</div>
     </HelpBox>
   );

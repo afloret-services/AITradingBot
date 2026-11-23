@@ -46,7 +46,7 @@ export function VariantB(p: VariantProps) {
             {' '}Around news:{' '}
             <InlineSelect value={setup.settings.news_rule.mode} onChange={(v) => mutate((s) => { s.settings.news_rule.mode = v; })} options={[['off', 'no rule'], ['whole_day', 'no entries all day'], ['span', `no entries ${setup.settings.news_rule.before ?? 30} min before a release`]]} />.
           </p>
-          <p className="text-xs text-muted-foreground">Sessions used by levels: {Object.entries(setup.settings.sessions).map(([n, r]) => `${n.replace('_', ' ')} ${r.start}–${r.end}`).join(' · ')} (copied into the Setup).</p>
+          <p className="text-xs text-muted-foreground">Market sessions used by levels: {Object.entries(setup.settings.sessions).map(([n, r]) => `${n.replace('_', ' ')} ${r.start}–${r.end}`).join(' · ')} (copied into the Setup).</p>
           <Explain>
             <BasicsHelp setup={setup} what="intro" />
             <BasicsHelp setup={setup} what="name" />
