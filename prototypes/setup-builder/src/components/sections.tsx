@@ -62,9 +62,9 @@ export function SessionsEditor({ setup, mutate }: { setup: Setup; mutate: Mutate
   );
 }
 export const ONE_AT_A_TIME: Record<string, [string, string]> = {
-  off: ['Allowed: several Trades at once', 'Every Candidate that completes gives a Signal, even while another Trade of this Setup is open, so Trades can overlap.'],
-  ignore_new_starts: ['Ignore new starts', 'While a Trade is live (from its Signal until its last exit), a first step that holds starts no new Candidate, and a Candidate already running cannot complete into a Signal. Once the Trade is over, the Setup looks for fresh starts.'],
-  skip_completions: ['Skip completions', 'While a Trade is live, Candidates keep starting and moving through their steps, but one that completes is dropped (no Signal). After the Trade ends, a Candidate still running can complete normally, so a setup that formed during the Trade can still be taken.'],
+  off: ['Allow overlap', 'Every Candidate that completes gives a Signal, even while another Trade of this Setup is open, so Trades can overlap.'],
+  ignore_new_starts: ['Wait for the Trade to end', 'While a Trade is live (from its Signal until its last exit), a first step that holds starts no new Candidate, and a Candidate already running cannot complete into a Signal. Once the Trade is over, the Setup looks for fresh starts.'],
+  skip_completions: ['Skip Signals during the Trade', 'While a Trade is live, Candidates keep starting and moving through their steps, but one that completes is dropped (no Signal). After the Trade ends, a Candidate still running can complete normally, so a setup that formed during the Trade can still be taken.'],
 };
 export const NEWS: Record<string, [string, string]> = {
   off: ['Off', 'Economic releases change nothing: Signals are taken on News days like any other day.'],

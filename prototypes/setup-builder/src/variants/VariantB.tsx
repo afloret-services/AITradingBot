@@ -42,7 +42,7 @@ export function VariantB(p: VariantProps) {
               <span key={k}>{k > 0 && ' or '}between <InlineInput value={r.start} onChange={(v) => mutate((s) => { s.settings.trading_hours.ranges[k].start = v; })} /> and <InlineInput value={r.end} onChange={(v) => mutate((s) => { s.settings.trading_hours.ranges[k].end = v; })} /></span>
             ))} New York time <button className="mx-1 inline-flex h-6 items-center gap-1 rounded-md border border-input px-2 align-middle text-xs font-medium text-sky-200 hover:bg-accent" onClick={() => mutate((s) => { s.settings.trading_hours.ranges.push({ start: '14:00', end: '15:00' }); })}><span aria-hidden="true">+</span>Add range</button>, on {th.weekdays.length === 5 ? 'weekdays' : th.weekdays.length + ' days'}.
             {' '}While a Signal is live,{' '}
-            <InlineSelect value={setup.settings.one_at_a_time} onChange={(v) => mutate((s) => { s.settings.one_at_a_time = v; })} options={[['off', 'new Signals are still taken'], ['ignore_new_starts', 'new starts are ignored'], ['skip_completions', 'Candidates that complete are skipped']]} />.
+            <InlineSelect value={setup.settings.one_at_a_time} onChange={(v) => mutate((s) => { s.settings.one_at_a_time = v; })} options={[['off', 'overlap is allowed'], ['ignore_new_starts', 'the Setup waits for the Trade to end'], ['skip_completions', 'Signals during the Trade are skipped']]} />.
             {' '}Around news:{' '}
             <InlineSelect value={setup.settings.news_rule.mode} onChange={(v) => mutate((s) => { s.settings.news_rule.mode = v; })} options={[['off', 'no rule'], ['whole_day', 'no entries all day'], ['span', `no entries ${setup.settings.news_rule.before ?? 30} min before a release`]]} />.
           </p>
