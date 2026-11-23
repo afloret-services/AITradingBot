@@ -636,7 +636,7 @@ export function setSection(s: Setup, k: SectionKey, v: any) {
 export function sectionSummary(s: Setup, k: SectionKey): string {
   const v = getSection(s, k);
   switch (k) {
-    case 'risk': return `${v.pct}% of $${v.capital}, max ${v.max_contracts} contracts`;
+    case 'risk': return `${v.pct}% of a $${v.capital} account, at most ${v.max_contracts} contracts`;
     case 'stop': return v.map((x: any) => `${x.offset} ${x.unit === 'atr' ? '× ATR' : 'ticks'} beyond ${shortName(x.token, {}) || '?'}`).join(' / ');
     case 'legs': return v.legs.map((l: Leg) => `${l.name} ${l.rule === 'r' ? l.r + 'R' : l.rule === 'fraction' ? (l.fraction ?? 0) * 100 + '% to ' + shortName(l.level || '', {}) : shortName(l.level || '', {}) + (l.offset_ticks ? ` −${l.offset_ticks}t` : '')} ${Math.round(l.share * 100)}%`).join(', ') + `; leftover to ${v.leftover}`;
     case 'break_even': return v.trigger === 'off' ? 'never' : `${v.trigger === 'after_leg' ? `after TP${v.k} fills` : `once +${v.r}R in profit`}${v.offset_ticks ? `, lock in ${v.offset_ticks} ticks` : ''}`;
@@ -650,9 +650,9 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
   switch (k) {
     case 'risk': return (
       <div className="flex flex-wrap gap-4">
-        <Field label="Capital $"><NumInput value={value.capital} onChange={(n) => onChange({ ...value, capital: n })} className="w-24" /></Field>
-        <Field label="Risk per Trade %"><NumInput step={0.25} value={value.pct} onChange={(n) => onChange({ ...value, pct: n })} /></Field>
-        <Field label="Max contracts"><NumInput value={value.max_contracts} onChange={(n) => onChange({ ...value, max_contracts: n })} /></Field>
+        <Field label="Account size ($)"><NumInput value={value.capital} onChange={(n) => onChange({ ...value, capital: n })} className="w-24" /></Field>
+        <Field label="Risk each Trade (% of account)"><NumInput step={0.25} value={value.pct} onChange={(n) => onChange({ ...value, pct: n })} /></Field>
+        <Field label="At most N contracts"><NumInput value={value.max_contracts} onChange={(n) => onChange({ ...value, max_contracts: n })} /></Field>
       </div>
     );
     case 'stop': return <div className="space-y-2">{value.map((st: any, i: number) => <div key={i}><Badge>{setup.branches[i]?.side}</Badge><StopEditor value={st} ctx={{ ...ctx, captures: ctxCaps(setup, i, ctx) }} onChange={(v) => onChange(value.map((x: any, j: number) => (j === i ? v : x)))} /></div>)}</div>;
@@ -717,7 +717,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
 // ---------- what each Trade-settings section does, with this Setup's numbers worked through ----------
 const PV = 2; // MNQ $ per point: the preview instrument (the real one is chosen per Run)
 const SECTION_HELP: Record<SectionKey | 'in_position', string> = {
-  risk: "How many contracts a Signal trades. Contracts = Capital × Risk per Trade % ÷ (stop distance × the instrument's $ per point), rounded down and capped at Max contracts. If even 1 contract would risk more than that, the Signal is refused (\"stop too wide\").",
+  risk: "How many contracts a Signal trades. Contracts = Account size × Risk each Trade % ÷ (stop distance × the instrument's $ per point), rounded down and capped at the contract limit. If even 1 contract would risk more than that, the Signal is refused (\"stop too wide\").",
   stop: 'Where the protective stop sits: a value the Setup reads (a captured low, a pattern edge…) plus an offset in ticks or in × ATR, on the far side from the entry. Every Entry must have one.',
   legs: "The Trade can be closed in parts, each part with its own take profit (TP1, TP2…). R multiple: entry ± k × the stop distance. Level ± ticks: a price the Setup reads, e.g. the Draw on liquidity, stopping N ticks short so it fills before the level. Fraction: that part of the way from the entry to a level. Share: the part of the contracts each take profit closes; contracts that don't divide evenly go to the first or the last take profits.",
   break_even: 'Moves the stop to the entry so the rest of the Trade can no longer lose; "lock in N ticks" puts it N ticks past the entry, toward profit. Never: the stop stays where it was placed. After TP k fills: once that take profit has filled. Once price is +X R in profit: once price first reaches X times the stop distance in profit. The stop only ever moves toward profit.',

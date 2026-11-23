@@ -60,6 +60,7 @@ A rough evaluator, not the engine. It exists so each step shows its effect on re
 - "One at a time" is called Trade overlap: Allow overlap / Wait for the Trade to end / Skip Signals during the Trade.
 - "Trading hours" is called Trading window.
 - "Sessions" are called Market sessions.
+- Risk per Trade fields: Account size ($) / Risk each Trade (% of account) / At most N contracts.
 - "Expiry and Flatten time" is called Closing time: "Close open Trades at (optional)" and "Be flat by (required)".
 - Signal guards: "Skip if the stop is wider than N ticks / × ATR" and "Skip if the reward is under N × the risk", added with "+ Stop too wide" / "+ Reward too small".
 - Break-even options: Never / After TP k fills / Once price is +X R in profit; the offset is "lock in N ticks".
