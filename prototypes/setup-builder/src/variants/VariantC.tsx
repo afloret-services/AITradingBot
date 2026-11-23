@@ -97,7 +97,7 @@ export function VariantC(p: VariantProps) {
                   ))}
                   {!run && <button className="mt-1.5 self-stretch rounded-md border border-dashed px-2 py-2 text-xs text-muted-foreground hover:text-foreground sm:mx-2 sm:mt-0 sm:self-center sm:rounded-full sm:py-6" onClick={() => { mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: 'New step', cond: { id: uid(), t: 'all', items: [] } }); }); setSel({ kind: 'step', bi, si: br.steps.length }); }}>+ step</button>}
                   <Connector label="Signal" />
-                  <LaneCard color="#e2e8f0" selected={sel.kind === 'entry' && sel.bi === bi} onClick={() => setSel({ kind: 'entry', bi })} title="Entry" overridable={run} overridden={run && 'stop' in runD.draft.overrides}>
+                  <LaneCard color="#e2e8f0" selected={sel.kind === 'entry' && sel.bi === bi} onClick={() => setSel({ kind: 'entry', bi })} title={<span className="text-base font-bold tracking-tight">Entry</span>} overridable={run} overridden={run && 'stop' in runD.draft.overrides}>
                     <div className="text-xs">{br.entry.order}{br.entry.order !== 'market' && <> at <Chip>{shortName(br.entry.price || '?', labels)}</Chip></>}</div>
                     <div className="mt-1 text-xs">stop {br.entry.stop.offset} {br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} {br.side === 'long' ? 'below' : 'above'} <Chip>{shortName(br.entry.stop.token || '?', labels)}</Chip></div>
                     <div className="mt-1.5 border-t pt-1 text-[11px] leading-snug text-muted-foreground">{br.entry.order === 'market' ? 'Fills at the next bar\'s open: always in, at the market\'s price.' : br.entry.order === 'limit' ? 'Fills only if price comes back to it: a better price, but it may never fill.' : 'Fills once price breaks through it: waits for confirmation, at a worse price.'} The entry-to-stop distance is 1R.
@@ -106,7 +106,7 @@ export function VariantC(p: VariantProps) {
                   </LaneCard>
                   {bi === 0 && <>
                     <Connector label="fill" />
-                    <LaneCard color="#94a3b8" selected={sel.kind === 'trade' || sel.kind === 'section'} onClick={() => setSel({ kind: 'trade' })} title="Trade" wide overridable={run}>
+                    <LaneCard color="#94a3b8" selected={sel.kind === 'trade' || sel.kind === 'section'} onClick={() => setSel({ kind: 'trade' })} title={<span className="text-base font-bold tracking-tight">Trade</span>} wide overridable={run}>
                       {SECTIONS.filter((k) => k !== 'stop').map((k) => {
                         const ov = run && k in runD.draft.overrides;
                         return (
