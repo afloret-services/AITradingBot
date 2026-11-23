@@ -1,6 +1,6 @@
 // PROTOTYPE variant A, "Wizard": a fixed order of stages, one thing at a time, the chart always under the stage.
 // Order: basics → indicators → when to trade → Signal steps → entry & stop → Trade settings → review → create a Run.
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { VariantProps } from '../types';
 import { SetupMap } from '../components/SetupMap';
 import { RuleEditor } from '../components/RuleEditor';
@@ -18,6 +18,9 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
   const { setup, mutate, data, result } = p;
   const inline = !!p.inline;
   const [stage, setStage] = useState(0);
+  // phone: the step row scrolls sideways so the current step is in view (never the page)
+  const navRow = useRef<HTMLDivElement>(null);
+  useEffect(() => { const r = navRow.current, el = r?.querySelector('[data-current]') as HTMLElement | null; if (r && el && r.scrollWidth > r.clientWidth) r.scrollLeft = el.offsetLeft - r.offsetLeft - (r.clientWidth - el.clientWidth) / 2; }, [stage]);
   // D (Inline): no declaring step. Indicators and patterns are created where a step uses them; the ones no step uses any more are removed.
   const declare = (tok: string) => mutate((s) => { if (!s.indicators.some((i) => i.token === tok)) s.indicators.push({ token: tok }); });
   const ctxOf = (b: number, k: number) => (inline ? tokenCtx(setup, b, k, { inlineDeclare: true, onDeclare: declare, inlinePatterns: { setup, mutate, data } }) : tokenCtx(setup, b, k));
@@ -40,18 +43,20 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
 
   return (
     <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 p-3 md:grid-cols-[220px_1fr] md:p-4">
-      <nav className="h-fit space-y-0.5 md:sticky md:top-16">
-        <div className="mb-3 px-2"><div className="text-lg font-semibold">{setup.name}</div><div className="text-xs text-muted-foreground">Draft · Base bar {setup.settings.base_bar}</div></div>
+      <nav className="h-fit md:sticky md:top-16">
+        <div className="mb-2 px-2 md:mb-3"><div className="text-lg font-semibold">{setup.name}</div><div className="text-xs text-muted-foreground">Draft · Base bar {setup.settings.base_bar}</div></div>
+        <div ref={navRow} className="flex gap-1 overflow-x-auto pb-1 md:block md:space-y-0.5 md:overflow-visible md:pb-0">
         {STAGES.map((s, k) => {
           if (!shown.includes(k)) return null;
           const n = stageIssues(k).filter((i) => i.level === 'error').length;
           return (
-            <button key={s} onClick={() => setStage(k)} className={cn('flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm', stage === k ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent/50')}>
-              <span className={cn('flex h-5 w-5 items-center justify-center rounded-full border text-[11px]', k < stage && 'border-emerald-500 text-emerald-400', stage === k && 'border-sky-400 text-sky-300')}>{k < stage ? '✓' : shown.indexOf(k) + 1}</span>
-              {s}{n > 0 && <Badge tone="error" className="ml-auto">{n}</Badge>}
+            <button key={s} onClick={() => setStage(k)} title={s} aria-label={s} data-current={stage === k || undefined} className={cn('flex shrink-0 items-center gap-2 rounded-md py-1.5 text-left text-sm md:w-full md:px-2', stage === k ? 'bg-accent px-2 font-medium' : 'px-1 text-muted-foreground hover:bg-accent/50')}>
+              <span className={cn('flex aspect-square h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] leading-none', k < stage && 'border-emerald-500 text-emerald-400', stage === k && 'border-sky-400 text-sky-300')}>{k < stage ? '✓' : shown.indexOf(k) + 1}</span>
+              <span className={cn('whitespace-nowrap', stage !== k && 'hidden md:inline')}>{s}</span>{n > 0 && <Badge tone="error" className="md:ml-auto">{n}</Badge>}
             </button>
           );
         })}
+        </div>
       </nav>
       <main className="min-w-0 space-y-4">
         <Card>
@@ -61,7 +66,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
               <div className="space-y-4">
                 <BasicsHelp setup={setup} what="intro" />
                 <div className="grid gap-5 md:grid-cols-2">
-                  <div className="space-y-1.5"><Field label="Name"><Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="w-64" /></Field><BasicsHelp setup={setup} what="name" /></div>
+                  <div className="space-y-1.5"><Field label="Name"><Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="w-full sm:w-64" /></Field><BasicsHelp setup={setup} what="name" /></div>
                   <div className="space-y-1.5"><BaseBarEditor setup={setup} mutate={mutate} /><BasicsHelp setup={setup} what="base_bar" /></div>
                   <div className="space-y-1.5"><Field label="Notes"><textarea value={setup.notes} onChange={(e) => mutate((s) => { s.notes = e.target.value; })} className="h-16 w-full rounded-md border border-input bg-transparent p-2 text-sm" /></Field><BasicsHelp setup={setup} what="notes" /></div>
                 </div>
