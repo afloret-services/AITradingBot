@@ -1,7 +1,7 @@
 // PROTOTYPE variant C, "Lanes": each branch is a horizontal lane of cards, Step → Step → Entry → Trade, with the
 // Sequence limits written on the connectors. A block library on the left inserts into the selected card; an inspector
 // on the right edits it. Settings sit in a toolbar. "Run" mode locks the Signal cards and lets Trade sections be overridden in place.
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { VariantProps } from '../types';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx, AddMenu, newCmp } from '../components/CondEditor';
@@ -9,7 +9,7 @@ import { PatternIcon, IndicatorIcon, SectionIcon } from '../components/PatternIc
 import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, SectionHelp, Explain, BasicsHelp, WhenHelp, IndicatorsHelp, PatternsHelp, SignalStepsHelp, ReviewHelp, RunHelp, IndicatorsPatternsIntro, ONE_AT_A_TIME, NEWS } from '../components/sections';
 import { RuleEditor, appendAnd } from '../components/RuleEditor';
 import { shortName } from '../components/TokenPicker';
-import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs, Field } from '../components/ui';
+import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs, Field, usePhone, Sheet } from '../components/ui';
 import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN_KINDS, patternUsage, labelsOf, validate, ruleDescription , tradingWindowText } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
 
@@ -18,6 +18,11 @@ type Sel = { kind: 'step'; bi: number; si: number } | { kind: 'entry'; bi: numbe
 export function VariantC(p: VariantProps) {
   const { setup, mutate, data, result } = p;
   const [sel, setSel] = useState<Sel>({ kind: 'step', bi: 0, si: 0 });
+  // phone: the inspector is a bottom sheet that opens when a card (or Review & save, a section…) is picked
+  const phone = usePhone();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const firstSel = useRef(true);
+  useEffect(() => { if (firstSel.current) { firstSel.current = false; return; } setSheetOpen(true); }, [sel]);
   const [mode, setMode] = useState<'build' | 'run'>('build');
   const runD = useRunDraft(data, setup);
   const labels = labelsOf(setup);
@@ -44,7 +49,7 @@ export function VariantC(p: VariantProps) {
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[230px_minmax(0,1fr)_380px]">
         {/* library */}
-        <div className={cn('space-y-3 overflow-auto border-r p-3 text-sm', run && 'pointer-events-none opacity-40')}>
+        <div className={cn('order-last space-y-3 overflow-auto border-t p-3 text-sm lg:order-none lg:border-r lg:border-t-0', run && 'pointer-events-none opacity-40')}>
           <Lib title="Indicators (declared once)">
             {setup.indicators.map((i) => (
               <LibItem key={i.token} onClick={() => insert({ id: uid(), t: 'cmp', a: i.token, op: '>', b: '' })} disabled={sel.kind !== 'step'} hint={`used ${usage[i.token] || 0}×`}><span className="inline-flex items-center gap-1.5"><IndicatorIcon token={i.token} size={16} />{i.label || shortName(i.token, {})}</span></LibItem>
@@ -121,7 +126,10 @@ export function VariantC(p: VariantProps) {
           </div>
         </div>
         {/* inspector */}
-        <div className="overflow-auto border-l p-3">
+        {(!phone || sheetOpen) && <Sheet phone={phone}>
+        {phone && <div className="fixed inset-0 z-[60] bg-black/50" onClick={() => setSheetOpen(false)} />}
+        <div className={phone ? 'fixed inset-x-0 bottom-0 z-[61] max-h-[85vh] overflow-auto rounded-t-xl border-t bg-card px-3 pb-6 shadow-2xl' : 'overflow-auto border-l p-3'}>
+          {phone && <div className="sticky top-0 z-10 -mx-3 mb-2 flex items-center gap-2 border-b bg-card px-3 py-2"><span className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/40" /><button aria-label="close" onClick={() => setSheetOpen(false)} className="absolute right-3 flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground">×</button></div>}
           {sel.kind === 'review' && <div className="space-y-3"><H>Review & save</H><ReviewHelp setup={setup} what="intro" /><ReviewHelp setup={setup} what="map" />
             <H>Checks</H><ReviewHelp setup={setup} what="checks" issues={issues} />
             {issues.length === 0 && <Badge tone="ok">Ready to freeze</Badge>}
@@ -171,6 +179,7 @@ export function VariantC(p: VariantProps) {
             <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Setup default</H><SectionHelp setup={setup} k={sel.k} /><SectionEditor k={sel.k} value={getSection(setup, sel.k)} setup={setup} ctx={tokenCtx(setup, 0, 99)} onChange={(v) => mutate((s) => { setSection(s, sel.k, v); })} /></div>
           )}
         </div>
+        </Sheet>}
       </div>
     </div>
   );
