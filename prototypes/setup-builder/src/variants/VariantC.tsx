@@ -81,7 +81,7 @@ export function VariantC(p: VariantProps) {
           <div className="space-y-4 p-3">
             {setup.branches.map((br, bi) => (
               <div key={br.id}>
-                <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"><Badge tone={br.side === 'long' ? 'go' : 'error'}>{br.side.toUpperCase()}</Badge><span className="text-muted-foreground">a new first step while one runs: {br.on_new_start.replace('_', ' ')}</span>
+                <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"><Badge tone={br.side === 'long' ? 'go' : 'error'} className="px-2.5 py-1 text-base font-black tracking-wider">{br.side === 'long' ? '▲ ' : '▼ '}{br.side.toUpperCase()}</Badge><span className="text-muted-foreground">a new first step while one runs: {br.on_new_start.replace('_', ' ')}</span>
                   {setup.branches.length === 1 && !run && <button className="text-sky-300 sm:ml-auto" onClick={() => mutate((s) => { addMirror(s); })}>duplicate as mirrored {br.side === 'long' ? 'short' : 'long'}</button>}</div>
                 <div className="flex flex-col items-stretch gap-0 pb-2 sm:flex-row sm:overflow-x-auto">
                   {br.steps.map((st, si) => (
