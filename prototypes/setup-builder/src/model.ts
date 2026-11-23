@@ -243,7 +243,7 @@ export interface Setup {
   in_position_rules: InPositionRule[];
 }
 export const SECTION_NAMES: Record<string, string> = {
-  risk: 'Risk per Trade', stop: 'Stop', legs: 'Take profits', break_even: 'Break-even', entry_deadline: 'Entry deadline', expiry_and_flatten: 'Expiry and Flatten time', signal_guards: 'Signal guards',
+  risk: 'Risk per Trade', stop: 'Stop', legs: 'Take profits', break_even: 'Break-even', entry_deadline: 'Entry deadline', expiry_and_flatten: 'Closing time', signal_guards: 'Signal guards',
 };
 
 let seq = 1;
@@ -476,7 +476,7 @@ export function validate(s: Setup): Issue[] {
   if (!ts.legs.length) out.push({ level: 'error', where: 'Trade settings', text: 'At least one take profit is needed.' });
   const share = ts.legs.reduce((a, l) => a + l.share, 0);
   if (ts.legs.length && Math.abs(share - 1) > 0.001) out.push({ level: 'warning', where: 'Take profits', text: `Take-profit shares add up to ${Math.round(share * 100)}%; leftover contracts go to the ${ts.leftover} take profits.` });
-  if (!ts.flatten_time) out.push({ level: 'error', where: 'Expiry and Flatten time', text: 'A Flatten time is mandatory.' });
+  if (!ts.flatten_time) out.push({ level: 'error', where: 'Closing time', text: 'A "Be flat by" time is required.' });
   if (!ts.entry_deadline.value && ts.entry_deadline.kind !== 'end_of_day' && ts.entry_deadline.kind !== 'end_of_hours') out.push({ level: 'error', where: 'Entry deadline', text: 'The entry deadline is mandatory.' });
   return out;
 }

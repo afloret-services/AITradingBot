@@ -1079,7 +1079,7 @@ function simulate(data: Data, setup: Setup, br: Branch, sig: Signal, base: Int32
   let pBase = p0;
   for (let k = fill; k < M.length; k++) {
     const b = M[k];
-    if (b.di !== day || b.min >= flat && M[fill].min < flat) { open.filter((l) => !l.done).forEach((l) => exitLeg(l, b.o, k, 'Flatten time')); break; }
+    if (b.di !== day || b.min >= flat && M[fill].min < flat) { open.filter((l) => !l.done).forEach((l) => exitLeg(l, b.o, k, 'Flat by time')); break; }
     if (long ? b.l <= stop : b.h >= stop) { open.filter((l) => !l.done).forEach((l) => exitLeg(l, stop, k, stop === sig.stop ? 'stop' : 'moved stop')); break; }
     open.forEach((l, li) => {
       if (!l.done && (long ? b.h >= l.price : b.l <= l.price)) {

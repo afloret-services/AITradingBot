@@ -434,7 +434,7 @@ function RunHelp_({ setup, what, instrument, overrides }: { setup: Setup; what: 
   }
   return (
     <HelpBox>
-      <div>A Run may replace <T>whole Trade-settings sections</T> (Risk per Trade, Stop, Take profits, Break-even, Entry deadline, Expiry and Flatten time, Signal guards): pick Override and the section's full editor opens, starting from the Setup default. It cannot change part of a section, and it cannot touch the Signal steps, the Entry order or the In-position rules: those are the Setup version itself.</div>
+      <div>A Run may replace <T>whole Trade-settings sections</T> (Risk per Trade, Stop, Take profits, Break-even, Entry deadline, Closing time, Signal guards): pick Override and the section's full editor opens, starting from the Setup default. It cannot change part of a section, and it cannot touch the Signal steps, the Entry order or the In-position rules: those are the Setup version itself.</div>
       <div>Overrides make <T>no new version</T>, so a Promoted version stays promoted. When a section is overridden, the line below it shows the Run's value, and the comparison at the bottom re-runs the Setup on the MNQ bars with and without the overrides.{overrides ? <> Here: {B(`${overrides} section${overrides === 1 ? '' : 's'}`)} overridden.</> : <> Here: {B('no override')}; the Run trades the Setup defaults.</>}</div>
     </HelpBox>
   );
@@ -641,7 +641,7 @@ export function sectionSummary(s: Setup, k: SectionKey): string {
     case 'legs': return v.legs.map((l: Leg) => `${l.name} ${l.rule === 'r' ? l.r + 'R' : l.rule === 'fraction' ? (l.fraction ?? 0) * 100 + '% to ' + shortName(l.level || '', {}) : shortName(l.level || '', {}) + (l.offset_ticks ? ` −${l.offset_ticks}t` : '')} ${Math.round(l.share * 100)}%`).join(', ') + `; leftover to ${v.leftover}`;
     case 'break_even': return v.trigger === 'off' ? 'never' : `${v.trigger === 'after_leg' ? `after TP${v.k} fills` : `once +${v.r}R in profit`}${v.offset_ticks ? `, lock in ${v.offset_ticks} ticks` : ''}`;
     case 'entry_deadline': return `${v.entry_deadline.kind === 'clock' ? 'wait until ' + v.entry_deadline.value : v.entry_deadline.kind === 'bars' ? 'wait ' + v.entry_deadline.value + ' Base bars' : v.entry_deadline.kind === 'end_of_hours' ? 'wait until the Trading window closes' : 'wait until the Trading day ends'}; ${v.cancel_if.length ? 'cancel if price reaches ' + v.cancel_if.map((c: string) => (c === 'first_leg' ? 'TP1' : c === 'stop' ? 'the stop' : 'the Draw')).join(' or ') + ' first' : 'no early cancel'}`;
-    case 'expiry_and_flatten': return `${v.expiry ? 'exit at ' + v.expiry + ', ' : ''}flatten ${v.flatten_time}`;
+    case 'expiry_and_flatten': return `${v.expiry ? 'close Trades at ' + v.expiry + ', ' : ''}flat by ${v.flatten_time}`;
     case 'signal_guards': return v.map((g: Guard) => (g.kind === 'max_stop' ? `skip if stop > ${g.n} ${g.unit === 'atr' ? '× ATR' : 'ticks'}` : `skip if reward < ${g.n} × risk`)).join(', ') || 'none';
   }
 }
@@ -694,8 +694,8 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
     );
     case 'expiry_and_flatten': return (
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        exit open Trades at <Input value={value.expiry || ''} placeholder="off" onChange={(e) => onChange({ ...value, expiry: e.target.value || undefined })} className="w-16" />
-        Flatten time <Input value={value.flatten_time} onChange={(e) => onChange({ ...value, flatten_time: e.target.value })} className="w-16" /><Badge tone="outline">mandatory</Badge>
+        Close open Trades at <Input value={value.expiry || ''} placeholder="off" onChange={(e) => onChange({ ...value, expiry: e.target.value || undefined })} className="w-16" /><span className="text-xs text-muted-foreground">(optional)</span>
+        Be flat by <Input value={value.flatten_time} onChange={(e) => onChange({ ...value, flatten_time: e.target.value })} className="w-16" /><Badge tone="outline">required</Badge>
       </div>
     );
     case 'signal_guards': return (
@@ -722,7 +722,7 @@ const SECTION_HELP: Record<SectionKey | 'in_position', string> = {
   legs: "The Trade can be closed in parts, each part with its own take profit (TP1, TP2…). R multiple: entry ± k × the stop distance. Level ± ticks: a price the Setup reads, e.g. the Draw on liquidity, stopping N ticks short so it fills before the level. Fraction: that part of the way from the entry to a level. Share: the part of the contracts each take profit closes; contracts that don't divide evenly go to the first or the last take profits.",
   break_even: 'Moves the stop to the entry so the rest of the Trade can no longer lose; "lock in N ticks" puts it N ticks past the entry, toward profit. Never: the stop stays where it was placed. After TP k fills: once that take profit has filled. Once price is +X R in profit: once price first reaches X times the stop distance in profit. The stop only ever moves toward profit.',
   entry_deadline: "How long a limit or stop entry may wait for its fill; after that it is cancelled. A market entry fills at the next bar's open and ignores the deadline. \"Cancel if price reaches first\": if price touches the stop, TP1 or the Draw on liquidity before filling, the entry is cancelled, because the move already happened without you.",
-  expiry_and_flatten: 'Exit open Trades at (optional): any Trade still open at this New York time is closed at market. Flatten time (mandatory): the hard end of the day for this Setup; every position still open is closed at market, whatever its take profits and stop.',
+  expiry_and_flatten: 'Close open Trades at (optional): any Trade still open at this New York time is closed at market. Be flat by (required): the hard end of the day for this Setup; every position still open is closed at market, whatever its take profits and stop.',
   signal_guards: "Last checks on a Signal before any order. A refused Signal is logged with its reason and opens no Trade. Skip if the stop is wider than N ticks or N × ATR (checked before sizing). Skip if the reward is under N × the risk: the take profits' average reward, weighted by contracts, divided by the risk.",
   in_position: "Checked at every Base-bar close while a Trade is open. When a rule holds, its action runs at the next bar's open: close the whole Trade, close one take profit, move the stop, or cancel an entry still waiting. Each rule belongs to a branch, and a Run cannot override them.",
 };
