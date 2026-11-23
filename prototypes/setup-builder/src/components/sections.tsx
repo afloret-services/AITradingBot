@@ -44,15 +44,17 @@ export function TradingHoursEditor({ setup, mutate }: { setup: Setup; mutate: Mu
   const th = setup.settings.trading_hours;
   const ov = th.overrides || {};
   const ovDays = Object.keys(ov).map(Number).sort();
-  const free = th.weekdays.filter((d) => !(String(d) in ov));
+  const free = [0, 1, 2, 3, 4, 5, 6].filter((d) => !(String(d) in ov));
+  const allWeek = th.weekdays.length === 7 && th.ranges.length === 0 && ovDays.length === 0;
   return (
     <div className="space-y-2">
-      <Label>Trading window (NY, checked on the Signal's bar)</Label>
+      <div className="flex items-center gap-2"><Label>Trading window (NY, checked on the Signal's bar)</Label>
+        <button aria-pressed={allWeek} onClick={() => mutate((s) => { s.settings.trading_hours = { ranges: [], weekdays: [0, 1, 2, 3, 4, 5, 6] }; })} className={cn('ml-auto h-7 rounded-full border px-2.5 text-xs font-medium transition-colors', allWeek ? 'border-sky-400/50 bg-sky-500/20 text-sky-100' : 'border-input text-muted-foreground hover:bg-accent')} title="every day, all day: crypto and other markets that never close">24/7</button></div>
       <div className="flex items-center gap-1 text-xs"><span className="w-16 text-muted-foreground">Days</span>
         <span className="flex flex-wrap gap-1">{WD.map((d, k) => <button key={d} aria-pressed={th.weekdays.includes(k)} onClick={() => mutate((s) => { const w = s.settings.trading_hours.weekdays; s.settings.trading_hours.weekdays = w.includes(k) ? w.filter((x) => x !== k) : [...w, k].sort(); if (w.includes(k) && s.settings.trading_hours.overrides) delete s.settings.trading_hours.overrides[String(k)]; })} className={cn('h-8 min-w-[2.75rem] rounded-md border px-2 text-xs font-medium transition-colors', th.weekdays.includes(k) ? (String(k) in ov ? 'border-amber-400/60 bg-amber-500/15 text-amber-100' : 'border-sky-400/50 bg-sky-500/20 text-sky-100') : 'border-input text-muted-foreground hover:bg-accent')} title={String(k) in ov ? 'has its own hours' : undefined}>{d}</button>)}</span>
       </div>
       <div className="rounded-md border p-2.5">
-        <div className="mb-1.5 text-xs font-medium">Every trading day{ovDays.length ? <span className="font-normal text-muted-foreground"> (except {ovDays.map((d) => WD_LONG[d]).join(', ')})</span> : ''}</div>
+        <div className="mb-1.5 text-xs font-medium">{th.weekdays.length === 7 ? 'Every day' : 'Every trading day'}{ovDays.length ? <span className="font-normal text-muted-foreground"> (except {ovDays.map((d) => WD_LONG[d]).join(', ')})</span> : ''}</div>
         <RangeList ranges={th.ranges} defaults={{ start: '09:30', end: '16:00' }} onChange={(r) => mutate((s) => { s.settings.trading_hours.ranges = r; })} />
       </div>
       {ovDays.map((d) => (
@@ -64,7 +66,7 @@ export function TradingHoursEditor({ setup, mutate }: { setup: Setup; mutate: Mu
       ))}
       {free.length > 0 && (
         <div className="flex flex-wrap items-center gap-1 text-xs"><span className="text-muted-foreground">Different hours on</span>
-          {free.map((d) => <button key={d} className="h-7 rounded-md border border-input px-2 font-medium hover:bg-accent" onClick={() => mutate((s) => { s.settings.trading_hours.overrides = { ...(s.settings.trading_hours.overrides || {}), [String(d)]: structuredClone(s.settings.trading_hours.ranges) }; })}>+ {WD[d]}</button>)}
+          {free.map((d) => <button key={d} className="h-7 rounded-md border border-input px-2 font-medium hover:bg-accent" onClick={() => mutate((s) => { s.settings.trading_hours.overrides = { ...(s.settings.trading_hours.overrides || {}), [String(d)]: structuredClone(s.settings.trading_hours.ranges) }; if (!s.settings.trading_hours.weekdays.includes(d)) s.settings.trading_hours.weekdays = [...s.settings.trading_hours.weekdays, d].sort(); })} title={th.weekdays.includes(d) ? undefined : 'also ticks this day'}>+ {WD[d]}</button>)}
         </div>
       )}
       <div className="text-[11px] text-muted-foreground">Ranges may cross midnight, e.g. 18:00–16:00 for every session.</div>
@@ -373,7 +375,7 @@ function WhenHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'hours' | 's
     const covered = new Set<number>();
     for (const r of th.ranges) { const [h1, m1] = r.start.split(':').map(Number), [h2, m2] = r.end.split(':').map(Number); const a0 = h1 * 60 + (m1 || 0); let d = h2 * 60 + (m2 || 0) - a0; if (d <= 0) d += 1440; if (isFinite(d)) for (let m = 0; m < d; m++) covered.add((a0 + m) % 1440); }
     const mins = covered.size;
-    const days = th.weekdays.length === 5 && [1, 2, 3, 4, 5].every((d) => th.weekdays.includes(d)) ? 'Monday to Friday' : th.weekdays.map((d) => WDN[d]).join(', ') || 'every day';
+    const days = th.weekdays.length === 5 && [1, 2, 3, 4, 5].every((d) => th.weekdays.includes(d)) ? 'Monday to Friday' : (th.weekdays.length === 7 ? 'every day of the week' : th.weekdays.map((d) => WDN[d]).join(', ')) || 'every day';
     return (
       <HelpBox>
         <div>A Signal is only taken when the bar its last step completes on opens inside one of these ranges, on a ticked weekday. The steps before it may complete earlier (a pullback can start before the window opens); only the Signal is checked. A range may cross midnight (18:00–16:00 covers the whole futures day), you can add several, and no range means all day. "End of Trading window" in the Entry deadline means the end of these ranges.</div>
