@@ -129,7 +129,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
               <Arrow lines={['Signal']} />
               <Node title="Entry" tone={long ? 'long' : 'short'} compact={compact}>
                 <Line k="order" v={br.entry.order === 'market' ? 'market, next bar' : `${br.entry.order} at ${shortName(br.entry.price || '?', labels)}`} />
-                <Line k="stop" icon="stop" v={`${br.entry.stop.offset} ${br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} beyond ${shortName(br.entry.stop.token || '?', labels)}`} bad={!br.entry.stop.token} />
+                <Line k="stop" icon="stop" v={`${br.entry.stop.offset} ${br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} ${br.side === 'long' ? 'below' : 'above'} ${shortName(br.entry.stop.token || '?', labels)}`} bad={!br.entry.stop.token} />
               </Node>
               <Arrow lines={['fill']} />
               <Node title="Trade" tone="muted" compact={compact} wide>

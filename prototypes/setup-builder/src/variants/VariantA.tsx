@@ -100,7 +100,7 @@ export function VariantA(p: VariantProps) {
                       <div className="ml-4 border-l-2 border-dashed py-1 pl-4 text-xs text-muted-foreground">when the last step completes</div>
                       <button onClick={() => setStage(4)} className="flex w-full items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-left text-sm hover:bg-emerald-500/10">
                         <span className="text-xs font-black tracking-wider text-emerald-300">→ SIGNAL</span>
-                        <span className="text-muted-foreground">{br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labelsOf(setup))}`}, stop {br.entry.stop.offset} {br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} beyond {phrase(br.entry.stop.token || '?', labelsOf(setup))}</span>
+                        <span className="text-muted-foreground">{br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labelsOf(setup))}`}, stop {br.entry.stop.offset} {br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} {br.side === 'long' ? 'below' : 'above'} {phrase(br.entry.stop.token || '?', labelsOf(setup))}</span>
                         <span className="ml-auto text-xs text-sky-300">edit in Entry & stop →</span>
                       </button>
                     </li>

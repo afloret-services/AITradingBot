@@ -566,7 +566,7 @@ export function EntryEditor({ setup, mutate, bi, ctx, result, data }: { setup: S
         <Select value={e.order} onChange={(v) => set((x) => { x.order = v; })} options={[['market', "market (next Base bar's open)"], ['limit', 'limit'], ['stop', 'stop entry']]} />
         {e.order !== 'market' && <><span className="text-xs text-muted-foreground">at</span><TokenPicker value={e.price || ''} ctx={ctx} onChange={(v) => set((x) => { x.price = v; })} /></>}
       </Field>
-      <StopEditor value={e.stop} onChange={(v) => set((x) => { x.stop = v; })} ctx={ctx} />
+      <StopEditor value={e.stop} side={setup.branches[bi].side} onChange={(v) => set((x) => { x.stop = v; })} ctx={ctx} />
     </div>
   );
 }
@@ -594,13 +594,14 @@ function EntryHelp_({ setup, bi, result, data }: { setup: Setup; bi: number; res
     </HelpBox>
   );
 }
-export function StopEditor({ value, onChange, ctx }: { value: Setup['branches'][0]['entry']['stop']; onChange: (v: Setup['branches'][0]['entry']['stop']) => void; ctx: TokenCtx }) {
+export function StopEditor({ value, onChange, ctx, side = 'long' }: { value: Setup['branches'][0]['entry']['stop']; onChange: (v: Setup['branches'][0]['entry']['stop']) => void; ctx: TokenCtx; side?: 'long' | 'short' }) {
   return (
-    <Field label={<>Stop <Badge tone={value.token ? 'outline' : 'error'}>mandatory</Badge></>}>
+    <Field label={<>Stop <Badge tone={value.token ? 'outline' : 'error'}>required</Badge></>}>
+      <span className="text-sm">Place the stop</span>
       <NumInput step={0.05} value={value.offset} onChange={(n) => onChange({ ...value, offset: n })} className="w-16" />
       <Select value={value.unit} onChange={(u) => onChange({ ...value, unit: u })} options={[['ticks', 'ticks'], ['atr', '× ATR']]} />
-      {value.unit === 'atr' && <TokenPicker value={value.atr || ''} ctx={ctx} compact onChange={(a) => onChange({ ...value, atr: a })} placeholder="which ATR" />}
-      <span className="text-xs text-muted-foreground">beyond</span>
+      {value.unit === 'atr' && <span className="text-sm text-muted-foreground">using</span>}{value.unit === 'atr' && <TokenPicker value={value.atr || ''} ctx={ctx} compact onChange={(a) => onChange({ ...value, atr: a })} placeholder="which ATR" />}
+      <span className="text-sm">{side === 'long' ? 'below' : 'above'}</span>
       <TokenPicker value={value.token} ctx={ctx} onChange={(t) => onChange({ ...value, token: t })} placeholder="pick the stop level" />
     </Field>
   );
@@ -637,7 +638,7 @@ export function sectionSummary(s: Setup, k: SectionKey): string {
   const v = getSection(s, k);
   switch (k) {
     case 'risk': return `${v.pct}% of a $${v.capital} account, at most ${v.max_contracts} contracts`;
-    case 'stop': return v.map((x: any) => `${x.offset} ${x.unit === 'atr' ? '× ATR' : 'ticks'} beyond ${shortName(x.token, {}) || '?'}`).join(' / ');
+    case 'stop': return v.map((x: any, i: number) => `${x.offset} ${x.unit === 'atr' ? '× ATR' : 'ticks'} ${s.branches[i]?.side === 'short' ? 'above' : 'below'} ${shortName(x.token, {}) || '?'}`).join(' / ');
     case 'legs': return v.legs.map((l: Leg) => `${l.name} ${l.rule === 'r' ? l.r + 'R' : l.rule === 'fraction' ? (l.fraction ?? 0) * 100 + '% to ' + shortName(l.level || '', {}) : shortName(l.level || '', {}) + (l.offset_ticks ? ` −${l.offset_ticks}t` : '')} ${Math.round(l.share * 100)}%`).join(', ') + `; leftover to ${v.leftover}`;
     case 'break_even': return v.trigger === 'off' ? 'never' : `${v.trigger === 'after_leg' ? `after TP${v.k} fills` : `once +${v.r}R in profit`}${v.offset_ticks ? `, lock in ${v.offset_ticks} ticks` : ''}`;
     case 'entry_deadline': return `${v.entry_deadline.kind === 'clock' ? 'wait until ' + v.entry_deadline.value : v.entry_deadline.kind === 'bars' ? 'wait ' + v.entry_deadline.value + ' Base bars' : v.entry_deadline.kind === 'end_of_hours' ? 'wait until the Trading window closes' : 'wait until the Trading day ends'}; ${v.cancel_if.length ? 'cancel if price reaches ' + v.cancel_if.map((c: string) => (c === 'first_leg' ? 'TP1' : c === 'stop' ? 'the stop' : 'the Draw')).join(' or ') + ' first' : 'no early cancel'}`;
@@ -655,7 +656,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
         <Field label="At most N contracts"><NumInput value={value.max_contracts} onChange={(n) => onChange({ ...value, max_contracts: n })} /></Field>
       </div>
     );
-    case 'stop': return <div className="space-y-2">{value.map((st: any, i: number) => <div key={i}><Badge>{setup.branches[i]?.side}</Badge><StopEditor value={st} ctx={{ ...ctx, captures: ctxCaps(setup, i, ctx) }} onChange={(v) => onChange(value.map((x: any, j: number) => (j === i ? v : x)))} /></div>)}</div>;
+    case 'stop': return <div className="space-y-2">{value.map((st: any, i: number) => <div key={i}><Badge>{setup.branches[i]?.side}</Badge><StopEditor value={st} side={setup.branches[i]?.side} ctx={{ ...ctx, captures: ctxCaps(setup, i, ctx) }} onChange={(v) => onChange(value.map((x: any, j: number) => (j === i ? v : x)))} /></div>)}</div>;
     case 'legs': return (
       <div className="space-y-1.5">
         {value.legs.map((l: Leg, i: number) => (

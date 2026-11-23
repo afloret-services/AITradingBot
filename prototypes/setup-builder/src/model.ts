@@ -342,7 +342,7 @@ export function ruleDescription(s: Setup): string {
       lines.push(`  ${k === 0 ? 'First' : 'Then'}${lim ? ` (${lim})` : ''}: ${condPhrase(st.cond, labels)}.`);
     });
     const e = br.entry;
-    lines.push(`  Enter ${e.order === 'market' ? "at market at the next bar's open" : `with a ${e.order} at ${phrase(e.price || '?', labels)}`}; stop ${e.stop.offset} ${e.stop.unit === 'atr' ? `× ${phrase(e.stop.atr || '?', labels)}` : 'ticks'} beyond ${phrase(e.stop.token || '?', labels)}.`);
+    lines.push(`  Enter ${e.order === 'market' ? "at market at the next bar's open" : `with a ${e.order} at ${phrase(e.price || '?', labels)}`}; stop ${e.stop.offset} ${e.stop.unit === 'atr' ? `× ${phrase(e.stop.atr || '?', labels)}` : 'ticks'} ${br.side === 'long' ? 'below' : 'above'} ${phrase(e.stop.token || '?', labels)}.`);
   }
   const ts = s.trade_settings;
   lines.push(`Take profits: ${ts.legs.map((l) => `${l.name} ${l.rule === 'r' ? `at ${l.r}R` : l.rule === 'fraction' ? `${(l.fraction ?? 0) * 100}% of the way to ${phrase(l.level || '?')}` : `${l.offset_ticks ? `${l.offset_ticks} tick${l.offset_ticks === 1 ? "" : "s"} before ` : 'at '}${phrase(l.level || '?')}`} (${Math.round(l.share * 100)}%)`).join('; ')}.`);
