@@ -30,8 +30,10 @@ export function AddMenu({ onAdd, ctx, side, small, label = '+ add' }: { onAdd: (
   return (
     <span className="relative inline-block">
       <Button size="sm" variant="ghost" className={cn('text-sky-300', small && 'h-6 px-1.5')} onClick={() => setOpen(!open)}>{label}</Button>
+      {open && <div className="fixed inset-0 z-[60] bg-black/50 sm:hidden" onClick={() => setOpen(false)} />}
       {open && (
-        <div className={cn("absolute left-0 top-full z-40 mt-1 rounded-lg border bg-card p-1 shadow-2xl", ctx.inlinePatterns ? "max-h-[70vh] w-[30rem] overflow-auto" : "w-80")} onMouseLeave={() => setOpen(false)}>
+        <div className={cn("fixed inset-x-3 bottom-3 z-[61] max-h-[70vh] overflow-auto rounded-lg border bg-card p-1 shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-0 sm:top-full sm:z-40 sm:mt-1", ctx.inlinePatterns ? "sm:w-[30rem]" : "sm:max-h-none sm:w-80 sm:overflow-visible")} onMouseLeave={() => setOpen(false)}>
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-card px-2 py-1.5 text-sm font-medium sm:hidden">Add a condition<button aria-label="close" onClick={() => setOpen(false)} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground">×</button></div>
           {!ctx.inlinePatterns && !(ctx.patterns || []).length && <div className="px-2 py-1 text-[11px] text-muted-foreground">No patterns declared yet: declare FVG, Order block, Swing, MSS… in Patterns first.</div>}
           {ctx.inlinePatterns && <InlinePatternItems ctx={ctx} side={side} onPick={(c) => { onAdd(c); setOpen(false); }} />}
           {items.map(([l, f, h]) => (
@@ -147,8 +149,8 @@ export function CondEditor({ cond, onChange, onRemove, ctx, side, look, depth = 
         {p && !ctx.inlinePatterns && <span className="text-[11px] text-muted-foreground" title="edit it in Patterns; every step that uses it changes">({patternSettingsPhrase(p)})</span>}
         {p && ctx.inlinePatterns && <button onClick={() => setShowSettings(!showSettings)} className="rounded-full border border-input px-2 py-0.5 text-[11px] text-sky-300 hover:bg-accent">{showSettings ? 'hide settings' : 'settings'}</button>}
         {rm}
-        {p && ctx.inlinePatterns && !showSettings && <div className="w-full pl-9 text-[11px] text-muted-foreground">{patternSettingsPhrase(p)}</div>}
-        {p && ctx.inlinePatterns && showSettings && <div className="w-full pl-9"><PatternList setup={ctx.inlinePatterns.setup} mutate={ctx.inlinePatterns.mutate} data={ctx.inlinePatterns.data} only={[p.name]} compact /></div>}
+        {p && ctx.inlinePatterns && !showSettings && <div className="w-full text-[11px] text-muted-foreground [@container(min-width:38rem)]:pl-9">{patternSettingsPhrase(p)}</div>}
+        {p && ctx.inlinePatterns && showSettings && <div className="w-full min-w-0 max-w-full overflow-hidden [&_input]:max-w-full [&_select]:max-w-full [&_select]:min-w-0 [&_label]:min-w-0 [&_label]:max-w-full [&_svg]:h-auto [&_svg]:max-w-full [@container(min-width:38rem)]:pl-9"><PatternList setup={ctx.inlinePatterns.setup} mutate={ctx.inlinePatterns.mutate} data={ctx.inlinePatterns.data} only={[p.name]} compact /></div>}
       </div>
     );
   }
@@ -207,7 +209,7 @@ function InlinePatternItems({ ctx, side, onPick }: { ctx: TokenCtx; side: 'long'
       {groups.map(([g, title]) => (
         <div key={g}>
           <div className="px-2 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
-          <div className="grid grid-cols-2 gap-0.5">
+          <div className="grid grid-cols-1 gap-0.5 min-[420px]:grid-cols-2">
             {(Object.keys(PATTERN_KINDS) as PatternKind[]).filter((k) => (PATTERN_KINDS[k].group || 'ict') === g).map((k) => (
               <button key={k} onClick={() => pick(k)} title={PATTERN_KINDS[k].help} className="flex items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs hover:bg-accent">
                 <PatternIcon kind={k} size={16} /><span className="truncate">{PATTERN_KINDS[k].named ? (side === 'long' ? PATTERN_KINDS[k].bull : PATTERN_KINDS[k].bear) : `${PATTERN_KINDS[k].title.replace(/ \(.*\)$/, '')} (${side === 'long' ? PATTERN_KINDS[k].bull : PATTERN_KINDS[k].bear})`}</span>
