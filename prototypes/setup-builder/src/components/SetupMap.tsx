@@ -45,7 +45,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
     <div className="space-y-3">
       {/* declared once */}
       <div className="flex flex-wrap items-center gap-1.5 text-xs">
-        <span className="mr-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Declared</span>
+        <span className="mr-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Configured</span>
         {setup.indicators.map((i) => (
           <button key={i.token} onMouseEnter={() => setHover({ kind: 'ind', key: i.token })} onMouseLeave={() => setHover(null)} onClick={onDeclared}
             className={cn('flex items-center gap-1 rounded-full border px-2 py-0.5 transition', hover?.key === i.token ? 'border-amber-400 bg-amber-500/10' : 'hover:bg-accent')}>
@@ -58,7 +58,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
             <PatternIcon kind={p.kind} size={16} /><span className="mono">{p.name}</span><span className="text-muted-foreground">{p.tf} {PATTERN_KINDS[p.kind].title.replace(/ \(.*\)$/, '')} ·{pu[p.name] || 0}</span>
           </button>
         ))}
-        {!setup.indicators.length && !(setup.patterns || []).length && <span className="italic text-muted-foreground">no indicators or patterns declared yet</span>}
+        {!setup.indicators.length && !(setup.patterns || []).length && <span className="italic text-muted-foreground">no indicators or patterns configured yet</span>}
         {hover && <span className="text-[11px] text-muted-foreground">lights up the steps that read it</span>}
       </div>
 

@@ -52,13 +52,13 @@ export const PATTERN_KINDS: Record<PatternKind, PDef> = {
     params: [['strength', 'swing: bars each side', 2], ['displacement', 'breaking candle is a Displacement', true], ...DISP],
     fields: ['level', 'swing_low', 'swing_high', 'high', 'low', 'close'] },
   // classic chart patterns: the side picks which one (bullish = the bottom, bearish = the top); all form on the neckline break
-  double: { title: 'Double top / bottom', bull: 'double bottom', bear: 'double top', named: true, group: 'chart', cat: { types: ['reversal'], bull: 'bullish', bear: 'bearish', classical: true, consolidation: 'Yes', breaks: 'Up (bottom) / Down (top)', source: 'chartguys', note: 'Double Bottom (W) and Double Top (M). For the sharp-then-rounded variant, declare Adam & Eve double top / bottom.' },
+  double: { title: 'Double top / bottom', bull: 'double bottom', bear: 'double top', named: true, group: 'chart', cat: { types: ['reversal'], bull: 'bullish', bear: 'bearish', classical: true, consolidation: 'Yes', breaks: 'Up (bottom) / Down (top)', source: 'chartguys', note: 'Double Bottom (W) and Double Top (M). For the sharp-then-rounded variant, configure Adam & Eve double top / bottom.' },
     help: 'Two swing highs at about the same price with a low between them (double top, bearish), or two swing lows with a high between them (double bottom, bullish). The neckline is the extreme between the two; the pattern forms on the first close through it. Target: the height measured from the neckline.',
     params: CHART_PARAMS, fields: ['neckline', 'height', 'target', 'first', 'second', 'extreme'] },
   triple: { title: 'Triple top / bottom', bull: 'triple bottom', bear: 'triple top', named: true, group: 'chart', cat: { types: ['reversal'], bull: 'bullish', bear: 'bearish', classical: true, consolidation: 'Yes', breaks: 'Up (bottom) / Down (top)', source: 'chartguys' },
     help: 'Three swing highs (triple top, bearish) or three swing lows (triple bottom, bullish) at about the same price. The neckline is the extreme between the first and the third; the pattern forms on the first close through it.',
     params: CHART_PARAMS, fields: ['neckline', 'height', 'target', 'first', 'second', 'third', 'extreme'] },
-  head_shoulders: { title: 'Head and shoulders', bull: 'inverse head and shoulders', bear: 'head and shoulders', named: true, group: 'chart', cat: { types: ['reversal'], bull: 'bullish', bear: 'bearish', classical: true, consolidation: 'Yes', breaks: 'Up (inverse) / Down', source: 'chartguys', note: 'For two shoulders on each side, declare Complex head and shoulders.' },
+  head_shoulders: { title: 'Head and shoulders', bull: 'inverse head and shoulders', bear: 'head and shoulders', named: true, group: 'chart', cat: { types: ['reversal'], bull: 'bullish', bear: 'bearish', classical: true, consolidation: 'Yes', breaks: 'Up (inverse) / Down', source: 'chartguys', note: 'For two shoulders on each side, configure Complex head and shoulders.' },
     help: 'Three swing highs where the middle one (the head) is clearly higher than the two shoulders, which are at about the same price (bearish); the inverse, with lows, is bullish. The neckline joins the two lows between them and may slope; the pattern forms on the first close through it.',
     params: [...CHART_PARAMS, ['head_margin_pct', 'head beyond the shoulders by ≥ % of the height', 15]], fields: ['neckline', 'height', 'target', 'left_shoulder', 'head', 'right_shoulder'] },
   triangle: { title: 'Triangle', bull: 'triangle breaking up', bear: 'triangle breaking down', named: true, group: 'chart', cat: { types: ['continuation', 'indeterminate'], bull: 'bullish', bear: 'bearish', classical: true, consolidation: 'Yes', breaks: 'Ascending up, descending down, symmetrical either way', source: 'chartguys', note: 'Ascending: Bullish Continuation. Descending: Bearish Continuation. Symmetrical (equilibrium): Neutral, Indeterminate.' },
@@ -190,7 +190,7 @@ export function newPattern(kind: PatternKind, tf: TF, taken: string[]): Pattern 
   return { name, kind, tf, params: Object.fromEntries(PATTERN_KINDS[kind].params.map(([k, , d]) => [k, d])) };
 }
 export function patternPhrase(p: Pattern | undefined, side: 'long' | 'short') {
-  if (!p) return 'an undeclared pattern';
+  if (!p) return 'an unconfigured pattern';
   const d = PATTERN_KINDS[p.kind];
   if (d.group === 'candle') return `a ${p.tf} ${side === 'long' ? d.bull : d.bear}${p.label ? ` (${p.label})` : ''} forms (captured as "${p.name}")`;
   if (d.named) return `a ${p.tf} ${side === 'long' ? d.bull : d.bear}${p.label ? ` (${p.label})` : ''} completes on its ${['double', 'triple', 'head_shoulders'].includes(p.kind) ? 'neckline break' : 'breakout'} (captured as "${p.name}")`;
@@ -316,7 +316,7 @@ export function condPhrase(c: Cond, labels: Record<string, string> = {}): string
     case 'for_n': return `${condPhrase(c.item, labels)} for at least ${c.n} bars`;
     case 'time': return `the ${c.tf || 'Base'} bar opens between ${c.start} and ${c.end} NY`;
     case 'fvg': return `a ${c.tf} ${c.side === 'long' ? 'bullish' : 'bearish'} FVG of at least ${c.min_gap_ticks} ticks forms${c.middle_closes_gap_way ? ', its middle candle closing the gap\'s way' : ''} (captured as "${c.capture}")`;
-    case 'pattern': return labels[`pattern:${c.ref}:${c.side}`] || `the pattern "${c.ref}" forms (not declared)`;
+    case 'pattern': return labels[`pattern:${c.ref}:${c.side}`] || `the pattern "${c.ref}" forms (not configured)`;
     case 'draw': return `a Draw on liquidity exists: the nearest untaken ${c.levels.map((l) => phrase(l)).join(' / ')} ${c.side === 'long' ? 'above' : 'below'} ${phrase(c.from)} by at least ${c.min_framework_points} points`;
   }
 }
@@ -448,9 +448,9 @@ export function validate(s: Setup): Issue[] {
     if (!/^[a-z][a-z0-9_]*$/.test(p.name)) out.push({ level: 'error', where: 'Patterns', text: `"${p.name}" is not a valid name (lower case letters, digits, _).` });
     if (pats.findIndex((q) => q.name === p.name) !== k) out.push({ level: 'error', where: 'Patterns', text: `Two patterns are named "${p.name}".` });
     if (tfMinutes(p.tf) < bm) out.push({ level: 'error', where: 'Patterns', text: `"${p.name}" is on ${p.tf}, finer than the Base bar (${s.settings.base_bar}).` });
-    if (!pu[p.name]) out.push({ level: 'warning', where: 'Patterns', text: `"${p.name}" is declared but no step uses it.` });
+    if (!pu[p.name]) out.push({ level: 'warning', where: 'Patterns', text: `"${p.name}" is configured but no step uses it.` });
   });
-  for (const n of Object.keys(pu)) if (!pats.some((p) => p.name === n)) out.push({ level: 'error', where: 'Signals', text: `A step reads the pattern "${n}", which is not declared.` });
+  for (const n of Object.keys(pu)) if (!pats.some((p) => p.name === n)) out.push({ level: 'error', where: 'Signals', text: `A step reads the pattern "${n}", which is not configured.` });
   const declared = new Set(s.indicators.map((i) => i.token));
   if (!s.branches.length) out.push({ level: 'error', where: 'Signals', text: 'No entry branch yet: add a long or a short branch.' });
   s.branches.forEach((br) => {
@@ -461,7 +461,7 @@ export function validate(s: Setup): Issue[] {
         const tf = tokenTf(t);
         if (tf && tfMinutes(tf) < bm) out.push({ level: 'error', where: `${where}, step ${k + 1}`, text: `${t} is finer than the Base bar (${s.settings.base_bar}).` });
         const p = parseToken(t);
-        if (p.parts[0] === 'indicator' && !declared.has(t.replace(/\.prev\[\d+\]$/, ''))) out.push({ level: 'warning', where: `${where}, step ${k + 1}`, text: `${t} is not in the Setup's indicator list (it will be declared on save).` });
+        if (p.parts[0] === 'indicator' && !declared.has(t.replace(/\.prev\[\d+\]$/, ''))) out.push({ level: 'warning', where: `${where}, step ${k + 1}`, text: `${t} is not in the Setup's indicator list (it will be configured on save).` });
         if (p.parts[0] === 'capture') { const n = p.parts[1].split('.')[0]; if (!caps.includes(n) && !captureNames(st.cond).includes(n)) out.push({ level: 'error', where: `${where}, step ${k + 1}`, text: `"${n}" is read before any step captures it.` }); }
         if (p.parts[0] === 'draw' && !caps.includes('draw') && !captureNames(st.cond).includes('draw')) out.push({ level: 'error', where: `${where}, step ${k + 1}`, text: 'The Draw on liquidity is read before a step chooses it.' });
       }

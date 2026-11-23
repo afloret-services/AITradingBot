@@ -53,17 +53,17 @@ export function VariantC(p: VariantProps) {
         {/* library */}
         <div className={cn('order-last space-y-3 overflow-auto border-t p-3 text-sm lg:order-none lg:border-r lg:border-t-0', run && 'pointer-events-none opacity-40')}>
           <div className="lg:hidden"><div className="text-sm font-semibold">Block library</div><div className="text-xs text-muted-foreground">{sel.kind === 'step' ? <>Tap a block to add it to <b className="text-foreground">step {sel.si + 1}</b> ({setup.branches[sel.bi]?.side}); tap another step card above to change.</> : 'Tap a step card above first, then a block to add it there.'}</div></div>
-          <Lib title="Indicators (declared once)">
+          <Lib title="Indicators (configured once)">
             {setup.indicators.map((i) => (
               <LibItem key={i.token} onClick={() => insert({ id: uid(), t: 'cmp', a: i.token, op: '>', b: '' })} disabled={sel.kind !== 'step'} hint={`used ${usage[i.token] || 0}×`}><span className="inline-flex items-center gap-1.5"><IndicatorIcon token={i.token} size={16} />{i.label || shortName(i.token, {})}</span></LibItem>
             ))}
-            <button className="col-span-2 py-1 text-left text-xs text-sky-300" onClick={() => setSel({ kind: 'settings' })}>manage / declare…</button>
+            <button className="col-span-2 py-1 text-left text-xs text-sky-300" onClick={() => setSel({ kind: 'settings' })}>manage / configure…</button>
           </Lib>
-          <Lib title="Patterns (declared once)">
+          <Lib title="Patterns (configured once)">
             {(setup.patterns || []).map((pt) => (
               <LibItem key={pt.name} onClick={() => insert({ id: uid(), t: 'pattern', ref: pt.name, side: side() })} disabled={sel.kind !== 'step'} hint={`${pt.tf} · used ${patternUsage(setup)[pt.name] || 0}×`}><span className="inline-flex items-center gap-1.5"><PatternIcon kind={pt.kind} size={16} />{pt.name}: {PATTERN_KINDS[pt.kind].title.replace(/ \(.*\)$/, '')}</span></LibItem>
             ))}
-            <button className="col-span-2 py-1 text-left text-xs text-sky-300" onClick={() => setSel({ kind: 'settings' })}>manage / declare…</button>
+            <button className="col-span-2 py-1 text-left text-xs text-sky-300" onClick={() => setSel({ kind: 'settings' })}>manage / configure…</button>
           </Lib>
           <Lib title="ICT presets">
             {[['Bias', () => PRESETS.bias(side())], ['Draw on liquidity', () => PRESETS.draw(side())]].map(([l, f]: any) => <LibItem key={l} onClick={() => insert(f())} disabled={sel.kind !== 'step'}>{l}</LibItem>)}

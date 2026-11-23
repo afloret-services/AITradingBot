@@ -131,10 +131,10 @@ function IndicatorEditor({ value, onChange, ctx }: { value: string; onChange: (v
   if (!ctx.inlineDeclare && !draft) {
     return (
       <div className="space-y-1">
-        <div className="flex items-center gap-2"><span className="w-14 text-xs text-muted-foreground">Declared</span>
+        <div className="flex items-center gap-2"><span className="w-14 text-xs text-muted-foreground">Configured</span>
           <Select value={declared ? base : ''} onChange={(t) => onChange(withPrev(t, p.prev))} options={[['', '— pick —'] as [string, string], ...ctx.indicators.map((i) => [i.token, i.label || shortName(i.token, {})] as [string, string])]} />
         </div>
-        {!declared && <div className="text-[11px] text-amber-300">Not in the Setup's indicator list. Declare it there first.</div>}
+        {!declared && <div className="text-[11px] text-amber-300">Not in the Setup's indicator list. Configure it there first.</div>}
       </div>
     );
   }
@@ -146,7 +146,7 @@ function IndicatorEditor({ value, onChange, ctx }: { value: string; onChange: (v
         <TfSelect value={tf} base={ctx.baseBar} onChange={(t) => set(name, params, t, out)} />
         {name === 'macd' && <Select value={out || 'line'} onChange={(o) => set(name, params, tf, o === 'line' ? undefined : o)} options={['line', 'signal', 'hist']} />}
       </div>
-      {ctx.inlineDeclare && <div className="text-[11px] text-muted-foreground">Declared in the Setup on first use; the token is its identity.</div>}
+      {ctx.inlineDeclare && <div className="text-[11px] text-muted-foreground">Configured in the Setup on first use; the token is its identity.</div>}
       {ctx.indicators.length > 0 && ctx.inlineDeclare && <div className="flex flex-wrap gap-1">{ctx.indicators.map((i) => <button key={i.token} onClick={() => onChange(withPrev(i.token, p.prev))} className="rounded border px-1 text-[11px] hover:bg-accent">{i.label || shortName(i.token, {})}</button>)}</div>}
     </div>
   );

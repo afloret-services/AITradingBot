@@ -86,7 +86,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
             {stage === 3 && (
               <div className="space-y-3">
                 <SignalStepsHelp setup={setup} bi={bi} />
-                {inline && <div className="rounded-md border border-dashed border-sky-500/40 px-2.5 py-1.5 text-xs text-muted-foreground"><span className="font-medium text-foreground">No declaring step here.</span> In a step, <b className="text-foreground">+ add</b> lists every pattern kind: pick one and it's created with default settings, then open its <b className="text-foreground">settings</b> to change them. Click any value to pick an indicator and set its length and timeframe on the spot. One that no step uses any more is removed.</div>}
+                {inline && <div className="rounded-md border border-dashed border-sky-500/40 px-2.5 py-1.5 text-xs text-muted-foreground"><span className="font-medium text-foreground">No configuring step here.</span> In a step, <b className="text-foreground">+ add</b> lists every pattern kind: pick one and it's created with default settings, then open its <b className="text-foreground">settings</b> to change them. Click any value to pick an indicator and set its length and timeframe on the spot. One that no step uses any more is removed.</div>}
                 <div className="flex flex-wrap items-center gap-2">
                   <Tabs value={String(bi)} onChange={(v) => { setBi(Number(v)); setOpen(0); }} tabs={setup.branches.map((b, k) => [String(k), `${b.side === 'long' ? 'Long' : 'Short'} branch`] as [string, string])} />
                   {setup.branches.length === 1 && <Button size="sm" variant="ghost" onClick={() => mutate((s) => { addMirror(s); })}>Duplicate as mirrored {br.side === 'long' ? 'short' : 'long'}</Button>}
@@ -195,8 +195,8 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
 
 
 const SUBS = [
-  'Name the Setup and declare its Base bar, the bar the evaluator runs on.',
-  'Every indicator and pattern the Setup reads, declared once. Steps pick from these lists.',
+  'Name the Setup and set its Base bar, the bar the evaluator runs on.',
+  'Every indicator and pattern the Setup reads, configured once. Steps pick from these lists.',
   'Trading window, Market sessions, Trade overlap and the News filter.',
   'First A, then B: each step is one Sequence link. The counts show how often each step held and completed on MNQ.',
   'The Entry block: order type, price and the mandatory stop.',

@@ -132,7 +132,7 @@ export function VariantB(p: VariantProps) {
         </Card>
         <Card className="p-3">
           <div className="mb-1 text-sm font-semibold">Indicators in this Setup</div>
-          <div className="mb-1 text-[11px] text-muted-foreground">Declared the first time a step reads them. Give one a label and the description uses it.</div>
+          <div className="mb-1 text-[11px] text-muted-foreground">Configured the first time a step reads them. Give one a label and the description uses it.</div>
           <div className="mb-2 space-y-2"><IndicatorsPatternsIntro /><IndicatorsHelp setup={setup} /></div>
           {setup.indicators.length === 0 && <div className="text-xs italic text-muted-foreground">none yet</div>}
           {setup.indicators.map((ind, k) => (
@@ -148,7 +148,7 @@ export function VariantB(p: VariantProps) {
         </Card>
         <Card className="p-3">
           <div className="mb-1 text-sm font-semibold">Patterns in this Setup</div>
-          <div className="mb-1 text-[11px] text-muted-foreground">Declared up front, then used by name in a sentence ("a bullish fvg forms").</div>
+          <div className="mb-1 text-[11px] text-muted-foreground">Configured up front, then used by name in a sentence ("a bullish fvg forms").</div>
           <div className="mb-2"><PatternsHelp setup={setup} /></div>
           <PatternList setup={setup} mutate={mutate} compact data={data} />
         </Card>

@@ -155,9 +155,9 @@ function IndicatorsHelp_({ setup }: { setup: Setup }) {
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   return (
     <HelpBox>
-      <div>An indicator is declared once by what it is: its kind, its settings and its timeframe (e.g. EMA 200 on 15m, MACD 12/26/9 on 15m, its signal line). Steps, the stop and the guards pick it from this list, and the same declaration serves both branches; change it here and every place that reads it changes. On a timeframe coarser than the Base bar, it is read from its last closed bar; finer ones are refused.</div>
+      <div>An indicator is configured once by what it is: its kind, its settings and its timeframe (e.g. EMA 200 on 15m, MACD 12/26/9 on 15m, its signal line). Steps, the stop and the guards pick it from this list, and the same configuration serves both branches; change it here and every place that reads it changes. On a timeframe coarser than the Base bar, it is read from its last closed bar; finer ones are refused.</div>
       <div>A <T>display label</T> ("the EMA 200") replaces the token in the Rule description and on the chart legend. Available: EMA, SMA, MACD (line, signal, histogram), ATR, ADX, RSI, average range and average body.</div>
-      <div>Here: {B(`${setup.indicators.length} declared`)}{unused ? <>, {B(`${unused} unused`)}</> : ''}.{!setup.indicators.length ? ' This Setup reads no indicator; patterns and candle values need none.' : ''}</div>
+      <div>Here: {B(`${setup.indicators.length} configured`)}{unused ? <>, {B(`${unused} unused`)}</> : ''}.{!setup.indicators.length ? ' This Setup reads no indicator; patterns and candle values need none.' : ''}</div>
     </HelpBox>
   );
 }
@@ -166,16 +166,16 @@ function PatternsHelp_({ setup }: { setup: Setup }) {
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   return (
     <HelpBox>
-      <div>A pattern is declared once with a <T>name</T>, a <T>kind</T>, a <T>timeframe</T> and its settings. A step then says "a bullish <span className="mono">fvg</span> forms", and later steps, the Entry and the stop read what it captured: <span className="mono">fvg.top</span>, <span className="mono">dbl.neckline</span>, <span className="mono">eng.low</span>… The declaration has no side: the step picks bullish or bearish, so both branches share it, and "duplicate as mirrored" just flips the side.</div>
+      <div>A pattern is configured once with a <T>name</T>, a <T>kind</T>, a <T>timeframe</T> and its settings. A step then says "a bullish <span className="mono">fvg</span> forms", and later steps, the Entry and the stop read what it captured: <span className="mono">fvg.top</span>, <span className="mono">dbl.neckline</span>, <span className="mono">eng.low</span>… The configuration has no side: the step picks bullish or bearish, so both branches share it, and "duplicate as mirrored" just flips the side.</div>
       <div>Three families. <T>ICT</T>: FVG, Displacement, Order block, Swing, MSS. <T>Chart patterns</T>, all of The Chart Guys' cheat sheet: doubles (and Adam & Eve), triples, head and shoulders (and complex), triangles, wedges, flags, pennants, rectangles, channels, broadening formations and wedges, cup and handle, diamonds, rounding tops and bottoms, island and bump-and-run reversals, measured moves, parabolic turns and the Wyckoff schematics; they form on their breakout and most capture a measured-move target. <T>Candlesticks</T>: engulfing, hammer, stars, harami, piercing, soldiers, tweezers, inside bar, doji, marubozu; they form on the close of their last candle. Each one below shows its idea and real examples on MNQ with your settings.</div>
-      <div>Here: {pats.length ? <>{pats.map((q, i) => <span key={q.name}>{i > 0 && ', '}{B(q.name)} ({q.tf} {PATTERN_KINDS[q.kind].title.replace(/ \(.*\)$/, '')})</span>)}.</> : B('none declared yet.')}</div>
+      <div>Here: {pats.length ? <>{pats.map((q, i) => <span key={q.name}>{i > 0 && ', '}{B(q.name)} ({q.tf} {PATTERN_KINDS[q.kind].title.replace(/ \(.*\)$/, '')})</span>)}.</> : B('none configured yet.')}</div>
     </HelpBox>
   );
 }
 function IndicatorsPatternsIntro_() {
   return (
     <HelpBox>
-      <div><T>Declare first, use later.</T> Everything a step will read that needs computing (an indicator, a pattern) is declared here once, with its timeframe and settings. The Signal steps then pick from these lists, so a setting lives in one place and the Rule description lists each one once. Plain candle values (a 15m close, a candle's range), levels (the previous day's high, a session high) and the Bias need no declaration.</div>
+      <div><T>Configure first, use later.</T> Everything a step will read that needs computing (an indicator, a pattern) is configured here once, with its timeframe and settings. The Signal steps then pick from these lists, so a setting lives in one place and the Rule description lists each one once. Plain candle values (a 15m close, a candle's range), levels (the previous day's high, a session high) and the Bias need no configuration.</div>
     </HelpBox>
   );
 }
@@ -270,7 +270,7 @@ export function PatternCatChips({ kind, full }: { kind: PatternKind; full?: bool
     </span>
   );
 }
-/** the "+ declare" palette, with the cheat sheet's filters: Type, Bias, Classical / Lesser-Known */
+/** the "+ configure" palette, with the cheat sheet's filters: Type, Bias, Classical / Lesser-Known */
 function PatternPalette({ onPick }: { onPick: (k: PatternKind) => void }) {
   const [type, setType] = React.useState<string>('all');
   const [bias, setBias] = React.useState<string>('all');
@@ -290,7 +290,7 @@ function PatternPalette({ onPick }: { onPick: (k: PatternKind) => void }) {
   return (
     <div className="w-full space-y-2 pt-1">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">+ declare</span>
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">+ configure</span>
         <Seg value={type} set={setType} opts={[['all', 'All'], ['continuation', 'Continuation'], ['reversal', 'Reversal'], ['indeterminate', 'Indeterminate']]} />
         <Seg value={bias} set={setBias} opts={[['all', 'All'], ['bullish', 'Bullish'], ['bearish', 'Bearish'], ['neutral', 'Neutral']]} />
         <Seg value={pop} set={setPop} opts={[['all', 'All'], ['classical', 'Classical'], ['lesser', 'Lesser-Known']]} />
@@ -432,7 +432,7 @@ function BasicsHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'name' | '
   return (
     <HelpBox>
       <div>The bar the Setup is checked on: at every close of a {B(bb)} bar the Signal steps are evaluated once. Values on a coarser timeframe (a 15m close, a 1d Bias) are read from their last closed bar; values on a finer one are refused{finer.length ? <> (here {B(finer.join(', '))})</> : ''}, because the Setup never looks inside its own bar.</div>
-      <div>Here: {B(bb)} means about {B(`${perDay.toLocaleString('en-US')} checks`)} per Trading day, and a Signal can come at the earliest {m === 1 ? 'one minute' : `${m} minutes`} after a move starts. A finer Base bar reacts sooner but sees more noise; a coarser one is calmer but enters later.{setup.patterns?.some((p) => tfMinutes(p.tf) < m) ? ' Some declared patterns are finer than this Base bar and will be refused.' : ''}</div>
+      <div>Here: {B(bb)} means about {B(`${perDay.toLocaleString('en-US')} checks`)} per Trading day, and a Signal can come at the earliest {m === 1 ? 'one minute' : `${m} minutes`} after a move starts. A finer Base bar reacts sooner but sees more noise; a coarser one is calmer but enters later.{setup.patterns?.some((p) => tfMinutes(p.tf) < m) ? ' Some configured patterns are finer than this Base bar and will be refused.' : ''}</div>
     </HelpBox>
   );
 }
@@ -478,7 +478,7 @@ function ReviewHelp_({ setup, what, issues, result, versions }: { setup: Setup; 
   );
   if (what === 'map') return (
     <HelpBox>
-      <div>Each branch as a flow, left to right: <T>When</T> (Base bar, Trading window), its <T>steps</T>, the <T>Entry</T> and the <T>Trade</T> settings. A step card lists its conditions with a tag (pattern, compare, time…), what it reads from earlier steps (<span className="mono">← name</span>) and what it captures for later ones (<span className="mono">→ name</span>), and how often it completed on the bars. The arrows between steps carry the Sequence limits. Hover a declared indicator or pattern at the top to light up the steps that read it.</div>
+      <div>Each branch as a flow, left to right: <T>When</T> (Base bar, Trading window), its <T>steps</T>, the <T>Entry</T> and the <T>Trade</T> settings. A step card lists its conditions with a tag (pattern, compare, time…), what it reads from earlier steps (<span className="mono">← name</span>) and what it captures for later ones (<span className="mono">→ name</span>), and how often it completed on the bars. The arrows between steps carry the Sequence limits. Hover a configured indicator or pattern at the top to light up the steps that read it.</div>
     </HelpBox>
   );
   if (what === 'rule') return (

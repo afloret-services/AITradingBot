@@ -36,7 +36,7 @@ export function AddMenu({ onAdd, ctx, side, small, label = '+ add', buttonClass,
       {(
         <div className={cn("fixed inset-x-3 bottom-3 z-[61] max-h-[70vh] overflow-auto rounded-lg border bg-card p-1 shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-0 sm:top-full sm:z-40 sm:mt-1", ctx.inlinePatterns ? "sm:w-[30rem]" : "sm:max-h-none sm:w-80 sm:overflow-visible")} onMouseLeave={() => setOpen(false)}>
           <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-card px-2 py-1.5 text-sm font-medium sm:hidden">Add a condition<button aria-label="close" onClick={() => setOpen(false)} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground">×</button></div>
-          {!ctx.inlinePatterns && !(ctx.patterns || []).length && <div className="px-2 py-1 text-[11px] text-muted-foreground">No patterns declared yet: declare FVG, Order block, Swing, MSS… in Patterns first.</div>}
+          {!ctx.inlinePatterns && !(ctx.patterns || []).length && <div className="px-2 py-1 text-[11px] text-muted-foreground">No patterns configured yet: configure FVG, Order block, Swing, MSS… in Patterns first.</div>}
           {ctx.inlinePatterns && <InlinePatternItems ctx={ctx} side={side} onPick={(c) => { onAdd(c); setOpen(false); }} />}
           {items.map(([l, f, h]) => (
             <button key={l} className="block w-full rounded px-2 py-1 text-left text-sm hover:bg-accent" onClick={() => { onAdd(f()); setOpen(false); }}>
@@ -146,9 +146,9 @@ export function CondEditor({ cond, onChange, onRemove, ctx, side, look, depth = 
       <div className="flex flex-wrap items-center gap-1 text-sm">
         {p ? <span className="flex h-7 w-7 items-center justify-center rounded border bg-[hsl(var(--chart))]" title={PATTERN_KINDS[p.kind].title}><PatternIcon kind={p.kind} size={20} /></span> : <Badge tone="info">Pattern</Badge>}
         <span className="text-muted-foreground">a {p?.tf || ''} {d ? (cond.side === 'long' ? d.bull : d.bear) : ''}</span>
-        <Select value={cond.ref} onChange={(ref) => onChange({ ...cond, ref })} options={(p ? pats : [{ name: cond.ref } as any, ...pats]).map((q: any) => [q.name, q.kind ? `${q.name}: ${q.label || PATTERN_KINDS[q.kind as keyof typeof PATTERN_KINDS].title}` : `${q.name} (not declared)`] as [string, string])} className="h-7" />
+        <Select value={cond.ref} onChange={(ref) => onChange({ ...cond, ref })} options={(p ? pats : [{ name: cond.ref } as any, ...pats]).map((q: any) => [q.name, q.kind ? `${q.name}: ${q.label || PATTERN_KINDS[q.kind as keyof typeof PATTERN_KINDS].title}` : `${q.name} (not configured)`] as [string, string])} className="h-7" />
         <span className="text-muted-foreground">forms</span>
-        {!p && <Badge tone="error">not declared</Badge>}
+        {!p && <Badge tone="error">not configured</Badge>}
         {p && !ctx.inlinePatterns && <span className="text-[11px] text-muted-foreground" title="edit it in Patterns; every step that uses it changes">({patternSettingsPhrase(p)})</span>}
         {p && ctx.inlinePatterns && <button onClick={() => setShowSettings(!showSettings)} className="rounded-full border border-input px-2 py-0.5 text-[11px] text-sky-300 hover:bg-accent">{showSettings ? 'hide settings' : 'settings'}</button>}
         {rm}
