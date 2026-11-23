@@ -67,9 +67,9 @@ export const ONE_AT_A_TIME: Record<string, [string, string]> = {
   skip_completions: ['Skip Signals during the Trade', 'While a Trade is live, Candidates keep starting and moving through their steps, but one that completes is dropped (no Signal). After the Trade ends, a Candidate still running can complete normally, so a setup that formed during the Trade can still be taken.'],
 };
 export const NEWS: Record<string, [string, string]> = {
-  off: ['Off', 'Economic releases change nothing: Signals are taken on News days like any other day.'],
-  whole_day: ['Whole Trading day', 'On a News day (a release of a type you switched on), every Signal of this Setup is suppressed: logged with the reason, but no Trade opens.'],
-  span: ['A span around the release', 'Only Signals inside the window around each release are suppressed: from N minutes before to M minutes after its New York time. Signals outside the window trade normally.'],
+  off: ['Trade through the news', 'Economic releases change nothing: Signals are taken on News days like any other day.'],
+  whole_day: ['Skip the whole News day', 'On a News day (a release of a type you switched on), every Signal of this Setup is suppressed: logged with the reason, but no Trade opens.'],
+  span: ['Skip around each release', 'Only Signals inside the window around each release are suppressed: from N minutes before to M minutes after its New York time. Signals outside the window trade normally.'],
 };
 export function BehaviourEditor({ setup, mutate, stacked }: { setup: Setup; mutate: Mutate; stacked?: boolean }) {
   const n = setup.settings.news_rule;

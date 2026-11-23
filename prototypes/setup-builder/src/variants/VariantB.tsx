@@ -44,7 +44,7 @@ export function VariantB(p: VariantProps) {
             {' '}While a Signal is live,{' '}
             <InlineSelect value={setup.settings.one_at_a_time} onChange={(v) => mutate((s) => { s.settings.one_at_a_time = v; })} options={[['off', 'overlap is allowed'], ['ignore_new_starts', 'the Setup waits for the Trade to end'], ['skip_completions', 'Signals during the Trade are skipped']]} />.
             {' '}Around news:{' '}
-            <InlineSelect value={setup.settings.news_rule.mode} onChange={(v) => mutate((s) => { s.settings.news_rule.mode = v; })} options={[['off', 'no rule'], ['whole_day', 'no entries all day'], ['span', `no entries ${setup.settings.news_rule.before ?? 30} min before a release`]]} />.
+            <InlineSelect value={setup.settings.news_rule.mode} onChange={(v) => mutate((s) => { s.settings.news_rule.mode = v; })} options={[['off', 'trade through the news'], ['whole_day', 'skip the whole News day'], ['span', `skip ${setup.settings.news_rule.before ?? 30} min before a release`]]} />.
           </p>
           <p className="text-xs text-muted-foreground">Market sessions used by levels: {Object.entries(setup.settings.sessions).map(([n, r]) => `${n.replace('_', ' ')} ${r.start}–${r.end}`).join(' · ')} (copied into the Setup).</p>
           <Explain>

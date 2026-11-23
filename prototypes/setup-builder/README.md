@@ -60,7 +60,7 @@ A rough evaluator, not the engine. It exists so each step shows its effect on re
 - "One at a time" is called Trade overlap: Allow overlap / Wait for the Trade to end / Skip Signals during the Trade.
 - "Trading hours" is called Trading window.
 - "Sessions" are called Market sessions.
-- "News rule" is called News filter.
+- "News rule" is called News filter: Trade through the news / Skip the whole News day / Skip around each release.
 - The Leg pattern is called Swing (an up swing / a down swing, captured as swing.start, swing.end…), and the measured move's legs are its first and second swing (captured as mm.swing).
 - "Take profits" replaces "Take-profit legs": the section is Take profits, each one TP1, TP2… (your call while trying it; the glossary term "Take-profit legs" would change with it).
 - Signal steps read as rules: IF … AND/OR …, THEN … for the next step, ending in the Signal. AND is checked before OR; brackets group explicitly.
