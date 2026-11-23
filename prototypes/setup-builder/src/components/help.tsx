@@ -64,10 +64,10 @@ export function HelpToggle() {
   return (
     <span className="flex items-center gap-1.5">
       <label className="flex cursor-pointer items-center gap-1.5 text-muted-foreground">
-        <span onClick={() => h.setAll(!h.all)} role="switch" aria-checked={h.all} className={'relative h-4 w-7 rounded-full transition ' + (h.all ? 'bg-sky-500' : 'bg-input')}>
-          <span className={'absolute top-0.5 h-3 w-3 rounded-full bg-white transition ' + (h.all ? 'left-[14px]' : 'left-0.5')} />
+        <span onClick={() => h.setAll(!h.all)} role="switch" aria-checked={!h.all} aria-label="Hide descriptions" className={'relative h-4 w-7 rounded-full transition ' + (!h.all ? 'bg-sky-500' : 'bg-input')}>
+          <span className={'absolute top-0.5 h-3 w-3 rounded-full bg-white transition ' + (!h.all ? 'left-[14px]' : 'left-0.5')} />
         </span>
-        <span onClick={() => h.setAll(!h.all)}>Descriptions</span>
+        <span onClick={() => h.setAll(!h.all)}>Hide descriptions</span>
       </label>
       {h.all && h.hidden.length > 0 && <button onClick={h.showAllHidden} className="rounded px-1 text-sky-300 hover:bg-accent">show {h.hidden.length} hidden</button>}
     </span>
