@@ -98,7 +98,7 @@ export function VariantB(p: VariantProps) {
             ))}
             <button className="text-sm text-sky-300" onClick={() => mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: 'what this step is', cond: { id: uid(), t: 'all', items: [] } }); })}>+ Then…</button>
             <div className="rounded-md border-l-4 border-slate-400 py-1 pl-4">
-              <div className="text-lg font-bold text-emerald-300">→ Then enter.</div>
+              <div className="flex flex-wrap items-baseline gap-2"><span className="text-lg font-bold text-sky-300">Then,</span><span className="text-lg font-bold tracking-tight text-foreground">enter the Trade</span></div>
               <EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={bi} ctx={ctxFor(bi, br.steps.length)} />
             </div>
           </section>
