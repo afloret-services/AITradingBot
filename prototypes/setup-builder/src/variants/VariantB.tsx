@@ -160,14 +160,14 @@ export function VariantB(p: VariantProps) {
         <Card className="p-3">
           <div className="flex items-center justify-between"><div className="text-sm font-semibold">Try it as a Run</div><Button size="sm" variant={runMode ? 'default' : 'outline'} onClick={() => setRunMode(!runMode)}>{runMode ? 'Close Run' : 'Create a Run…'}</Button></div>
           {runMode && <div className="mt-2 space-y-2"><RunHelp setup={setup} what="intro" /><RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></div>}
-          {runMode && <RunDiff setup={setup} runD={runD} ctx={ctxFor(0, 99)} />}
+          {runMode && <RunDiff setup={setup} runD={runD} ctx={ctxFor(0, 99)} base={result} data={data} />}
         </Card>
       </aside>
     </div>
   );
 }
 
-function RunDiff({ setup, runD, ctx }: { setup: Setup; runD: ReturnType<typeof useRunDraft>; ctx: TokenCtx }) {
+function RunDiff({ setup, runD, ctx, base, data }: { setup: Setup; runD: ReturnType<typeof useRunDraft>; ctx: TokenCtx; base: any; data: any }) {
   const [editing, setEditing] = useState<SectionKey | null>(null);
   return (
     <div className="mt-2 space-y-2 text-xs">
@@ -209,6 +209,7 @@ function RunDiff({ setup, runD, ctx }: { setup: Setup; runD: ReturnType<typeof u
           <tr className="border-t text-muted-foreground"><td className="py-1">While in a Trade</td><td colSpan={2}>🔒 part of the Setup version</td></tr>
         </tbody>
       </table>
+      {runD.result && <div className="grid gap-2 sm:grid-cols-2"><div className="rounded-md border p-2"><div className="mb-1 font-medium text-muted-foreground">Setup defaults</div><RunSummary result={base} data={data} /></div><div className="rounded-md border border-sky-500/40 bg-sky-500/5 p-2"><div className="mb-1 font-medium text-sky-300">With this Run's overrides</div><RunSummary result={runD.result} data={data} /></div></div>}
       <div className="text-muted-foreground">Overrides make no new version; the gate judges the defaults.</div>
     </div>
   );
