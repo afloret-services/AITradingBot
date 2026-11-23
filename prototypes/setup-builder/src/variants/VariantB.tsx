@@ -134,14 +134,14 @@ export function VariantB(p: VariantProps) {
           <div className="mb-2 space-y-2"><IndicatorsPatternsIntro /><IndicatorsHelp setup={setup} /></div>
           {setup.indicators.length === 0 && <div className="text-xs italic text-muted-foreground">none yet</div>}
           {setup.indicators.map((ind, k) => (
-            <React.Fragment key={ind.token}>
-            <div className="flex items-center gap-2 py-0.5 text-xs">
-              <IndicatorIcon token={ind.token} size={18} /><span className="mono w-36 truncate" title={ind.token}>{shortName(ind.token, {})}</span>
-              <Input value={ind.label || ''} placeholder="label" onChange={(e) => mutate((s) => { s.indicators[k].label = e.target.value || undefined; })} className="h-6 flex-1" />
-              <span className={cn('w-14 text-right', usage[ind.token] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[ind.token] ? `used ${usage[ind.token]}×` : 'unused'}</span>
+            <div key={ind.token} className="mb-1.5 rounded-md border border-border/60 p-2 sm:mb-0 sm:border-0 sm:p-0">
+            <div className="flex flex-wrap items-center gap-2 py-0.5 text-xs sm:flex-nowrap">
+              <IndicatorIcon token={ind.token} size={18} /><span className="mono min-w-0 flex-1 sm:w-36 sm:flex-none sm:truncate" title={ind.token}>{shortName(ind.token, {})}</span>
+              <Input value={ind.label || ''} placeholder="label" onChange={(e) => mutate((s) => { s.indicators[k].label = e.target.value || undefined; })} className="order-last h-7 min-w-0 basis-full sm:order-none sm:h-6 sm:flex-1 sm:basis-0" />
+              <span className={cn('whitespace-nowrap text-right sm:w-14', usage[ind.token] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[ind.token] ? `used ${usage[ind.token]}×` : 'unused'}</span>
             </div>
-            {indHelp(ind.token) && <Hideable id="indicators:each" className="-mt-0.5 mb-1 pl-6 text-[11px] text-muted-foreground">{indHelp(ind.token)}</Hideable>}
-            </React.Fragment>
+            {indHelp(ind.token) && <Hideable id="indicators:each" className="mt-1 text-[11px] text-muted-foreground sm:-mt-0.5 sm:mb-1 sm:pl-6">{indHelp(ind.token)}</Hideable>}
+            </div>
           ))}
         </Card>
         <Card className="p-3">
