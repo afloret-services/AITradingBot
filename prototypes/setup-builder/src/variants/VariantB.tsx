@@ -98,14 +98,14 @@ export function VariantB(p: VariantProps) {
             ))}
             <button className="text-sm text-sky-300" onClick={() => mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: 'what this step is', cond: { id: uid(), t: 'all', items: [] } }); })}>+ Then…</button>
             <div className="rounded-md border-l-4 border-slate-400 py-1 pl-4">
-              <div className="flex flex-wrap items-baseline gap-2"><span className="text-lg font-bold text-sky-300">Then,</span><span className="text-lg font-bold tracking-tight text-foreground">enter the Trade</span></div>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2"><span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black leading-none text-black">→</span><span className="shrink-0 text-sm font-black tracking-wider text-emerald-300">SIGNAL</span><span className="min-w-0 flex-1 text-base font-bold tracking-tight">Enter the Trade</span><span className="w-full pl-9 text-xs text-muted-foreground">When the last step completes, the Signal places this order with its stop.</span></div>
               <EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={bi} ctx={ctxFor(bi, br.steps.length)} />
             </div>
           </section>
         ))}
 
         <section className="space-y-3">
-          <h2 className="flex flex-wrap items-baseline gap-2"><span className="text-lg font-bold text-sky-300">Once filled,</span><span className="text-lg font-bold tracking-tight text-foreground">manage the Trade</span></h2>
+          <h2 className="contents"><div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-slate-400/30 bg-slate-400/5 px-3 py-2"><span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-300 text-sm font-black leading-none text-black">→</span><span className="shrink-0 text-sm font-black tracking-wider text-slate-300">FILLED</span><span className="min-w-0 flex-1 text-base font-bold tracking-tight">Manage the Trade</span><span className="w-full pl-9 text-xs text-muted-foreground">Once the entry fills, these settings size, protect and close the Trade.</span></div></h2>
           {SECTIONS.filter((k) => k !== 'stop').map((k) => (
             <div key={k} className="grid grid-cols-1 items-start gap-1 sm:grid-cols-[150px_1fr] sm:gap-3">
               <div className="flex items-center gap-1.5 pt-1 text-sm font-medium text-muted-foreground"><SectionIcon k={k} size={18} />{SECTION_NAMES[k]}</div>
