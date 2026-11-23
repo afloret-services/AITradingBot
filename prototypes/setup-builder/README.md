@@ -60,6 +60,7 @@ A rough evaluator, not the engine. It exists so each step shows its effect on re
 - "One at a time" is called Trade overlap: Allow overlap / Wait for the Trade to end / Skip Signals during the Trade.
 - "Trading hours" is called Trading window.
 - "Sessions" are called Market sessions.
+- Break-even options: Never / After TP k fills / Once price is +X R in profit; the offset is "lock in N ticks".
 - Entry deadline options: Wait until a set time (NY) / Wait N Base bars / Wait until the Trading window closes / Wait until the Trading day ends; "Cancel if price reaches first: the stop / TP1 / the Draw".
 - "News rule" is called News filter: Trade through the news / Skip the whole News day / Skip around each release.
 - The Leg pattern is called Swing (an up swing / a down swing, captured as swing.start, swing.end…), and the measured move's legs are its first and second swing (captured as mm.swing).

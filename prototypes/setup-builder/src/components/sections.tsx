@@ -639,7 +639,7 @@ export function sectionSummary(s: Setup, k: SectionKey): string {
     case 'risk': return `${v.pct}% of $${v.capital}, max ${v.max_contracts} contracts`;
     case 'stop': return v.map((x: any) => `${x.offset} ${x.unit === 'atr' ? '× ATR' : 'ticks'} beyond ${shortName(x.token, {}) || '?'}`).join(' / ');
     case 'legs': return v.legs.map((l: Leg) => `${l.name} ${l.rule === 'r' ? l.r + 'R' : l.rule === 'fraction' ? (l.fraction ?? 0) * 100 + '% to ' + shortName(l.level || '', {}) : shortName(l.level || '', {}) + (l.offset_ticks ? ` −${l.offset_ticks}t` : '')} ${Math.round(l.share * 100)}%`).join(', ') + `; leftover to ${v.leftover}`;
-    case 'break_even': return v.trigger === 'off' ? 'off' : v.trigger === 'after_leg' ? `after TP${v.k}, +${v.offset_ticks} ticks` : `at +${v.r}R, +${v.offset_ticks} ticks`;
+    case 'break_even': return v.trigger === 'off' ? 'never' : `${v.trigger === 'after_leg' ? `after TP${v.k} fills` : `once +${v.r}R in profit`}${v.offset_ticks ? `, lock in ${v.offset_ticks} ticks` : ''}`;
     case 'entry_deadline': return `${v.entry_deadline.kind === 'clock' ? 'wait until ' + v.entry_deadline.value : v.entry_deadline.kind === 'bars' ? 'wait ' + v.entry_deadline.value + ' Base bars' : v.entry_deadline.kind === 'end_of_hours' ? 'wait until the Trading window closes' : 'wait until the Trading day ends'}; ${v.cancel_if.length ? 'cancel if price reaches ' + v.cancel_if.map((c: string) => (c === 'first_leg' ? 'TP1' : c === 'stop' ? 'the stop' : 'the Draw')).join(' or ') + ' first' : 'no early cancel'}`;
     case 'expiry_and_flatten': return `${v.expiry ? 'exit at ' + v.expiry + ', ' : ''}flatten ${v.flatten_time}`;
     case 'signal_guards': return v.map((g: Guard) => (g.kind === 'max_stop' ? `stop ≤ ${g.n} ${g.unit === 'atr' ? '× ATR' : 'ticks'}` : `reward:risk ≥ ${g.n}`)).join(', ') || 'none';
@@ -677,10 +677,10 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
     );
     case 'break_even': return (
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Select value={value.trigger} onChange={(t) => onChange({ ...value, trigger: t, k: value.k ?? 1, r: value.r ?? 1 })} options={[['off', 'off'], ['after_leg', 'after take profit k fills'], ['at_r', 'once price reaches +X R']]} />
-        {value.trigger === 'after_leg' && <>k <NumInput value={value.k} onChange={(n) => onChange({ ...value, k: n })} className="w-14" /></>}
-        {value.trigger === 'at_r' && <>X <NumInput step={0.25} value={value.r} onChange={(n) => onChange({ ...value, r: n })} className="w-14" />R</>}
-        {value.trigger !== 'off' && <>offset <NumInput value={value.offset_ticks} onChange={(n) => onChange({ ...value, offset_ticks: n })} className="w-14" /> ticks</>}
+        <Select value={value.trigger} onChange={(t) => onChange({ ...value, trigger: t, k: value.k ?? 1, r: value.r ?? 1 })} options={[['off', 'Never'], ['after_leg', 'After TP k fills'], ['at_r', 'Once price is +X R in profit']]} />
+        {value.trigger === 'after_leg' && <>TP <NumInput value={value.k} onChange={(n) => onChange({ ...value, k: n })} className="w-14" /></>}
+        {value.trigger === 'at_r' && <>+<NumInput step={0.25} value={value.r} onChange={(n) => onChange({ ...value, r: n })} className="w-14" />R</>}
+        {value.trigger !== 'off' && <>lock in <NumInput value={value.offset_ticks} onChange={(n) => onChange({ ...value, offset_ticks: n })} className="w-14" /> ticks</>}
       </div>
     );
     case 'entry_deadline': return (
@@ -720,7 +720,7 @@ const SECTION_HELP: Record<SectionKey | 'in_position', string> = {
   risk: "How many contracts a Signal trades. Contracts = Capital × Risk per Trade % ÷ (stop distance × the instrument's $ per point), rounded down and capped at Max contracts. If even 1 contract would risk more than that, the Signal is refused (\"stop too wide\").",
   stop: 'Where the protective stop sits: a value the Setup reads (a captured low, a pattern edge…) plus an offset in ticks or in × ATR, on the far side from the entry. Every Entry must have one.',
   legs: "The Trade can be closed in parts, each part with its own take profit (TP1, TP2…). R multiple: entry ± k × the stop distance. Level ± ticks: a price the Setup reads, e.g. the Draw on liquidity, stopping N ticks short so it fills before the level. Fraction: that part of the way from the entry to a level. Share: the part of the contracts each take profit closes; contracts that don't divide evenly go to the first or the last take profits.",
-  break_even: 'Moves the stop to the entry (plus an offset in ticks, toward profit) so the rest of the Trade can no longer lose. After take profit k: once TP k has filled. At +X R: once price first reaches X times the stop distance in profit. The stop only ever moves toward profit.',
+  break_even: 'Moves the stop to the entry so the rest of the Trade can no longer lose; "lock in N ticks" puts it N ticks past the entry, toward profit. Never: the stop stays where it was placed. After TP k fills: once that take profit has filled. Once price is +X R in profit: once price first reaches X times the stop distance in profit. The stop only ever moves toward profit.',
   entry_deadline: "How long a limit or stop entry may wait for its fill; after that it is cancelled. A market entry fills at the next bar's open and ignores the deadline. \"Cancel if price reaches first\": if price touches the stop, TP1 or the Draw on liquidity before filling, the entry is cancelled, because the move already happened without you.",
   expiry_and_flatten: 'Exit open Trades at (optional): any Trade still open at this New York time is closed at market. Flatten time (mandatory): the hard end of the day for this Setup; every position still open is closed at market, whatever its take profits and stop.',
   signal_guards: "Last checks on a Signal before any order. A refused Signal is logged with its reason and opens no Trade. Max stop: refuse when the stop is wider than N ticks or N × ATR (checked before sizing). Min reward:risk: refuse when the take profits' average reward, weighted by contracts, divided by the risk is below N.",
@@ -746,7 +746,7 @@ function sectionExample(setup: Setup, k: SectionKey | 'in_position'): React.Reac
       return <>Here, with {B(n)} contract{n === 1 ? '' : 's'} (a 20-point stop): {ts.legs.map((l, i) => <span key={i}>{i > 0 && ', '}{B(`${l.name} ×${sp[i]}`)} {l.rule === 'r' ? `at ${l.r}R, ${((l.r || 0) * stopPts).toFixed(0)} points away` : l.rule === 'fraction' ? `${Math.round((l.fraction || 0) * 100)}% of the way to the level` : `${l.offset_ticks || 0} tick${(l.offset_ticks || 0) === 1 ? '' : 's'} before the level`}</span>)}.{sp.some((x) => x === 0) ? ' A take profit with 0 contracts is skipped.' : ''}</>;
     }
     case 'break_even': {
-      const be = ts.break_even, off = be.offset_ticks ? ` + ${be.offset_ticks} ticks` : '';
+      const be = ts.break_even, off = be.offset_ticks ? `, locking in ${be.offset_ticks} ticks` : '';
       if (be.trigger === 'off') return <>Here: {B('off')}; the stop stays where it was placed.</>;
       if (be.trigger === 'after_leg') return <>Here: when {B(ts.legs[(be.k || 1) - 1]?.name || `TP${be.k}`)} fills, the stop moves to the entry{off}.</>;
       return <>Here: once price is {B(`+${be.r}R`)} ({((be.r || 1) * stopPts).toFixed(0)} points with a 20-point stop), the stop moves to the entry{off}.</>;
