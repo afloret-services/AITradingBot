@@ -105,7 +105,7 @@ export function VariantB(p: VariantProps) {
         ))}
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">Managing the Trade</h2>
+          <h2 className="flex flex-wrap items-baseline gap-2"><span className="text-lg font-bold text-sky-300">Once filled,</span><span className="text-lg font-bold tracking-tight text-foreground">manage the Trade</span></h2>
           {SECTIONS.filter((k) => k !== 'stop').map((k) => (
             <div key={k} className="grid grid-cols-1 items-start gap-1 sm:grid-cols-[150px_1fr] sm:gap-3">
               <div className="flex items-center gap-1.5 pt-1 text-sm font-medium text-muted-foreground"><SectionIcon k={k} size={18} />{SECTION_NAMES[k]}</div>
