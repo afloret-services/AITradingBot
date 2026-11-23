@@ -98,7 +98,7 @@ export function VariantB(p: VariantProps) {
             ))}
             <button className="text-sm text-sky-300" onClick={() => mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: 'what this step is', cond: { id: uid(), t: 'all', items: [] } }); })}>+ Then…</button>
             <div className="rounded-md border-l-4 border-slate-400 py-1 pl-4">
-              <div className="text-[15px] font-semibold">Then enter.</div>
+              <div className="text-lg font-bold text-emerald-300">→ Then enter.</div>
               <EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={bi} ctx={ctxFor(bi, br.steps.length)} />
             </div>
           </section>
