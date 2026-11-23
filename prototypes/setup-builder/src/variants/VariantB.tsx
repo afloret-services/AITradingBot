@@ -81,10 +81,11 @@ export function VariantB(p: VariantProps) {
             {bi === 0 ? <SignalStepsHelp setup={setup} bi={bi} /> : <Explain label="how steps work"><SignalStepsHelp setup={setup} bi={bi} /></Explain>}
             {br.steps.map((st, k) => (
               <div key={st.id} id={`step-${st.id}`} onMouseEnter={() => p.setFocus({ bi, si: k })} className={cn('group relative rounded-md border-l-4 py-1 pl-4', p.focus?.bi === bi && p.focus?.si === k ? 'bg-accent/40' : '')} style={{ borderColor: STEP_COLORS[k % 6] }}>
-                <div className="flex flex-wrap items-baseline gap-2">
-                  <span className="text-lg font-bold text-sky-300">{k === 0 ? 'First,' : st.same_bar ? 'Then, on the same bar or later,' : 'Then, on a later bar,'}</span>
-                  <Input value={st.name} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-8 min-w-0 flex-1 basis-[12rem] border-transparent bg-transparent px-0 text-lg font-bold tracking-tight text-foreground" />
-                  <span className="w-full"><StepStats result={result} bi={bi} si={k} data={data} /></span>
+                <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border bg-card/40 px-3 py-2">
+                  <span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-black leading-none text-black" style={{ background: STEP_COLORS[k % 6] }}>{k + 1}</span>
+                  <span className="shrink-0 text-sm font-black tracking-wider text-sky-300">{k === 0 ? 'IF' : 'THEN'}</span>
+                  <Input value={st.name} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-8 min-w-0 flex-1 basis-[10rem] border-transparent bg-transparent px-1 text-base font-bold tracking-tight text-foreground" />
+                  <span className="w-full pl-9 text-xs text-muted-foreground">{k === 0 ? 'Starts a Candidate when its conditions hold.' : st.same_bar ? 'On the same bar as the step before, or later.' : 'On a later bar than the step before.'} · <StepStats result={result} bi={bi} si={k} data={data} /></span>
                 </div>
                 <div className="text-[15px]">
                   <RuleEditor cond={st.cond} keyword={k === 0 ? 'IF' : 'THEN'} ctx={ctxFor(bi, k)} side={br.side} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
