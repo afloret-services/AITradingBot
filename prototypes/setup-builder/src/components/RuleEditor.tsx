@@ -76,11 +76,10 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested }: { con
         </span>
         <div className="min-w-0 flex-1 basis-[calc(100%-6rem)] [@container(min-width:38rem)]:basis-0">
           {isPlainGroup(c)
-            ? <div className="flex items-start gap-1">
-                <span className="pt-0.5 text-lg leading-none text-sky-400/70">(</span>
-                <div className="min-w-0 flex-1 rounded-md border border-dashed border-sky-500/30 p-2"><RuleEditor cond={c} onChange={(x) => setLine(i, x)} ctx={ctx} side={side} nested /></div>
-                <span className="pt-0.5 text-lg leading-none text-sky-400/70">)</span>
-                <button title="remove the bracket" aria-label="remove the bracket" onClick={() => remove(i)} className="ml-1.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button>
+            ? <div className="rounded-md border border-dashed border-sky-500/40 bg-sky-500/[0.03]">
+                <div className="flex items-center gap-2 border-b border-dashed border-sky-500/30 px-2 py-1 text-[11px] text-sky-300/80"><span className="text-base leading-none">(</span>bracket: checked as one condition<button title="remove the bracket" aria-label="remove the bracket" onClick={() => remove(i)} className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button></div>
+                <div className="p-2"><RuleEditor cond={c} onChange={(x) => setLine(i, x)} ctx={ctx} side={side} nested /></div>
+                <div className="px-2 pb-1 text-base leading-none text-sky-300/80">)</div>
               </div>
             : <CondEditor cond={c} ctx={ctx} side={side} look="boxes" depth={1} onChange={(x) => setLine(i, x)} />}
         </div>

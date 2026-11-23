@@ -1,5 +1,17 @@
 // PROTOTYPE: shadcn/ui-styled primitives, hand-written so the prototype needs no generator.
 import React from 'react';
+import { createPortal } from 'react-dom';
+/** true below the sm breakpoint (640px), where pop-ups open as bottom sheets */
+export function usePhone() {
+  const q = '(max-width: 639px)';
+  const [m, setM] = React.useState(() => typeof window !== 'undefined' && window.matchMedia(q).matches);
+  React.useEffect(() => { const mq = window.matchMedia(q); const h = () => setM(mq.matches); mq.addEventListener('change', h); return () => mq.removeEventListener('change', h); }, []);
+  return m;
+}
+/** on a phone, draws its children at page level so a bottom sheet is pinned to the screen, not to the nearest container */
+export function Sheet({ phone, children }: { phone: boolean; children: React.ReactNode }) {
+  return phone ? createPortal(<div data-sheet>{children}</div>, document.body) : <>{children}</>;
+}
 export const cn = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
 
 export function Button({ variant = 'default', size = 'md', className, ...p }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'default' | 'outline' | 'ghost' | 'secondary' | 'destructive'; size?: 'sm' | 'md' | 'icon' }) {
