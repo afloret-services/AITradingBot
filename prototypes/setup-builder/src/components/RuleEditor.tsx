@@ -41,7 +41,7 @@ function runs(lines: Line[]) {
 /** AND / OR as a button: tap to switch */
 const JoinSelect = ({ value, onChange }: { value: Join; onChange: (j: Join) => void }) => (
   <button type="button" onClick={() => onChange(value === 'and' ? 'or' : 'and')} title={value === 'and' ? 'switch to OR' : 'switch to AND'}
-    className={cn('flex h-7 items-center gap-1 rounded-md border px-2 text-[11px] font-black uppercase tracking-wider transition-colors', value === 'and' ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25' : 'border-amber-500/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25')}>
+    className={cn('flex h-8 items-center gap-1 rounded-md border px-3 text-xs font-black uppercase tracking-wider transition-colors', value === 'and' ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25' : 'border-amber-500/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25')}>
     {value === 'and' ? 'And' : 'Or'} <span aria-hidden="true">⇄</span>
   </button>
 );
@@ -69,8 +69,8 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }
   const lineView = (l: Line, i: number) => {
     const c = l.cond;
     const lead = group ? <span className={cn('w-7 shrink-0 pt-1.5 text-[10px] font-bold uppercase tracking-wide', group === 'all' ? 'text-cyan-300/70' : 'text-amber-300/70')}>{i === 0 ? '' : group === 'all' ? 'and' : 'or'}</span>
-      : i === 0 ? (keyword ? <span className="w-14 shrink-0 pt-1 text-xs font-black tracking-wider text-sky-300">{keyword}</span> : <span className="w-14 shrink-0" />)
-      : <span className="w-14 shrink-0 pt-0.5">{l.join === 'and' ? <JoinSelect value="and" onChange={(j) => setJoin(i, j)} /> : null}</span>;
+      : i === 0 ? (keyword ? <span className="w-[4.5rem] shrink-0 pt-1 text-xs font-black tracking-wider text-sky-300">{keyword}</span> : <span className="w-[4.5rem] shrink-0" />)
+      : <span className="w-[4.5rem] shrink-0 pt-0.5">{l.join === 'and' ? <JoinSelect value="and" onChange={(j) => setJoin(i, j)} /> : null}</span>;
     return (
       <div key={c.id} className={cn('group/line flex flex-wrap items-start gap-2 rounded-md [@container(min-width:38rem)]:flex-nowrap', drag === i && 'opacity-40', over === i && drag != null && drag !== i && 'ring-1 ring-sky-400/60')}
         onDragOver={(e) => { if (drag != null) { e.preventDefault(); setOver(i); } }} onDragLeave={() => setOver((o) => (o === i ? null : o))}
@@ -79,7 +79,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }
         <span className="flex shrink-0 flex-col items-center gap-0.5 pt-0.5">
           <span draggable onDragStart={(e) => { setDrag(i); e.dataTransfer.effectAllowed = 'move'; }} onDragEnd={() => { setDrag(null); setOver(null); }} title="drag to reorder" className="flex h-7 w-5 cursor-grab items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground active:cursor-grabbing">⠿</span>
         </span>
-        <div className="min-w-0 flex-1 basis-[calc(100%-6rem)] [@container(min-width:38rem)]:basis-0">
+        <div className="min-w-0 flex-1 basis-[calc(100%-7.5rem)] [@container(min-width:38rem)]:basis-0">
           {isPlainGroup(c)
             ? (() => { const gt = (c as any).t as 'all' | 'any'; const all = gt === 'all'; return (
               <div className={cn('rounded-md border', all ? 'border-cyan-500/40 bg-cyan-500/[0.04]' : 'border-amber-500/40 bg-amber-500/[0.04]')}>
@@ -104,12 +104,12 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }
 
   return (
     <div className="space-y-1.5 [container-type:inline-size]">
-      {lines.length === 0 && <div className={cn('flex items-center gap-2', group && 'pl-9')}>{keyword && <span className="w-14 text-xs font-black tracking-wider text-sky-300">{keyword}</span>}<span className="text-xs italic text-muted-foreground">no condition yet: add one</span></div>}
+      {lines.length === 0 && <div className={cn('flex items-center gap-2', group && 'pl-9')}>{keyword && <span className="w-[4.5rem] text-xs font-black tracking-wider text-sky-300">{keyword}</span>}<span className="text-xs italic text-muted-foreground">no condition yet: add one</span></div>}
       {groups.map((g, gi) => (
         <React.Fragment key={g[0].line.cond.id}>
           {gi > 0 && (
             <div className="flex items-center gap-2 py-0.5">
-              <span className="w-14 shrink-0"><JoinSelect value="or" onChange={(j) => setJoin(g[0].idx, j)} /></span>
+              <span className="w-[4.5rem] shrink-0"><JoinSelect value="or" onChange={(j) => setJoin(g[0].idx, j)} /></span>
               <div className="h-px flex-1 bg-amber-500/25" />
             </div>
           )}
@@ -118,13 +118,13 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }
           </div>
         </React.Fragment>
       ))}
-      <div className={cn('flex flex-wrap items-center gap-1.5', group ? 'pl-9' : 'pl-16')}>
+      <div className={cn('flex flex-wrap items-center gap-1.5', group ? 'pl-9' : 'pl-[5.5rem]')}>
         <AddMenu ctx={ctx} side={side} onAdd={(c) => add(c, 'and')} label="+ Add" title={group ? 'add a condition to this group' : 'add a condition, joined with AND'} buttonClass="flex h-8 items-center rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" />
         {!group && lines.length > 0 && <AddMenu ctx={ctx} side={side} onAdd={(c) => add(c, 'or')} label="+ Or" title="add a condition joined with OR (starts a new box)" buttonClass="flex h-8 items-center rounded-md border border-amber-500/40 px-3 text-xs font-bold uppercase tracking-wider text-amber-300 transition-colors hover:bg-amber-500/15" />}
         <button className="flex h-8 items-center gap-1 rounded-md border border-cyan-500/50 bg-cyan-500/10 px-3 text-xs font-bold uppercase tracking-wider text-cyan-300 transition-colors hover:bg-cyan-500/20" onClick={() => add(newGroup('all'))} title="a group where every condition must hold"><span aria-hidden="true" className="text-sm leading-none">+</span>All of</button>
         <button className="flex h-8 items-center gap-1 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 text-xs font-bold uppercase tracking-wider text-amber-300 transition-colors hover:bg-amber-500/20" onClick={() => add(newGroup('any'))} title="a group where at least one condition must hold"><span aria-hidden="true" className="text-sm leading-none">+</span>Any of</button>
       </div>
-      {!nested && mixed && <div className="pl-16 text-[11px] text-muted-foreground">AND is checked before OR: each box must hold as a whole, and any one of the boxes is enough. Reads as: {condPhrase(cond, ctx.labels)}.</div>}
+      {!nested && mixed && <div className="pl-[5.5rem] text-[11px] text-muted-foreground">AND is checked before OR: each box must hold as a whole, and any one of the boxes is enough. Reads as: {condPhrase(cond, ctx.labels)}.</div>}
     </div>
   );
 }
