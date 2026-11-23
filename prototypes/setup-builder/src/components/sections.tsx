@@ -195,7 +195,7 @@ export function IndicatorList({ setup, mutate, ctx, usage }: { setup: Setup; mut
           {indHelp(ind.token) && <Hideable id="indicators:each" className="mt-1 pl-1 text-[11px] text-muted-foreground sm:-mt-0.5 sm:mb-1">{indHelp(ind.token)}</Hideable>}
         </div>
       ))}
-      <Button size="sm" variant="ghost" onClick={() => mutate((s) => { s.indicators.push({ token: `{{indicator:ema:200:${s.settings.base_bar}}}` }); })}>+ declare an indicator</Button>
+      <button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => mutate((s) => { s.indicators.push({ token: `{{indicator:ema:200:${s.settings.base_bar}}}` }); })}><span aria-hidden="true" className="text-sm leading-none">+</span>Configure an indicator</button>
     </div>
   );
 }
