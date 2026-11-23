@@ -30,7 +30,7 @@ export function signalEvents(data: Data, setup: Setup, s: Signal): ReplayEvent[]
   const t = s.trade;
   if (t?.fillI != null) ev.push({ i: t.fillI, label: `Filled at ${s.entry.toFixed(2)}`, tone: 'fill', color: C.entry });
   if (t?.cancelI != null) ev.push({ i: t.cancelI, label: t.outcome, tone: 'cancel', color: '#94a3b8' });
-  for (const x of dedupeExits(t?.exits || [])) ev.push({ i: x.i, label: `${x.why}${x.n > 1 ? ` (${x.n} legs)` : ''} · ${x.price.toFixed(2)}`, tone: 'exit', color: /stop/.test(x.why) ? C.risk : /TP|leg/i.test(x.why) ? C.reward : '#fbbf24' });
+  for (const x of dedupeExits(t?.exits || [])) ev.push({ i: x.i, label: `${x.why}${x.n > 1 ? ` (${x.n} take profits)` : ''} · ${x.price.toFixed(2)}`, tone: 'exit', color: /stop/.test(x.why) ? C.risk : /TP|leg/i.test(x.why) ? C.reward : '#fbbf24' });
   return ev;
 }
 

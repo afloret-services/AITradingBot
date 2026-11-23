@@ -434,7 +434,7 @@ function RunHelp_({ setup, what, instrument, overrides }: { setup: Setup; what: 
   }
   return (
     <HelpBox>
-      <div>A Run may replace <T>whole Trade-settings sections</T> (Risk per Trade, Stop, Take-profit legs, Break-even, Entry deadline, Expiry and Flatten time, Signal guards): pick Override and the section's full editor opens, starting from the Setup default. It cannot change part of a section, and it cannot touch the Signal steps, the Entry order or the In-position rules: those are the Setup version itself.</div>
+      <div>A Run may replace <T>whole Trade-settings sections</T> (Risk per Trade, Stop, Take profits, Break-even, Entry deadline, Expiry and Flatten time, Signal guards): pick Override and the section's full editor opens, starting from the Setup default. It cannot change part of a section, and it cannot touch the Signal steps, the Entry order or the In-position rules: those are the Setup version itself.</div>
       <div>Overrides make <T>no new version</T>, so a Promoted version stays promoted. When a section is overridden, the line below it shows the Run's value, and the comparison at the bottom re-runs the Setup on the MNQ bars with and without the overrides.{overrides ? <> Here: {B(`${overrides} section${overrides === 1 ? '' : 's'}`)} overridden.</> : <> Here: {B('no override')}; the Run trades the Setup defaults.</>}</div>
     </HelpBox>
   );
@@ -462,7 +462,7 @@ function ReviewHelp_({ setup, what, issues, result, versions }: { setup: Setup; 
     const e = (issues || []).filter((i) => i.level === 'error').length, w = (issues || []).length - e;
     return (
       <HelpBox>
-        <div><span className="text-red-300">✕ Errors</span> block Freeze: something the engine cannot run (no stop, a value read before a step captures it, a timeframe finer than the Base bar…). <span className="text-amber-300">! Warnings</span> do not: the Draft still saves and freezes, but have a look (an unused pattern, leg shares that do not add up to 100%…).</div>
+        <div><span className="text-red-300">✕ Errors</span> block Freeze: something the engine cannot run (no stop, a value read before a step captures it, a timeframe finer than the Base bar…). <span className="text-amber-300">! Warnings</span> do not: the Draft still saves and freezes, but have a look (an unused pattern, take-profit shares that do not add up to 100%…).</div>
         <div>Here: {e || w ? <>{B(`${e} error${e === 1 ? '' : 's'}`)} and {B(`${w} warning${w === 1 ? '' : 's'}`)}.</> : B('nothing to fix, ready to freeze.')}</div>
       </HelpBox>
     );
@@ -586,7 +586,7 @@ function EntryHelp_({ setup, bi, result, data }: { setup: Setup; bi: number; res
   return (
     <HelpBox>
       <div><span className="font-medium text-foreground">Order.</span> {ORDER_HELP[e.order](long)}</div>
-      <div><span className="font-medium text-foreground">Stop.</span> Placed {long ? 'below' : 'above'} a level the Setup reads (a captured low or high, a pattern edge…) by an offset: in ticks (on MNQ a tick is 0.25 points) or in × ATR, so it widens when the market is more volatile. The distance from the entry to the stop is the risk, 1R: it sizes the contracts and sets R-multiple legs. An Entry cannot be saved without a stop.</div>
+      <div><span className="font-medium text-foreground">Stop.</span> Placed {long ? 'below' : 'above'} a level the Setup reads (a captured low or high, a pattern edge…) by an offset: in ticks (on MNQ a tick is 0.25 points) or in × ATR, so it widens when the market is more volatile. The distance from the entry to the stop is the risk, 1R: it sizes the contracts and sets R-multiple take profits. An Entry cannot be saved without a stop.</div>
       <div>Here: {e.order === 'market' ? B('at market') : <>a {B(e.order === 'limit' ? 'limit' : 'stop entry')} at {B(phrase(e.price || '?', labels))}</>}, stop {B(`${e.stop.offset} ${e.stop.unit === 'atr' ? '× ' + phrase(e.stop.atr || 'the ATR', labels) : e.stop.offset === 1 ? 'tick' : 'ticks'}`)} {long ? 'below' : 'above'} {B(phrase(e.stop.token || '?', labels))}{e.stop.unit === 'ticks' ? ` (${(e.stop.offset * 0.25).toFixed(2)} points)` : ''}.
         {sig && data && <> On its latest Signal ({when.slice(5, 10)} {when.slice(11, 16)} NY): entry {B(sig.entry.toFixed(2))}, stop {B(sig.stop.toFixed(2))}, so {B(`${Math.abs(sig.entry - sig.stop).toFixed(2)} points`)} of risk and {B(`${contracts} contract${contracts === 1 ? '' : 's'}`)}.</>}
         {!sig && result && <> No Signal of this branch was traded on these bars yet.</>}
@@ -639,7 +639,7 @@ export function sectionSummary(s: Setup, k: SectionKey): string {
     case 'risk': return `${v.pct}% of $${v.capital}, max ${v.max_contracts} contracts`;
     case 'stop': return v.map((x: any) => `${x.offset} ${x.unit === 'atr' ? '× ATR' : 'ticks'} beyond ${shortName(x.token, {}) || '?'}`).join(' / ');
     case 'legs': return v.legs.map((l: Leg) => `${l.name} ${l.rule === 'r' ? l.r + 'R' : l.rule === 'fraction' ? (l.fraction ?? 0) * 100 + '% to ' + shortName(l.level || '', {}) : shortName(l.level || '', {}) + (l.offset_ticks ? ` −${l.offset_ticks}t` : '')} ${Math.round(l.share * 100)}%`).join(', ') + `; leftover to ${v.leftover}`;
-    case 'break_even': return v.trigger === 'off' ? 'off' : v.trigger === 'after_leg' ? `after leg ${v.k}, +${v.offset_ticks} ticks` : `at +${v.r}R, +${v.offset_ticks} ticks`;
+    case 'break_even': return v.trigger === 'off' ? 'off' : v.trigger === 'after_leg' ? `after TP${v.k}, +${v.offset_ticks} ticks` : `at +${v.r}R, +${v.offset_ticks} ticks`;
     case 'entry_deadline': return `${v.entry_deadline.kind === 'clock' ? 'at ' + v.entry_deadline.value : v.entry_deadline.kind === 'bars' ? v.entry_deadline.value + ' Base bars' : v.entry_deadline.kind.replace(/_/g, ' ')}; cancel if ${v.cancel_if.join(', ') || 'nothing'} reached first`;
     case 'expiry_and_flatten': return `${v.expiry ? 'exit at ' + v.expiry + ', ' : ''}flatten ${v.flatten_time}`;
     case 'signal_guards': return v.map((g: Guard) => (g.kind === 'max_stop' ? `stop ≤ ${g.n} ${g.unit === 'atr' ? '× ATR' : 'ticks'}` : `reward:risk ≥ ${g.n}`)).join(', ') || 'none';
@@ -671,13 +671,13 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
             <button className="text-muted-foreground hover:text-red-400" onClick={() => onChange({ ...value, legs: value.legs.filter((_: Leg, j: number) => j !== i) })}>×</button>
           </div>
         ))}
-        <div className="flex items-center gap-2"><Button size="sm" variant="ghost" onClick={() => onChange({ ...value, legs: [...value.legs, { name: `TP${value.legs.length + 1}`, rule: 'r', r: 3, share: 0 }] })}>+ leg</Button>
-          <span className="text-xs text-muted-foreground">leftover contracts to the</span><Select value={value.leftover} onChange={(v) => onChange({ ...value, leftover: v })} options={[['first', 'first legs'], ['last', 'last legs']]} className="h-7" /></div>
+        <div className="flex items-center gap-2"><Button size="sm" variant="ghost" onClick={() => onChange({ ...value, legs: [...value.legs, { name: `TP${value.legs.length + 1}`, rule: 'r', r: 3, share: 0 }] })}>+ take profit</Button>
+          <span className="text-xs text-muted-foreground">leftover contracts to the</span><Select value={value.leftover} onChange={(v) => onChange({ ...value, leftover: v })} options={[['first', 'first take profits'], ['last', 'last take profits']]} className="h-7" /></div>
       </div>
     );
     case 'break_even': return (
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Select value={value.trigger} onChange={(t) => onChange({ ...value, trigger: t, k: value.k ?? 1, r: value.r ?? 1 })} options={[['off', 'off'], ['after_leg', 'after leg k fills'], ['at_r', 'once price reaches +X R']]} />
+        <Select value={value.trigger} onChange={(t) => onChange({ ...value, trigger: t, k: value.k ?? 1, r: value.r ?? 1 })} options={[['off', 'off'], ['after_leg', 'after take profit k fills'], ['at_r', 'once price reaches +X R']]} />
         {value.trigger === 'after_leg' && <>k <NumInput value={value.k} onChange={(n) => onChange({ ...value, k: n })} className="w-14" /></>}
         {value.trigger === 'at_r' && <>X <NumInput step={0.25} value={value.r} onChange={(n) => onChange({ ...value, r: n })} className="w-14" />R</>}
         {value.trigger !== 'off' && <>offset <NumInput value={value.offset_ticks} onChange={(n) => onChange({ ...value, offset_ticks: n })} className="w-14" /> ticks</>}
@@ -689,7 +689,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
         <Select value={value.entry_deadline.kind} onChange={(kk) => onChange({ ...value, entry_deadline: { kind: kk, value: kk === 'clock' ? '11:00' : kk === 'bars' ? '3' : '' } })} options={[['clock', 'a NY clock time'], ['bars', 'N Base bars after the Signal'], ['end_of_hours', 'end of Trading hours'], ['end_of_day', 'end of the Trading day']]} />
         {(value.entry_deadline.kind === 'clock' || value.entry_deadline.kind === 'bars') && <Input value={value.entry_deadline.value} onChange={(e) => onChange({ ...value, entry_deadline: { ...value.entry_deadline, value: e.target.value } })} className="w-16" />}
         <span className="text-xs text-muted-foreground">cancel if reached first:</span>
-        {(['stop', 'first_leg', 'draw'] as const).map((c) => <label key={c} className="flex items-center gap-1 text-xs"><input type="checkbox" checked={value.cancel_if.includes(c)} onChange={(e) => onChange({ ...value, cancel_if: e.target.checked ? [...value.cancel_if, c] : value.cancel_if.filter((x: string) => x !== c) })} />{c.replace('_', ' ')}</label>)}
+        {(['stop', 'first_leg', 'draw'] as const).map((c) => <label key={c} className="flex items-center gap-1 text-xs"><input type="checkbox" checked={value.cancel_if.includes(c)} onChange={(e) => onChange({ ...value, cancel_if: e.target.checked ? [...value.cancel_if, c] : value.cancel_if.filter((x: string) => x !== c) })} />{(c === 'first_leg' ? 'first take profit' : c)}</label>)}
       </div>
     );
     case 'expiry_and_flatten': return (
@@ -719,12 +719,12 @@ const PV = 2; // MNQ $ per point: the preview instrument (the real one is chosen
 const SECTION_HELP: Record<SectionKey | 'in_position', string> = {
   risk: "How many contracts a Signal trades. Contracts = Capital × Risk per Trade % ÷ (stop distance × the instrument's $ per point), rounded down and capped at Max contracts. If even 1 contract would risk more than that, the Signal is refused (\"stop too wide\").",
   stop: 'Where the protective stop sits: a value the Setup reads (a captured low, a pattern edge…) plus an offset in ticks or in × ATR, on the far side from the entry. Every Entry must have one.',
-  legs: "The Trade is split into legs, each with its own take-profit. R multiple: entry ± k × the stop distance. Level ± ticks: a price the Setup reads, e.g. the Draw on liquidity, stopping N ticks short so it fills before the level. Fraction: that part of the way from the entry to a level. Share: the part of the contracts each leg closes; contracts that don't divide evenly go to the first or the last legs.",
-  break_even: 'Moves the stop to the entry (plus an offset in ticks, toward profit) so the rest of the Trade can no longer lose. After leg k: once leg k has filled. At +X R: once price first reaches X times the stop distance in profit. The stop only ever moves toward profit.',
-  entry_deadline: "How long a limit or stop entry may wait for its fill; after that it is cancelled. A market entry fills at the next bar's open and ignores the deadline. \"Cancel if reached first\": if price touches the stop, the first leg or the Draw on liquidity before filling, the entry is cancelled, because the move already happened without you.",
-  expiry_and_flatten: 'Exit open Trades at (optional): any Trade still open at this New York time is closed at market. Flatten time (mandatory): the hard end of the day for this Setup; every position still open is closed at market, whatever its legs and stop.',
-  signal_guards: "Last checks on a Signal before any order. A refused Signal is logged with its reason and opens no Trade. Max stop: refuse when the stop is wider than N ticks or N × ATR (checked before sizing). Min reward:risk: refuse when the legs' average reward, weighted by contracts, divided by the risk is below N.",
-  in_position: "Checked at every Base-bar close while a Trade is open. When a rule holds, its action runs at the next bar's open: close the whole Trade, close one leg, move the stop, or cancel an entry still waiting. Each rule belongs to a branch, and a Run cannot override them.",
+  legs: "The Trade can be closed in parts, each part with its own take profit (TP1, TP2…). R multiple: entry ± k × the stop distance. Level ± ticks: a price the Setup reads, e.g. the Draw on liquidity, stopping N ticks short so it fills before the level. Fraction: that part of the way from the entry to a level. Share: the part of the contracts each take profit closes; contracts that don't divide evenly go to the first or the last take profits.",
+  break_even: 'Moves the stop to the entry (plus an offset in ticks, toward profit) so the rest of the Trade can no longer lose. After take profit k: once TP k has filled. At +X R: once price first reaches X times the stop distance in profit. The stop only ever moves toward profit.',
+  entry_deadline: "How long a limit or stop entry may wait for its fill; after that it is cancelled. A market entry fills at the next bar's open and ignores the deadline. \"Cancel if reached first\": if price touches the stop, the first take profit or the Draw on liquidity before filling, the entry is cancelled, because the move already happened without you.",
+  expiry_and_flatten: 'Exit open Trades at (optional): any Trade still open at this New York time is closed at market. Flatten time (mandatory): the hard end of the day for this Setup; every position still open is closed at market, whatever its take profits and stop.',
+  signal_guards: "Last checks on a Signal before any order. A refused Signal is logged with its reason and opens no Trade. Max stop: refuse when the stop is wider than N ticks or N × ATR (checked before sizing). Min reward:risk: refuse when the take profits' average reward, weighted by contracts, divided by the risk is below N.",
+  in_position: "Checked at every Base-bar close while a Trade is open. When a rule holds, its action runs at the next bar's open: close the whole Trade, close one take profit, move the stop, or cancel an entry still waiting. Each rule belongs to a branch, and a Run cannot override them.",
 };
 function splitN(n: number, legs: Leg[], leftover: 'first' | 'last') {
   const out = legs.map((l) => Math.floor(n * l.share));
@@ -743,18 +743,18 @@ function sectionExample(setup: Setup, k: SectionKey | 'in_position'): React.Reac
     case 'risk': return <>Here: {B(`$${ts.risk.capital} × ${ts.risk.pct}% = $${budget.toFixed(0)}`)} per Trade. With a 20-point stop on MNQ ($2 a point), 1 contract risks $40, so the Signal trades {B(`${contracts} contract${contracts === 1 ? '' : 's'}`)}{raw > ts.risk.max_contracts ? ' (capped by Max contracts)' : ''}. A stop wider than {B(`${(budget / PV).toFixed(0)} points`)} is refused.</>;
     case 'legs': {
       const n = contracts || 1, sp = splitN(n, ts.legs, ts.leftover);
-      return <>Here, with {B(n)} contract{n === 1 ? '' : 's'} (a 20-point stop): {ts.legs.map((l, i) => <span key={i}>{i > 0 && ', '}{B(`${l.name} ×${sp[i]}`)} {l.rule === 'r' ? `at ${l.r}R, ${((l.r || 0) * stopPts).toFixed(0)} points away` : l.rule === 'fraction' ? `${Math.round((l.fraction || 0) * 100)}% of the way to the level` : `${l.offset_ticks || 0} tick${(l.offset_ticks || 0) === 1 ? '' : 's'} before the level`}</span>)}.{sp.some((x) => x === 0) ? ' A leg with 0 contracts is skipped.' : ''}</>;
+      return <>Here, with {B(n)} contract{n === 1 ? '' : 's'} (a 20-point stop): {ts.legs.map((l, i) => <span key={i}>{i > 0 && ', '}{B(`${l.name} ×${sp[i]}`)} {l.rule === 'r' ? `at ${l.r}R, ${((l.r || 0) * stopPts).toFixed(0)} points away` : l.rule === 'fraction' ? `${Math.round((l.fraction || 0) * 100)}% of the way to the level` : `${l.offset_ticks || 0} tick${(l.offset_ticks || 0) === 1 ? '' : 's'} before the level`}</span>)}.{sp.some((x) => x === 0) ? ' A take profit with 0 contracts is skipped.' : ''}</>;
     }
     case 'break_even': {
       const be = ts.break_even, off = be.offset_ticks ? ` + ${be.offset_ticks} ticks` : '';
       if (be.trigger === 'off') return <>Here: {B('off')}; the stop stays where it was placed.</>;
-      if (be.trigger === 'after_leg') return <>Here: when {B(ts.legs[(be.k || 1) - 1]?.name || `leg ${be.k}`)} fills, the stop moves to the entry{off}.</>;
+      if (be.trigger === 'after_leg') return <>Here: when {B(ts.legs[(be.k || 1) - 1]?.name || `TP${be.k}`)} fills, the stop moves to the entry{off}.</>;
       return <>Here: once price is {B(`+${be.r}R`)} ({((be.r || 1) * stopPts).toFixed(0)} points with a 20-point stop), the stop moves to the entry{off}.</>;
     }
     case 'entry_deadline': {
       const d = ts.entry_deadline;
       const wait = d.kind === 'clock' ? `until ${d.value} NY` : d.kind === 'bars' ? `${d.value} Base bars (${Number(d.value) * tfMinutes(setup.settings.base_bar)} minutes)` : d.kind === 'end_of_hours' ? 'until the Trading hours end' : 'until the Trading day ends';
-      return <>Here: the entry waits {B(wait)}{ts.cancel_if.length ? <>, and is cancelled earlier if the {B(ts.cancel_if.map((c) => c.replace('_', ' ')).join(' or '))} is reached first</> : ''}.{setup.branches.every((b) => b.entry.order === 'market') ? ' This Setup enters at market, so the deadline never comes into play.' : ''}</>;
+      return <>Here: the entry waits {B(wait)}{ts.cancel_if.length ? <>, and is cancelled earlier if the {B(ts.cancel_if.map((c) => (c === 'first_leg' ? 'first take profit' : c)).join(' or '))} is reached first</> : ''}.{setup.branches.every((b) => b.entry.order === 'market') ? ' This Setup enters at market, so the deadline never comes into play.' : ''}</>;
     }
     case 'expiry_and_flatten': return <>Here: {ts.expiry ? <>Trades still open at {B(ts.expiry)} are closed, and </> : ''}everything is flat by {B(ts.flatten_time)} NY.</>;
     case 'signal_guards': return ts.signal_guards.length
@@ -790,7 +790,7 @@ export function InPositionRules({ setup, mutate, ctx, look }: { setup: Setup; mu
         <div key={r.id} className="space-y-1 rounded-md border p-2">
           <div className="flex flex-wrap items-center gap-1.5 text-sm"><span className="text-muted-foreground">At each Base-bar close while in a Trade, when</span>
             <span className="ml-auto flex items-center gap-1"><span className="text-muted-foreground">then</span>
-              <Select value={r.action} onChange={(a) => mutate((s) => { s.in_position_rules[i].action = a; })} options={[['close_trade', 'close the Trade'], ['close_leg', 'close leg k'], ['move_stop', 'move stop (tighten only)'], ['cancel_entry', 'cancel the resting entry']]} className="h-7" />
+              <Select value={r.action} onChange={(a) => mutate((s) => { s.in_position_rules[i].action = a; })} options={[['close_trade', 'close the Trade'], ['close_leg', 'close take profit k'], ['move_stop', 'move stop (tighten only)'], ['cancel_entry', 'cancel the resting entry']]} className="h-7" />
               {r.action === 'close_leg' && <NumInput value={r.leg} onChange={(n) => mutate((s) => { s.in_position_rules[i].leg = n; })} className="h-7 w-12" />}
               <button className="text-muted-foreground hover:text-red-400" onClick={() => mutate((s) => { s.in_position_rules.splice(i, 1); })}>×</button></span>
           </div>

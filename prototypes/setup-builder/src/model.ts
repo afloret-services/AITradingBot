@@ -243,7 +243,7 @@ export interface Setup {
   in_position_rules: InPositionRule[];
 }
 export const SECTION_NAMES: Record<string, string> = {
-  risk: 'Risk per Trade', stop: 'Stop', legs: 'Take-profit legs', break_even: 'Break-even', entry_deadline: 'Entry deadline', expiry_and_flatten: 'Expiry and Flatten time', signal_guards: 'Signal guards',
+  risk: 'Risk per Trade', stop: 'Stop', legs: 'Take profits', break_even: 'Break-even', entry_deadline: 'Entry deadline', expiry_and_flatten: 'Expiry and Flatten time', signal_guards: 'Signal guards',
 };
 
 let seq = 1;
@@ -345,8 +345,8 @@ export function ruleDescription(s: Setup): string {
     lines.push(`  Enter ${e.order === 'market' ? "at market at the next bar's open" : `with a ${e.order} at ${phrase(e.price || '?', labels)}`}; stop ${e.stop.offset} ${e.stop.unit === 'atr' ? `× ${phrase(e.stop.atr || '?', labels)}` : 'ticks'} beyond ${phrase(e.stop.token || '?', labels)}.`);
   }
   const ts = s.trade_settings;
-  lines.push(`Legs: ${ts.legs.map((l) => `${l.name} ${l.rule === 'r' ? `at ${l.r}R` : l.rule === 'fraction' ? `${(l.fraction ?? 0) * 100}% of the way to ${phrase(l.level || '?')}` : `${l.offset_ticks ? `${l.offset_ticks} tick${l.offset_ticks === 1 ? "" : "s"} before ` : 'at '}${phrase(l.level || '?')}`} (${Math.round(l.share * 100)}%)`).join('; ')}.`);
-  for (const r of s.in_position_rules) lines.push(`While in a Trade: when ${condPhrase(r.when, labels)}, ${r.action === 'close_trade' ? 'close the Trade' : r.action === 'close_leg' ? `close leg ${r.leg}` : r.action.replace('_', ' ')}.`);
+  lines.push(`Take profits: ${ts.legs.map((l) => `${l.name} ${l.rule === 'r' ? `at ${l.r}R` : l.rule === 'fraction' ? `${(l.fraction ?? 0) * 100}% of the way to ${phrase(l.level || '?')}` : `${l.offset_ticks ? `${l.offset_ticks} tick${l.offset_ticks === 1 ? "" : "s"} before ` : 'at '}${phrase(l.level || '?')}`} (${Math.round(l.share * 100)}%)`).join('; ')}.`);
+  for (const r of s.in_position_rules) lines.push(`While in a Trade: when ${condPhrase(r.when, labels)}, ${r.action === 'close_trade' ? 'close the Trade' : r.action === 'close_leg' ? `close take profit ${r.leg}` : r.action.replace('_', ' ')}.`);
   return lines.join('\n');
 }
 
@@ -473,9 +473,9 @@ export function validate(s: Setup): Issue[] {
     readCap(br.entry.price); readCap(br.entry.stop.token);
   });
   const ts = s.trade_settings;
-  if (!ts.legs.length) out.push({ level: 'error', where: 'Trade settings', text: 'At least one Take-profit leg is needed.' });
+  if (!ts.legs.length) out.push({ level: 'error', where: 'Trade settings', text: 'At least one take profit is needed.' });
   const share = ts.legs.reduce((a, l) => a + l.share, 0);
-  if (ts.legs.length && Math.abs(share - 1) > 0.001) out.push({ level: 'warning', where: 'Take-profit legs', text: `Leg shares add up to ${Math.round(share * 100)}%; leftover contracts go to the ${ts.leftover} legs.` });
+  if (ts.legs.length && Math.abs(share - 1) > 0.001) out.push({ level: 'warning', where: 'Take profits', text: `Take-profit shares add up to ${Math.round(share * 100)}%; leftover contracts go to the ${ts.leftover} take profits.` });
   if (!ts.flatten_time) out.push({ level: 'error', where: 'Expiry and Flatten time', text: 'A Flatten time is mandatory.' });
   if (!ts.entry_deadline.value && ts.entry_deadline.kind !== 'end_of_day' && ts.entry_deadline.kind !== 'end_of_hours') out.push({ level: 'error', where: 'Entry deadline', text: 'The entry deadline is mandatory.' });
   return out;
