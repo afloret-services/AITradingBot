@@ -1013,7 +1013,7 @@ function makeSignal(data: Data, setup: Setup, br: Branch, bi: number, i: number,
   if (rrGuard) {
     const tot = sig.legs.reduce((s, l) => s + l.contracts, 0);
     const rr = sig.legs.reduce((s, l) => s + (l.contracts * Math.abs(l.price - entry)) / risk, 0) / (tot || 1);
-    if (rr < rrGuard.n - 1e-9) { sig.refused = `reward:risk ${rr.toFixed(2)} below ${rrGuard.n}`; return sig; }
+    if (rr < rrGuard.n - 1e-9) { sig.refused = `reward only ${rr.toFixed(2)} × the risk, under ${rrGuard.n}`; return sig; }
   }
   sig.trade = simulate(data, setup, br, sig, base, p);
   return sig;

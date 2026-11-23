@@ -642,7 +642,7 @@ export function sectionSummary(s: Setup, k: SectionKey): string {
     case 'break_even': return v.trigger === 'off' ? 'never' : `${v.trigger === 'after_leg' ? `after TP${v.k} fills` : `once +${v.r}R in profit`}${v.offset_ticks ? `, lock in ${v.offset_ticks} ticks` : ''}`;
     case 'entry_deadline': return `${v.entry_deadline.kind === 'clock' ? 'wait until ' + v.entry_deadline.value : v.entry_deadline.kind === 'bars' ? 'wait ' + v.entry_deadline.value + ' Base bars' : v.entry_deadline.kind === 'end_of_hours' ? 'wait until the Trading window closes' : 'wait until the Trading day ends'}; ${v.cancel_if.length ? 'cancel if price reaches ' + v.cancel_if.map((c: string) => (c === 'first_leg' ? 'TP1' : c === 'stop' ? 'the stop' : 'the Draw')).join(' or ') + ' first' : 'no early cancel'}`;
     case 'expiry_and_flatten': return `${v.expiry ? 'exit at ' + v.expiry + ', ' : ''}flatten ${v.flatten_time}`;
-    case 'signal_guards': return v.map((g: Guard) => (g.kind === 'max_stop' ? `stop ≤ ${g.n} ${g.unit === 'atr' ? '× ATR' : 'ticks'}` : `reward:risk ≥ ${g.n}`)).join(', ') || 'none';
+    case 'signal_guards': return v.map((g: Guard) => (g.kind === 'max_stop' ? `skip if stop > ${g.n} ${g.unit === 'atr' ? '× ATR' : 'ticks'}` : `skip if reward < ${g.n} × risk`)).join(', ') || 'none';
   }
 }
 
@@ -701,15 +701,15 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
     case 'signal_guards': return (
       <div className="space-y-1.5 text-sm">
         {value.map((g: Guard, i: number) => (
-          <div key={i} className="flex flex-wrap items-center gap-1.5">refuse the Signal if{' '}
+          <div key={i} className="flex flex-wrap items-center gap-1.5">Skip if{' '}
             {g.kind === 'max_stop' ? <>the stop is wider than <NumInput step={0.5} value={g.n} onChange={(n) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, n } : x)))} className="h-7 w-14" />
               <Select value={g.unit || 'ticks'} onChange={(u) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, unit: u } : x)))} options={[['ticks', 'ticks'], ['atr', '× ATR']]} className="h-7" />
               {g.unit === 'atr' && <TokenPicker value={g.atr || ''} ctx={ctx} compact onChange={(a) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, atr: a } : x)))} />}</>
-              : <>reward:risk is below <NumInput step={0.1} value={g.n} onChange={(n) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, n } : x)))} className="h-7 w-14" /></>}
+              : <>the reward is under <NumInput step={0.1} value={g.n} onChange={(n) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, n } : x)))} className="h-7 w-14" /> × the risk</>}
             <button className="text-muted-foreground hover:text-red-400" onClick={() => onChange(value.filter((_: Guard, j: number) => j !== i))}>×</button>
           </div>
         ))}
-        <div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => onChange([...value, { kind: 'max_stop', n: 40, unit: 'ticks' }])}>+ max stop</Button><Button size="sm" variant="ghost" onClick={() => onChange([...value, { kind: 'min_rr', n: 1 }])}>+ min reward:risk</Button></div>
+        <div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => onChange([...value, { kind: 'max_stop', n: 40, unit: 'ticks' }])}>+ Stop too wide</Button><Button size="sm" variant="ghost" onClick={() => onChange([...value, { kind: 'min_rr', n: 1 }])}>+ Reward too small</Button></div>
       </div>
     );
   }
@@ -723,7 +723,7 @@ const SECTION_HELP: Record<SectionKey | 'in_position', string> = {
   break_even: 'Moves the stop to the entry so the rest of the Trade can no longer lose; "lock in N ticks" puts it N ticks past the entry, toward profit. Never: the stop stays where it was placed. After TP k fills: once that take profit has filled. Once price is +X R in profit: once price first reaches X times the stop distance in profit. The stop only ever moves toward profit.',
   entry_deadline: "How long a limit or stop entry may wait for its fill; after that it is cancelled. A market entry fills at the next bar's open and ignores the deadline. \"Cancel if price reaches first\": if price touches the stop, TP1 or the Draw on liquidity before filling, the entry is cancelled, because the move already happened without you.",
   expiry_and_flatten: 'Exit open Trades at (optional): any Trade still open at this New York time is closed at market. Flatten time (mandatory): the hard end of the day for this Setup; every position still open is closed at market, whatever its take profits and stop.',
-  signal_guards: "Last checks on a Signal before any order. A refused Signal is logged with its reason and opens no Trade. Max stop: refuse when the stop is wider than N ticks or N × ATR (checked before sizing). Min reward:risk: refuse when the take profits' average reward, weighted by contracts, divided by the risk is below N.",
+  signal_guards: "Last checks on a Signal before any order. A refused Signal is logged with its reason and opens no Trade. Skip if the stop is wider than N ticks or N × ATR (checked before sizing). Skip if the reward is under N × the risk: the take profits' average reward, weighted by contracts, divided by the risk.",
   in_position: "Checked at every Base-bar close while a Trade is open. When a rule holds, its action runs at the next bar's open: close the whole Trade, close one take profit, move the stop, or cancel an entry still waiting. Each rule belongs to a branch, and a Run cannot override them.",
 };
 function splitN(n: number, legs: Leg[], leftover: 'first' | 'last') {
@@ -758,7 +758,7 @@ function sectionExample(setup: Setup, k: SectionKey | 'in_position'): React.Reac
     }
     case 'expiry_and_flatten': return <>Here: {ts.expiry ? <>Trades still open at {B(ts.expiry)} are closed, and </> : ''}everything is flat by {B(ts.flatten_time)} NY.</>;
     case 'signal_guards': return ts.signal_guards.length
-      ? <>Here: {ts.signal_guards.map((g, i) => <span key={i}>{i > 0 && '; '}{B(g.kind === 'max_stop' ? `stop ≤ ${g.n} ${g.unit === 'atr' ? '× ATR' : 'ticks'}` : `reward:risk ≥ ${g.n}`)}{g.kind === 'max_stop' && g.unit !== 'atr' ? ` (${(g.n * 0.25).toFixed(2)} points)` : g.kind === 'min_rr' ? ` (a 20-point stop needs ${(g.n * stopPts).toFixed(0)} points of average reward)` : ''}</span>)}.</>
+      ? <>Here: {ts.signal_guards.map((g, i) => <span key={i}>{i > 0 && '; '}{B(g.kind === 'max_stop' ? `skip if the stop is wider than ${g.n} ${g.unit === 'atr' ? '× ATR' : 'ticks'}` : `skip if the reward is under ${g.n} × the risk`)}{g.kind === 'max_stop' && g.unit !== 'atr' ? ` (${(g.n * 0.25).toFixed(2)} points)` : g.kind === 'min_rr' ? ` (a 20-point stop needs ${(g.n * stopPts).toFixed(0)} points of average reward)` : ''}</span>)}.</>
       : <>Here: {B('no guards')}; every Signal that can be sized is traded.</>;
     case 'in_position': return <>Here: {B(`${setup.in_position_rules.length} rule${setup.in_position_rules.length === 1 ? '' : 's'}`)}.</>;
     default: return null;
