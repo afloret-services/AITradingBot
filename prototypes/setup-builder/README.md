@@ -51,6 +51,18 @@ A rough evaluator, not the engine. It exists so each step shows its effect on re
 5. **Trading-day expiry of Candidates loses EMA 200 + MACD Signals** whose pullback spans 18:00. This needs a per-Setup (or per-step) "keeps across the Trading-day start" option.
 6. **Guard order:** the stop-width Signal guard is checked before sizing, so the refusal reason matches the lab's.
 
+## Open questions (awaiting your answers)
+
+The ticket resolves once these are answered; the same list is on the ticket's prototype comment.
+
+1. Which design wins: A Wizard, B Inline, C Lanes or D Document?
+2. Steps in a fixed order, or edit them in any order?
+3. Indicators: declared up front (A, C) or on first use (B, D)?
+4. A Run's overrides: a per-section choice (A, B), a side-by-side table (D) or in place on the cards (C)?
+5. Should a Candidate survive the 18:00 Trading-day start?
+
+The letters were reordered on 2026-11-23: earlier B was Document and D was Inline.
+
 ## Decided so far (your answers while trying it)
 
 - Patterns are declared up front, like indicators, then used by name in steps.
