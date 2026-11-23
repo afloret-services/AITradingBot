@@ -84,7 +84,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }
             ? (() => { const gt = (c as any).t as 'all' | 'any'; const all = gt === 'all'; return (
               <div className={cn('rounded-md border', all ? 'border-cyan-500/40 bg-cyan-500/[0.04]' : 'border-amber-500/40 bg-amber-500/[0.04]')}>
                 <div className={cn('flex flex-wrap items-center gap-2 border-b px-2 py-1 text-[11px]', all ? 'border-cyan-500/25' : 'border-amber-500/25')}>
-                  <button onClick={() => setLine(i, { ...(c as any), t: all ? 'any' : 'all' })} title="switch between ALL OF and ANY OF" className={cn('h-7 rounded-md border px-2 text-xs font-black uppercase tracking-wider', all ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300' : 'border-amber-500/50 bg-amber-500/15 text-amber-300')}>{all ? 'All of' : 'Any of'} ⇄</button>
+                  <button onClick={() => setLine(i, { ...(c as any), t: all ? 'any' : 'all' })} title="switch between ALL OF and ANY OF" className={cn('h-8 rounded-md border px-3 text-sm font-black uppercase tracking-wider', all ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300' : 'border-amber-500/50 bg-amber-500/15 text-amber-300')}>{all ? 'All of' : 'Any of'} ⇄</button>
                   <span className="text-muted-foreground">{all ? 'every condition below must hold' : 'at least one condition below must hold'}</span>
                   <button title="remove this group" aria-label="remove this group" onClick={() => remove(i)} className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button>
                 </div>
@@ -118,11 +118,11 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }
           </div>
         </React.Fragment>
       ))}
-      <div className={cn('flex flex-wrap items-center gap-1', group ? 'pl-9' : 'pl-16')}>
+      <div className={cn('flex flex-wrap items-center gap-1.5', group ? 'pl-9' : 'pl-16')}>
         <AddMenu ctx={ctx} side={side} onAdd={(c) => add(c, 'and')} small />
         {!group && lines.length > 0 && <AddMenu ctx={ctx} side={side} onAdd={(c) => add(c, 'or')} small label="+ or" />}
-        <button className="h-6 rounded px-1.5 text-xs text-cyan-300 hover:bg-accent" onClick={() => add(newGroup('all'))} title="a group where every condition must hold">+ all of</button>
-        <button className="h-6 rounded px-1.5 text-xs text-amber-300 hover:bg-accent" onClick={() => add(newGroup('any'))} title="a group where at least one condition must hold">+ any of</button>
+        <button className="ml-1 flex h-8 items-center gap-1 rounded-md border border-cyan-500/50 bg-cyan-500/10 px-3 text-xs font-bold uppercase tracking-wider text-cyan-300 transition-colors hover:bg-cyan-500/20" onClick={() => add(newGroup('all'))} title="a group where every condition must hold"><span aria-hidden="true" className="text-sm leading-none">+</span>All of</button>
+        <button className="flex h-8 items-center gap-1 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 text-xs font-bold uppercase tracking-wider text-amber-300 transition-colors hover:bg-amber-500/20" onClick={() => add(newGroup('any'))} title="a group where at least one condition must hold"><span aria-hidden="true" className="text-sm leading-none">+</span>Any of</button>
       </div>
       {!nested && mixed && <div className="pl-16 text-[11px] text-muted-foreground">AND is checked before OR: each box must hold as a whole, and any one of the boxes is enough. Reads as: {condPhrase(cond, ctx.labels)}.</div>}
     </div>
