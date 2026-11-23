@@ -475,7 +475,7 @@ export function validate(s: Setup): Issue[] {
   const ts = s.trade_settings;
   if (!ts.legs.length) out.push({ level: 'error', where: 'Trade settings', text: 'At least one take profit is needed.' });
   const share = ts.legs.reduce((a, l) => a + l.share, 0);
-  if (ts.legs.length && Math.abs(share - 1) > 0.001) out.push({ level: 'warning', where: 'Take profits', text: `Take-profit shares add up to ${Math.round(share * 100)}%; leftover contracts go to the ${ts.leftover} take profits.` });
+  if (ts.legs.length && Math.abs(share - 1) > 0.001) out.push({ level: 'warning', where: 'Take profits', text: `Take-profit shares add up to ${Math.round(share * 100)}%; extra contracts go to ${ts.leftover === 'first' ? 'TP1 first' : 'the last TP'}.` });
   if (!ts.flatten_time) out.push({ level: 'error', where: 'Closing time', text: 'A "Be flat by" time is required.' });
   if (!ts.entry_deadline.value && ts.entry_deadline.kind !== 'end_of_day' && ts.entry_deadline.kind !== 'end_of_hours') out.push({ level: 'error', where: 'Entry deadline', text: 'The entry deadline is mandatory.' });
   return out;
