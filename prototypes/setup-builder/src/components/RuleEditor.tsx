@@ -67,14 +67,14 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested }: { con
     const lead = i === 0 ? (keyword ? <span className="w-14 shrink-0 pt-1 text-xs font-black tracking-wider text-sky-300">{keyword}</span> : <span className="w-14 shrink-0" />)
       : <span className="w-14 shrink-0 pt-0.5">{l.join === 'and' ? <JoinSelect value="and" onChange={(j) => setJoin(i, j)} /> : null}</span>;
     return (
-      <div key={c.id} className={cn('group/line flex flex-wrap items-start gap-2 rounded-md sm:flex-nowrap', drag === i && 'opacity-40', over === i && drag != null && drag !== i && 'ring-1 ring-sky-400/60')}
+      <div key={c.id} className={cn('group/line flex flex-wrap items-start gap-2 rounded-md [@container(min-width:38rem)]:flex-nowrap', drag === i && 'opacity-40', over === i && drag != null && drag !== i && 'ring-1 ring-sky-400/60')}
         onDragOver={(e) => { if (drag != null) { e.preventDefault(); setOver(i); } }} onDragLeave={() => setOver((o) => (o === i ? null : o))}
         onDrop={(e) => { e.preventDefault(); drop(i); setDrag(null); setOver(null); }}>
         {lead}
         <span className="flex shrink-0 flex-col items-center gap-0.5 pt-0.5">
           <span draggable onDragStart={(e) => { setDrag(i); e.dataTransfer.effectAllowed = 'move'; }} onDragEnd={() => { setDrag(null); setOver(null); }} title="drag to reorder" className="flex h-7 w-5 cursor-grab items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground active:cursor-grabbing">⠿</span>
         </span>
-        <div className="min-w-0 flex-1 basis-[calc(100%-6rem)] sm:basis-0">
+        <div className="min-w-0 flex-1 basis-[calc(100%-6rem)] [@container(min-width:38rem)]:basis-0">
           {isPlainGroup(c)
             ? <div className="flex items-start gap-1">
                 <span className="pt-0.5 text-lg leading-none text-sky-400/70">(</span>
@@ -84,7 +84,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested }: { con
               </div>
             : <CondEditor cond={c} ctx={ctx} side={side} look="boxes" depth={1} onChange={(x) => setLine(i, x)} />}
         </div>
-        <span className="flex w-full shrink-0 items-center justify-end gap-0.5 sm:w-auto sm:pt-0.5">
+        <span className="flex w-full shrink-0 items-center justify-end gap-0.5 [@container(min-width:38rem)]:w-auto [@container(min-width:38rem)]:pt-0.5">
           <button aria-label="move up" title="move up" disabled={i === 0} onClick={() => move(i, -1)} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-xs text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30">↑</button>
           <button aria-label="move down" title="move down" disabled={i === lines.length - 1} onClick={() => move(i, 1)} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-xs text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30">↓</button>
           <AddMenu ctx={ctx} side={side} onAdd={(x) => insert(i, x)} small label="+ above" />
@@ -95,7 +95,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested }: { con
   };
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5 [container-type:inline-size]">
       {lines.length === 0 && <div className="flex items-center gap-2">{keyword && <span className="w-14 text-xs font-black tracking-wider text-sky-300">{keyword}</span>}<span className="text-xs italic text-muted-foreground">no condition yet: add one</span></div>}
       {groups.map((g, gi) => (
         <React.Fragment key={g[0].line.cond.id}>

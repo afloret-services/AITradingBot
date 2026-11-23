@@ -75,7 +75,7 @@ export function VariantC(p: VariantProps) {
               <div key={br.id}>
                 <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"><Badge tone={br.side === 'long' ? 'ok' : 'error'}>{br.side.toUpperCase()}</Badge><span className="text-muted-foreground">a new first step while one runs: {br.on_new_start.replace('_', ' ')}</span>
                   {setup.branches.length === 1 && !run && <button className="text-sky-300 sm:ml-auto" onClick={() => mutate((s) => { addMirror(s); })}>duplicate as mirrored {br.side === 'long' ? 'short' : 'long'}</button>}</div>
-                <div className="flex items-stretch gap-0 overflow-x-auto pb-2">
+                <div className="flex flex-col items-stretch gap-0 pb-2 sm:flex-row sm:overflow-x-auto">
                   {br.steps.map((st, si) => (
                     <React.Fragment key={st.id}>
                       {si > 0 && <Connector st={st} />}
@@ -87,7 +87,7 @@ export function VariantC(p: VariantProps) {
                       </LaneCard>
                     </React.Fragment>
                   ))}
-                  {!run && <button className="mx-2 self-center rounded-full border border-dashed px-2 py-6 text-xs text-muted-foreground hover:text-foreground" onClick={() => { mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: 'New step', cond: { id: uid(), t: 'all', items: [] } }); }); setSel({ kind: 'step', bi, si: br.steps.length }); }}>+ step</button>}
+                  {!run && <button className="mt-1.5 self-stretch rounded-md border border-dashed px-2 py-2 text-xs text-muted-foreground hover:text-foreground sm:mx-2 sm:mt-0 sm:self-center sm:rounded-full sm:py-6" onClick={() => { mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: 'New step', cond: { id: uid(), t: 'all', items: [] } }); }); setSel({ kind: 'step', bi, si: br.steps.length }); }}>+ step</button>}
                   <Connector label="Signal" />
                   <LaneCard color="#e2e8f0" selected={sel.kind === 'entry' && sel.bi === bi} onClick={() => setSel({ kind: 'entry', bi })} title="Entry" overridable={run} overridden={run && 'stop' in runD.draft.overrides}>
                     <div className="text-xs">{br.entry.order}{br.entry.order !== 'market' && <> at <Chip>{shortName(br.entry.price || '?', labels)}</Chip></>}</div>
@@ -201,7 +201,7 @@ function LibItem({ children, onClick, disabled, hint }: { children: React.ReactN
 }
 function LaneCard({ title, children, foot, color, selected, onClick, locked, wide, overridable, overridden }: { title: React.ReactNode; children: React.ReactNode; foot?: React.ReactNode; color: string; selected?: boolean; onClick: () => void; locked?: boolean; wide?: boolean; overridable?: boolean; overridden?: boolean }) {
   return (
-    <div onClick={onClick} className={cn('flex shrink-0 cursor-pointer flex-col rounded-lg border bg-card p-2 transition', wide ? 'w-80' : 'w-64', selected && 'ring-2 ring-sky-400', locked && 'opacity-50', overridable && 'border-sky-500/50 border-dashed', overridden && 'bg-sky-500/10')} style={{ borderTop: `3px solid ${color}` }}>
+    <div onClick={onClick} className={cn('flex shrink-0 cursor-pointer flex-col rounded-lg border bg-card p-2 transition', wide ? 'w-full sm:w-80' : 'w-full sm:w-64', selected && 'ring-2 ring-sky-400', locked && 'opacity-50', overridable && 'border-sky-500/50 border-dashed', overridden && 'bg-sky-500/10')} style={{ borderTop: `3px solid ${color}` }}>
       <div className="mb-1 flex items-center text-sm font-medium">{title}{locked && <span className="ml-auto text-xs">🔒</span>}{overridable && <span className="ml-auto text-[10px] text-sky-300">overridable</span>}</div>
       <div className="flex-1">{children}</div>
       {foot && <div className="mt-1 border-t pt-1">{foot}</div>}
@@ -210,7 +210,7 @@ function LaneCard({ title, children, foot, color, selected, onClick, locked, wid
 }
 function Connector({ st, label }: { st?: Step; label?: string }) {
   const t = label || [st?.same_bar && st?.within_bars === 0 ? 'same bar only' : st?.same_bar ? 'same bar ok' : 'later bar', st?.within_bars ? `≤ ${st.within_bars} bars` : '', st?.until ? `until ${st.until}` : '', st?.invalidate ? 'invalidation' : ''].filter(Boolean).join(' · ');
-  return <div className="flex w-20 shrink-0 flex-col items-center justify-center px-1 text-center text-[10px] text-muted-foreground"><span>then</span><span className="text-lg leading-none">→</span><span>{t}</span></div>;
+  return <div className="flex w-full shrink-0 flex-row items-center justify-center gap-1.5 px-1 py-1 text-center text-[10px] text-muted-foreground sm:w-20 sm:flex-col sm:gap-0 sm:py-0"><span>then</span><span className="text-lg leading-none"><span className="sm:hidden">↓</span><span className="hidden sm:inline">→</span></span><span>{t}</span></div>;
 }
 function MiniCond({ c, labels, depth = 0 }: { c: Cond; labels: Record<string, string>; depth?: number }) {
   if (c.t === 'all' || c.t === 'any') {
