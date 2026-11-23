@@ -73,7 +73,7 @@ export function VariantB(p: VariantProps) {
 
         {setup.branches.map((br, bi) => (
           <section key={br.id} className="space-y-3">
-            <h2 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xl font-semibold"><span className="whitespace-nowrap">{br.side === 'long' ? 'Going long' : 'Going short'}</span>
+            <h2 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xl font-semibold"><span className="whitespace-nowrap text-3xl font-bold tracking-tight">{br.side === 'long' ? 'Going long' : 'Going short'}</span>
               <span className="flex w-full flex-wrap items-center gap-x-2 sm:w-auto"><span className="text-xs font-normal text-muted-foreground">a new first step while one runs:</span>
               <InlineSelect value={br.on_new_start} onChange={(v) => mutate((s) => { s.branches[bi].on_new_start = v; })} options={[['start_another', 'starts another'], ['replace', 'replaces it'], ['ignore', 'is ignored']]} /></span>
               {setup.branches.length > 1 && <button className="ml-auto text-xs text-muted-foreground hover:text-red-400" onClick={() => mutate((s) => { s.branches.splice(bi, 1); })}>remove branch</button>}
