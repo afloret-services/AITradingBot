@@ -36,9 +36,9 @@ export function HelpBox({ id, children, className }: { id?: string; children: Re
   if (!h.all) return null;
   if (h.hidden.includes(key)) return <ShowLink onClick={() => h.show(key)} />;
   return (
-    <div className={'group/help relative space-y-1 rounded-md border-l-2 border-sky-500/50 bg-sky-500/5 py-1.5 pl-2.5 pr-12 text-xs leading-relaxed text-muted-foreground ' + (className || '')}>
+    <div className={'group/help relative space-y-1 rounded-md border-l-2 border-sky-500/50 bg-sky-500/5 py-1.5 pl-2.5 pr-16 text-xs leading-relaxed text-muted-foreground ' + (className || '')}>
       {children}
-      <button onClick={() => h.hide(key)} title="Hide this description (it comes back with “show description”)" className="absolute right-1.5 top-1 rounded px-1 text-[10px] text-muted-foreground/70 hover:bg-accent hover:text-foreground">hide ✕</button>
+      <button onClick={() => h.hide(key)} title="Hide this description (it comes back with “show description”)" className="absolute right-1.5 top-1.5 inline-flex items-center gap-1 rounded-full border border-input bg-card/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors hover:border-sky-400/60 hover:bg-accent hover:text-foreground">hide <span aria-hidden="true">✕</span></button>
     </div>
   );
 }
@@ -48,9 +48,9 @@ export function Hideable({ id, children, className }: { id: string; children: Re
   if (!h.all) return null;
   if (h.hidden.includes(id)) return <ShowLink onClick={() => h.show(id)} />;
   return (
-    <div className={'group/help relative pr-12 ' + (className || '')}>
+    <div className={'group/help relative pr-16 ' + (className || '')}>
       {children}
-      <button onClick={() => h.hide(id)} title="Hide this description" className="absolute right-0 top-0 rounded px-1 text-[10px] text-muted-foreground/70 opacity-0 hover:bg-accent hover:text-foreground group-hover/help:opacity-100 focus:opacity-100">hide ✕</button>
+      <button onClick={() => h.hide(id)} title="Hide this description" className="absolute right-0 top-0 inline-flex items-center gap-1 rounded-full border border-input bg-card/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors hover:border-sky-400/60 hover:bg-accent hover:text-foreground opacity-0 group-hover/help:opacity-100 focus:opacity-100">hide <span aria-hidden="true">✕</span></button>
     </div>
   );
 }
