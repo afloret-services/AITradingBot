@@ -45,7 +45,7 @@ export const PATTERN_KINDS: Record<PatternKind, PDef> = {
   order_block: { title: 'Order block', bull: 'bullish', bear: 'bearish', help: 'The last opposite candle before a Displacement that closes beyond it. Forms when the Displacement closes.',
     params: [['lookback', 'opposite candle within N bars', 3], ['use_body', 'zone is the body (not the wicks)', false], ...DISP],
     fields: ['top', 'bottom', 'mid', 'size', 'open', 'close', 'time'] },
-  leg: { title: 'Leg (swing to swing)', bull: 'up', bear: 'down', help: 'From a confirmed Swing low to the next confirmed Swing high (up), or the reverse. Forms when its end swing is confirmed. Fib tokens read it.',
+  leg: { title: 'Swing', bull: 'up', bear: 'down', help: 'The move from a confirmed Swing low to the next confirmed Swing high (an up swing), or the reverse (a down swing). Forms when its end swing point is confirmed. Fib tokens read it.',
     params: [['strength', 'swing: bars each side', 2], ['min_size_points', 'size ≥ points', 10]],
     fields: ['start', 'end', 'high', 'low', 'size', 'mid'] },
   mss: { title: 'Market structure shift (MSS)', bull: 'bullish', bear: 'bearish', help: 'A close beyond the last confirmed Swing high (bullish) or Swing low (bearish). Forms on the breaking candle.',
@@ -184,7 +184,7 @@ export const PATTERN_KINDS: Record<PatternKind, PDef> = {
     fields: ['neckline', 'height', 'target', 'head', 'extreme'] },
 };
 export function newPattern(kind: PatternKind, tf: TF, taken: string[]): Pattern {
-  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'leg', mss: 'mss', double: 'dbl', triple: 'tpl', head_shoulders: 'hs', triangle: 'tri', wedge: 'wdg', flag: 'flag', pennant: 'pen', rectangle: 'rect', channel: 'chan', engulfing: 'eng', hammer: 'pin', star: 'star', harami: 'har', piercing: 'pierce', soldiers: 'three', tweezer: 'tw', inside_bar: 'ib', doji: 'doji', marubozu: 'maru', broadening: 'mega', broadening_wedge: 'bwdg', cup_handle: 'cup', diamond: 'dia', rounding: 'rnd', island: 'isl', bump_run: 'barr', measured_move: 'mm', parabolic: 'para', wyckoff: 'wyk', wyckoff_re: 'wykre', adam_eve: 'ae', hs_complex: 'hsc' }[kind];
+  const base = { fvg: 'fvg', displacement: 'disp', order_block: 'ob', leg: 'swing', mss: 'mss', double: 'dbl', triple: 'tpl', head_shoulders: 'hs', triangle: 'tri', wedge: 'wdg', flag: 'flag', pennant: 'pen', rectangle: 'rect', channel: 'chan', engulfing: 'eng', hammer: 'pin', star: 'star', harami: 'har', piercing: 'pierce', soldiers: 'three', tweezer: 'tw', inside_bar: 'ib', doji: 'doji', marubozu: 'maru', broadening: 'mega', broadening_wedge: 'bwdg', cup_handle: 'cup', diamond: 'dia', rounding: 'rnd', island: 'isl', bump_run: 'barr', measured_move: 'mm', parabolic: 'para', wyckoff: 'wyk', wyckoff_re: 'wykre', adam_eve: 'ae', hs_complex: 'hsc' }[kind];
   let name = base, n = 2;
   while (taken.includes(name)) name = base + n++;
   return { name, kind, tf, params: Object.fromEntries(PATTERN_KINDS[kind].params.map(([k, , d]) => [k, d])) };

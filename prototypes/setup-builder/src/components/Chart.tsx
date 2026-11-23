@@ -238,7 +238,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
         }
         if (typeof v.top === 'number') sh.push({ k: 'rect', t1: t0, t2: v.end_time != null ? tOfMs(v.end_time) : tEnd, p1: v.top, p2: v.bottom, fill: 'rgba(56,189,248,0.12)', stroke: 'rgba(56,189,248,0.7)', dash: true, label: `${name} · ${title}` });
         else if (typeof v.level === 'number') sh.push({ k: 'line', t1: tOfMs(v.swing_time ?? startMs), t2: tOfMs(v.time ?? v.formed), p1: v.level, p2: v.level, stroke: '#fbbf24', dash: true, label: `${name} · MSS` });
-        else if (typeof v.start === 'number' && v.start_time != null) { sh.push({ k: 'line', t1: tOfMs(v.start_time), t2: tOfMs(v.end_time), p1: v.start, p2: v.end, stroke: '#fbbf24', width: 2, label: `${name} · Leg` }); sh.push({ k: 'line', t1: tOfMs(v.end_time), t2: tEnd, p1: v.mid, p2: v.mid, stroke: 'rgba(251,191,36,0.5)', dash: true, label: '50%' }); }
+        else if (typeof v.start === 'number' && v.start_time != null) { sh.push({ k: 'line', t1: tOfMs(v.start_time), t2: tOfMs(v.end_time), p1: v.start, p2: v.end, stroke: '#fbbf24', width: 2, label: `${name} · Swing` }); sh.push({ k: 'line', t1: tOfMs(v.end_time), t2: tEnd, p1: v.mid, p2: v.mid, stroke: 'rgba(251,191,36,0.5)', dash: true, label: '50%' }); }
         else if (typeof v.high === 'number' && v.time != null) sh.push({ k: 'rect', t1: tOfMs(v.time), t2: tOfMs(v.time), p1: v.high, p2: v.low, fill: 'rgba(251,191,36,0.15)', stroke: '#fbbf24', label: name });
         else if (typeof v.low === 'number' || typeof v.high === 'number') { const pv = v.low ?? v.high; sh.push({ k: 'line', t1: tOf1m(sel.stepBars[0] ?? sel.i), t2: tSig, p1: pv, p2: pv, stroke: '#94a3b8', dash: true, label: name }); }
       }

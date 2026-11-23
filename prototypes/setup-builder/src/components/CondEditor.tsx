@@ -30,7 +30,7 @@ export function AddMenu({ onAdd, ctx, side, small, label = '+ add' }: { onAdd: (
       <Button size="sm" variant="ghost" className={cn('text-sky-300', small && 'h-6 px-1.5')} onClick={() => setOpen(!open)}>{label}</Button>
       {open && (
         <div className="absolute left-0 top-full z-40 mt-1 w-80 rounded-lg border bg-card p-1 shadow-2xl" onMouseLeave={() => setOpen(false)}>
-          {!(ctx.patterns || []).length && <div className="px-2 py-1 text-[11px] text-muted-foreground">No patterns declared yet: declare FVG, Order block, Leg, MSS… in Patterns first.</div>}
+          {!(ctx.patterns || []).length && <div className="px-2 py-1 text-[11px] text-muted-foreground">No patterns declared yet: declare FVG, Order block, Swing, MSS… in Patterns first.</div>}
           {items.map(([l, f, h]) => (
             <button key={l} className="block w-full rounded px-2 py-1 text-left text-sm hover:bg-accent" onClick={() => { onAdd(f()); setOpen(false); }}>
               <span className="flex items-center gap-1.5">{(() => { const pt = l.startsWith('Pattern: ') ? (ctx.patterns || []).find((q) => q.name === l.slice(9)) : undefined; return pt ? <PatternIcon kind={pt.kind} size={18} /> : null; })()}<span>{l}{h && <span className="ml-1 text-[11px] text-muted-foreground">{h}</span>}</span></span>
