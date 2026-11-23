@@ -222,7 +222,10 @@ function LaneCard({ title, children, foot, color, selected, onClick, locked, wid
 }
 function Connector({ st, label }: { st?: Step; label?: string }) {
   const t = label || [st?.same_bar && st?.within_bars === 0 ? 'same bar only' : st?.same_bar ? 'same bar ok' : 'later bar', st?.within_bars ? `≤ ${st.within_bars} bars` : '', st?.until ? `until ${st.until}` : '', st?.invalidate ? 'invalidation' : ''].filter(Boolean).join(' · ');
-  return <div className="flex w-full shrink-0 flex-row items-center justify-center gap-1.5 px-1 py-1 text-center text-[10px] text-muted-foreground sm:w-20 sm:flex-col sm:gap-0 sm:py-0"><span>then</span><span className="text-lg leading-none"><span className="sm:hidden">↓</span><span className="hidden sm:inline">→</span></span><span>{t}</span></div>;
+  const arrow = <span className="text-xl leading-none"><span className="sm:hidden">↓</span><span className="hidden sm:inline">→</span></span>;
+  // the step → Entry link reads like the Wizard's "→ SIGNAL"
+  if (label === 'Signal') return <div className="flex w-full shrink-0 flex-row items-center justify-center gap-1.5 px-1 py-1.5 text-center text-emerald-300 sm:w-24 sm:flex-col sm:gap-0.5 sm:py-0">{arrow}<span className="text-sm font-black uppercase tracking-wider">Signal</span></div>;
+  return <div className="flex w-full shrink-0 flex-row items-center justify-center gap-1.5 px-1 py-1 text-center text-xs text-muted-foreground sm:w-24 sm:flex-col sm:gap-0.5 sm:py-0"><span className="text-sm font-black uppercase tracking-wider text-sky-300">{label ? '' : 'then'}</span>{arrow}<span>{t}</span></div>;
 }
 function MiniCond({ c, labels, depth = 0 }: { c: Cond; labels: Record<string, string>; depth?: number }) {
   if (c.t === 'all' || c.t === 'any') {
