@@ -12,7 +12,7 @@ const markEdited = (c: Cond): Cond => (c.origin ? { ...c, origin: { ...c.origin,
 
 export function newCmp(ctx: TokenCtx): Cond { return { id: uid(), t: 'cmp', a: `{{bar:close:${ctx.baseBar}}}`, op: '>', b: '' }; }
 
-export function AddMenu({ onAdd, ctx, side, small, label = '+ add' }: { onAdd: (c: Cond) => void; ctx: TokenCtx; side: 'long' | 'short'; small?: boolean; label?: string }) {
+export function AddMenu({ onAdd, ctx, side, small, label = '+ add', buttonClass, title }: { onAdd: (c: Cond) => void; ctx: TokenCtx; side: 'long' | 'short'; small?: boolean; label?: string; buttonClass?: string; title?: string }) {
   const [open, setOpen] = useState(false);
   const phone = usePhone();
   const tf = ctx.baseBar;
@@ -30,7 +30,7 @@ export function AddMenu({ onAdd, ctx, side, small, label = '+ add' }: { onAdd: (
   ];
   return (
     <span className="relative inline-block">
-      <Button size="sm" variant="ghost" className={cn('text-sky-300', small && 'h-6 px-1.5')} onClick={() => setOpen(!open)}>{label}</Button>
+      {buttonClass ? <button type="button" title={title} aria-label={title} className={buttonClass} onClick={() => setOpen(!open)}>{label}</button> : <Button size="sm" variant="ghost" className={cn('text-sky-300', small && 'h-6 px-1.5')} onClick={() => setOpen(!open)}>{label}</Button>}
       {open && <Sheet phone={phone}>
       {open && <div className="fixed inset-0 z-[60] bg-black/50 sm:hidden" onClick={() => setOpen(false)} />}
       {(

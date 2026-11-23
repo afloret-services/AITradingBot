@@ -86,7 +86,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested }: { con
         <span className="flex w-full shrink-0 items-center justify-end gap-0.5 [@container(min-width:38rem)]:w-auto [@container(min-width:38rem)]:pt-0.5">
           <button aria-label="move up" title="move up" disabled={i === 0} onClick={() => move(i, -1)} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-xs text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30">↑</button>
           <button aria-label="move down" title="move down" disabled={i === lines.length - 1} onClick={() => move(i, 1)} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-xs text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30">↓</button>
-          <AddMenu ctx={ctx} side={side} onAdd={(x) => insert(i, x)} small label="+ above" />
+          <AddMenu ctx={ctx} side={side} onAdd={(x) => insert(i, x)} label="+ Insert" title="insert a condition above this one" buttonClass="flex h-7 items-center gap-1 rounded-md border border-input px-2 text-xs font-medium text-sky-300 transition-colors hover:border-sky-400/60 hover:bg-accent" />
           {!isPlainGroup(c) && <button title="remove this condition" aria-label="remove this condition" onClick={() => remove(i)} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button>}
         </span>
       </div>
