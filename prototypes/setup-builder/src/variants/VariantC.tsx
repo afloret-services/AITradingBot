@@ -123,7 +123,7 @@ export function VariantC(p: VariantProps) {
             ))}
           </div>
           <div className="border-t p-3">
-            <div className="mb-2"><RunSummary result={shown} data={data} /></div>
+            <div className="mb-2">{run && runD.result ? <RunCompare base={result} over={runD.result} data={data} /> : <RunSummary result={shown} data={data} />}</div>
             <div className="mb-2"><ReviewHelp setup={setup} what="chart" result={shown} /></div>
             <Chart data={data} setup={setup} result={shown} day={p.day} setDay={p.setDay} focus={p.focus} selected={p.selected} setSelected={p.setSelected} height={420} compactBar />
           </div>
@@ -164,7 +164,7 @@ export function VariantC(p: VariantProps) {
             </div>
           )}
           {sel.kind === 'entry' && (
-            run ? <div className="space-y-2"><H>Stop · Run override</H><SectionHelp setup={setup} k="stop" /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /><OverrideBox k="stop" setup={setup} runD={runD} /></div> :
+            run ? <div className="space-y-2"><H>Stop · Run override</H><SectionHelp setup={setup} k="stop" /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /><OverrideBox k="stop" setup={setup} runD={runD} />{phone && runD.result && <RunCompare base={result} over={runD.result} data={data} />}</div> :
             <div className="space-y-2"><H>Entry · {setup.branches[sel.bi].side}</H><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={sel.bi} ctx={tokenCtx(setup, sel.bi, 99)} /></div>
           )}
           {sel.kind === 'trade' && (
@@ -178,7 +178,7 @@ export function VariantC(p: VariantProps) {
               ))}<H><span className="inline-flex items-center gap-1.5"><SectionIcon k="in_position" size={16} />While in a Trade</span></H><SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="chips" /></div>
           )}
           {sel.kind === 'section' && (
-            run ? <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Run override</H><SectionHelp setup={setup} k={sel.k} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /><OverrideBox k={sel.k} setup={setup} runD={runD} /></div> :
+            run ? <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Run override</H><SectionHelp setup={setup} k={sel.k} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /><OverrideBox k={sel.k} setup={setup} runD={runD} />{phone && runD.result && <RunCompare base={result} over={runD.result} data={data} />}</div> :
             <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Setup default</H><SectionHelp setup={setup} k={sel.k} /><SectionEditor k={sel.k} value={getSection(setup, sel.k)} setup={setup} ctx={tokenCtx(setup, 0, 99)} onChange={(v) => mutate((s) => { setSection(s, sel.k, v); })} /></div>
           )}
         </div>
@@ -239,3 +239,13 @@ function MiniCond({ c, labels, depth = 0 }: { c: Cond; labels: Record<string, st
   return null;
 }
 void AddMenu;
+
+/** a Run's result next to the Setup defaults' result (stacked on a phone) */
+function RunCompare({ base, over, data }: { base: any; over: any; data: any }) {
+  return (
+    <div className="grid gap-2 text-xs sm:grid-cols-2">
+      <div className="rounded-md border p-2"><div className="mb-1 font-medium text-muted-foreground">Setup defaults</div><RunSummary result={base} data={data} /></div>
+      <div className="rounded-md border border-sky-500/40 bg-sky-500/5 p-2"><div className="mb-1 font-medium text-sky-300">With this Run's overrides</div><RunSummary result={over} data={data} /></div>
+    </div>
+  );
+}
