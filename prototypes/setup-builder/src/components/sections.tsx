@@ -184,16 +184,16 @@ export function IndicatorList({ setup, mutate, ctx, usage }: { setup: Setup; mut
   return (
     <div className="space-y-1.5">
       {setup.indicators.map((ind, k) => (
-        <React.Fragment key={k}>
+        <div key={k} className="rounded-md border border-border/60 p-2 sm:border-0 sm:p-0">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))]"><IndicatorIcon token={ind.token} size={22} /></span>
-          <TokenPicker value={ind.token} ctx={{ ...ctx, inlineDeclare: true, onDeclare: undefined, onlyIndicator: true }} compact onChange={(t) => mutate((s) => { const old = s.indicators[k].token; s.indicators[k].token = t.replace(/\.prev\[\d+\]$/, ''); renameToken(s, old, s.indicators[k].token); })} />
-          <Input placeholder="display label (optional)" value={ind.label || ''} onChange={(e) => mutate((s) => { s.indicators[k].label = e.target.value || undefined; })} className="h-7 w-48" />
-          {usage && <span className="text-[11px] text-muted-foreground">used {usage[ind.token] || 0}×</span>}
-          <button aria-label="remove this indicator" title="remove" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" onClick={() => mutate((s) => { s.indicators.splice(k, 1); })}>×</button>
+          <span className="order-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))]"><IndicatorIcon token={ind.token} size={22} /></span>
+          <span className="order-2"><TokenPicker value={ind.token} ctx={{ ...ctx, inlineDeclare: true, onDeclare: undefined, onlyIndicator: true }} compact onChange={(t) => mutate((s) => { const old = s.indicators[k].token; s.indicators[k].token = t.replace(/\.prev\[\d+\]$/, ''); renameToken(s, old, s.indicators[k].token); })} /></span>
+          <Input placeholder="display label (optional)" value={ind.label || ''} onChange={(e) => mutate((s) => { s.indicators[k].label = e.target.value || undefined; })} className="order-4 h-7 min-w-0 flex-1 basis-[calc(100%-4rem)] sm:order-3 sm:w-48 sm:flex-none sm:basis-auto" />
+          {usage && <span className="order-5 text-[11px] text-muted-foreground sm:order-4">used {usage[ind.token] || 0}×</span>}
+          <button aria-label="remove this indicator" title="remove" className="order-3 ml-auto sm:order-5 sm:ml-0 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" onClick={() => mutate((s) => { s.indicators.splice(k, 1); })}>×</button>
         </div>
-          {indHelp(ind.token) && <Hideable id="indicators:each" className="-mt-0.5 mb-1 pl-1 text-[11px] text-muted-foreground">{indHelp(ind.token)}</Hideable>}
-        </React.Fragment>
+          {indHelp(ind.token) && <Hideable id="indicators:each" className="mt-1 pl-1 text-[11px] text-muted-foreground sm:-mt-0.5 sm:mb-1">{indHelp(ind.token)}</Hideable>}
+        </div>
       ))}
       <Button size="sm" variant="ghost" onClick={() => mutate((s) => { s.indicators.push({ token: `{{indicator:ema:200:${s.settings.base_bar}}}` }); })}>+ declare an indicator</Button>
     </div>
@@ -301,7 +301,7 @@ function PatternPalette({ onPick }: { onPick: (k: PatternKind) => void }) {
         return (
           <div key={g}>
             <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
               {ks.map((kind) => (
                 <button key={kind} onClick={() => onPick(kind)} title={PATTERN_KINDS[kind].help}
                   className="flex items-center gap-2 rounded-md border border-input bg-card/40 py-1 pl-1.5 pr-2.5 text-left text-xs font-medium transition-colors hover:border-sky-400/60 hover:bg-accent">
