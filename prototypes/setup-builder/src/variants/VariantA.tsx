@@ -118,10 +118,12 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                   {br.steps.length > 0 && (
                     <li>
                       <div className="ml-4 border-l-2 border-dashed py-1 pl-4 text-xs text-muted-foreground">when the last step completes</div>
-                      <button onClick={() => setStage(4)} className="flex w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-left text-sm hover:bg-emerald-500/10">
-                        <span className="shrink-0 whitespace-nowrap text-sm font-black tracking-wider text-emerald-300">→ SIGNAL</span>
-                        <span className="order-last w-full text-muted-foreground sm:order-none sm:w-auto sm:min-w-0 sm:flex-1">{br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labelsOf(setup))}`}, stop {br.entry.stop.offset} {br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} {br.side === 'long' ? 'below' : 'above'} {phrase(br.entry.stop.token || '?', labelsOf(setup))}</span>
-                        <span className="ml-auto shrink-0 whitespace-nowrap text-xs text-sky-300">edit in Entry & stop →</span>
+                      <button onClick={() => setStage(4)} className="flex w-full flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-left hover:bg-emerald-500/10">
+                        <span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black leading-none text-black">→</span>
+                        <span className="shrink-0 text-sm font-black tracking-wider text-emerald-300 sm:w-14">SIGNAL</span>
+                        <span className="min-w-0 flex-1 text-base font-bold tracking-tight">Enter the Trade</span>
+                        <span className="order-last w-full pl-9 text-xs text-sky-300 sm:order-none sm:w-auto sm:shrink-0 sm:whitespace-nowrap sm:pl-0">edit in Entry & stop →</span>
+                        <span className="w-full pl-9 text-xs text-muted-foreground">{br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labelsOf(setup))}`}, stop {br.entry.stop.offset} {br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} {br.side === 'long' ? 'below' : 'above'} {phrase(br.entry.stop.token || '?', labelsOf(setup))}</span>
                       </button>
                     </li>
                   )}
