@@ -1,7 +1,7 @@
 // PROTOTYPE, throwaway: Step-by-step builder (issue #76). Three variants on one page, switched by ?variant=A|B|C.
 import React, { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Data, parseCsv, run, Signal } from './engine';
-import { Setup, STARTERS, validate, hashSetup, ruleDescription, addMirror } from './model';
+import { Setup, STARTERS, validate, hashSetup, ruleDescription } from './model';
 import { Focus } from './components/Chart';
 import { Switcher } from './components/Switcher';
 import { HelpProvider, HelpToggle } from './components/help';
@@ -75,7 +75,6 @@ export default function App() {
         <Badge tone="warn">PROTOTYPE · throwaway</Badge>
         <span className="text-sm text-muted-foreground">Select Setup</span>
         <Select value={starter} onChange={loadStarter} options={[['silver_bullet', 'Silver Bullet (built)'], ['ema_macd', 'EMA 200 + MACD (built)'], ['double_bottom', 'Double bottom (chart-pattern demo)'], ['blank', 'New Setup (empty)']]} className="h-9 min-w-[16rem] text-sm font-medium" />
-        {setup.branches.length === 1 && <Button size="sm" variant="ghost" onClick={() => mutate((s) => { addMirror(s); })}>Duplicate as mirrored {setup.branches[0].side === 'long' ? 'short' : 'long'}</Button>}
         {versions.length > 0 && <span className="text-muted-foreground">versions: {versions.map((v) => <span key={v.v} className="mono mr-1">v{v.v}·{v.hash.slice(0, 8)}</span>)}</span>}
         <span className="ml-auto flex flex-wrap items-center gap-3"><HelpToggle /><span className="text-muted-foreground">nothing is persisted · reload to reset</span></span>
       </div>
