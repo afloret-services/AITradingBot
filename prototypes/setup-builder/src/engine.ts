@@ -979,7 +979,8 @@ function runBranch(data: Data, setup: Setup, br: Branch, bi: number, base: Int32
 export function inTradingHours(setup: Setup, min: number, t: number) {
   const wd = new Date(t + nyOffset(t)).getUTCDay();
   const okDay = setup.settings.trading_hours.weekdays.includes(wd) || setup.settings.trading_hours.weekdays.length === 0;
-  return okDay && (setup.settings.trading_hours.ranges.length === 0 || setup.settings.trading_hours.ranges.some((r) => inRange(min, r.start, r.end)));
+  const ranges = setup.settings.trading_hours.overrides?.[String(wd)] ?? setup.settings.trading_hours.ranges;
+  return okDay && (ranges.length === 0 || ranges.some((r) => inRange(min, r.start, r.end)));
 }
 
 function makeSignal(data: Data, setup: Setup, br: Branch, bi: number, i: number, p: number, base: Int32Array, c: Cand): Signal | null {

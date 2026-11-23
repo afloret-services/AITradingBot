@@ -231,7 +231,8 @@ export interface Setup {
   notes: string;
   settings: {
     base_bar: TF;
-    trading_hours: { ranges: { start: string; end: string }[]; weekdays: number[] };
+    /** ranges apply to every ticked weekday, unless that weekday has its own ranges in overrides (0 = Sunday … 6 = Saturday) */
+    trading_hours: { ranges: { start: string; end: string }[]; weekdays: number[]; overrides?: Record<string, { start: string; end: string }[]> };
     sessions: Record<string, { start: string; end: string }>;
     news_rule: { mode: 'off' | 'whole_day' | 'span'; before?: number; after?: number };
     one_at_a_time: 'off' | 'ignore_new_starts' | 'skip_completions';
@@ -334,6 +335,7 @@ export function ruleDescription(s: Setup): string {
   const labels = labelsOf(s);
   const lines: string[] = [];
   lines.push(`${s.name}. Base bar ${s.settings.base_bar}. Trading window ${s.settings.trading_hours.ranges.map((r) => `${r.start}–${r.end}`).join(', ') || 'all day'} NY.`);
+  for (const [d, rs] of Object.entries(s.settings.trading_hours.overrides || {})) lines.push(`On ${['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'][Number(d)]}: ${rs.map((r) => `${r.start}–${r.end}`).join(', ') || 'all day'} NY instead.`);
   for (const p of s.patterns || []) lines.push(`Pattern "${p.name}": ${p.tf} ${PATTERN_KINDS[p.kind].title} (${patternSettingsPhrase(p)}).`);
   for (const br of s.branches) {
     lines.push(`${br.side === 'long' ? 'Long' : 'Short'}:`);
@@ -641,3 +643,10 @@ export function doubleBottom(): Setup {
   return s;
 }
 export const STARTERS: Record<string, () => Setup> = { blank: blankSetup, silver_bullet: silverBullet, ema_macd: emaMacd, double_bottom: doubleBottom };
+
+/** "09:30–16:00 (Fri 09:30–12:00)": the usual ranges, then each weekday that has its own */
+export function tradingWindowText(th: Setup['settings']['trading_hours']) {
+  const r = (rs: { start: string; end: string }[]) => rs.map((x) => `${x.start}–${x.end}`).join(', ') || 'all day';
+  const ov = Object.entries(th.overrides || {}).map(([d, rs]) => `${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][Number(d)]} ${r(rs)}`);
+  return r(th.ranges) + (ov.length ? ` (${ov.join('; ')})` : '');
+}

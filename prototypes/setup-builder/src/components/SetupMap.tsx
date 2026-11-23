@@ -2,7 +2,7 @@
 // reads and captures, the Sequence limits on the connectors, and what the branch did on the bars. Hovering a declared
 // indicator or pattern lights up the steps that read it; clicking a step focuses it on the chart.
 import React, { useState } from 'react';
-import { Cond, Setup, Step, captureNames, condPhrase, labelsOf, patternRefs, tokensOf, PATTERN_KINDS, parseToken, patternUsage } from '../model';
+import { Cond, Setup, Step, captureNames, condPhrase, labelsOf, patternRefs, tokensOf, PATTERN_KINDS, parseToken, patternUsage , tradingWindowText } from '../model';
 import { Data, RunResult } from '../engine';
 import { shortName } from './TokenPicker';
 import { PatternIcon, IndicatorIcon, SectionIcon } from './PatternIcon';
@@ -39,7 +39,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
     return conds.some((c) => tokensOf(c).some((t) => indKey(t) === hover.key));
   };
   const ts = setup.trade_settings;
-  const th = setup.settings.trading_hours.ranges.map((r) => `${r.start}–${r.end}`).join(', ') || 'all day';
+  const th = tradingWindowText(setup.settings.trading_hours);
 
   return (
     <div className="space-y-3">

@@ -41,6 +41,17 @@ export function VariantB(p: VariantProps) {
             bar. Signals are taken {th.ranges.map((r, k) => (
               <span key={k}>{k > 0 && ' or '}between <InlineInput value={r.start} onChange={(v) => mutate((s) => { s.settings.trading_hours.ranges[k].start = v; })} /> and <InlineInput value={r.end} onChange={(v) => mutate((s) => { s.settings.trading_hours.ranges[k].end = v; })} /></span>
             ))} New York time <button className="mx-1 inline-flex h-6 items-center gap-1 rounded-md border border-input px-2 align-middle text-xs font-medium text-sky-200 hover:bg-accent" onClick={() => mutate((s) => { s.settings.trading_hours.ranges.push({ start: '14:00', end: '15:00' }); })}><span aria-hidden="true">+</span>Add range</button>, on {th.weekdays.length === 5 ? 'weekdays' : th.weekdays.length + ' days'}.
+            {Object.entries(th.overrides || {}).map(([d, rs]) => (
+              <span key={d}>{' '}On {['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'][Number(d)]}, {rs.length ? rs.map((r, k) => (
+                <span key={k}>{k > 0 && ' or '}between <InlineInput value={r.start} onChange={(v) => mutate((s) => { s.settings.trading_hours.overrides![d][k].start = v; })} /> and <InlineInput value={r.end} onChange={(v) => mutate((s) => { s.settings.trading_hours.overrides![d][k].end = v; })} /></span>
+              )) : 'all day'} instead <button className="mx-1 inline-flex h-6 items-center rounded-full border border-input px-2 align-middle text-xs text-muted-foreground hover:bg-accent" onClick={() => mutate((s) => { delete s.settings.trading_hours.overrides![d]; })}>use the usual hours</button>.</span>
+            ))}
+            {th.weekdays.some((d) => !(String(d) in (th.overrides || {}))) && (
+              <select value="" onChange={(e) => { const d = e.target.value; if (d) mutate((s) => { s.settings.trading_hours.overrides = { ...(s.settings.trading_hours.overrides || {}), [d]: structuredClone(s.settings.trading_hours.ranges) }; }); }} className="mx-1 rounded border-b border-dashed border-sky-400 bg-transparent px-0.5 align-middle text-xs text-sky-200 outline-none">
+                <option value="" className="bg-card">+ different hours on a day…</option>
+                {th.weekdays.filter((d) => !(String(d) in (th.overrides || {}))).map((d) => <option key={d} value={String(d)} className="bg-card">{['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'][d]}</option>)}
+              </select>
+            )}
             {' '}While a Signal is live,{' '}
             <InlineSelect value={setup.settings.one_at_a_time} onChange={(v) => mutate((s) => { s.settings.one_at_a_time = v; })} options={[['off', 'overlap is allowed'], ['ignore_new_starts', 'the Setup waits for the Trade to end'], ['skip_completions', 'Signals during the Trade are skipped']]} />.
             {' '}Around news:{' '}

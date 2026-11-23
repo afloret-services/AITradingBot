@@ -22,26 +22,51 @@ export function BaseBarEditor({ setup, mutate }: { setup: Setup; mutate: Mutate 
   );
 }
 const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+type Range = { start: string; end: string };
+function RangeList({ ranges, onChange, defaults }: { ranges: Range[]; onChange: (r: Range[]) => void; defaults: Range }) {
+  return (
+    <div className="space-y-1.5">
+      {ranges.length === 0 && <div className="text-xs italic text-muted-foreground">No range: all day.</div>}
+      {ranges.map((r, k) => (
+        <div key={k} className="flex items-center gap-1 text-xs">
+          <span className="w-16 text-muted-foreground">Range {k + 1}</span>
+          <Input value={r.start} onChange={(e) => onChange(ranges.map((x, j) => (j === k ? { ...x, start: e.target.value } : x)))} className="h-7 w-14" />–
+          <Input value={r.end} onChange={(e) => onChange(ranges.map((x, j) => (j === k ? { ...x, end: e.target.value } : x)))} className="h-7 w-14" />
+          <button className="ml-1.5 flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" title="remove this range" aria-label={`remove range ${k + 1}`} onClick={() => onChange(ranges.filter((_, j) => j !== k))}>×</button>
+        </div>
+      ))}
+      <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => onChange([...ranges, { ...defaults }])}><span aria-hidden="true" className="text-base leading-none">+</span>Add range</Button>
+    </div>
+  );
+}
+const WD_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 export function TradingHoursEditor({ setup, mutate }: { setup: Setup; mutate: Mutate }) {
   const th = setup.settings.trading_hours;
+  const ov = th.overrides || {};
+  const ovDays = Object.keys(ov).map(Number).sort();
+  const free = th.weekdays.filter((d) => !(String(d) in ov));
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       <Label>Trading window (NY, checked on the Signal's bar)</Label>
-      <div className="space-y-1.5">
-        {th.ranges.length === 0 && <div className="text-xs italic text-muted-foreground">No range: all day.</div>}
-        {th.ranges.map((r, k) => (
-          <div key={k} className="flex items-center gap-1 text-xs">
-            <span className="w-16 text-muted-foreground">Range {k + 1}</span>
-            <Input value={r.start} onChange={(e) => mutate((s) => { s.settings.trading_hours.ranges[k].start = e.target.value; })} className="h-7 w-14" />–
-            <Input value={r.end} onChange={(e) => mutate((s) => { s.settings.trading_hours.ranges[k].end = e.target.value; })} className="h-7 w-14" />
-            <button className="ml-1.5 flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" title="remove this range" aria-label={`remove range ${k + 1}`} onClick={() => mutate((s) => { s.settings.trading_hours.ranges.splice(k, 1); })}>×</button>
-          </div>
-        ))}
-        <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => mutate((s) => { s.settings.trading_hours.ranges.push({ start: '09:30', end: '16:00' }); })}><span aria-hidden="true" className="text-base leading-none">+</span>Add range</Button>
+      <div className="flex items-center gap-1 text-xs"><span className="w-16 text-muted-foreground">Days</span>
+        <span className="flex flex-wrap gap-1">{WD.map((d, k) => <button key={d} aria-pressed={th.weekdays.includes(k)} onClick={() => mutate((s) => { const w = s.settings.trading_hours.weekdays; s.settings.trading_hours.weekdays = w.includes(k) ? w.filter((x) => x !== k) : [...w, k].sort(); if (w.includes(k) && s.settings.trading_hours.overrides) delete s.settings.trading_hours.overrides[String(k)]; })} className={cn('h-8 min-w-[2.75rem] rounded-md border px-2 text-xs font-medium transition-colors', th.weekdays.includes(k) ? (String(k) in ov ? 'border-amber-400/60 bg-amber-500/15 text-amber-100' : 'border-sky-400/50 bg-sky-500/20 text-sky-100') : 'border-input text-muted-foreground hover:bg-accent')} title={String(k) in ov ? 'has its own hours' : undefined}>{d}</button>)}</span>
       </div>
-      <div className="flex items-center gap-1 pt-1 text-xs"><span className="w-16 text-muted-foreground">Days</span>
-        <span className="flex flex-wrap gap-1">{WD.map((d, k) => <button key={d} aria-pressed={th.weekdays.includes(k)} onClick={() => mutate((s) => { const w = s.settings.trading_hours.weekdays; s.settings.trading_hours.weekdays = w.includes(k) ? w.filter((x) => x !== k) : [...w, k].sort(); })} className={cn('h-8 min-w-[2.75rem] rounded-md border px-2 text-xs font-medium transition-colors', th.weekdays.includes(k) ? 'border-sky-400/50 bg-sky-500/20 text-sky-100' : 'border-input text-muted-foreground hover:bg-accent')}>{d}</button>)}</span>
+      <div className="rounded-md border p-2.5">
+        <div className="mb-1.5 text-xs font-medium">Every trading day{ovDays.length ? <span className="font-normal text-muted-foreground"> (except {ovDays.map((d) => WD_LONG[d]).join(', ')})</span> : ''}</div>
+        <RangeList ranges={th.ranges} defaults={{ start: '09:30', end: '16:00' }} onChange={(r) => mutate((s) => { s.settings.trading_hours.ranges = r; })} />
       </div>
+      {ovDays.map((d) => (
+        <div key={d} className="rounded-md border border-amber-500/30 bg-amber-500/[0.04] p-2.5">
+          <div className="mb-1.5 flex items-center gap-2 text-xs font-medium">On {WD_LONG[d]}s instead
+            <button className="ml-auto rounded-full border border-input px-2 py-0.5 text-[11px] font-normal text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => mutate((s) => { delete s.settings.trading_hours.overrides![String(d)]; })}>use the usual hours</button></div>
+          <RangeList ranges={ov[String(d)]} defaults={{ start: '09:30', end: '16:00' }} onChange={(r) => mutate((s) => { s.settings.trading_hours.overrides = { ...(s.settings.trading_hours.overrides || {}), [String(d)]: r }; })} />
+        </div>
+      ))}
+      {free.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1 text-xs"><span className="text-muted-foreground">Different hours on</span>
+          {free.map((d) => <button key={d} className="h-7 rounded-md border border-input px-2 font-medium hover:bg-accent" onClick={() => mutate((s) => { s.settings.trading_hours.overrides = { ...(s.settings.trading_hours.overrides || {}), [String(d)]: structuredClone(s.settings.trading_hours.ranges) }; })}>+ {WD[d]}</button>)}
+        </div>
+      )}
       <div className="text-[11px] text-muted-foreground">Ranges may cross midnight, e.g. 18:00–16:00 for every session.</div>
     </div>
   );
@@ -352,7 +377,7 @@ function WhenHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'hours' | 's
     return (
       <HelpBox>
         <div>A Signal is only taken when the bar its last step completes on opens inside one of these ranges, on a ticked weekday. The steps before it may complete earlier (a pullback can start before the window opens); only the Signal is checked. A range may cross midnight (18:00–16:00 covers the whole futures day), you can add several, and no range means all day. "End of Trading window" in the Entry deadline means the end of these ranges.</div>
-        <div>Here: {th.ranges.length ? B(th.ranges.map((r) => `${r.start}–${r.end}`).join(' and ')) : B('all day')} NY{th.ranges.length ? <> ({B(`${Math.floor(mins / 60)}h${mins % 60 ? String(mins % 60).padStart(2, '0') : ''}`)} a day)</> : ''}, {B(days)}.</div>
+        <div>Here: {th.ranges.length ? B(th.ranges.map((r) => `${r.start}–${r.end}`).join(' and ')) : B('all day')} NY{th.ranges.length ? <> ({B(`${Math.floor(mins / 60)}h${mins % 60 ? String(mins % 60).padStart(2, '0') : ''}`)} a day)</> : ''}, {B(days)}.{Object.entries(th.overrides || {}).map(([d, rs]) => <span key={d}> On {WDN[Number(d)]}s: {B(rs.map((r) => `${r.start}–${r.end}`).join(' and ') || 'all day')} instead.</span>)}</div>
       </HelpBox>
     );
   }
