@@ -101,7 +101,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                         <div role="button" tabIndex={0} className="flex w-full cursor-pointer flex-wrap items-center gap-x-2 gap-y-0.5 px-3 py-2 text-left sm:flex-nowrap" onClick={() => { setOpen(open === k ? -1 : k); p.setFocus({ bi, si: k }); }}>
                           <span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold leading-none text-black" style={{ background: STEP_COLORS[k % 6] }}>{k + 1}</span>
                           <span className={cn('shrink-0 text-sm font-black tracking-wider text-sky-300 sm:w-14', open === k && 'hidden sm:inline')}>{open === k ? '' : k === 0 ? 'IF' : 'THEN'}</span>
-                          <Input value={st.name} onClick={(e) => e.stopPropagation()} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-7 min-w-0 flex-1 border-transparent bg-transparent font-medium sm:w-72 sm:flex-none" />
+                          <Input value={st.name} onClick={(e) => e.stopPropagation()} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-9 min-w-0 flex-1 border-transparent bg-transparent text-base font-bold tracking-tight sm:w-80 sm:flex-none" />
                           <span className="order-last w-full pl-9 sm:order-none sm:w-auto sm:pl-0"><StepStats result={result} bi={bi} si={k} data={data} /></span>
                           <span className="shrink-0 text-muted-foreground sm:ml-auto">{open === k ? '▾' : '▸'}</span>
                         </div>
