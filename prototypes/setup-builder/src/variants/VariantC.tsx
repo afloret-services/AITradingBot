@@ -96,7 +96,7 @@ export function VariantC(p: VariantProps) {
                     </React.Fragment>
                   ))}
                   {!run && <button className="mt-1.5 self-stretch rounded-md border border-dashed px-2 py-2 text-xs text-muted-foreground hover:text-foreground sm:mx-2 sm:mt-0 sm:self-center sm:rounded-full sm:py-6" onClick={() => { mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: 'New step', cond: { id: uid(), t: 'all', items: [] } }); }); setSel({ kind: 'step', bi, si: br.steps.length }); }}>+ step</button>}
-                  <Connector label="Signal" />
+                  <Connector label="" />
                   <LaneCard color="#34d399" selected={sel.kind === 'entry' && sel.bi === bi} onClick={() => setSel({ kind: 'entry', bi })} title={<span className="flex items-start gap-1.5"><span className="mt-0.5 inline-flex aspect-square h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-xs font-black leading-none text-black">→</span><span className="mt-0.5 shrink-0 text-sm font-black tracking-wider text-emerald-300">SIGNAL</span><span className="text-base font-bold leading-snug tracking-tight">Enter the Trade</span></span>} overridable={run} overridden={run && 'stop' in runD.draft.overrides}>
                     <div className="text-xs">{br.entry.order}{br.entry.order !== 'market' && <> at <Chip>{shortName(br.entry.price || '?', labels)}</Chip></>}</div>
                     <div className="mt-1 text-xs">stop {br.entry.stop.offset} {br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} {br.side === 'long' ? 'below' : 'above'} <Chip>{shortName(br.entry.stop.token || '?', labels)}</Chip></div>
@@ -224,7 +224,8 @@ function Connector({ st, label }: { st?: Step; label?: string }) {
   const t = label || [st?.same_bar && st?.within_bars === 0 ? 'same bar only' : st?.same_bar ? 'same bar ok' : 'later bar', st?.within_bars ? `≤ ${st.within_bars} bars` : '', st?.until ? `until ${st.until}` : '', st?.invalidate ? 'invalidation' : ''].filter(Boolean).join(' · ');
   const arrow = <span className="text-xl leading-none"><span className="sm:hidden">↓</span><span className="hidden sm:inline">→</span></span>;
   // the step → Entry link reads like the Wizard's "→ SIGNAL"
-  if (label === 'Signal') return <div className="flex w-full shrink-0 flex-row items-center justify-center gap-1.5 px-1 py-1.5 text-center text-emerald-300 sm:w-24 sm:flex-col sm:gap-0.5 sm:py-0">{arrow}<span className="text-sm font-black uppercase tracking-wider">Signal</span></div>;
+  // the step → Entry link: just the arrow (the Entry card says SIGNAL)
+  if (label === '') return <div className="flex w-full shrink-0 items-center justify-center px-1 py-1 text-muted-foreground sm:w-16 sm:py-0">{arrow}</div>;
   return <div className="flex w-full shrink-0 flex-row items-center justify-center gap-1.5 px-1 py-1 text-center text-xs text-muted-foreground sm:w-24 sm:flex-col sm:gap-0.5 sm:py-0"><span className="text-sm font-black uppercase tracking-wider text-sky-300">{label ? '' : 'then'}</span>{arrow}<span>{t}</span></div>;
 }
 function MiniCond({ c, labels, depth = 0 }: { c: Cond; labels: Record<string, string>; depth?: number }) {
