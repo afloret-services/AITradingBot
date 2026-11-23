@@ -296,7 +296,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
         {daySignals.length === 0 && <span className="text-muted-foreground">no Signal this day</span>}
         {daySignals.map((s, k) => (
           <button key={k} onClick={() => setSelected?.(selected === s ? null : s)} className={cn('flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 transition', selected === s ? 'border-sky-400 bg-sky-500/15' : 'hover:bg-accent')}>
-            <span className={cn('h-1.5 w-1.5 rounded-full', s.side === 'long' ? 'bg-emerald-400' : 'bg-red-400')} />
+            <span className={cn('h-1.5 w-1.5 rounded-full', s.side === 'long' ? 'bg-cyan-400' : 'bg-red-400')} />
             {s.side} {fmtT(data, s.i)}
             {s.refused ? <span className="text-muted-foreground">refused</span> : s.trade?.r != null ? <span className={cn('font-semibold', s.trade.r >= 0 ? 'text-emerald-400' : 'text-red-400')}>{s.trade.r >= 0 ? '+' : ''}{s.trade.r.toFixed(2)}R</span> : <span className="text-muted-foreground">cancelled</span>}
           </button>
@@ -336,7 +336,7 @@ function SignalPanel({ data, s, events, replay, setReplay, playing, play, onClos
   return (
     <div className="mt-2 rounded-lg border bg-muted/30 p-3">
       <div className="flex flex-wrap items-center gap-2">
-        <span className={cn('rounded px-1.5 py-0.5 text-xs font-semibold uppercase', s.side === 'long' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300')}>{s.side}</span>
+        <span className={cn('rounded px-1.5 py-0.5 text-xs font-semibold uppercase', s.side === 'long' ? 'bg-cyan-500/15 text-cyan-300' : 'bg-red-500/15 text-red-300')}>{s.side}</span>
         <span className="text-sm font-semibold">Signal at {fmtT(data, s.i)} NY</span>
         {s.refused ? <Badge tone="warn">refused: {s.refused}</Badge> : <Badge tone={r != null ? (r >= 0 ? 'ok' : 'error') : 'default'}>{s.trade?.outcome}{r != null ? ` · ${r >= 0 ? '+' : ''}${r.toFixed(2)}R` : ''}</Badge>}
         <span className="flex-1" />

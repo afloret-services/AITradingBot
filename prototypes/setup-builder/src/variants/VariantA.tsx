@@ -152,7 +152,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                 <div><div className="mb-1 text-sm font-medium">Rule description (generated, stored at Freeze)</div><div className="mb-2"><ReviewHelp setup={setup} what="rule" /></div><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{ruleDescription(setup)}</pre></div>
                 <div className="space-y-2"><div className="text-sm font-medium">Checks</div>
                   <ReviewHelp setup={setup} what="checks" issues={issues} />
-                  {issues.length === 0 && <Badge tone="ok">Ready to freeze</Badge>}
+                  {issues.length === 0 && <Badge tone="go">Ready to freeze</Badge>}
                   {issues.map((i, k) => <div key={k} className={cn('text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.level === 'error' ? '✕' : '!'} {i.where}: {i.text}</div>)}
                   <div className="pt-2 text-sm font-medium">Save</div>
                   <ReviewHelp setup={setup} what="save" />

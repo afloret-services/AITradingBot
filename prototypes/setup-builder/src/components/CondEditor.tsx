@@ -71,7 +71,7 @@ export function CondEditor({ cond, onChange, onRemove, ctx, side, look, depth = 
       <div className="flex items-center gap-1 text-xs">
         {cond.origin && <button onClick={() => setCollapsed(true)} className="text-muted-foreground">▾</button>}
         {originBadge}
-        <button onClick={() => onChange({ ...cond, t: cond.t === 'all' ? 'any' : 'all' })} className={cn('rounded px-1.5 py-0.5 font-semibold uppercase tracking-wide', cond.t === 'all' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300')} title="switch All / Any">{look === 'chips' ? (cond.t === 'all' ? 'AND' : 'OR') : word}</button>
+        <button onClick={() => onChange({ ...cond, t: cond.t === 'all' ? 'any' : 'all' })} className={cn('rounded px-1.5 py-0.5 font-semibold uppercase tracking-wide', cond.t === 'all' ? 'bg-cyan-500/15 text-cyan-300' : 'bg-amber-500/15 text-amber-300')} title="switch All / Any">{look === 'chips' ? (cond.t === 'all' ? 'AND' : 'OR') : word}</button>
         <AddMenu ctx={ctx} side={side} small onAdd={(c) => setItems([...cond.items, c])} />
         {rm}
       </div>
@@ -83,7 +83,7 @@ export function CondEditor({ cond, onChange, onRemove, ctx, side, look, depth = 
     if (look === 'boxes') return <div className={cn('space-y-1.5 rounded-md border p-2', depth % 2 ? 'bg-background/40' : 'bg-muted/30', highlight && 'ring-1 ring-sky-400')}>{header}{children.length ? children : <Empty />}</div>;
     if (look === 'outline') return <div>{depth > 0 && header}<ul className={cn('space-y-1', depth > 0 && 'ml-3 border-l pl-3')}>{children.map((ch, k) => <li key={k} className="flex gap-1.5"><span className="mt-1.5 text-muted-foreground">{depth === 0 ? '•' : '◦'}</span><div className="flex-1">{ch}</div></li>)}{!children.length && <Empty />}</ul></div>;
     return (
-      <div className={cn('rounded-md border-l-2 py-1 pl-2', cond.t === 'all' ? 'border-emerald-500/60' : 'border-amber-500/60')}>
+      <div className={cn('rounded-md border-l-2 py-1 pl-2', cond.t === 'all' ? 'border-cyan-500/60' : 'border-amber-500/60')}>
         {header}
         <div className="mt-1 flex flex-wrap items-start gap-1.5">{children.length ? children.map((ch, k) => <React.Fragment key={k}>{k > 0 && <span className="mt-1 text-[10px] font-semibold text-muted-foreground">{cond.t === 'all' ? 'AND' : 'OR'}</span>}<div className="rounded-md bg-muted/50 px-1.5 py-1">{ch}</div></React.Fragment>) : <Empty />}</div>
       </div>

@@ -56,7 +56,7 @@ export default function App() {
   const saveBar = (
     <div className="flex flex-wrap items-center gap-1.5">
       {issues.length > 0 && <Badge tone={errors.length ? 'error' : 'warn'} title={issues.map((i) => `${i.where}: ${i.text}`).join('\n')}>{errors.length} errors · {issues.length - errors.length} warnings</Badge>}
-      {!issues.length && <Badge tone="ok">valid</Badge>}
+      {!issues.length && <Badge tone="go">valid</Badge>}
       <Button size="sm" variant="outline" onClick={saveDraft}>{dirty ? 'Save Draft' : 'Draft saved'}</Button>
       <Button size="sm" variant={errors.length ? 'outline' : 'default'} onClick={freeze} title="Freeze makes an immutable numbered Setup version">Freeze → v{versions.length + 1}</Button>
       <Button size="sm" variant="ghost" onClick={exportFile}>Export file</Button>

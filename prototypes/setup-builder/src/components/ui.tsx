@@ -23,8 +23,8 @@ export function Card({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) 
 export function CardHeader({ title, sub, right }: { title: React.ReactNode; sub?: React.ReactNode; right?: React.ReactNode }) {
   return <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 border-b px-4 py-4 sm:flex-nowrap sm:px-5"><div className="min-w-0 basis-full sm:basis-auto"><div className="text-[15px] font-semibold leading-tight tracking-tight">{title}</div>{sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}</div>{right}</div>;
 }
-export function Badge({ className, tone = 'default', ...p }: React.HTMLAttributes<HTMLSpanElement> & { tone?: 'default' | 'outline' | 'warn' | 'error' | 'ok' | 'info' }) {
-  const t = { default: 'bg-secondary text-secondary-foreground', outline: 'border text-muted-foreground', warn: 'bg-amber-500/10 text-amber-300 ring-1 ring-inset ring-amber-500/20', error: 'bg-red-500/10 text-red-300 ring-1 ring-inset ring-red-500/20', ok: 'bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/20', info: 'bg-sky-500/10 text-sky-300 ring-1 ring-inset ring-sky-500/20' }[tone];
+export function Badge({ className, tone = 'default', ...p }: React.HTMLAttributes<HTMLSpanElement> & { tone?: 'default' | 'outline' | 'warn' | 'error' | 'ok' | 'go' | 'info' }) {
+  const t = { default: 'bg-secondary text-secondary-foreground', outline: 'border text-muted-foreground', warn: 'bg-amber-500/10 text-amber-300 ring-1 ring-inset ring-amber-500/20', error: 'bg-red-500/10 text-red-300 ring-1 ring-inset ring-red-500/20', go: 'bg-cyan-500/10 text-cyan-300 ring-1 ring-inset ring-cyan-500/20', ok: 'bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/20', info: 'bg-sky-500/10 text-sky-300 ring-1 ring-inset ring-sky-500/20' }[tone];
   return <span {...p} className={cn('inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium', t, className)} />;
 }
 export function Input({ className, ...p }: React.InputHTMLAttributes<HTMLInputElement>) {

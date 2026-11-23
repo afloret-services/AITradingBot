@@ -40,7 +40,7 @@ function runs(lines: Line[]) {
 
 const JoinSelect = ({ value, onChange }: { value: Join; onChange: (j: Join) => void }) => (
   <select value={value} onChange={(e) => onChange(e.target.value as Join)}
-    className={cn('h-6 rounded-md border px-1 text-[11px] font-bold uppercase tracking-wide outline-none', value === 'and' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' : 'border-amber-500/40 bg-amber-500/10 text-amber-300')}>
+    className={cn('h-6 rounded-md border px-1 text-[11px] font-bold uppercase tracking-wide outline-none', value === 'and' ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300' : 'border-amber-500/40 bg-amber-500/10 text-amber-300')}>
     <option value="and">AND</option><option value="or">OR</option>
   </select>
 );
@@ -104,7 +104,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested }: { con
               <div className="h-px flex-1 bg-amber-500/25" />
             </div>
           )}
-          <div className={cn('space-y-1.5', groups.length > 1 && 'rounded-md border border-emerald-500/20 bg-emerald-500/[0.03] p-1.5')}>
+          <div className={cn('space-y-1.5', groups.length > 1 && 'rounded-md border border-cyan-500/20 bg-cyan-500/[0.03] p-1.5')}>
             {g.map(({ line, idx }) => lineView(line, idx))}
           </div>
         </React.Fragment>

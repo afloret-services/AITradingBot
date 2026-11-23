@@ -15,7 +15,7 @@ type Hover = { kind: 'ind' | 'pat'; key: string } | null;
 function topItems(c: Cond): Cond[] { return c.t === 'all' && !c.origin ? c.items : [c]; }
 const KIND_TAG: Record<string, [string, string]> = {
   pattern: ['pattern', 'text-sky-300 bg-sky-500/10'], cmp: ['compare', 'text-slate-300 bg-slate-500/15'], time: ['time', 'text-amber-300 bg-amber-500/10'],
-  draw: ['draw', 'text-violet-300 bg-violet-500/10'], any: ['any of', 'text-orange-300 bg-orange-500/10'], all: ['all of', 'text-emerald-300 bg-emerald-500/10'],
+  draw: ['draw', 'text-violet-300 bg-violet-500/10'], any: ['any of', 'text-orange-300 bg-orange-500/10'], all: ['all of', 'text-cyan-300 bg-cyan-500/10'],
   not: ['not', 'text-red-300 bg-red-500/10'], for_n: ['for N bars', 'text-teal-300 bg-teal-500/10'], fvg: ['FVG', 'text-sky-300 bg-sky-500/10'],
 };
 function connectorText(st: Step) {
@@ -71,7 +71,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
         return (
           <div key={br.id} className="rounded-xl border bg-background/40 p-3">
             <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-              <span className={cn('rounded-md px-1.5 py-0.5 font-semibold uppercase tracking-wide', long ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300')}>{long ? '▲ long' : '▼ short'}</span>
+              <span className={cn('rounded-md px-1.5 py-0.5 font-semibold uppercase tracking-wide', long ? 'bg-cyan-500/15 text-cyan-300' : 'bg-red-500/15 text-red-300')}>{long ? '▲ long' : '▼ short'}</span>
               <span className="text-muted-foreground">a new first step while one runs: <span className="text-foreground">{br.on_new_start.replace('_', ' ')}</span></span>
               <span className="flex-1" />
               <span className="tabular-nums"><b>{sigs.length}</b> <span className="text-muted-foreground">Signals</span></span>

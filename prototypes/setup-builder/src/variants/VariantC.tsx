@@ -46,7 +46,7 @@ export function VariantC(p: VariantProps) {
         <button onClick={() => setSel({ kind: 'settings' })} className="rounded border px-2 py-1 hover:bg-accent">Base bar <b>{setup.settings.base_bar}</b> · Trading window <b>{tradingWindowText(setup.settings.trading_hours)}</b> · Trade overlap <b>{(ONE_AT_A_TIME[setup.settings.one_at_a_time]?.[0] || '').replace(/:.*$/, '').replace(/^./, (c) => c.toLowerCase())}</b> · News filter <b>{NEWS[setup.settings.news_rule.mode]?.[0].replace(/^./, (c) => c.toLowerCase())}</b> ✎</button>
         <Tabs value={mode} onChange={(v) => { setMode(v as 'build' | 'run'); if (v === 'run') setSel({ kind: 'trade' }); }} tabs={[['build', 'Build the Setup'], ['run', 'Create a Run']]} />
         {run && <><Select value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} options={INSTRUMENTS} className="h-7" />{instrumentWarnings(setup, runD.draft.instrument).map((w) => <span key={w} className="text-amber-300">{w}</span>)}</>}
-        <button onClick={() => setSel({ kind: 'review' })} className={cn('ml-auto rounded border px-2 py-1 hover:bg-accent', sel.kind === 'review' && 'border-sky-400 bg-sky-500/10')}>Review & save {issues.some((i) => i.level === 'error') ? <span className="text-red-300">· {issues.filter((i) => i.level === 'error').length} errors</span> : issues.length ? <span className="text-amber-300">· {issues.length} warnings</span> : <span className="text-emerald-300">· ready</span>}</button>
+        <button onClick={() => setSel({ kind: 'review' })} className={cn('ml-auto rounded border px-2 py-1 hover:bg-accent', sel.kind === 'review' && 'border-sky-400 bg-sky-500/10')}>Review & save {issues.some((i) => i.level === 'error') ? <span className="text-red-300">· {issues.filter((i) => i.level === 'error').length} errors</span> : issues.length ? <span className="text-amber-300">· {issues.length} warnings</span> : <span className="text-cyan-300">· ready</span>}</button>
         <div>{p.saveBar}</div>
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[230px_minmax(0,1fr)_380px]">
@@ -81,7 +81,7 @@ export function VariantC(p: VariantProps) {
           <div className="space-y-4 p-3">
             {setup.branches.map((br, bi) => (
               <div key={br.id}>
-                <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"><Badge tone={br.side === 'long' ? 'ok' : 'error'}>{br.side.toUpperCase()}</Badge><span className="text-muted-foreground">a new first step while one runs: {br.on_new_start.replace('_', ' ')}</span>
+                <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"><Badge tone={br.side === 'long' ? 'go' : 'error'}>{br.side.toUpperCase()}</Badge><span className="text-muted-foreground">a new first step while one runs: {br.on_new_start.replace('_', ' ')}</span>
                   {setup.branches.length === 1 && !run && <button className="text-sky-300 sm:ml-auto" onClick={() => mutate((s) => { addMirror(s); })}>duplicate as mirrored {br.side === 'long' ? 'short' : 'long'}</button>}</div>
                 <div className="flex flex-col items-stretch gap-0 pb-2 sm:flex-row sm:overflow-x-auto">
                   {br.steps.map((st, si) => (
@@ -135,7 +135,7 @@ export function VariantC(p: VariantProps) {
           {phone && <div className="sticky top-0 z-10 -mx-3 mb-2 flex items-center gap-2 border-b bg-card px-3 py-2"><span className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/40" /><button aria-label="close" onClick={() => setSheetOpen(false)} className="absolute right-3 flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground">×</button></div>}
           {sel.kind === 'review' && <div className="space-y-3"><H>Review & save</H><ReviewHelp setup={setup} what="intro" /><ReviewHelp setup={setup} what="map" />
             <H>Checks</H><ReviewHelp setup={setup} what="checks" issues={issues} />
-            {issues.length === 0 && <Badge tone="ok">Ready to freeze</Badge>}
+            {issues.length === 0 && <Badge tone="go">Ready to freeze</Badge>}
             {issues.map((i, k) => <div key={k} className={cn('text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.level === 'error' ? '✕' : '!'} {i.where}: {i.text}</div>)}
             <H>Save</H><ReviewHelp setup={setup} what="save" /><div>{p.saveBar}</div>
             <H>Rule description (stored at Freeze)</H><ReviewHelp setup={setup} what="rule" /><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-2 text-[11px]">{ruleDescription(setup)}</pre>
@@ -227,7 +227,7 @@ function Connector({ st, label }: { st?: Step; label?: string }) {
 function MiniCond({ c, labels, depth = 0 }: { c: Cond; labels: Record<string, string>; depth?: number }) {
   if (c.t === 'all' || c.t === 'any') {
     if (c.origin) return <div className="text-xs"><Badge tone="info">{c.origin.preset}{c.origin.edited ? ' (edited)' : ''}</Badge></div>;
-    return <div className={cn('space-y-0.5', depth > 0 && 'ml-1 border-l-2 pl-1.5', c.t === 'any' ? 'border-amber-500/60' : 'border-emerald-500/60')}>{depth > 0 && <div className="text-[10px] font-semibold text-muted-foreground">{c.t === 'all' ? 'AND' : 'OR'}</div>}{c.items.map((x) => <MiniCond key={x.id} c={x} labels={labels} depth={depth + 1} />)}{!c.items.length && <div className="text-xs italic text-muted-foreground">empty</div>}</div>;
+    return <div className={cn('space-y-0.5', depth > 0 && 'ml-1 border-l-2 pl-1.5', c.t === 'any' ? 'border-amber-500/60' : 'border-cyan-500/60')}>{depth > 0 && <div className="text-[10px] font-semibold text-muted-foreground">{c.t === 'all' ? 'AND' : 'OR'}</div>}{c.items.map((x) => <MiniCond key={x.id} c={x} labels={labels} depth={depth + 1} />)}{!c.items.length && <div className="text-xs italic text-muted-foreground">empty</div>}</div>;
   }
   if (c.t === 'cmp') return <div className="text-xs">{c.origin && <Badge tone="info" className="mr-1">{c.origin.preset}</Badge>}<Chip>{shortName(c.a, labels)}</Chip> {c.op} {c.mult && c.mult !== 1 ? `${c.mult}×` : ''}<Chip>{shortName(c.b || '?', labels)}</Chip></div>;
   if (c.t === 'pattern') return <div className="text-xs"><Badge tone="info">{c.side === 'long' ? '▲' : '▼'} {c.ref} forms</Badge></div>;
