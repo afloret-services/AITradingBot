@@ -13,7 +13,7 @@ export interface Focus { bi: number; si: number }
 export function dayOfSignal(data: Data, s: Signal) { return data.m1[s.i].di; }
 
 const LINE_COLORS = ['#fbbf24', '#f472b6', '#b7e4c7', '#34d399'];
-const C = { up: '#26a69a', down: '#ef5350', zone: '#74c69d', draw: '#a78bfa', risk: '#ef4444', reward: '#22c55e', entry: '#e2e8f0' };
+const C = { up: '#26a69a', down: '#ef5350', zone: '#cbd5e1', draw: '#a78bfa', risk: '#ef4444', reward: '#22c55e', entry: '#e2e8f0' };
 
 type Shape =
   | { k: 'rect'; t1: number; t2: number; p1: number; p2: number; fill: string; stroke?: string; dash?: boolean; label?: string; labelColor?: string; right?: boolean }
@@ -213,7 +213,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
     for (let k = from; k <= to + 1; k++) {
       const inH = k <= to && inTradingHours(setup, B[k].min, B[k].t);
       if (inH && run0 < 0) run0 = k;
-      if (!inH && run0 >= 0) { sh.push({ k: 'band', t1: T(run0), t2: T(k - 1), fill: 'rgba(116,198,157,0.045)' }); run0 = -1; }
+      if (!inH && run0 >= 0) { sh.push({ k: 'band', t1: T(run0), t2: T(k - 1), fill: 'rgba(203,213,225,0.05)' }); run0 = -1; }
     }
     const tOf1m = (i: number) => T(barOf(Math.min(i, cutI ?? i)));
     const tOfMs = (ms: number) => { let k = from; while (k < to && B[k + 1].t <= ms) k++; return T(k); };
@@ -236,7 +236,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
           if (v.target != null) sh.push({ k: 'line', t1: tOfMs(v.time), t2: tEnd, p1: v.target, p2: v.target, stroke: 'rgba(248,113,113,0.8)', dash: true, label: `${name} · target` });
           continue;
         }
-        if (typeof v.top === 'number') sh.push({ k: 'rect', t1: t0, t2: v.end_time != null ? tOfMs(v.end_time) : tEnd, p1: v.top, p2: v.bottom, fill: 'rgba(116,198,157,0.12)', stroke: 'rgba(116,198,157,0.7)', dash: true, label: `${name} · ${title}` });
+        if (typeof v.top === 'number') sh.push({ k: 'rect', t1: t0, t2: v.end_time != null ? tOfMs(v.end_time) : tEnd, p1: v.top, p2: v.bottom, fill: 'rgba(203,213,225,0.12)', stroke: 'rgba(203,213,225,0.7)', dash: true, label: `${name} · ${title}` });
         else if (typeof v.level === 'number') sh.push({ k: 'line', t1: tOfMs(v.swing_time ?? startMs), t2: tOfMs(v.time ?? v.formed), p1: v.level, p2: v.level, stroke: '#fbbf24', dash: true, label: `${name} · MSS` });
         else if (typeof v.start === 'number' && v.start_time != null) { sh.push({ k: 'line', t1: tOfMs(v.start_time), t2: tOfMs(v.end_time), p1: v.start, p2: v.end, stroke: '#fbbf24', width: 2, label: `${name} · Swing` }); sh.push({ k: 'line', t1: tOfMs(v.end_time), t2: tEnd, p1: v.mid, p2: v.mid, stroke: 'rgba(251,191,36,0.5)', dash: true, label: '50%' }); }
         else if (typeof v.high === 'number' && v.time != null) sh.push({ k: 'rect', t1: tOfMs(v.time), t2: tOfMs(v.time), p1: v.high, p2: v.low, fill: 'rgba(251,191,36,0.15)', stroke: '#fbbf24', label: name });
@@ -312,9 +312,9 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
         </div>
       </div>
       <div className="mt-1.5 flex flex-wrap gap-3 px-1 text-[10px] text-muted-foreground">
-        <span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-sky-400/25" />Trading window</span>
+        <span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-slate-300/25" />Trading window</span>
         {focus && !selected && <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: STEP_COLORS[focus.si % 6] }} />step {focus.si + 1} completed<span className="ml-1 h-1.5 w-1.5 bg-slate-400/60" />held alone</span>}
-        {selected && <><span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm border border-dashed border-sky-400 bg-sky-400/20" />pattern zone</span><span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-red-500/40" />risk</span><span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-emerald-500/40" />reward</span><span className="flex items-center gap-1"><span className="h-0.5 w-3 bg-violet-400" />Draw on liquidity</span></>}
+        {selected && <><span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm border border-dashed border-slate-300 bg-slate-300/20" />pattern zone</span><span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-red-500/40" />risk</span><span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-emerald-500/40" />reward</span><span className="flex items-center gap-1"><span className="h-0.5 w-3 bg-violet-400" />Draw on liquidity</span></>}
         {!selected && <span>{focus ? '' : 'Pick a step to see where it completes. '}Click a Signal above to see its zones and replay it.</span>}
       </div>
       {selected && <SignalPanel data={data} s={selected} events={events} replay={replay} setReplay={(r) => { setPlaying(false); setReplay(r); }} playing={playing} play={() => { if (replay == null || replay >= events.length - 1) setReplay(0); setPlaying(true); }} onClose={() => setSelected?.(null)} />}

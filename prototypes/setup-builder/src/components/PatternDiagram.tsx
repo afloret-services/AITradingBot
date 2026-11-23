@@ -6,7 +6,7 @@ import { Data, bars, patternSeries, chartTime } from '../engine';
 import { cn } from './ui';
 
 const W = 260, H = 150;
-const UP = '#26a69a', DOWN = '#ef5350', ZONE = '#74c69d', LVL = '#fbbf24';
+const UP = '#26a69a', DOWN = '#ef5350', ZONE = '#cbd5e1', LVL = '#fbbf24';
 type C = [o: number, h: number, l: number, c: number];
 
 function Candle({ x, k, y, w = 14, hi }: { x: number; k: C; y: (v: number) => number; w?: number; hi?: string }) {

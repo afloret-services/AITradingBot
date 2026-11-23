@@ -2,7 +2,7 @@
 import React from 'react';
 import type { PatternKind } from '../model';
 
-const UP = '#26a69a', DN = '#ef5350', ZN = '#74c69d', LV = '#fbbf24';
+const UP = '#26a69a', DN = '#ef5350', ZN = '#cbd5e1', LV = '#fbbf24';
 /** a candle: x, open, high, low, close in a 0–24 grid (y grows down, so a smaller number is higher) */
 const K = ({ x, o, h, l, c, w = 4 }: { x: number; o: number; h: number; l: number; c: number; w?: number }) => {
   const col = c < o ? UP : DN;
