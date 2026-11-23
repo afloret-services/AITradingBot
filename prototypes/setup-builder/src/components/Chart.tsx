@@ -1,6 +1,6 @@
 // PROTOTYPE: TradingView Lightweight Charts on the real MNQ bars, with each step's effect drawn on it.
 // An SVG overlay draws what price lines can't: pattern zones as boxes, Legs as lines, the Trade's risk and reward
-// areas, and the Trading hours as shaded bands. A Signal can be replayed event by event (steps → Signal → fill → exits).
+// areas, and the Trading window as shaded bands. A Signal can be replayed event by event (steps → Signal → fill → exits).
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createChart, IChartApi, ISeriesApi, LineStyle, SeriesMarker, Time, CrosshairMode } from 'lightweight-charts';
 import { Data, RunResult, bars, closedAt, chartTime, indicatorSeries, Signal, inTradingHours } from '../engine';
@@ -208,7 +208,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
 
     // overlay shapes
     const sh: Shape[] = [];
-    // Trading hours as shaded bands
+    // Trading window as shaded bands
     let run0 = -1;
     for (let k = from; k <= to + 1; k++) {
       const inH = k <= to && inTradingHours(setup, B[k].min, B[k].t);
@@ -312,7 +312,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
         </div>
       </div>
       <div className="mt-1.5 flex flex-wrap gap-3 px-1 text-[10px] text-muted-foreground">
-        <span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-sky-400/25" />Trading hours</span>
+        <span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-sky-400/25" />Trading window</span>
         {focus && !selected && <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: STEP_COLORS[focus.si % 6] }} />step {focus.si + 1} completed<span className="ml-1 h-1.5 w-1.5 bg-slate-400/60" />held alone</span>}
         {selected && <><span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm border border-dashed border-sky-400 bg-sky-400/20" />pattern zone</span><span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-red-500/40" />risk</span><span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-emerald-500/40" />reward</span><span className="flex items-center gap-1"><span className="h-0.5 w-3 bg-violet-400" />Draw on liquidity</span></>}
         {!selected && <span>{focus ? '' : 'Pick a step to see where it completes. '}Click a Signal above to see its zones and replay it.</span>}

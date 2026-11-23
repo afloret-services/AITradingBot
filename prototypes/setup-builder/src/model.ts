@@ -333,7 +333,7 @@ export function patternSettingsPhrase(p: Pattern) {
 export function ruleDescription(s: Setup): string {
   const labels = labelsOf(s);
   const lines: string[] = [];
-  lines.push(`${s.name}. Base bar ${s.settings.base_bar}. Trading hours ${s.settings.trading_hours.ranges.map((r) => `${r.start}–${r.end}`).join(', ') || 'all day'} NY.`);
+  lines.push(`${s.name}. Base bar ${s.settings.base_bar}. Trading window ${s.settings.trading_hours.ranges.map((r) => `${r.start}–${r.end}`).join(', ') || 'all day'} NY.`);
   for (const p of s.patterns || []) lines.push(`Pattern "${p.name}": ${p.tf} ${PATTERN_KINDS[p.kind].title} (${patternSettingsPhrase(p)}).`);
   for (const br of s.branches) {
     lines.push(`${br.side === 'long' ? 'Long' : 'Short'}:`);

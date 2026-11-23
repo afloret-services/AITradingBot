@@ -58,6 +58,7 @@ A rough evaluator, not the engine. It exists so each step shows its effect on re
 - Candlestick patterns are pattern kinds too: engulfing, hammer / shooting star, morning / evening star, harami, piercing line / dark cloud cover, three white soldiers / three black crows, tweezer bottom / top, inside-bar breakout, doji (after a drop or a rise; optionally dragonfly / gravestone only) and marubozu. The side picks the bullish or bearish one; most have an optional "after a move against it over N bars" filter; they form on the close of their last candle and capture its high, low, open, close and mid.
 - Pattern categories follow The Chart Guys' chart-pattern cheat sheet (chartguys.com/chart-pattern-cheat-sheet): Type (Continuation / Reversal / Indeterminate), Bias (Bullish / Bearish / Neutral) and Classical / Lesser-Known, with Consolidation and Typically breaks. The declare palette filters by them and each pattern shows them; candlesticks, which that page does not cover, use the usual reading.
 - "One at a time" is called Trade overlap (Allowed / Ignore new starts / Skip completions).
+- "Trading hours" is called Trading window.
 - "News rule" is called News filter.
 - The Leg pattern is called Swing (an up swing / a down swing, captured as swing.start, swing.end…), and the measured move's legs are its first and second swing (captured as mm.swing).
 - "Take profits" replaces "Take-profit legs": the section is Take profits, each one TP1, TP2… (your call while trying it; the glossary term "Take-profit legs" would change with it).

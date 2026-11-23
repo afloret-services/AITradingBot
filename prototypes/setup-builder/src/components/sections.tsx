@@ -26,7 +26,7 @@ export function TradingHoursEditor({ setup, mutate }: { setup: Setup; mutate: Mu
   const th = setup.settings.trading_hours;
   return (
     <div className="space-y-1">
-      <Label>Trading hours (NY, checked on the Signal's bar)</Label>
+      <Label>Trading window (NY, checked on the Signal's bar)</Label>
       <div className="space-y-1.5">
         {th.ranges.length === 0 && <div className="text-xs italic text-muted-foreground">No range: all day.</div>}
         {th.ranges.map((r, k) => (
@@ -339,7 +339,7 @@ function WhenHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'hours' | 's
   const WDN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   if (what === 'intro') return (
     <HelpBox>
-      <div><T>When this Setup may trade.</T> The Trading hours say when a Signal may be taken; the sessions are the named windows that session levels (the Asia high, the London low…) are measured over; Trade overlap and the News filter say what happens while a Trade is live and around economic releases. Times are New York time throughout.</div>
+      <div><T>When this Setup may trade.</T> The Trading window says when a Signal may be taken; the sessions are the named windows that session levels (the Asia high, the London low…) are measured over; Trade overlap and the News filter say what happens while a Trade is live and around economic releases. Times are New York time throughout.</div>
     </HelpBox>
   );
   if (what === 'hours') {
@@ -350,7 +350,7 @@ function WhenHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'hours' | 's
     const days = th.weekdays.length === 5 && [1, 2, 3, 4, 5].every((d) => th.weekdays.includes(d)) ? 'Monday to Friday' : th.weekdays.map((d) => WDN[d]).join(', ') || 'every day';
     return (
       <HelpBox>
-        <div>A Signal is only taken when the bar its last step completes on opens inside one of these ranges, on a ticked weekday. The steps before it may complete earlier (a pullback can start before the window opens); only the Signal is checked. A range may cross midnight (18:00–16:00 covers the whole futures day), you can add several, and no range means all day. "End of Trading hours" in the Entry deadline means the end of these ranges.</div>
+        <div>A Signal is only taken when the bar its last step completes on opens inside one of these ranges, on a ticked weekday. The steps before it may complete earlier (a pullback can start before the window opens); only the Signal is checked. A range may cross midnight (18:00–16:00 covers the whole futures day), you can add several, and no range means all day. "End of Trading window" in the Entry deadline means the end of these ranges.</div>
         <div>Here: {th.ranges.length ? B(th.ranges.map((r) => `${r.start}–${r.end}`).join(' and ')) : B('all day')} NY{th.ranges.length ? <> ({B(`${Math.floor(mins / 60)}h${mins % 60 ? String(mins % 60).padStart(2, '0') : ''}`)} a day)</> : ''}, {B(days)}.</div>
       </HelpBox>
     );
@@ -395,7 +395,7 @@ function BasicsHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'name' | '
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   if (what === 'intro') return (
     <HelpBox>
-      <div><T>A Setup</T> is one trading strategy written as Rule blocks: when to look (Trading hours), what must happen in order (Signal steps), how to get in (Entry and stop) and how to manage the Trade (Trade settings). It names no instrument: the same Setup can run on MNQ, NQ, ES or MES, chosen when a <T>Run</T> is created.</div>
+      <div><T>A Setup</T> is one trading strategy written as Rule blocks: when to look (Trading window), what must happen in order (Signal steps), how to get in (Entry and stop) and how to manage the Trade (Trade settings). It names no instrument: the same Setup can run on MNQ, NQ, ES or MES, chosen when a <T>Run</T> is created.</div>
       <div>While you build, it is a <T>Draft</T>: it saves with warnings and you can keep changing it. <T>Freeze</T> makes a numbered, unchangeable version (v1, v2…) that Runs and backtests point to; it is refused while there are errors. You build it, check what it did on the MNQ bars, freeze it, then create a Run.</div>
     </HelpBox>
   );
@@ -450,7 +450,7 @@ function ReviewHelp_({ setup, what, issues, result, versions }: { setup: Setup; 
   );
   if (what === 'map') return (
     <HelpBox>
-      <div>Each branch as a flow, left to right: <T>When</T> (Base bar, Trading hours), its <T>steps</T>, the <T>Entry</T> and the <T>Trade</T> settings. A step card lists its conditions with a tag (pattern, compare, time…), what it reads from earlier steps (<span className="mono">← name</span>) and what it captures for later ones (<span className="mono">→ name</span>), and how often it completed on the bars. The arrows between steps carry the Sequence limits. Hover a declared indicator or pattern at the top to light up the steps that read it.</div>
+      <div>Each branch as a flow, left to right: <T>When</T> (Base bar, Trading window), its <T>steps</T>, the <T>Entry</T> and the <T>Trade</T> settings. A step card lists its conditions with a tag (pattern, compare, time…), what it reads from earlier steps (<span className="mono">← name</span>) and what it captures for later ones (<span className="mono">→ name</span>), and how often it completed on the bars. The arrows between steps carry the Sequence limits. Hover a declared indicator or pattern at the top to light up the steps that read it.</div>
     </HelpBox>
   );
   if (what === 'rule') return (
@@ -479,7 +479,7 @@ function ReviewHelp_({ setup, what, issues, result, versions }: { setup: Setup; 
   const wins = taken.filter((x) => (x.trade!.r || 0) > 0).length;
   return (
     <HelpBox>
-      <div><T>Signals</T>: every time the last step completed inside the Trading hours. <T>Refused</T>: Signals a guard or the sizing turned down (the reason is in the Signal's panel). <T>Trades</T>: Signals that filled; a cancelled entry is not a Trade. <T>Win rate</T>: Trades that ended in profit. <T>Total</T>: the sum of the Trades' results in R, where 1R is what each Trade risked at its stop.</div>
+      <div><T>Signals</T>: every time the last step completed inside the Trading window. <T>Refused</T>: Signals a guard or the sizing turned down (the reason is in the Signal's panel). <T>Trades</T>: Signals that filled; a cancelled entry is not a Trade. <T>Win rate</T>: Trades that ended in profit. <T>Total</T>: the sum of the Trades' results in R, where 1R is what each Trade risked at its stop.</div>
       <div>Here: {B(`${sigs.length} Signal${sigs.length === 1 ? "" : "s"}`)}, {B(`${taken.length} Trade${taken.length === 1 ? "" : "s"}`)}, {taken.length ? <>{B(`${Math.round((wins / taken.length) * 100)}%`)} winners and </> : ''}{B(`${r >= 0 ? '+' : ''}${r.toFixed(2)}R`)} on 35 Trading days. Use the day arrows or "next Signal day", click a Signal to see its zones and its risk and reward, and ▶ Replay to step through it. This is a rough simulation on 1-minute bars; a backtest Run is the real measure.</div>
     </HelpBox>
   );
@@ -498,7 +498,7 @@ function SignalStepsHelp_({ setup, bi }: { setup: Setup; bi: number }) {
   return (
     <HelpBox>
       <div><T>How steps work.</T> A branch is a Sequence: step 1, then step 2, and so on. At every close of the {setup.settings.base_bar} Base bar the conditions are checked. When step 1 holds, a <T>Candidate</T> starts and waits for step 2; when the last step completes, the Candidate becomes a <T>Signal</T> and goes to the Entry. All the conditions inside a step must hold on the same bar. What a step captures (a pattern's top, the Draw on liquidity, a running low) can be read by the steps after it and by the Entry and stop.</div>
-      <div><T>When a Candidate ends without a Signal:</T> a limit on the next step runs out (too many bars, past its clock time), its invalidation happens, or the Trading day ends at 18:00 NY. A Candidate that completes outside the Trading hours gives no Signal.</div>
+      <div><T>When a Candidate ends without a Signal:</T> a limit on the next step runs out (too many bars, past its clock time), its invalidation happens, or the Trading day ends at 18:00 NY. A Candidate that completes outside the Trading window gives no Signal.</div>
       <div><T>On a new first step while one is running: {title}.</T> {text}</div>
       <details className="text-[11px]"><summary className="cursor-pointer hover:text-foreground">compare the three, and how to read the counts</summary>
         <ul className="mt-1 space-y-1 pl-3">{Object.entries(NEW_START).map(([k, [l, t]]) => <li key={k} className={cn(k === br?.on_new_start && 'text-foreground')}><b>{l}</b>: {t}</li>)}</ul>
@@ -686,7 +686,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
     case 'entry_deadline': return (
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Badge tone="outline">mandatory</Badge>
-        <Select value={value.entry_deadline.kind} onChange={(kk) => onChange({ ...value, entry_deadline: { kind: kk, value: kk === 'clock' ? '11:00' : kk === 'bars' ? '3' : '' } })} options={[['clock', 'a NY clock time'], ['bars', 'N Base bars after the Signal'], ['end_of_hours', 'end of Trading hours'], ['end_of_day', 'end of the Trading day']]} />
+        <Select value={value.entry_deadline.kind} onChange={(kk) => onChange({ ...value, entry_deadline: { kind: kk, value: kk === 'clock' ? '11:00' : kk === 'bars' ? '3' : '' } })} options={[['clock', 'a NY clock time'], ['bars', 'N Base bars after the Signal'], ['end_of_hours', 'end of Trading window'], ['end_of_day', 'end of the Trading day']]} />
         {(value.entry_deadline.kind === 'clock' || value.entry_deadline.kind === 'bars') && <Input value={value.entry_deadline.value} onChange={(e) => onChange({ ...value, entry_deadline: { ...value.entry_deadline, value: e.target.value } })} className="w-16" />}
         <span className="text-xs text-muted-foreground">cancel if reached first:</span>
         {(['stop', 'first_leg', 'draw'] as const).map((c) => <label key={c} className="flex items-center gap-1 text-xs"><input type="checkbox" checked={value.cancel_if.includes(c)} onChange={(e) => onChange({ ...value, cancel_if: e.target.checked ? [...value.cancel_if, c] : value.cancel_if.filter((x: string) => x !== c) })} />{(c === 'first_leg' ? 'first take profit' : c)}</label>)}
@@ -753,7 +753,7 @@ function sectionExample(setup: Setup, k: SectionKey | 'in_position'): React.Reac
     }
     case 'entry_deadline': {
       const d = ts.entry_deadline;
-      const wait = d.kind === 'clock' ? `until ${d.value} NY` : d.kind === 'bars' ? `${d.value} Base bars (${Number(d.value) * tfMinutes(setup.settings.base_bar)} minutes)` : d.kind === 'end_of_hours' ? 'until the Trading hours end' : 'until the Trading day ends';
+      const wait = d.kind === 'clock' ? `until ${d.value} NY` : d.kind === 'bars' ? `${d.value} Base bars (${Number(d.value) * tfMinutes(setup.settings.base_bar)} minutes)` : d.kind === 'end_of_hours' ? 'until the Trading window ends' : 'until the Trading day ends';
       return <>Here: the entry waits {B(wait)}{ts.cancel_if.length ? <>, and is cancelled earlier if the {B(ts.cancel_if.map((c) => (c === 'first_leg' ? 'first take profit' : c)).join(' or '))} is reached first</> : ''}.{setup.branches.every((b) => b.entry.order === 'market') ? ' This Setup enters at market, so the deadline never comes into play.' : ''}</>;
     }
     case 'expiry_and_flatten': return <>Here: {ts.expiry ? <>Trades still open at {B(ts.expiry)} are closed, and </> : ''}everything is flat by {B(ts.flatten_time)} NY.</>;
