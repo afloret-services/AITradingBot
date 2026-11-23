@@ -173,7 +173,22 @@ function RunDiff({ setup, runD, ctx }: { setup: Setup; runD: ReturnType<typeof u
     <div className="mt-2 space-y-2 text-xs">
       <div className="flex items-center gap-2">on <Select value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} options={INSTRUMENTS} className="h-7" /></div>
       {instrumentWarnings(setup, runD.draft.instrument).map((w) => <div key={w} className="text-amber-300">{w}</div>)}
-      <table className="w-full">
+      <div className="space-y-1.5 sm:hidden">
+        {SECTIONS.map((k) => {
+          const on = k in runD.draft.overrides;
+          return (
+            <div key={k} className={cn('rounded-md border p-2', on && 'border-sky-500/40 bg-sky-500/5')}>
+              <div className="flex items-center gap-2 font-medium"><SectionIcon k={k} size={16} />{SECTION_NAMES[k]}
+                <span className="ml-auto flex gap-1.5">{on && <button className="h-7 rounded-md border border-input px-2 font-normal text-muted-foreground" onClick={() => { runD.override(k, false); setEditing(null); }}>reset</button>}<button className="h-7 rounded-md border border-sky-500/40 px-2 font-normal text-sky-300" onClick={() => { if (!on) runD.override(k, true); setEditing(editing === k ? null : k); }}>{on ? (editing === k ? 'done' : 'edit') : 'override'}</button></span></div>
+              <div className={cn('mt-1', on ? 'text-red-300/80 line-through' : 'text-muted-foreground')}>{sectionSummary(setup, k)}</div>
+              {on && <div className="mt-0.5 text-emerald-300">→ {sectionSummary(runD.effective, k)}</div>}
+              {editing === k && on && <div className="mt-2 rounded-md border p-2"><SectionEditor k={k} value={runD.draft.overrides[k]} setup={setup} ctx={ctx} onChange={(v) => runD.setOverride(k, v)} /></div>}
+            </div>
+          );
+        })}
+        <div className="rounded-md border p-2 text-muted-foreground">🔒 Signal steps and While in a Trade are part of the Setup version.</div>
+      </div>
+      <table className="hidden w-full sm:table">
         <thead><tr className="text-left text-muted-foreground"><th className="py-1">Section</th><th>Setup default</th><th>This Run</th></tr></thead>
         <tbody>
           {SECTIONS.map((k) => {
