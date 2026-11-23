@@ -12,7 +12,8 @@ const inR = (m: number, s: number, e: number) => (s <= e ? m >= s && m < e : m >
 export interface Focus { bi: number; si: number }
 export function dayOfSignal(data: Data, s: Signal) { return data.m1[s.i].di; }
 
-const LINE_COLORS = ['#fbbf24', '#f472b6', '#b7e4c7', '#34d399'];
+// indicator lines in the green palette (d8f3dc…081c15), as the indicator icons: EMA, SMA, then more shades for more averages
+const LINE_COLORS = ['#95d5b2', '#d8f3dc', '#52b788', '#b7e4c7'];
 const C = { up: '#26a69a', down: '#ef5350', zone: '#cbd5e1', draw: '#a78bfa', risk: '#ef4444', reward: '#22c55e', entry: '#e2e8f0' };
 
 type Shape =
@@ -132,7 +133,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
     cs.setData(B.slice(from, to + 1).map((b, k) => ({ time: T(from + k) as Time, open: b.o, high: b.h, low: b.l, close: b.c })));
 
     // declared indicators on the chart timeframe
-    let lineN = 0;
+    let lineN = 0; const usedLine = new Set<string>();
     for (const ind of setup.indicators) {
       const p = parseToken(ind.token);
       if (p.parts[3] !== tf) continue;
@@ -144,14 +145,16 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
       const label = ind.label?.replace(/^the /, '') || `${name.toUpperCase()} ${p.parts[2]}${out ? ' ' + out : ''}`;
       let s: ISeriesApi<any> | null = null, color = '#94a3b8';
       if (name === 'ema' || name === 'sma') {
-        color = LINE_COLORS[lineN++ % LINE_COLORS.length];
+        const want = name === 'ema' ? LINE_COLORS[0] : LINE_COLORS[1];
+        color = !usedLine.has(want) ? want : LINE_COLORS.find((x) => !usedLine.has(x)) || LINE_COLORS[lineN % LINE_COLORS.length];
+        usedLine.add(color); lineN++;
         s = c.addLineSeries({ color, lineWidth: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
       } else if (name === 'macd') {
-        color = out === 'hist' ? '#64748b' : out === 'signal' ? '#f97316' : '#74c69d';
+        color = out === 'hist' ? '#64748b' : out === 'signal' ? '#d8f3dc' : '#74c69d';
         s = out === 'hist' ? c.addHistogramSeries({ priceScaleId: 'osc', priceLineVisible: false, lastValueVisible: false }) : c.addLineSeries({ priceScaleId: 'osc', color, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
         c.priceScale('osc').applyOptions({ scaleMargins: { top: 0.78, bottom: 0.02 }, visible: false });
       } else if (name === 'adx' || name === 'rsi') {
-        color = '#c084fc';
+        color = '#52b788';
         s = c.addLineSeries({ priceScaleId: name, color, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
         c.priceScale(name).applyOptions({ scaleMargins: { top: 0.78, bottom: 0.02 }, visible: false });
       } else continue; // ATR, average range…: listed in the legend only
@@ -162,7 +165,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
     const legendOnly = setup.indicators.filter((ind) => { const p = parseToken(ind.token); return p.parts[3] === tf && !['ema', 'sma', 'macd', 'adx', 'rsi'].includes(p.parts[1]); }).map((ind) => {
       const p = parseToken(ind.token), vals = indicatorSeries(data, p.parts[1], p.parts[2], tf, p.parts[4]), vm = new Map<number, number>();
       for (let k = from; k <= to; k++) if (vals[k] != null) vm.set(T(k), vals[k]!);
-      return { label: ind.label?.replace(/^the /, '') || `${p.parts[1]} ${p.parts[2]}`, color: '#64748b', vals: vm };
+      return { label: ind.label?.replace(/^the /, '') || `${p.parts[1]} ${p.parts[2]}`, color: '#b7e4c7', vals: vm };
     });
     const allLegend = [...extra.current, ...legendOnly];
     const setLegendAt = (t: number | null) => {
