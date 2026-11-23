@@ -1,6 +1,6 @@
 // PROTOTYPE: a step's conditions as a rule: IF a AND b OR c … Each line has its own AND / OR. AND binds tighter than
-// OR (like "a and b, or c"), so each run of ANDs is drawn as one box and the boxes are joined by OR. Brackets ( … )
-// group explicitly and nest. Underneath it is still the same Cond tree: an OR of ANDs.
+// OR (like "a and b, or c"), so each run of ANDs is drawn as one box and the boxes are joined by OR. ALL OF / ANY OF
+// groups (any number of conditions, switchable) group explicitly and nest. Underneath it is still the same Cond tree: an OR of ANDs.
 import React from 'react';
 import { Cond, uid, condPhrase } from '../model';
 import { CondEditor, AddMenu } from './CondEditor';
@@ -45,26 +45,30 @@ const JoinSelect = ({ value, onChange }: { value: Join; onChange: (j: Join) => v
   </select>
 );
 
-export function RuleEditor({ cond, onChange, ctx, side, keyword, nested }: { cond: Cond; onChange: (c: Cond) => void; ctx: TokenCtx; side: 'long' | 'short'; keyword?: string; nested?: boolean }) {
-  const lines = toLines(cond);
+export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }: { cond: Cond; onChange: (c: Cond) => void; ctx: TokenCtx; side: 'long' | 'short'; keyword?: string; nested?: boolean; group?: 'all' | 'any' }) {
+  // group: the inside of an ALL OF / ANY OF box; every line has the group's join, so no AND/OR dropdowns
+  const gj: Join = group === 'any' ? 'or' : 'and';
+  const lines: Line[] = group ? (cond as any).items.map((x: Cond) => ({ cond: x, join: gj })) : toLines(cond);
   const label = (cond as any).label;
-  const set = (ls: Line[]) => onChange(fromLines(ls, cond.id, label));
+  const set = (ls: Line[]) => onChange(group ? { ...(cond as any), t: group, items: ls.map((l) => l.cond) } : fromLines(ls, cond.id, label));
   const setLine = (i: number, c: Cond) => set(lines.map((l, k) => (k === i ? { ...l, cond: c } : l)));
   const setJoin = (i: number, j: Join) => set(lines.map((l, k) => (k === i ? { ...l, join: j } : l)));
   const remove = (i: number) => set(lines.filter((_, k) => k !== i).map((l, k) => (k === 0 ? { ...l, join: 'and' as Join } : l)));
-  const add = (c: Cond, join: Join = 'and') => set([...lines, { cond: c, join }]);
+  const add = (c: Cond, join: Join = 'and') => set([...lines, { cond: c, join: group ? gj : join }]);
+  const newGroup = (t: 'all' | 'any'): Cond => ({ id: uid(), t, items: [] });
   // insert before line i, joined with AND; the AND/OR layout stays where it is and the conditions move through it
   const insert = (i: number, c: Cond) => set([...lines.slice(0, i), { cond: c, join: 'and' as Join }, ...lines.slice(i).map((l, k) => (k === 0 && i === 0 ? { ...l, join: 'and' as Join } : l))]);
   const move = (i: number, d: -1 | 1) => { const j = i + d; if (j < 0 || j >= lines.length) return; const ls = lines.map((l) => ({ ...l })); [ls[i].cond, ls[j].cond] = [ls[j].cond, ls[i].cond]; set(ls); };
   const [drag, setDrag] = React.useState<number | null>(null);
   const [over, setOver] = React.useState<number | null>(null);
   const drop = (to: number) => { if (drag == null || drag === to) return; const conds = lines.map((l) => l.cond); const [c] = conds.splice(drag, 1); conds.splice(to, 0, c); set(lines.map((l, k) => ({ ...l, cond: conds[k] }))); };
-  const groups = runs(lines);
+  const groups = group ? (lines.length ? [lines.map((line, idx) => ({ line, idx }))] : []) : runs(lines);
   const mixed = groups.length > 1 && groups.some((g) => g.length > 1);
 
   const lineView = (l: Line, i: number) => {
     const c = l.cond;
-    const lead = i === 0 ? (keyword ? <span className="w-14 shrink-0 pt-1 text-xs font-black tracking-wider text-sky-300">{keyword}</span> : <span className="w-14 shrink-0" />)
+    const lead = group ? <span className={cn('w-7 shrink-0 pt-1.5 text-[10px] font-bold uppercase tracking-wide', group === 'all' ? 'text-cyan-300/70' : 'text-amber-300/70')}>{i === 0 ? '' : group === 'all' ? 'and' : 'or'}</span>
+      : i === 0 ? (keyword ? <span className="w-14 shrink-0 pt-1 text-xs font-black tracking-wider text-sky-300">{keyword}</span> : <span className="w-14 shrink-0" />)
       : <span className="w-14 shrink-0 pt-0.5">{l.join === 'and' ? <JoinSelect value="and" onChange={(j) => setJoin(i, j)} /> : null}</span>;
     return (
       <div key={c.id} className={cn('group/line flex flex-wrap items-start gap-2 rounded-md [@container(min-width:38rem)]:flex-nowrap', drag === i && 'opacity-40', over === i && drag != null && drag !== i && 'ring-1 ring-sky-400/60')}
@@ -76,11 +80,15 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested }: { con
         </span>
         <div className="min-w-0 flex-1 basis-[calc(100%-6rem)] [@container(min-width:38rem)]:basis-0">
           {isPlainGroup(c)
-            ? <div className="rounded-md border border-dashed border-sky-500/40 bg-sky-500/[0.03]">
-                <div className="flex items-center gap-2 border-b border-dashed border-sky-500/30 px-2 py-1 text-[11px] text-sky-300/80"><span className="text-base leading-none">(</span>bracket: checked as one condition<button title="remove the bracket" aria-label="remove the bracket" onClick={() => remove(i)} className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button></div>
-                <div className="p-2"><RuleEditor cond={c} onChange={(x) => setLine(i, x)} ctx={ctx} side={side} nested /></div>
-                <div className="px-2 pb-1 text-base leading-none text-sky-300/80">)</div>
-              </div>
+            ? (() => { const gt = (c as any).t as 'all' | 'any'; const all = gt === 'all'; return (
+              <div className={cn('rounded-md border', all ? 'border-cyan-500/40 bg-cyan-500/[0.04]' : 'border-amber-500/40 bg-amber-500/[0.04]')}>
+                <div className={cn('flex flex-wrap items-center gap-2 border-b px-2 py-1 text-[11px]', all ? 'border-cyan-500/25' : 'border-amber-500/25')}>
+                  <button onClick={() => setLine(i, { ...(c as any), t: all ? 'any' : 'all' })} title="switch between ALL OF and ANY OF" className={cn('h-7 rounded-md border px-2 text-xs font-black uppercase tracking-wider', all ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300' : 'border-amber-500/50 bg-amber-500/15 text-amber-300')}>{all ? 'All of' : 'Any of'} ⇄</button>
+                  <span className="text-muted-foreground">{all ? 'every condition below must hold' : 'at least one condition below must hold'}</span>
+                  <button title="remove this group" aria-label="remove this group" onClick={() => remove(i)} className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button>
+                </div>
+                <div className="p-2"><RuleEditor cond={c} onChange={(x) => setLine(i, x)} ctx={ctx} side={side} nested group={gt} /></div>
+              </div>); })()
             : <CondEditor cond={c} ctx={ctx} side={side} look="boxes" depth={1} onChange={(x) => setLine(i, x)} />}
         </div>
         <span className="flex w-full shrink-0 items-center justify-end gap-0.5 [@container(min-width:38rem)]:w-auto [@container(min-width:38rem)]:pt-0.5">
@@ -95,7 +103,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested }: { con
 
   return (
     <div className="space-y-1.5 [container-type:inline-size]">
-      {lines.length === 0 && <div className="flex items-center gap-2">{keyword && <span className="w-14 text-xs font-black tracking-wider text-sky-300">{keyword}</span>}<span className="text-xs italic text-muted-foreground">no condition yet: add one</span></div>}
+      {lines.length === 0 && <div className={cn('flex items-center gap-2', group && 'pl-9')}>{keyword && <span className="w-14 text-xs font-black tracking-wider text-sky-300">{keyword}</span>}<span className="text-xs italic text-muted-foreground">no condition yet: add one</span></div>}
       {groups.map((g, gi) => (
         <React.Fragment key={g[0].line.cond.id}>
           {gi > 0 && (
@@ -109,12 +117,13 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested }: { con
           </div>
         </React.Fragment>
       ))}
-      <div className="flex flex-wrap items-center gap-1 pl-16">
+      <div className={cn('flex flex-wrap items-center gap-1', group ? 'pl-9' : 'pl-16')}>
         <AddMenu ctx={ctx} side={side} onAdd={(c) => add(c, 'and')} small />
-        {lines.length > 0 && <AddMenu ctx={ctx} side={side} onAdd={(c) => add(c, 'or')} small label="+ or" />}
-        <button className="h-6 rounded px-1.5 text-xs text-sky-300 hover:bg-accent" onClick={() => add({ id: uid(), t: 'all', items: [] })} title="a bracket groups conditions explicitly">+ ( … )</button>
+        {!group && lines.length > 0 && <AddMenu ctx={ctx} side={side} onAdd={(c) => add(c, 'or')} small label="+ or" />}
+        <button className="h-6 rounded px-1.5 text-xs text-cyan-300 hover:bg-accent" onClick={() => add(newGroup('all'))} title="a group where every condition must hold">+ all of</button>
+        <button className="h-6 rounded px-1.5 text-xs text-amber-300 hover:bg-accent" onClick={() => add(newGroup('any'))} title="a group where at least one condition must hold">+ any of</button>
       </div>
-      {!nested && mixed && <div className="pl-16 text-[11px] text-muted-foreground">AND is checked before OR: each green box must hold as a whole, and any one of the boxes is enough. Reads as: {condPhrase(cond, ctx.labels)}.</div>}
+      {!nested && mixed && <div className="pl-16 text-[11px] text-muted-foreground">AND is checked before OR: each box must hold as a whole, and any one of the boxes is enough. Reads as: {condPhrase(cond, ctx.labels)}.</div>}
     </div>
   );
 }
