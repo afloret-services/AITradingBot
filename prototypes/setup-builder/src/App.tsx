@@ -83,8 +83,8 @@ export default function App() {
       {variant === 'C' && <VariantC {...props} />}
       {variant === 'D' && <VariantA {...props} inline />}
       {showJson && (
-        <div className="fixed right-3 top-12 z-50 h-[75vh] w-[460px] overflow-auto rounded-lg border bg-card p-3 shadow-2xl">
-          <div className="mb-2 flex items-center justify-between"><b>The Setup file (Draft)</b><Button size="sm" variant="ghost" onClick={() => setShowJson(false)}>×</Button></div>
+        <div className="fixed inset-x-3 top-12 z-[70] max-h-[80vh] overflow-auto rounded-lg border bg-card p-3 shadow-2xl sm:inset-x-auto sm:right-3 sm:h-[75vh] sm:max-h-none sm:w-[460px]">
+          <div className="sticky -top-3 -mx-3 -mt-3 mb-2 flex items-center justify-between border-b bg-card px-3 py-2"><b>The Setup file (Draft)</b><button aria-label="close" onClick={() => setShowJson(false)} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground hover:bg-accent">×</button></div>
           <pre className="mono whitespace-pre-wrap text-[11px] text-muted-foreground">{ruleDescription(setup)}</pre>
           <hr className="my-2" />
           {issues.map((i, k) => <div key={k} className={cn('text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.where}: {i.text}</div>)}
