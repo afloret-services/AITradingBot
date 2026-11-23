@@ -117,7 +117,7 @@ export function VariantA(p: VariantProps) {
                     <SectionHelp setup={setup} k={k} />
                     <SectionEditor k={k} value={getSection(setup, k)} setup={setup} ctx={tokenCtx(setup, 0, 99)} onChange={(v) => mutate((s) => { setSection(s, k, v); })} /></div>
                 ))}
-                <div><div className="mb-1.5 flex items-center gap-2 text-sm font-medium"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={'in_position'} size={18} /></span>In-position rules <span className="text-xs font-normal text-muted-foreground">(part of the Setup version; a Run cannot override them)</span></div>
+                <div><div className="mb-1.5 flex items-center gap-2 text-sm font-medium"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={'in_position'} size={18} /></span>While in a Trade <span className="text-xs font-normal text-muted-foreground">(part of the Setup version; a Run cannot override them)</span></div>
                   <SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="boxes" /></div>
               </div>
             )}
@@ -164,7 +164,7 @@ const SUBS = [
   'Trading window, Market sessions, Trade overlap and the News filter.',
   'First A, then B: each step is one Sequence link. The counts show how often each step held and completed on MNQ.',
   'The Entry block: order type, price and the mandatory stop.',
-  'The Setup defaults a Run may override section by section, plus In-position rules.',
+  'The Setup defaults a Run may override section by section, plus the While-in-a-Trade rules.',
   'The whole Setup at a glance, what it did on MNQ, what the engine will read, and what still blocks a Freeze.',
   'Bind this Setup to an instrument and override whole sections. Overrides make no new version.',
 ];
@@ -196,7 +196,7 @@ function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
             </div>
           );
         })}
-        <div className="p-3 text-xs text-muted-foreground">Signal rules and In-position rules are part of the Setup version and cannot be overridden here.</div>
+        <div className="p-3 text-xs text-muted-foreground">Signal rules and While-in-a-Trade rules are part of the Setup version and cannot be overridden here.</div>
       </div>
       {runD.result && <div className="flex items-center gap-2 text-xs"><span>Defaults:</span><RunSummary result={p.result} data={p.data} /><span>With this Run's overrides:</span><RunSummary result={runD.result} data={p.data} /></div>}
     </div>

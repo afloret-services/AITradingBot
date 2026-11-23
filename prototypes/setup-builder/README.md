@@ -60,6 +60,7 @@ A rough evaluator, not the engine. It exists so each step shows its effect on re
 - "One at a time" is called Trade overlap: Allow overlap / Wait for the Trade to end / Skip Signals during the Trade.
 - "Trading hours" is called Trading window.
 - "Sessions" are called Market sessions.
+- While in a Trade (was In-position rules): "If … at a bar close, then Close the whole Trade / Close TP k now / Tighten the stop / Cancel the waiting entry"; "+ Add a rule".
 - Take profits: "At a multiple of the risk (R)" / "Just before a level" / "Part of the way to a level"; "close N % of the contracts"; "Extra contracts go to TP1 first / the last TP".
 - Stop: "Place the stop [N] [ticks | × ATR using ATR] below [level]" ("above" on a short branch), badge "required".
 - Risk per Trade fields: Account size ($) / Risk each Trade (% of account) / At most N contracts.

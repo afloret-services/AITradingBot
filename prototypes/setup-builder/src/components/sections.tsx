@@ -434,7 +434,7 @@ function RunHelp_({ setup, what, instrument, overrides }: { setup: Setup; what: 
   }
   return (
     <HelpBox>
-      <div>A Run may replace <T>whole Trade-settings sections</T> (Risk per Trade, Stop, Take profits, Break-even, Entry deadline, Closing time, Signal guards): pick Override and the section's full editor opens, starting from the Setup default. It cannot change part of a section, and it cannot touch the Signal steps, the Entry order or the In-position rules: those are the Setup version itself.</div>
+      <div>A Run may replace <T>whole Trade-settings sections</T> (Risk per Trade, Stop, Take profits, Break-even, Entry deadline, Closing time, Signal guards): pick Override and the section's full editor opens, starting from the Setup default. It cannot change part of a section, and it cannot touch the Signal steps, the Entry order or the While-in-a-Trade rules: those are the Setup version itself.</div>
       <div>Overrides make <T>no new version</T>, so a Promoted version stays promoted. When a section is overridden, the line below it shows the Run's value, and the comparison at the bottom re-runs the Setup on the MNQ bars with and without the overrides.{overrides ? <> Here: {B(`${overrides} section${overrides === 1 ? '' : 's'}`)} overridden.</> : <> Here: {B('no override')}; the Run trades the Setup defaults.</>}</div>
     </HelpBox>
   );
@@ -725,7 +725,7 @@ const SECTION_HELP: Record<SectionKey | 'in_position', string> = {
   entry_deadline: "How long a limit or stop entry may wait for its fill; after that it is cancelled. A market entry fills at the next bar's open and ignores the deadline. \"Cancel if price reaches first\": if price touches the stop, TP1 or the Draw on liquidity before filling, the entry is cancelled, because the move already happened without you.",
   expiry_and_flatten: 'Close open Trades at (optional): any Trade still open at this New York time is closed at market. Be flat by (required): the hard end of the day for this Setup; every position still open is closed at market, whatever its take profits and stop.',
   signal_guards: "Last checks on a Signal before any order. A refused Signal is logged with its reason and opens no Trade. Skip if the stop is wider than N ticks or N × ATR (checked before sizing). Skip if the reward is under N × the risk: the take profits' average reward, weighted by contracts, divided by the risk.",
-  in_position: "Checked at every Base-bar close while a Trade is open. When a rule holds, its action runs at the next bar's open: close the whole Trade, close one take profit, move the stop, or cancel an entry still waiting. Each rule belongs to a branch, and a Run cannot override them.",
+  in_position: "Checked at every Base-bar close while a Trade is open. When a rule holds, its action runs at the next bar's open: Close the whole Trade, Close TP k now, Tighten the stop, or Cancel the waiting entry. Each rule belongs to a branch, and a Run cannot override them.",
 };
 function splitN(n: number, legs: Leg[], leftover: 'first' | 'last') {
   const out = legs.map((l) => Math.floor(n * l.share));
@@ -789,16 +789,16 @@ export function InPositionRules({ setup, mutate, ctx, look }: { setup: Setup; mu
     <div className="space-y-2">
       {setup.in_position_rules.map((r, i) => (
         <div key={r.id} className="space-y-1 rounded-md border p-2">
-          <div className="flex flex-wrap items-center gap-1.5 text-sm"><span className="text-muted-foreground">At each Base-bar close while in a Trade, when</span>
-            <span className="ml-auto flex items-center gap-1"><span className="text-muted-foreground">then</span>
-              <Select value={r.action} onChange={(a) => mutate((s) => { s.in_position_rules[i].action = a; })} options={[['close_trade', 'close the Trade'], ['close_leg', 'close take profit k'], ['move_stop', 'move stop (tighten only)'], ['cancel_entry', 'cancel the resting entry']]} className="h-7" />
+          <div className="flex flex-wrap items-center gap-1.5 text-sm"><span className="font-medium">If</span><span className="text-muted-foreground">this holds at a bar close</span>
+            <span className="ml-auto flex items-center gap-1"><span className="font-medium">then</span>
+              <Select value={r.action} onChange={(a) => mutate((s) => { s.in_position_rules[i].action = a; })} options={[['close_trade', 'Close the whole Trade'], ['close_leg', 'Close TP k now'], ['move_stop', 'Tighten the stop'], ['cancel_entry', 'Cancel the waiting entry']]} className="h-7" />
               {r.action === 'close_leg' && <NumInput value={r.leg} onChange={(n) => mutate((s) => { s.in_position_rules[i].leg = n; })} className="h-7 w-12" />}
               <button className="text-muted-foreground hover:text-red-400" onClick={() => mutate((s) => { s.in_position_rules.splice(i, 1); })}>×</button></span>
           </div>
           <CondEditor cond={r.when} ctx={{ ...ctx, inPosition: true }} side="long" look={look} onChange={(c) => mutate((s) => { s.in_position_rules[i].when = c; })} />
         </div>
       ))}
-      <Button size="sm" variant="ghost" onClick={() => mutate((s) => { s.in_position_rules.push({ id: uid('ip'), action: 'close_trade', when: { id: uid(), t: 'all', items: [] } }); })}>+ In-position rule</Button>
+      <Button size="sm" variant="ghost" onClick={() => mutate((s) => { s.in_position_rules.push({ id: uid('ip'), action: 'close_trade', when: { id: uid(), t: 'all', items: [] } }); })}>+ Add a rule</Button>
     </div>
   );
 }

@@ -1099,8 +1099,8 @@ function simulate(data: Data, setup: Setup, br: Branch, sig: Signal, base: Int32
         const h = evalCond({ data, i: k, caps: sig.caps, trade }, rule.when, base, pBase);
         if (!h.ok) continue;
         const px = M[k + 1]?.o ?? b.c;
-        if (rule.action === 'close_trade') { open.filter((l) => !l.done).forEach((l) => exitLeg(l, px, k + 1, 'In-position rule: close Trade')); break; }
-        if (rule.action === 'close_leg') { const l = open[(rule.leg || 1) - 1]; if (l && !l.done) exitLeg(l, px, k + 1, `In-position rule: close ${l.name}`); }
+        if (rule.action === 'close_trade') { open.filter((l) => !l.done).forEach((l) => exitLeg(l, px, k + 1, 'While in a Trade: close the Trade')); break; }
+        if (rule.action === 'close_leg') { const l = open[(rule.leg || 1) - 1]; if (l && !l.done) exitLeg(l, px, k + 1, `While in a Trade: close ${l.name}`); }
       }
       if (open.every((l) => l.done)) break;
     }

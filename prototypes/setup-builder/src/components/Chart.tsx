@@ -201,7 +201,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
       sel.stepBars.forEach((i, k) => { const j = inSpan(i); if (j >= 0) marks.push({ time: T(j) as Time, position: sel.side === 'long' ? 'belowBar' : 'aboveBar', color: STEP_COLORS[k % STEP_COLORS.length], shape: 'circle', text: `${k + 1}` }); });
       const t = sel.trade;
       if (t?.fillI != null) { const j = inSpan(t.fillI); if (j >= 0) marks.push({ time: T(j) as Time, position: 'inBar', color: C.entry, shape: 'square', size: 0.6, text: 'fill' }); }
-      for (const x of dedupeExits(t?.exits || [])) { const j = inSpan(x.i); if (j >= 0) marks.push({ time: T(j) as Time, position: sel.side === 'long' ? 'aboveBar' : 'belowBar', color: /stop/.test(x.why) ? C.risk : C.reward, shape: 'circle', size: 0.6, text: x.why.replace('In-position rule: ', '') }); }
+      for (const x of dedupeExits(t?.exits || [])) { const j = inSpan(x.i); if (j >= 0) marks.push({ time: T(j) as Time, position: sel.side === 'long' ? 'aboveBar' : 'belowBar', color: /stop/.test(x.why) ? C.risk : C.reward, shape: 'circle', size: 0.6, text: x.why.replace('While in a Trade: ', '') }); }
     }
     marks.sort((a, b) => (a.time as number) - (b.time as number));
     cs.setMarkers(marks);

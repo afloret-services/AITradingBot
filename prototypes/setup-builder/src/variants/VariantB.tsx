@@ -180,7 +180,7 @@ function RunDiff({ setup, runD, ctx }: { setup: Setup; runD: ReturnType<typeof u
             );
           })}
           <tr className="border-t text-muted-foreground"><td className="py-1">Signal steps</td><td colSpan={2}>🔒 part of the Setup version</td></tr>
-          <tr className="border-t text-muted-foreground"><td className="py-1">In-position rules</td><td colSpan={2}>🔒 part of the Setup version</td></tr>
+          <tr className="border-t text-muted-foreground"><td className="py-1">While in a Trade</td><td colSpan={2}>🔒 part of the Setup version</td></tr>
         </tbody>
       </table>
       <div className="text-muted-foreground">Overrides make no new version; the gate judges the defaults.</div>

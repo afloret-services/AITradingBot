@@ -104,7 +104,7 @@ function Editor({ value, onChange, ctx }: { value: string; onChange: (v: string)
           <TfSelect value={p.parts[1] as TF} base={ctx.baseBar} onChange={(tf) => onChange(`{{${p.parts[0]}:${tf}}}`)} />
         </div>
       )}
-      {kind === 'trade' && <div className="flex items-center gap-2"><span className="w-14 text-xs text-muted-foreground">Field</span><Select value={p.parts[1]} onChange={(f) => onChange(`{{trade:${f}}}`)} options={TRADE} /></div>}
+      {kind === 'trade' && <div className="flex items-center gap-2"><span className="w-14 text-xs text-muted-foreground">Field</span><Select value={p.parts[1]} onChange={(f) => onChange(`{{trade:${f}}}`)} options={TRADE.map((t) => [t, phrase(`{{trade:${t}}}`, {}).replace("the Trade's ", '')] as [string, string])} /></div>}
       {['bar', 'indicator', 'bias'].includes(kind) && (
         <div className="flex items-center gap-2"><span className="w-14 text-xs text-muted-foreground">Bars back</span><NumInput value={prev} onChange={(n) => onChange(withPrev(value, Math.max(0, n)))} className="w-16" /><span className="text-[11px] text-muted-foreground">0 = the last closed bar</span></div>
       )}

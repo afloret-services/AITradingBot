@@ -300,7 +300,7 @@ export function phrase(tok: string, labels: Record<string, string> = {}): string
     case 'trend': return `the ${a} Trend`;
     case 'draw': return 'the Draw on liquidity';
     case 'entry': return 'the entry';
-    case 'trade': return `the Trade's ${a.replace(/_/g, ' ')}`;
+    case 'trade': return `the Trade's ${({ legs_filled: 'take profits filled', open_r: 'open profit in R', max_favourable_r: 'best open profit in R', bars_open: 'bars open' } as Record<string, string>)[a] || a.replace(/_/g, ' ')}`;
   }
   return tok;
 }
@@ -346,7 +346,7 @@ export function ruleDescription(s: Setup): string {
   }
   const ts = s.trade_settings;
   lines.push(`Take profits: ${ts.legs.map((l) => `${l.name} ${l.rule === 'r' ? `at ${l.r}R` : l.rule === 'fraction' ? `${(l.fraction ?? 0) * 100}% of the way to ${phrase(l.level || '?')}` : `${l.offset_ticks ? `${l.offset_ticks} tick${l.offset_ticks === 1 ? "" : "s"} before ` : 'at '}${phrase(l.level || '?')}`} (${Math.round(l.share * 100)}%)`).join('; ')}.`);
-  for (const r of s.in_position_rules) lines.push(`While in a Trade: when ${condPhrase(r.when, labels)}, ${r.action === 'close_trade' ? 'close the Trade' : r.action === 'close_leg' ? `close take profit ${r.leg}` : r.action.replace('_', ' ')}.`);
+  for (const r of s.in_position_rules) lines.push(`While in a Trade: if ${condPhrase(r.when, labels)}, ${r.action === 'close_trade' ? 'close the whole Trade' : r.action === 'close_leg' ? `close TP${r.leg} now` : r.action.replace('_', ' ')}.`);
   return lines.join('\n');
 }
 

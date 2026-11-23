@@ -107,7 +107,7 @@ export function VariantC(p: VariantProps) {
                           </button>
                         );
                       })}
-                      <div className={cn('mt-1 border-t pt-1 text-[11px] text-muted-foreground', run && 'opacity-50')}>{run && '🔒 '}{setup.in_position_rules.length} In-position rule(s)</div>
+                      <div className={cn('mt-1 border-t pt-1 text-[11px] text-muted-foreground', run && 'opacity-50')}>{run && '🔒 '}While in a Trade: {setup.in_position_rules.length} rule(s)</div>
                     </LaneCard>
                   </>}
                 </div>
@@ -157,14 +157,14 @@ export function VariantC(p: VariantProps) {
             <div className="space-y-2"><H>Entry · {setup.branches[sel.bi].side}</H><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={sel.bi} ctx={tokenCtx(setup, sel.bi, 99)} /></div>
           )}
           {sel.kind === 'trade' && (
-            run ? <div className="space-y-2"><H>Create a Run</H><div className="text-xs text-muted-foreground">Pick a section on the Trade card to override it for this Run. Signal steps and In-position rules are locked: changing them makes a new Setup version.</div><RunHelp setup={setup} what="intro" /><RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></div> :
+            run ? <div className="space-y-2"><H>Create a Run</H><div className="text-xs text-muted-foreground">Pick a section on the Trade card to override it for this Run. Signal steps and While-in-a-Trade rules are locked: changing them makes a new Setup version.</div><RunHelp setup={setup} what="intro" /><RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></div> :
             <div className="space-y-3"><H>Trade settings</H><div className="text-xs text-muted-foreground">The Setup's defaults; a Run may override each section. Click a section to edit it.</div>
               {SECTIONS.filter((k) => k !== 'stop').map((k) => (
                 <button key={k} onClick={() => setSel({ kind: 'section', k })} className="block w-full space-y-1 rounded-md border p-2 text-left hover:border-sky-400/60">
                   <div className="flex items-center gap-1.5 text-xs font-medium"><SectionIcon k={k} size={16} className="shrink-0" /><span className="shrink-0 whitespace-nowrap">{SECTION_NAMES[k]}</span><span className="ml-auto min-w-0 truncate text-[11px] font-normal text-muted-foreground">{sectionSummary(setup, k)}</span></div>
                   <SectionHelp setup={setup} k={k} />
                 </button>
-              ))}<H><span className="inline-flex items-center gap-1.5"><SectionIcon k="in_position" size={16} />In-position rules</span></H><SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="chips" /></div>
+              ))}<H><span className="inline-flex items-center gap-1.5"><SectionIcon k="in_position" size={16} />While in a Trade</span></H><SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="chips" /></div>
           )}
           {sel.kind === 'section' && (
             run ? <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Run override</H><SectionHelp setup={setup} k={sel.k} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /><OverrideBox k={sel.k} setup={setup} runD={runD} /></div> :

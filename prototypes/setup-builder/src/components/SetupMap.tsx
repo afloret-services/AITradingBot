@@ -139,7 +139,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
                 {!compact && <Line k="deadline" icon="entry_deadline" v={sectionSummary(setup, 'entry_deadline')} />}
                 <Line k="flat by" icon="expiry_and_flatten" v={ts.flatten_time} />
                 {!compact && ts.signal_guards.length > 0 && <Line k="guards" icon="signal_guards" v={sectionSummary(setup, 'signal_guards')} />}
-                {setup.in_position_rules.filter((x) => x.branch === undefined || x.branch === bi).length > 0 && <Line k="in position" icon="in_position" v={`${setup.in_position_rules.filter((x) => x.branch === undefined || x.branch === bi).length} rule(s)`} />}
+                {setup.in_position_rules.filter((x) => x.branch === undefined || x.branch === bi).length > 0 && <Line k="while in a Trade" icon="in_position" v={`${setup.in_position_rules.filter((x) => x.branch === undefined || x.branch === bi).length} rule(s)`} />}
               </Node>
             </div>
           </div>
