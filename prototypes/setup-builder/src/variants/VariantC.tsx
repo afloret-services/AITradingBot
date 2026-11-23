@@ -105,8 +105,8 @@ export function VariantC(p: VariantProps) {
                       <span className="text-sky-300/80"> Click for the full description.</span></div>
                   </LaneCard>
                   {bi === 0 && <>
-                    <Connector label="fill" />
-                    <LaneCard color="#94a3b8" selected={sel.kind === 'trade' || sel.kind === 'section'} onClick={() => setSel({ kind: 'trade' })} title={<span className="text-base font-bold tracking-tight">Trade</span>} wide overridable={run}>
+                    <Connector label="" />
+                    <LaneCard color="#94a3b8" selected={sel.kind === 'trade' || sel.kind === 'section'} onClick={() => setSel({ kind: 'trade' })} title={<span className="flex items-start gap-1.5"><span className="mt-0.5 inline-flex aspect-square h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-300 text-xs font-black leading-none text-black">→</span><span className="mt-0.5 shrink-0 text-sm font-black tracking-wider text-slate-300">FILLED</span><span className="text-base font-bold leading-snug tracking-tight">Manage the Trade</span></span>} wide overridable={run}>
                       {SECTIONS.filter((k) => k !== 'stop').map((k) => {
                         const ov = run && k in runD.draft.overrides;
                         return (
