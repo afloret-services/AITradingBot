@@ -10,7 +10,8 @@ import { VariantA } from './variants/VariantA';
 import { VariantB } from './variants/VariantB';
 import { VariantC } from './variants/VariantC';
 
-const VARIANTS: [string, string][] = [['A', 'Wizard'], ['B', 'Document'], ['C', 'Lanes'], ['D', 'Inline']];
+// letters as shown in the switcher: B is the Wizard without its declaring step (VariantA inline), D the Document (VariantB.tsx)
+const VARIANTS: [string, string][] = [['A', 'Wizard'], ['B', 'Inline'], ['C', 'Lanes'], ['D', 'Document']];
 const qs = () => new URLSearchParams(location.search);
 
 export default function App() {
@@ -79,9 +80,9 @@ export default function App() {
         <span className="ml-auto flex flex-wrap items-center gap-3"><HelpToggle /><span className="text-muted-foreground">nothing is persisted · reload to reset</span></span>
       </div>
       {variant === 'A' && <VariantA {...props} />}
-      {variant === 'B' && <VariantB {...props} />}
+      {variant === 'B' && <VariantA {...props} inline />}
       {variant === 'C' && <VariantC {...props} />}
-      {variant === 'D' && <VariantA {...props} inline />}
+      {variant === 'D' && <VariantB {...props} />}
       {showJson && (
         <div className="fixed inset-x-3 top-12 z-[70] max-h-[80vh] overflow-auto rounded-lg border bg-card p-3 shadow-2xl sm:inset-x-auto sm:right-3 sm:h-[75vh] sm:max-h-none sm:w-[460px]">
           <div className="sticky -top-3 -mx-3 -mt-3 mb-2 flex items-center justify-between border-b bg-card px-3 py-2"><b>The Setup file (Draft)</b><button aria-label="close" onClick={() => setShowJson(false)} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground hover:bg-accent">×</button></div>

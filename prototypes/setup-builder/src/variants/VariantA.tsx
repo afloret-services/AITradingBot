@@ -21,7 +21,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
   // phone: the step row scrolls sideways so the current step is in view (never the page)
   const navRow = useRef<HTMLDivElement>(null);
   useEffect(() => { const r = navRow.current, el = r?.querySelector('[data-current]') as HTMLElement | null; if (r && el && r.scrollWidth > r.clientWidth) r.scrollLeft = el.offsetLeft - r.offsetLeft - (r.clientWidth - el.clientWidth) / 2; }, [stage]);
-  // D (Inline): no declaring step. Indicators and patterns are created where a step uses them; the ones no step uses any more are removed.
+  // B (Inline): no declaring step. Indicators and patterns are created where a step uses them; the ones no step uses any more are removed.
   const declare = (tok: string) => mutate((s) => { if (!s.indicators.some((i) => i.token === tok)) s.indicators.push({ token: tok }); });
   const ctxOf = (b: number, k: number) => (inline ? tokenCtx(setup, b, k, { inlineDeclare: true, onDeclare: declare, inlinePatterns: { setup, mutate, data } }) : tokenCtx(setup, b, k));
   useEffect(() => {
