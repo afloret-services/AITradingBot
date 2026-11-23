@@ -9,7 +9,7 @@ export function Button({ variant = 'default', size = 'md', className, ...p }: Re
 }
 export function Card({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) { return <div {...p} className={cn('rounded-xl border bg-card/90 text-card-foreground shadow-card backdrop-blur', className)} />; }
 export function CardHeader({ title, sub, right }: { title: React.ReactNode; sub?: React.ReactNode; right?: React.ReactNode }) {
-  return <div className="flex items-start justify-between gap-3 border-b px-5 py-4"><div><div className="text-[15px] font-semibold leading-tight tracking-tight">{title}</div>{sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}</div>{right}</div>;
+  return <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 border-b px-4 py-4 sm:flex-nowrap sm:px-5"><div className="min-w-0 basis-full sm:basis-auto"><div className="text-[15px] font-semibold leading-tight tracking-tight">{title}</div>{sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}</div>{right}</div>;
 }
 export function Badge({ className, tone = 'default', ...p }: React.HTMLAttributes<HTMLSpanElement> & { tone?: 'default' | 'outline' | 'warn' | 'error' | 'ok' | 'info' }) {
   const t = { default: 'bg-secondary text-secondary-foreground', outline: 'border text-muted-foreground', warn: 'bg-amber-500/10 text-amber-300 ring-1 ring-inset ring-amber-500/20', error: 'bg-red-500/10 text-red-300 ring-1 ring-inset ring-red-500/20', ok: 'bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/20', info: 'bg-sky-500/10 text-sky-300 ring-1 ring-inset ring-sky-500/20' }[tone];

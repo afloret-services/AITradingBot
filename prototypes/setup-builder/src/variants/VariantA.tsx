@@ -128,11 +128,11 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
             {stage === 5 && (
               <div className="space-y-4">
                 {SECTIONS.filter((k) => k !== 'stop').map((k) => (
-                  <div key={k}><div className="mb-1.5 flex items-center gap-2 text-sm font-medium"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={k} size={18} /></span>{SECTION_NAMES[k]}</div>
+                  <div key={k}><div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm font-medium"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={k} size={18} /></span>{SECTION_NAMES[k]}</div>
                     <SectionHelp setup={setup} k={k} />
                     <SectionEditor k={k} value={getSection(setup, k)} setup={setup} ctx={ctxOf(0, 99)} onChange={(v) => mutate((s) => { setSection(s, k, v); })} /></div>
                 ))}
-                <div><div className="mb-1.5 flex items-center gap-2 text-sm font-medium"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={'in_position'} size={18} /></span>While in a Trade <span className="text-xs font-normal text-muted-foreground">(part of the Setup version; a Run cannot override them)</span></div>
+                <div><div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm font-medium"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={'in_position'} size={18} /></span>While in a Trade <span className="basis-full text-xs font-normal text-muted-foreground sm:basis-auto">(part of the Setup version; a Run cannot override them)</span></div>
                   <SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={ctxOf(0, 99)} look="boxes" /></div>
               </div>
             )}
@@ -190,8 +190,8 @@ function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
   return (
     <div className="space-y-3">
       <RunHelp setup={setup} what="intro" />
-      <div className="flex items-center gap-3"><Field label="Instrument"><Select value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} options={INSTRUMENTS} /></Field>
-        <Field label="Binds"><span className="mono text-xs">{setup.setup_id} · Draft (a paper Run needs a frozen version that passed the gate)</span></Field></div>
+      <div className="flex flex-wrap items-start gap-3"><Field label="Instrument"><Select value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} options={INSTRUMENTS} /></Field>
+        <Field label="Binds"><span className="mono break-words text-xs">{setup.setup_id} · Draft (a paper Run needs a frozen version that passed the gate)</span></Field></div>
       {instrumentWarnings(setup, runD.draft.instrument).map((w) => <div key={w} className="text-xs text-amber-300">{w}</div>)}
       <RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} />
       <div className="pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Risk overrides</div>
@@ -201,11 +201,11 @@ function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
           const on = k in runD.draft.overrides;
           return (
             <div key={k} className="p-3">
-              <div className="flex items-center gap-3">
-                <div className="flex w-52 items-center gap-2 text-sm font-medium"><SectionIcon k={k} size={18} />{SECTION_NAMES[k]}</div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:flex-nowrap">
+                <div className="flex basis-full items-center gap-2 text-sm font-medium sm:w-52 sm:basis-auto sm:shrink-0"><SectionIcon k={k} size={18} />{SECTION_NAMES[k]}</div>
                 <label className="flex items-center gap-1 text-xs"><input type="radio" checked={!on} onChange={() => runD.override(k, false)} />Setup default</label>
                 <label className="flex items-center gap-1 text-xs"><input type="radio" checked={on} onChange={() => runD.override(k, true)} />Override</label>
-                <span className={cn('text-xs', on ? 'text-muted-foreground line-through' : 'text-muted-foreground')}>{sectionSummary(setup, k)}</span>
+                <span className={cn('basis-full text-xs sm:basis-auto', on ? 'text-muted-foreground line-through' : 'text-muted-foreground')}>{sectionSummary(setup, k)}</span>
               </div>
               {on && <div className="mt-2 rounded-md bg-sky-500/5 p-2"><SectionEditor k={k} value={runD.draft.overrides[k]} setup={setup} ctx={ctx} onChange={(v) => runD.setOverride(k, v)} /><div className="mt-1 text-xs text-sky-300">→ {sectionSummary(runD.effective, k)}</div></div>}
             </div>
