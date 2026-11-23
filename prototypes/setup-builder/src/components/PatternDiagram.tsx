@@ -7,6 +7,8 @@ import { cn } from './ui';
 
 const W = 260, H = 150;
 const UP = '#26a69a', DOWN = '#ef5350', ZONE = '#cbd5e1', LVL = '#fbbf24';
+/** a chart pattern's own shape (the W, a flag's pole, wedge sides) */
+const SHAPE = '#f0abfc';
 type C = [o: number, h: number, l: number, c: number];
 
 function Candle({ x, k, y, w = 14, hi }: { x: number; k: C; y: (v: number) => number; w?: number; hi?: string }) {
@@ -113,7 +115,7 @@ export function PatternSchematic({ p }: { p: Pattern }) {
       </>;
     } else {
       body = <>
-        <polyline points={mo.pts.map(([x, v]) => `${x},${y(v)}`).join(' ')} fill="none" stroke="#cbd5e1" strokeWidth={1.6} strokeLinejoin="round" />
+        <polyline points={mo.pts.map(([x, v]) => `${x},${y(v)}`).join(' ')} fill="none" stroke={SHAPE} strokeWidth={1.6} strokeLinejoin="round" />
         {mo.lines.map(([x1, v1, x2, v2], i) => <line key={i} x1={x1} y1={y(v1)} x2={x2} y2={y(v2)} stroke={LVL} strokeWidth={1.4} strokeDasharray={p.kind === 'cup_handle' || p.kind === 'rounding' || p.kind === 'measured_move' ? '3 3' : undefined} />)}
         {(mo.marks || []).map(([x, v, t], i) => <g key={i}><circle cx={x} cy={y(v)} r={2.5} fill={ZONE} /><Label x={x + 4} y={y(v) + (v > 50 ? -5 : 12)} color={ZONE}>{t}</Label></g>)}
         <circle cx={mo.bx} cy={y(mo.by)} r={4} fill="none" stroke="#26a69a" strokeWidth={1.5} />
@@ -184,7 +186,7 @@ export function PatternSchematic({ p }: { p: Pattern }) {
     }
     body = <>
       {pole && <line x1={pole[0]} y1={y(pole[1])} x2={pole[2]} y2={y(pole[3])} stroke={ZONE} strokeWidth={2.5} />}
-      <polyline points={pts.map(([x, v]) => `${x},${y(v)}`).join(' ')} fill="none" stroke="#cbd5e1" strokeWidth={1.6} strokeLinejoin="round" />
+      <polyline points={pts.map(([x, v]) => `${x},${y(v)}`).join(' ')} fill="none" stroke={SHAPE} strokeWidth={1.6} strokeLinejoin="round" />
       <line x1={up[0]} y1={y(up[1])} x2={up[2]} y2={y(up[3])} stroke={LVL} strokeWidth={1.5} />
       <line x1={lo[0]} y1={y(lo[1])} x2={lo[2]} y2={y(lo[3])} stroke={LVL} strokeWidth={1.5} />
       <circle cx={bx} cy={y(by)} r={4} fill="none" stroke="#26a69a" strokeWidth={1.5} />
@@ -207,7 +209,7 @@ export function PatternSchematic({ p }: { p: Pattern }) {
     const names = p.kind === 'head_shoulders' ? ['left shoulder', 'head', 'right shoulder'] : ['1', '2', '3'];
     const top = p.kind === 'head_shoulders' ? 88 : 80, nk = 50, target = nk - (top - nk);
     body = <>
-      <polyline points={pts.map(([x, v]) => `${x},${y(v)}`).join(' ')} fill="none" stroke="#cbd5e1" strokeWidth={1.8} strokeLinejoin="round" />
+      <polyline points={pts.map(([x, v]) => `${x},${y(v)}`).join(' ')} fill="none" stroke={SHAPE} strokeWidth={1.8} strokeLinejoin="round" />
       <line x1={neck[0][0]} y1={y(neck[0][1])} x2={neck[1][0]} y2={y(neck[1][1])} stroke={LVL} strokeDasharray="4 3" />
       <Label x={neck[1][0] - 2} y={y(neck[1][1]) - 4} anchor="end" color={LVL}>{p.name}.neckline</Label>
       {peaks.map((k, i) => <g key={k}><circle cx={pts[k][0]} cy={y(pts[k][1])} r={3} fill={ZONE} /><Label x={pts[k][0]} y={y(pts[k][1]) - 6} anchor="middle" color={ZONE}>{names[i]}</Label></g>)}
@@ -252,7 +254,7 @@ export function PatternExample({ p, data }: { p: Pattern; data: Data }) {
   return (
     <div className="space-y-1">
       <svg viewBox={`0 0 ${w} ${h}`} className="h-[150px] w-[300px] rounded-md border bg-[hsl(var(--chart))]">
-        {caps.path && <polyline points={caps.path.map(([t, v]: [number, number]) => `${xt(t)},${y(v)}`).join(' ')} fill="none" stroke={ZONE} strokeWidth={1.6} opacity={0.9} />}
+        {caps.path && <polyline points={caps.path.map(([t, v]: [number, number]) => `${xt(t)},${y(v)}`).join(' ')} fill="none" stroke={SHAPE} strokeWidth={1.6} opacity={0.9} />}
         {caps.neck_t0 != null && <line x1={xt(caps.neck_t0)} y1={y(caps.neck_p0)} x2={xt(caps.time)} y2={y(caps.neckline)} stroke={LVL} strokeDasharray="4 3" />}
         {caps.lines && caps.lines.map(([t1, p1, t2, p2]: number[], q: number) => <line key={q} x1={xt(t1)} y1={y(p1)} x2={xt(t2)} y2={y(p2)} stroke={LVL} strokeWidth={1.5} />)}
         {caps.target != null && <line x1={xt(caps.time)} x2={w - 42} y1={y(caps.target)} y2={y(caps.target)} stroke="#ef5350" strokeDasharray="2 3" />}
