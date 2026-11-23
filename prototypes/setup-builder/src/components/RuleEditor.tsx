@@ -53,6 +53,12 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested }: { con
   const setJoin = (i: number, j: Join) => set(lines.map((l, k) => (k === i ? { ...l, join: j } : l)));
   const remove = (i: number) => set(lines.filter((_, k) => k !== i).map((l, k) => (k === 0 ? { ...l, join: 'and' as Join } : l)));
   const add = (c: Cond, join: Join = 'and') => set([...lines, { cond: c, join }]);
+  // insert before line i, joined with AND; the AND/OR layout stays where it is and the conditions move through it
+  const insert = (i: number, c: Cond) => set([...lines.slice(0, i), { cond: c, join: 'and' as Join }, ...lines.slice(i).map((l, k) => (k === 0 && i === 0 ? { ...l, join: 'and' as Join } : l))]);
+  const move = (i: number, d: -1 | 1) => { const j = i + d; if (j < 0 || j >= lines.length) return; const ls = lines.map((l) => ({ ...l })); [ls[i].cond, ls[j].cond] = [ls[j].cond, ls[i].cond]; set(ls); };
+  const [drag, setDrag] = React.useState<number | null>(null);
+  const [over, setOver] = React.useState<number | null>(null);
+  const drop = (to: number) => { if (drag == null || drag === to) return; const conds = lines.map((l) => l.cond); const [c] = conds.splice(drag, 1); conds.splice(to, 0, c); set(lines.map((l, k) => ({ ...l, cond: conds[k] }))); };
   const groups = runs(lines);
   const mixed = groups.length > 1 && groups.some((g) => g.length > 1);
 
@@ -61,18 +67,29 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested }: { con
     const lead = i === 0 ? (keyword ? <span className="w-14 shrink-0 pt-1 text-xs font-black tracking-wider text-sky-300">{keyword}</span> : <span className="w-14 shrink-0" />)
       : <span className="w-14 shrink-0 pt-0.5">{l.join === 'and' ? <JoinSelect value="and" onChange={(j) => setJoin(i, j)} /> : null}</span>;
     return (
-      <div key={c.id} className="flex items-start gap-2">
+      <div key={c.id} className={cn('group/line flex flex-wrap items-start gap-2 rounded-md sm:flex-nowrap', drag === i && 'opacity-40', over === i && drag != null && drag !== i && 'ring-1 ring-sky-400/60')}
+        onDragOver={(e) => { if (drag != null) { e.preventDefault(); setOver(i); } }} onDragLeave={() => setOver((o) => (o === i ? null : o))}
+        onDrop={(e) => { e.preventDefault(); drop(i); setDrag(null); setOver(null); }}>
         {lead}
-        <div className="min-w-0 flex-1">
+        <span className="flex shrink-0 flex-col items-center gap-0.5 pt-0.5">
+          <span draggable onDragStart={(e) => { setDrag(i); e.dataTransfer.effectAllowed = 'move'; }} onDragEnd={() => { setDrag(null); setOver(null); }} title="drag to reorder" className="flex h-7 w-5 cursor-grab items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground active:cursor-grabbing">⠿</span>
+        </span>
+        <div className="min-w-0 flex-1 basis-[calc(100%-6rem)] sm:basis-0">
           {isPlainGroup(c)
             ? <div className="flex items-start gap-1">
                 <span className="pt-0.5 text-lg leading-none text-sky-400/70">(</span>
                 <div className="min-w-0 flex-1 rounded-md border border-dashed border-sky-500/30 p-2"><RuleEditor cond={c} onChange={(x) => setLine(i, x)} ctx={ctx} side={side} nested /></div>
                 <span className="pt-0.5 text-lg leading-none text-sky-400/70">)</span>
-                <button title="remove the bracket" onClick={() => remove(i)} className="ml-1 text-muted-foreground hover:text-red-400">×</button>
+                <button title="remove the bracket" aria-label="remove the bracket" onClick={() => remove(i)} className="ml-1.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button>
               </div>
-            : <CondEditor cond={c} ctx={ctx} side={side} look="boxes" depth={1} onChange={(x) => setLine(i, x)} onRemove={() => remove(i)} />}
+            : <CondEditor cond={c} ctx={ctx} side={side} look="boxes" depth={1} onChange={(x) => setLine(i, x)} />}
         </div>
+        <span className="flex w-full shrink-0 items-center justify-end gap-0.5 sm:w-auto sm:pt-0.5">
+          <button aria-label="move up" title="move up" disabled={i === 0} onClick={() => move(i, -1)} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-xs text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30">↑</button>
+          <button aria-label="move down" title="move down" disabled={i === lines.length - 1} onClick={() => move(i, 1)} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-xs text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30">↓</button>
+          <AddMenu ctx={ctx} side={side} onAdd={(x) => insert(i, x)} small label="+ above" />
+          {!isPlainGroup(c) && <button title="remove this condition" aria-label="remove this condition" onClick={() => remove(i)} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button>}
+        </span>
       </div>
     );
   };

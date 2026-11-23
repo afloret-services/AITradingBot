@@ -99,7 +99,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
                       className={cn('flex min-w-[170px] flex-1 basis-0 flex-col justify-start rounded-lg border bg-card p-2.5 text-left transition hover:border-foreground/30', isFocus && 'ring-2 ring-sky-400/60', lit && 'border-amber-400 shadow-[0_0_0_3px_rgba(251,191,36,0.15)]', hover && !lit && 'opacity-50')}
                       style={{ borderTopColor: STEP_COLORS[si % 6], borderTopWidth: 3 }}>
                       <div className="flex items-center gap-1.5">
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-black" style={{ background: STEP_COLORS[si % 6] }}>{si + 1}</span>
+                        <span className="flex aspect-square h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] leading-none font-bold text-black" style={{ background: STEP_COLORS[si % 6] }}>{si + 1}</span>
                         <span className="truncate text-sm font-medium">{st.name}</span>
                       </div>
                       <ul className="mt-1.5 space-y-1">

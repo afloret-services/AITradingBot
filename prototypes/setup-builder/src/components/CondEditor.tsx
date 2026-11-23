@@ -48,7 +48,7 @@ export function AddMenu({ onAdd, ctx, side, small, label = '+ add' }: { onAdd: (
 export function CondEditor({ cond, onChange, onRemove, ctx, side, look, depth = 0, highlight }: { cond: Cond; onChange: (c: Cond) => void; onRemove?: () => void; ctx: TokenCtx; side: 'long' | 'short'; look: Look; depth?: number; highlight?: boolean }) {
   const [collapsed, setCollapsed] = useState(!!cond.origin && cond.t === 'all');
   const [showSettings, setShowSettings] = useState(false);
-  const rm = onRemove && <button title="remove" onClick={onRemove} className="ml-1 text-muted-foreground hover:text-red-400">×</button>;
+  const rm = onRemove && <button title="remove this condition" aria-label="remove this condition" onClick={onRemove} className="ml-1.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button>;
   const originBadge = cond.origin && <Badge tone="info" className="mr-1">{cond.origin.preset}{cond.origin.edited ? ' (edited)' : ''}</Badge>;
 
   if (cond.t === 'all' || cond.t === 'any') {

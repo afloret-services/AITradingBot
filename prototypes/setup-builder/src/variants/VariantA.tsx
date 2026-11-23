@@ -94,7 +94,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                       {k > 0 && <div className="ml-4 border-l-2 border-dashed py-1 pl-4 text-xs text-muted-foreground"><b className="text-sky-300">THEN</b>, {st.same_bar && st.within_bars === 0 ? 'on the same bar only' : st.same_bar ? 'possibly on the same bar' : 'on a later bar'}{st.within_bars ? `, within ${st.within_bars} bars` : ''}{st.until ? `, until ${st.until}` : ''}</div>}
                       <div className={cn('rounded-lg border', open === k && 'border-sky-500/50')}>
                         <button className="flex w-full items-center gap-2 px-3 py-2 text-left" onClick={() => { setOpen(open === k ? -1 : k); p.setFocus({ bi, si: k }); }}>
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-black" style={{ background: STEP_COLORS[k % 6] }}>{k + 1}</span>
+                          <span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold leading-none text-black" style={{ background: STEP_COLORS[k % 6] }}>{k + 1}</span>
                           <span className="w-11 text-xs font-black tracking-wider text-sky-300">{open === k ? '' : k === 0 ? 'IF' : 'THEN'}</span>
                           <Input value={st.name} onClick={(e) => e.stopPropagation()} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-7 w-72 border-transparent bg-transparent font-medium" />
                           <StepStats result={result} bi={bi} si={k} data={data} />
