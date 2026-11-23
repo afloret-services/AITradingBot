@@ -6,7 +6,7 @@ import { Cond, Setup, Step, captureNames, condPhrase, labelsOf, patternRefs, tok
 import { Data, RunResult } from '../engine';
 import { shortName } from './TokenPicker';
 import { PatternIcon, IndicatorIcon, SectionIcon } from './PatternIcon';
-import { sectionSummary, indicatorUsage } from './sections';
+import { sectionSummary, indicatorUsage, ONE_AT_A_TIME } from './sections';
 import { Focus } from './Chart';
 import { STEP_COLORS, cn } from './ui';
 
@@ -82,7 +82,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
               <Node title="When" tone="muted" compact={compact}>
                 <Line k="Base bar" v={setup.settings.base_bar} />
                 <Line k="hours" v={`${th} NY`} />
-                {!compact && <Line k="one at a time" v={setup.settings.one_at_a_time.replace(/_/g, ' ')} />}
+                {!compact && <Line k="trade overlap" v={(ONE_AT_A_TIME[setup.settings.one_at_a_time]?.[0] || '').replace(/:.*$/, '').toLowerCase()} />}
               </Node>
               {br.steps.map((st, si) => {
                 const own = [...captureNames(st.cond), ...(st.capture_running ? [st.capture_running.name] : [])];

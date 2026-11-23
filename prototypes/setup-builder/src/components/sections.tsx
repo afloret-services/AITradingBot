@@ -61,8 +61,8 @@ export function SessionsEditor({ setup, mutate }: { setup: Setup; mutate: Mutate
     </div>
   );
 }
-const ONE_AT_A_TIME: Record<string, [string, string]> = {
-  off: ['Off: several Trades at once', 'Every Candidate that completes gives a Signal, even while another Trade of this Setup is open, so Trades can overlap.'],
+export const ONE_AT_A_TIME: Record<string, [string, string]> = {
+  off: ['Allowed: several Trades at once', 'Every Candidate that completes gives a Signal, even while another Trade of this Setup is open, so Trades can overlap.'],
   ignore_new_starts: ['Ignore new starts', 'While a Trade is live (from its Signal until its last exit), a first step that holds starts no new Candidate, and a Candidate already running cannot complete into a Signal. Once the Trade is over, the Setup looks for fresh starts.'],
   skip_completions: ['Skip completions', 'While a Trade is live, Candidates keep starting and moving through their steps, but one that completes is dropped (no Signal). After the Trade ends, a Candidate still running can complete normally, so a setup that formed during the Trade can still be taken.'],
 };
@@ -80,7 +80,7 @@ export function BehaviourEditor({ setup, mutate, stacked }: { setup: Setup; muta
   return (
     <div className={cn('grid gap-5', !stacked && 'md:grid-cols-2')}>
       <div>
-        <Field label="One at a time" hint="What happens to new setups while a Trade of this Setup is live.">
+        <Field label="Trade overlap" hint="What happens to new setups while a Trade of this Setup is live.">
           <Select value={oat} onChange={(v) => mutate((s) => { s.settings.one_at_a_time = v as any; })} options={Object.entries(ONE_AT_A_TIME).map(([k, [l]]) => [k, l] as [string, string])} />
         </Field>
         {desc(...ONE_AT_A_TIME[oat], undefined, 'when:oat')}
@@ -339,7 +339,7 @@ function WhenHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'hours' | 's
   const WDN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   if (what === 'intro') return (
     <HelpBox>
-      <div><T>When this Setup may trade.</T> The Trading hours say when a Signal may be taken; the sessions are the named windows that session levels (the Asia high, the London low…) are measured over; One at a time and the News rule say what happens while a Trade is live and around economic releases. Times are New York time throughout.</div>
+      <div><T>When this Setup may trade.</T> The Trading hours say when a Signal may be taken; the sessions are the named windows that session levels (the Asia high, the London low…) are measured over; Trade overlap and the News rule say what happens while a Trade is live and around economic releases. Times are New York time throughout.</div>
     </HelpBox>
   );
   if (what === 'hours') {
@@ -377,7 +377,7 @@ function BehaviourHelp_({ setup }: { setup: Setup }) {
   const list = (d: Record<string, [string, string]>, cur: string) => <ul className="mt-1 space-y-1 pl-3">{Object.entries(d).map(([k, [l, t]]) => <li key={k} className={cn(k === cur && 'text-foreground')}><b>{l}</b>: {t}</li>)}</ul>;
   return (
     <HelpBox>
-      <div><T>One at a time: {o[0]}.</T> {o[1]}</div>
+      <div><T>Trade overlap: {o[0]}.</T> {o[1]}</div>
       <details className="text-[11px]"><summary className="cursor-pointer hover:text-foreground">compare the three</summary>{list(ONE_AT_A_TIME, oat)}</details>
       <div><T>News rule: {n[0]}.</T> {n[1]}{nr.mode === 'span' && <> Here: from <b className="text-foreground">{nr.before ?? 0} min</b> before to <b className="text-foreground">{nr.after ?? 0} min</b> after; a 08:30 release blocks {spanText(nr.before ?? 0, nr.after ?? 0)}.</>}</div>
       <details className="text-[11px]"><summary className="cursor-pointer hover:text-foreground">compare the three</summary>{list(NEWS, nr.mode)}</details>
