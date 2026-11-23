@@ -21,6 +21,7 @@ export function VariantC(p: VariantProps) {
   // phone: the inspector is a bottom sheet that opens when a card (or Review & save, a section…) is picked
   const phone = usePhone();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const inspRef = useRef<HTMLDivElement>(null);
   const firstSel = useRef(true);
   useEffect(() => { if (firstSel.current) { firstSel.current = false; return; } setSheetOpen(true); }, [sel]);
   const [mode, setMode] = useState<'build' | 'run'>('build');
@@ -29,6 +30,7 @@ export function VariantC(p: VariantProps) {
   const insert = (c: Cond) => {
     if (sel.kind !== 'step') return;
     mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = appendAnd(s.branches[sel.bi].steps[sel.si].cond, c); });
+    if (phone) { setSheetOpen(true); setTimeout(() => { const el = inspRef.current?.querySelectorAll('[aria-label="move up"]'); el?.[el.length - 1]?.scrollIntoView({ block: 'center' }); }, 50); } // phone: show the new condition in its step
   };
   const run = mode === 'run';
   const shown = run && runD.result ? runD.result : result;
@@ -50,17 +52,18 @@ export function VariantC(p: VariantProps) {
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[230px_minmax(0,1fr)_380px]">
         {/* library */}
         <div className={cn('order-last space-y-3 overflow-auto border-t p-3 text-sm lg:order-none lg:border-r lg:border-t-0', run && 'pointer-events-none opacity-40')}>
+          <div className="lg:hidden"><div className="text-sm font-semibold">Block library</div><div className="text-xs text-muted-foreground">{sel.kind === 'step' ? <>Tap a block to add it to <b className="text-foreground">step {sel.si + 1}</b> ({setup.branches[sel.bi]?.side}); tap another step card above to change.</> : 'Tap a step card above first, then a block to add it there.'}</div></div>
           <Lib title="Indicators (declared once)">
             {setup.indicators.map((i) => (
               <LibItem key={i.token} onClick={() => insert({ id: uid(), t: 'cmp', a: i.token, op: '>', b: '' })} disabled={sel.kind !== 'step'} hint={`used ${usage[i.token] || 0}×`}><span className="inline-flex items-center gap-1.5"><IndicatorIcon token={i.token} size={16} />{i.label || shortName(i.token, {})}</span></LibItem>
             ))}
-            <button className="text-xs text-sky-300" onClick={() => setSel({ kind: 'settings' })}>manage / declare…</button>
+            <button className="col-span-2 py-1 text-left text-xs text-sky-300" onClick={() => setSel({ kind: 'settings' })}>manage / declare…</button>
           </Lib>
           <Lib title="Patterns (declared once)">
             {(setup.patterns || []).map((pt) => (
               <LibItem key={pt.name} onClick={() => insert({ id: uid(), t: 'pattern', ref: pt.name, side: side() })} disabled={sel.kind !== 'step'} hint={`${pt.tf} · used ${patternUsage(setup)[pt.name] || 0}×`}><span className="inline-flex items-center gap-1.5"><PatternIcon kind={pt.kind} size={16} />{pt.name}: {PATTERN_KINDS[pt.kind].title.replace(/ \(.*\)$/, '')}</span></LibItem>
             ))}
-            <button className="text-xs text-sky-300" onClick={() => setSel({ kind: 'settings' })}>manage / declare…</button>
+            <button className="col-span-2 py-1 text-left text-xs text-sky-300" onClick={() => setSel({ kind: 'settings' })}>manage / declare…</button>
           </Lib>
           <Lib title="ICT presets">
             {[['Bias', () => PRESETS.bias(side())], ['Draw on liquidity', () => PRESETS.draw(side())]].map(([l, f]: any) => <LibItem key={l} onClick={() => insert(f())} disabled={sel.kind !== 'step'}>{l}</LibItem>)}
@@ -71,7 +74,7 @@ export function VariantC(p: VariantProps) {
           <Lib title="Logic">
             {[['Compare', () => newCmp(tokenCtx(setup, 0, 0))], ['All of', () => ({ id: uid(), t: 'all', items: [] })], ['Any of', () => ({ id: uid(), t: 'any', items: [] })], ['Not', () => ({ id: uid(), t: 'not', item: newCmp(tokenCtx(setup, 0, 0)) })], ['For at least N bars', () => ({ id: uid(), t: 'for_n', n: 3, item: newCmp(tokenCtx(setup, 0, 0)) })], ['Time range', () => ({ id: uid(), t: 'time', start: '10:00', end: '11:00' })]].map(([l, f]: any) => <LibItem key={l} onClick={() => insert(f())} disabled={sel.kind !== 'step'}>{l}</LibItem>)}
           </Lib>
-          <div className="text-[11px] text-muted-foreground">Click to add to the selected step card.</div>
+          <div className="hidden text-[11px] text-muted-foreground lg:block">Click to add to the selected step card.</div>
         </div>
         {/* lanes + chart */}
         <div className="min-w-0 overflow-auto">
@@ -128,7 +131,7 @@ export function VariantC(p: VariantProps) {
         {/* inspector */}
         {(!phone || sheetOpen) && <Sheet phone={phone}>
         {phone && <div className="fixed inset-0 z-[60] bg-black/50" onClick={() => setSheetOpen(false)} />}
-        <div className={phone ? 'fixed inset-x-0 bottom-0 z-[61] max-h-[85vh] overflow-auto rounded-t-xl border-t bg-card px-3 pb-6 shadow-2xl' : 'overflow-auto border-l p-3'}>
+        <div ref={inspRef} className={phone ? 'fixed inset-x-0 bottom-0 z-[61] max-h-[85vh] overflow-auto rounded-t-xl border-t bg-card px-3 pb-6 shadow-2xl' : 'overflow-auto border-l p-3'}>
           {phone && <div className="sticky top-0 z-10 -mx-3 mb-2 flex items-center gap-2 border-b bg-card px-3 py-2"><span className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/40" /><button aria-label="close" onClick={() => setSheetOpen(false)} className="absolute right-3 flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground">×</button></div>}
           {sel.kind === 'review' && <div className="space-y-3"><H>Review & save</H><ReviewHelp setup={setup} what="intro" /><ReviewHelp setup={setup} what="map" />
             <H>Checks</H><ReviewHelp setup={setup} what="checks" issues={issues} />
@@ -204,9 +207,9 @@ function OverrideBox({ k, setup, runD }: { k: SectionKey; setup: any; runD: Retu
 const H = ({ children }: { children: React.ReactNode }) => <div className="text-sm font-semibold">{children}</div>;
 const Locked = ({ what }: { what: string }) => <div className="space-y-1"><H>🔒 {what}</H><div className="text-xs text-muted-foreground">Part of the Setup version. A Run cannot change them; switch to "Build the Setup" and Freeze a new version.</div></div>;
 const Chip = ({ children }: { children: React.ReactNode }) => <span className="rounded border border-sky-500/40 bg-sky-500/10 px-1 text-sky-200">{children}</span>;
-function Lib({ title, children }: { title: string; children: React.ReactNode }) { return <div><div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{title}</div><div className="space-y-0.5">{children}</div></div>; }
+function Lib({ title, children }: { title: string; children: React.ReactNode }) { return <div><div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{title}</div><div className="grid grid-cols-2 gap-1.5 lg:block lg:space-y-0.5">{children}</div></div>; }
 function LibItem({ children, onClick, disabled, hint }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; hint?: string }) {
-  return <button disabled={disabled} onClick={onClick} className="flex w-full items-center justify-between rounded px-1.5 py-1 text-left text-xs hover:bg-accent disabled:opacity-40"><span>{children}</span>{hint && <span className="text-[10px] text-muted-foreground">{hint}</span>}</button>;
+  return <button disabled={disabled} onClick={onClick} className="flex w-full flex-wrap items-center justify-between gap-x-1.5 rounded-md border border-input px-2 py-2 text-left text-xs hover:bg-accent disabled:opacity-40 lg:flex-nowrap lg:rounded lg:border-0 lg:px-1.5 lg:py-1"><span>{children}</span>{hint && <span className="text-[10px] text-muted-foreground">{hint}</span>}</button>;
 }
 function LaneCard({ title, children, foot, color, selected, onClick, locked, wide, overridable, overridden }: { title: React.ReactNode; children: React.ReactNode; foot?: React.ReactNode; color: string; selected?: boolean; onClick: () => void; locked?: boolean; wide?: boolean; overridable?: boolean; overridden?: boolean }) {
   return (
