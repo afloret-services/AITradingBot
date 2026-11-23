@@ -707,9 +707,9 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
     case 'break_even': return (
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Select value={value.trigger} onChange={(t) => onChange({ ...value, trigger: t, k: value.k ?? 1, r: value.r ?? 1 })} options={[['off', 'Never'], ['after_leg', 'After TP k fills'], ['at_r', 'Once price is +X R in profit']]} />
-        {value.trigger === 'after_leg' && <>TP <NumInput value={value.k} onChange={(n) => onChange({ ...value, k: n })} className="w-14" /></>}
-        {value.trigger === 'at_r' && <>+<NumInput step={0.25} value={value.r} onChange={(n) => onChange({ ...value, r: n })} className="w-14" />R</>}
-        {value.trigger !== 'off' && <>lock in <NumInput value={value.offset_ticks} onChange={(n) => onChange({ ...value, offset_ticks: n })} className="w-14" /> ticks</>}
+        {value.trigger === 'after_leg' && <span className="flex items-center gap-1.5">TP <NumInput value={value.k} onChange={(n) => onChange({ ...value, k: n })} className="w-14" /></span>}
+        {value.trigger === 'at_r' && <span className="flex items-center gap-1">+<NumInput step={0.25} value={value.r} onChange={(n) => onChange({ ...value, r: n })} className="w-14" />R</span>}
+        {value.trigger !== 'off' && <span className="flex items-center gap-1.5">lock in <NumInput value={value.offset_ticks} onChange={(n) => onChange({ ...value, offset_ticks: n })} className="w-14" /> ticks</span>}
       </div>
     );
     case 'entry_deadline': return (
@@ -730,7 +730,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
     case 'signal_guards': return (
       <div className="space-y-1.5 text-sm">
         {value.map((g: Guard, i: number) => (
-          <div key={i} className="flex flex-wrap items-center gap-1.5">Skip if{' '}
+          <div key={i} className="flex flex-wrap items-center gap-1.5 rounded-md border border-border/60 p-2 sm:border-0 sm:p-0">Skip if{' '}
             {g.kind === 'max_stop' ? <>the stop is wider than <NumInput step={0.5} value={g.n} onChange={(n) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, n } : x)))} className="h-7 w-14" />
               <Select value={g.unit || 'ticks'} onChange={(u) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, unit: u } : x)))} options={[['ticks', 'ticks'], ['atr', '× ATR']]} className="h-7" />
               {g.unit === 'atr' && <TokenPicker value={g.atr || ''} ctx={ctx} compact onChange={(a) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, atr: a } : x)))} />}</>
