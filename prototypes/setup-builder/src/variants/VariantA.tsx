@@ -1,6 +1,6 @@
 // PROTOTYPE variant A, "Wizard": a fixed order of stages, one thing at a time, the chart always under the stage.
 // Order: basics → indicators → when to trade → Signal steps → entry & stop → Trade settings → review → create a Run.
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { VariantProps } from '../types';
 import { SetupMap } from '../components/SetupMap';
 import { RuleEditor } from '../components/RuleEditor';
@@ -9,14 +9,27 @@ import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
 import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp, ReviewHelp, IndicatorsHelp, PatternsHelp, IndicatorsPatternsIntro, WhenHelp } from '../components/sections';
 import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
-import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf } from '../model';
+import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf, patternUsage } from '../model';
 import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
 
 const STAGES = ['General', 'Indicators & patterns', 'When to trade', 'Signal steps', 'Entry & stop', 'Trade settings', 'Review & save', 'Create a Run'] as const;
 
-export function VariantA(p: VariantProps) {
+export function VariantA(p: VariantProps & { inline?: boolean }) {
   const { setup, mutate, data, result } = p;
+  const inline = !!p.inline;
   const [stage, setStage] = useState(0);
+  // D (Inline): no declaring step. Indicators and patterns are created where a step uses them; the ones no step uses any more are removed.
+  const declare = (tok: string) => mutate((s) => { if (!s.indicators.some((i) => i.token === tok)) s.indicators.push({ token: tok }); });
+  const ctxOf = (b: number, k: number) => (inline ? tokenCtx(setup, b, k, { inlineDeclare: true, onDeclare: declare, inlinePatterns: { setup, mutate, data } }) : tokenCtx(setup, b, k));
+  useEffect(() => {
+    if (!inline) return;
+    const pu = patternUsage(setup), iu = indicatorUsage(setup);
+    const deadP = (setup.patterns || []).filter((q) => !pu[q.name]).map((q) => q.name);
+    const deadI = setup.indicators.filter((i) => !iu[i.token]).map((i) => i.token);
+    if (deadP.length || deadI.length) mutate((s) => { s.patterns = (s.patterns || []).filter((q) => !deadP.includes(q.name)); s.indicators = s.indicators.filter((i) => !deadI.includes(i.token)); });
+  }, [inline, setup]);
+  const shown = STAGES.map((s, k) => k).filter((k) => !(inline && k === 1));
+  const pos = shown.indexOf(stage), prevS = shown[pos - 1], nextS = shown[pos + 1];
   const [bi, setBi] = useState(0);
   const [open, setOpen] = useState(0);
   const issues = validate(setup);
@@ -30,10 +43,11 @@ export function VariantA(p: VariantProps) {
       <nav className="h-fit space-y-0.5 md:sticky md:top-16">
         <div className="mb-3 px-2"><div className="text-lg font-semibold">{setup.name}</div><div className="text-xs text-muted-foreground">Draft · Base bar {setup.settings.base_bar}</div></div>
         {STAGES.map((s, k) => {
+          if (!shown.includes(k)) return null;
           const n = stageIssues(k).filter((i) => i.level === 'error').length;
           return (
             <button key={s} onClick={() => setStage(k)} className={cn('flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm', stage === k ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent/50')}>
-              <span className={cn('flex h-5 w-5 items-center justify-center rounded-full border text-[11px]', k < stage && 'border-emerald-500 text-emerald-400', stage === k && 'border-sky-400 text-sky-300')}>{k < stage ? '✓' : k + 1}</span>
+              <span className={cn('flex h-5 w-5 items-center justify-center rounded-full border text-[11px]', k < stage && 'border-emerald-500 text-emerald-400', stage === k && 'border-sky-400 text-sky-300')}>{k < stage ? '✓' : shown.indexOf(k) + 1}</span>
               {s}{n > 0 && <Badge tone="error" className="ml-auto">{n}</Badge>}
             </button>
           );
@@ -41,7 +55,7 @@ export function VariantA(p: VariantProps) {
       </nav>
       <main className="min-w-0 space-y-4">
         <Card>
-          <CardHeader title={`${stage + 1}. ${STAGES[stage]}`} sub={SUBS[stage]} right={<div className="flex gap-1"><Button size="sm" variant="outline" disabled={stage === 0} onClick={() => setStage(stage - 1)}>Back</Button><Button size="sm" disabled={stage === STAGES.length - 1} onClick={() => setStage(stage + 1)}>{stage < STAGES.length - 1 ? `Next: ${STAGES[stage + 1]}` : 'Last step'}</Button></div>} />
+          <CardHeader title={`${pos + 1}. ${STAGES[stage]}`} sub={inline && stage === 3 ? 'First A, then B: each step is one Sequence link. Add an indicator or a pattern right where you use it, and set it up there.' : SUBS[stage]} right={<div className="flex gap-1"><Button size="sm" variant="outline" disabled={prevS == null} onClick={() => setStage(prevS)}>Back</Button><Button size="sm" disabled={nextS == null} onClick={() => setStage(nextS)}>{nextS != null ? `Next: ${STAGES[nextS]}` : 'Last step'}</Button></div>} />
           <div className="space-y-4 p-4">
             {stage === 0 && (
               <div className="space-y-4">
@@ -55,7 +69,7 @@ export function VariantA(p: VariantProps) {
             )}
             {stage === 1 && <div className="space-y-5">
               <IndicatorsPatternsIntro />
-              <div><div className="mb-1 text-sm font-semibold">Indicators</div><div className="mb-2"><IndicatorsHelp setup={setup} /></div><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={indicatorUsage(setup)} /></div>
+              <div><div className="mb-1 text-sm font-semibold">Indicators</div><div className="mb-2"><IndicatorsHelp setup={setup} /></div><IndicatorList setup={setup} mutate={mutate} ctx={ctxOf(0, 0)} usage={indicatorUsage(setup)} /></div>
               <div><div className="mb-1 text-sm font-semibold">Patterns</div><div className="mb-2"><PatternsHelp setup={setup} /></div><PatternList setup={setup} mutate={mutate} data={data} /></div>
             </div>}
             {stage === 2 && <div className="space-y-5">
@@ -67,6 +81,7 @@ export function VariantA(p: VariantProps) {
             {stage === 3 && (
               <div className="space-y-3">
                 <SignalStepsHelp setup={setup} bi={bi} />
+                {inline && <div className="rounded-md border border-dashed border-sky-500/40 px-2.5 py-1.5 text-xs text-muted-foreground"><span className="font-medium text-foreground">No declaring step here.</span> In a step, <b className="text-foreground">+ add</b> lists every pattern kind: pick one and it's created with default settings, then open its <b className="text-foreground">settings</b> to change them. Click any value to pick an indicator and set its length and timeframe on the spot. One that no step uses any more is removed.</div>}
                 <div className="flex items-center gap-2">
                   <Tabs value={String(bi)} onChange={(v) => { setBi(Number(v)); setOpen(0); }} tabs={setup.branches.map((b, k) => [String(k), `${b.side === 'long' ? 'Long' : 'Short'} branch`] as [string, string])} />
                   {setup.branches.length === 1 && <Button size="sm" variant="ghost" onClick={() => mutate((s) => { addMirror(s); })}>Duplicate as mirrored {br.side === 'long' ? 'short' : 'long'}</Button>}
@@ -87,8 +102,8 @@ export function VariantA(p: VariantProps) {
                         </button>
                         {open === k && (
                           <div className="space-y-2 border-t p-3">
-                            <RuleEditor cond={st.cond} keyword={k === 0 ? 'IF' : 'THEN'} ctx={tokenCtx(setup, bi, k)} side={br.side} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
-                            <StepLimits step={st} isFirst={k === 0} ctx={tokenCtx(setup, bi, k)} side={br.side} look="boxes" onChange={(n: Step) => mutate((s) => { s.branches[bi].steps[k] = n; })} />
+                            <RuleEditor cond={st.cond} keyword={k === 0 ? 'IF' : 'THEN'} ctx={ctxOf(bi, k)} side={br.side} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
+                            <StepLimits step={st} isFirst={k === 0} ctx={ctxOf(bi, k)} side={br.side} look="boxes" onChange={(n: Step) => mutate((s) => { s.branches[bi].steps[k] = n; })} />
                             <div className="flex gap-1"><Button size="sm" variant="ghost" disabled={k === 0} onClick={() => mutate((s) => { const a = s.branches[bi].steps; [a[k - 1], a[k]] = [a[k], a[k - 1]]; })}>↑ move up</Button><Button size="sm" variant="ghost" onClick={() => mutate((s) => { s.branches[bi].steps.splice(k, 1); })}>delete step</Button></div>
                           </div>
                         )}
@@ -109,16 +124,16 @@ export function VariantA(p: VariantProps) {
                 <Button size="sm" variant="outline" onClick={() => { mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: `Step ${s.branches[bi].steps.length + 1}`, cond: { id: uid(), t: 'all', items: [] } }); }); setOpen(br.steps.length); }}>+ then another step</Button>
               </div>
             )}
-            {stage === 4 && setup.branches.map((b, k) => <div key={b.id} className="space-y-2"><Badge>{b.side} branch</Badge><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={k} ctx={tokenCtx(setup, k, b.steps.length)} /></div>)}
+            {stage === 4 && setup.branches.map((b, k) => <div key={b.id} className="space-y-2"><Badge>{b.side} branch</Badge><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={k} ctx={ctxOf(k, b.steps.length)} /></div>)}
             {stage === 5 && (
               <div className="space-y-4">
                 {SECTIONS.filter((k) => k !== 'stop').map((k) => (
                   <div key={k}><div className="mb-1.5 flex items-center gap-2 text-sm font-medium"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={k} size={18} /></span>{SECTION_NAMES[k]}</div>
                     <SectionHelp setup={setup} k={k} />
-                    <SectionEditor k={k} value={getSection(setup, k)} setup={setup} ctx={tokenCtx(setup, 0, 99)} onChange={(v) => mutate((s) => { setSection(s, k, v); })} /></div>
+                    <SectionEditor k={k} value={getSection(setup, k)} setup={setup} ctx={ctxOf(0, 99)} onChange={(v) => mutate((s) => { setSection(s, k, v); })} /></div>
                 ))}
                 <div><div className="mb-1.5 flex items-center gap-2 text-sm font-medium"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={'in_position'} size={18} /></span>While in a Trade <span className="text-xs font-normal text-muted-foreground">(part of the Setup version; a Run cannot override them)</span></div>
-                  <SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 99)} look="boxes" /></div>
+                  <SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={ctxOf(0, 99)} look="boxes" /></div>
               </div>
             )}
             {stage === 6 && (

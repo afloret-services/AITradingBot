@@ -178,15 +178,16 @@ const PField = ({ label, hint, children }: { label: string; hint?: string; child
 );
 const PKINDS = Object.keys(PATTERN_KINDS) as PatternKind[];
 const DISP_KEYS = ['disp_mult', 'disp_body_pct', 'avg_len'];
-export function PatternList({ setup, mutate, compact, data }: { setup: Setup; mutate: Mutate; compact?: boolean; data?: Data }) {
+export function PatternList({ setup, mutate, compact, data, only }: { setup: Setup; mutate: Mutate; compact?: boolean; data?: Data; only?: string[] }) {
   const usage = patternUsage(setup);
   const pats = setup.patterns || [];
   const set = (k: number, fn: (p: Pattern) => void) => mutate((s) => { fn(s.patterns[k]); });
   const tfs = TFS.filter((t) => tfMinutes(t) >= tfMinutes(setup.settings.base_bar));
   return (
     <div className="space-y-2">
-      {pats.length === 0 && <div className="text-xs italic text-muted-foreground">No patterns yet.</div>}
+      {!only && pats.length === 0 && <div className="text-xs italic text-muted-foreground">No patterns yet.</div>}
       {pats.map((p, k) => {
+        if (only && !only.includes(p.name)) return null;
         const d = PATTERN_KINDS[p.kind];
         const dispOn = p.kind === 'displacement' || p.kind === 'order_block' || !!p.params.displacement;
         return (
@@ -198,7 +199,7 @@ export function PatternList({ setup, mutate, compact, data }: { setup: Setup; mu
               <PField label="Timeframe"><Select value={p.tf} onChange={(tf: TF) => set(k, (q) => { q.tf = tf; })} options={tfs.includes(p.tf) ? tfs : [p.tf, ...tfs]} className="h-7" /></PField>
               <PField label="Display label (optional)" hint="replaces the kind in descriptions"><Input value={p.label || ''} placeholder={d.title.replace(/ \(.*\)$/, '')} onChange={(e) => set(k, (q) => { q.label = e.target.value || undefined; })} className="h-7 w-48" /></PField>
               <span className={cn('pb-1.5 text-[11px]', usage[p.name] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[p.name] ? `used ${usage[p.name]}×` : 'unused'}</span>
-              <button className="mb-1.5 ml-auto text-muted-foreground hover:text-red-400" title="remove" onClick={() => mutate((s) => { s.patterns.splice(k, 1); })}>×</button>
+              {!only && <button className="mb-1.5 ml-auto text-muted-foreground hover:text-red-400" title="remove" onClick={() => mutate((s) => { s.patterns.splice(k, 1); })}>×</button>}
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">Reads in a step as: <span className="text-foreground">"{patternPhrase(p, 'long')}"</span></div>
             {d.cat && <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]"><PatternCatChips kind={p.kind} full />{d.cat.note && <span className="text-muted-foreground">{d.cat.note}</span>}</div>}
@@ -220,7 +221,7 @@ export function PatternList({ setup, mutate, compact, data }: { setup: Setup; mu
         );
       })}
       <div className="flex flex-wrap items-center gap-1">
-        <PatternPalette onPick={(kind) => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })} />
+        {!only && <PatternPalette onPick={(kind) => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })} />}
       </div>
     </div>
   );

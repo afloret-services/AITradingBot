@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Cond, OPS, Op, PRESETS, Setup, condPhrase, opWord, uid, captureNames, PATTERN_KINDS, labelsOf, patternSettingsPhrase } from '../model';
 import { TokenPicker, TokenCtx } from './TokenPicker';
 import { PatternIcon } from './PatternIcon';
+import { PatternList } from './sections';
+import { newPattern, PatternKind } from '../model';
 import { Badge, Button, Input, NumInput, Select, cn } from './ui';
 
 export type Look = 'boxes' | 'outline' | 'chips';
@@ -20,7 +22,7 @@ export function AddMenu({ onAdd, ctx, side, small, label = '+ add' }: { onAdd: (
     ['Not', () => ({ id: uid(), t: 'not', item: newCmp(ctx) }), ''],
     ['For at least N bars', () => ({ id: uid(), t: 'for_n', n: 3, item: newCmp(ctx) }), ''],
     ['Time range (NY)', () => ({ id: uid(), t: 'time', start: '10:00', end: '11:00', tf }), 'bar open time in [start, end)'],
-    ...(ctx.patterns || []).map((p): [string, () => Cond, string] => [`Pattern: ${p.name}`, () => ({ id: uid(), t: 'pattern', ref: p.name, side }), `${p.tf} ${PATTERN_KINDS[p.kind].title}, ${side === 'long' ? PATTERN_KINDS[p.kind].bull : PATTERN_KINDS[p.kind].bear}`]),
+    ...(ctx.inlinePatterns ? [] : ctx.patterns || []).map((p): [string, () => Cond, string] => [`Pattern: ${p.name}`, () => ({ id: uid(), t: 'pattern', ref: p.name, side }), `${p.tf} ${PATTERN_KINDS[p.kind].title}, ${side === 'long' ? PATTERN_KINDS[p.kind].bull : PATTERN_KINDS[p.kind].bear}`]),
     ['Preset: Bias', () => PRESETS.bias(side), '1d Structure break, 2 bars'],
     ['Preset: Draw on liquidity', () => PRESETS.draw(side), 'Choose: nearest untaken level'],
     ['Preset: MACD crosses signal', () => PRESETS.macdCross(tf, side), ''],
@@ -29,8 +31,9 @@ export function AddMenu({ onAdd, ctx, side, small, label = '+ add' }: { onAdd: (
     <span className="relative inline-block">
       <Button size="sm" variant="ghost" className={cn('text-sky-300', small && 'h-6 px-1.5')} onClick={() => setOpen(!open)}>{label}</Button>
       {open && (
-        <div className="absolute left-0 top-full z-40 mt-1 w-80 rounded-lg border bg-card p-1 shadow-2xl" onMouseLeave={() => setOpen(false)}>
-          {!(ctx.patterns || []).length && <div className="px-2 py-1 text-[11px] text-muted-foreground">No patterns declared yet: declare FVG, Order block, Swing, MSS… in Patterns first.</div>}
+        <div className={cn("absolute left-0 top-full z-40 mt-1 rounded-lg border bg-card p-1 shadow-2xl", ctx.inlinePatterns ? "max-h-[70vh] w-[30rem] overflow-auto" : "w-80")} onMouseLeave={() => setOpen(false)}>
+          {!ctx.inlinePatterns && !(ctx.patterns || []).length && <div className="px-2 py-1 text-[11px] text-muted-foreground">No patterns declared yet: declare FVG, Order block, Swing, MSS… in Patterns first.</div>}
+          {ctx.inlinePatterns && <InlinePatternItems ctx={ctx} side={side} onPick={(c) => { onAdd(c); setOpen(false); }} />}
           {items.map(([l, f, h]) => (
             <button key={l} className="block w-full rounded px-2 py-1 text-left text-sm hover:bg-accent" onClick={() => { onAdd(f()); setOpen(false); }}>
               <span className="flex items-center gap-1.5">{(() => { const pt = l.startsWith('Pattern: ') ? (ctx.patterns || []).find((q) => q.name === l.slice(9)) : undefined; return pt ? <PatternIcon kind={pt.kind} size={18} /> : null; })()}<span>{l}{h && <span className="ml-1 text-[11px] text-muted-foreground">{h}</span>}</span></span>
@@ -44,6 +47,7 @@ export function AddMenu({ onAdd, ctx, side, small, label = '+ add' }: { onAdd: (
 
 export function CondEditor({ cond, onChange, onRemove, ctx, side, look, depth = 0, highlight }: { cond: Cond; onChange: (c: Cond) => void; onRemove?: () => void; ctx: TokenCtx; side: 'long' | 'short'; look: Look; depth?: number; highlight?: boolean }) {
   const [collapsed, setCollapsed] = useState(!!cond.origin && cond.t === 'all');
+  const [showSettings, setShowSettings] = useState(false);
   const rm = onRemove && <button title="remove" onClick={onRemove} className="ml-1 text-muted-foreground hover:text-red-400">×</button>;
   const originBadge = cond.origin && <Badge tone="info" className="mr-1">{cond.origin.preset}{cond.origin.edited ? ' (edited)' : ''}</Badge>;
 
@@ -140,8 +144,11 @@ export function CondEditor({ cond, onChange, onRemove, ctx, side, look, depth = 
         <Select value={cond.ref} onChange={(ref) => onChange({ ...cond, ref })} options={(p ? pats : [{ name: cond.ref } as any, ...pats]).map((q: any) => [q.name, q.kind ? `${q.name}: ${q.label || PATTERN_KINDS[q.kind as keyof typeof PATTERN_KINDS].title}` : `${q.name} (not declared)`] as [string, string])} className="h-7" />
         <span className="text-muted-foreground">forms</span>
         {!p && <Badge tone="error">not declared</Badge>}
-        {p && <span className="text-[11px] text-muted-foreground" title="edit it in Patterns; every step that uses it changes">({patternSettingsPhrase(p)})</span>}
+        {p && !ctx.inlinePatterns && <span className="text-[11px] text-muted-foreground" title="edit it in Patterns; every step that uses it changes">({patternSettingsPhrase(p)})</span>}
+        {p && ctx.inlinePatterns && <button onClick={() => setShowSettings(!showSettings)} className="rounded-full border border-input px-2 py-0.5 text-[11px] text-sky-300 hover:bg-accent">{showSettings ? 'hide settings' : 'settings'}</button>}
         {rm}
+        {p && ctx.inlinePatterns && !showSettings && <div className="w-full pl-9 text-[11px] text-muted-foreground">{patternSettingsPhrase(p)}</div>}
+        {p && ctx.inlinePatterns && showSettings && <div className="w-full pl-9"><PatternList setup={ctx.inlinePatterns.setup} mutate={ctx.inlinePatterns.mutate} data={ctx.inlinePatterns.data} only={[p.name]} compact /></div>}
       </div>
     );
   }
@@ -183,4 +190,32 @@ export function tokenCtx(setup: Setup, bi: number, k: number, extra: Partial<Tok
     baseBar: setup.settings.base_bar, indicators: setup.indicators, patterns: setup.patterns || [], captures: capturesAt(setup, bi, k),
     labels: labelsOf(setup), ...extra,
   };
+}
+
+/** variant D: pick a pattern kind; it is created with default settings and used here at once */
+function InlinePatternItems({ ctx, side, onPick }: { ctx: TokenCtx; side: 'long' | 'short'; onPick: (c: Cond) => void }) {
+  const ip = ctx.inlinePatterns!;
+  const groups: [string, string][] = [['ict', 'ICT patterns'], ['chart', 'Chart patterns'], ['candle', 'Candlesticks']];
+  const pick = (kind: PatternKind) => {
+    const taken = (ip.setup.patterns || []).map((q: any) => q.name);
+    const p = newPattern(kind, ctx.baseBar, taken);
+    ip.mutate((s: any) => { s.patterns = s.patterns || []; s.patterns.push(p); });
+    onPick({ id: uid(), t: 'pattern', ref: p.name, side });
+  };
+  return (
+    <div className="mb-1 border-b pb-1">
+      {groups.map(([g, title]) => (
+        <div key={g}>
+          <div className="px-2 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
+          <div className="grid grid-cols-2 gap-0.5">
+            {(Object.keys(PATTERN_KINDS) as PatternKind[]).filter((k) => (PATTERN_KINDS[k].group || 'ict') === g).map((k) => (
+              <button key={k} onClick={() => pick(k)} title={PATTERN_KINDS[k].help} className="flex items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs hover:bg-accent">
+                <PatternIcon kind={k} size={16} /><span className="truncate">{PATTERN_KINDS[k].named ? (side === 'long' ? PATTERN_KINDS[k].bull : PATTERN_KINDS[k].bear) : `${PATTERN_KINDS[k].title.replace(/ \(.*\)$/, '')} (${side === 'long' ? PATTERN_KINDS[k].bull : PATTERN_KINDS[k].bear})`}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }

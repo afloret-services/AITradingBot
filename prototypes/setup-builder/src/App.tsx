@@ -10,7 +10,7 @@ import { VariantA } from './variants/VariantA';
 import { VariantB } from './variants/VariantB';
 import { VariantC } from './variants/VariantC';
 
-const VARIANTS: [string, string][] = [['A', 'Wizard'], ['B', 'Document'], ['C', 'Lanes']];
+const VARIANTS: [string, string][] = [['A', 'Wizard'], ['B', 'Document'], ['C', 'Lanes'], ['D', 'Inline']];
 const qs = () => new URLSearchParams(location.search);
 
 export default function App() {
@@ -81,6 +81,7 @@ export default function App() {
       {variant === 'A' && <VariantA {...props} />}
       {variant === 'B' && <VariantB {...props} />}
       {variant === 'C' && <VariantC {...props} />}
+      {variant === 'D' && <VariantA {...props} inline />}
       {showJson && (
         <div className="fixed right-3 top-12 z-50 h-[75vh] w-[460px] overflow-auto rounded-lg border bg-card p-3 shadow-2xl">
           <div className="mb-2 flex items-center justify-between"><b>The Setup file (Draft)</b><Button size="sm" variant="ghost" onClick={() => setShowJson(false)}>×</Button></div>

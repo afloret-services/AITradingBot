@@ -16,6 +16,8 @@ export interface TokenCtx {
   inPosition?: boolean;
   /** the Indicators stage: only indicators can be declared there */
   onlyIndicator?: boolean;
+  /** variant D: patterns are created and edited where a step uses them */
+  inlinePatterns?: { setup: any; mutate: (fn: (s: any) => void) => void; data?: any };
 }
 
 const KINDS = [['number', 'Number'], ['enum', 'Word (bullish, …)'], ['bar', 'Candle value'], ['indicator', 'Indicator'], ['level', 'Level'], ['capture', 'Captured value'], ['bias', 'Bias / Trend'], ['draw', 'Draw on liquidity'], ['entry', 'The entry'], ['trade', 'Trade value']] as const;
