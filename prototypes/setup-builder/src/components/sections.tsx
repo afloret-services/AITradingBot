@@ -37,7 +37,7 @@ export function TradingHoursEditor({ setup, mutate }: { setup: Setup; mutate: Mu
             <button className="ml-1.5 flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" title="remove this range" aria-label={`remove range ${k + 1}`} onClick={() => mutate((s) => { s.settings.trading_hours.ranges.splice(k, 1); })}>×</button>
           </div>
         ))}
-        <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={() => mutate((s) => { s.settings.trading_hours.ranges.push({ start: '09:30', end: '16:00' }); })}>+ range</Button>
+        <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => mutate((s) => { s.settings.trading_hours.ranges.push({ start: '09:30', end: '16:00' }); })}><span aria-hidden="true" className="text-base leading-none">+</span>Add range</Button>
       </div>
       <div className="flex items-center gap-1 pt-1 text-xs"><span className="w-16 text-muted-foreground">Days</span>
         <span className="flex flex-wrap gap-1">{WD.map((d, k) => <button key={d} aria-pressed={th.weekdays.includes(k)} onClick={() => mutate((s) => { const w = s.settings.trading_hours.weekdays; s.settings.trading_hours.weekdays = w.includes(k) ? w.filter((x) => x !== k) : [...w, k].sort(); })} className={cn('h-8 min-w-[2.75rem] rounded-md border px-2 text-xs font-medium transition-colors', th.weekdays.includes(k) ? 'border-sky-400/50 bg-sky-500/20 text-sky-100' : 'border-input text-muted-foreground hover:bg-accent')}>{d}</button>)}</span>

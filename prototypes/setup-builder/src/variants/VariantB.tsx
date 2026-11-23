@@ -40,7 +40,7 @@ export function VariantB(p: VariantProps) {
             <InlineSelect value={setup.settings.base_bar} onChange={(v: TF) => mutate((s) => { s.settings.base_bar = v; })} options={TFS.filter((t) => t !== '1d')} />{' '}
             bar. Signals are taken {th.ranges.map((r, k) => (
               <span key={k}>{k > 0 && ' or '}between <InlineInput value={r.start} onChange={(v) => mutate((s) => { s.settings.trading_hours.ranges[k].start = v; })} /> and <InlineInput value={r.end} onChange={(v) => mutate((s) => { s.settings.trading_hours.ranges[k].end = v; })} /></span>
-            ))} New York time <button className="text-xs text-sky-300" onClick={() => mutate((s) => { s.settings.trading_hours.ranges.push({ start: '14:00', end: '15:00' }); })}>(+ range)</button>, on {th.weekdays.length === 5 ? 'weekdays' : th.weekdays.length + ' days'}.
+            ))} New York time <button className="mx-1 inline-flex h-6 items-center gap-1 rounded-md border border-input px-2 align-middle text-xs font-medium text-sky-200 hover:bg-accent" onClick={() => mutate((s) => { s.settings.trading_hours.ranges.push({ start: '14:00', end: '15:00' }); })}><span aria-hidden="true">+</span>Add range</button>, on {th.weekdays.length === 5 ? 'weekdays' : th.weekdays.length + ' days'}.
             {' '}While a Signal is live,{' '}
             <InlineSelect value={setup.settings.one_at_a_time} onChange={(v) => mutate((s) => { s.settings.one_at_a_time = v; })} options={[['off', 'new Signals are still taken'], ['ignore_new_starts', 'new starts are ignored'], ['skip_completions', 'Candidates that complete are skipped']]} />.
             {' '}Around news:{' '}
