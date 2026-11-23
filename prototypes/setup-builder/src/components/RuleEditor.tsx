@@ -69,7 +69,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }
   const lineView = (l: Line, i: number) => {
     const c = l.cond;
     const lead = group ? <span className={cn('w-7 shrink-0 pt-1.5 text-[10px] font-bold uppercase tracking-wide', group === 'all' ? 'text-cyan-300/70' : 'text-amber-300/70')}>{i === 0 ? '' : group === 'all' ? 'and' : 'or'}</span>
-      : i === 0 ? (keyword ? <span className="w-[4.5rem] shrink-0 pt-1 text-xs font-black tracking-wider text-sky-300">{keyword}</span> : <span className="w-[4.5rem] shrink-0" />)
+      : i === 0 ? (keyword ? <span className="flex h-8 w-[4.5rem] shrink-0 items-center text-base font-black tracking-wider text-sky-300">{keyword}</span> : <span className="w-[4.5rem] shrink-0" />)
       : <span className="w-[4.5rem] shrink-0 pt-0.5">{l.join === 'and' ? <JoinSelect value="and" onChange={(j) => setJoin(i, j)} /> : null}</span>;
     return (
       <div key={c.id} className={cn('group/line flex flex-wrap items-start gap-2 rounded-md [@container(min-width:38rem)]:flex-nowrap', drag === i && 'opacity-40', over === i && drag != null && drag !== i && 'ring-1 ring-sky-400/60')}
@@ -104,7 +104,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }
 
   return (
     <div className="space-y-1.5 [container-type:inline-size]">
-      {lines.length === 0 && <div className={cn('flex items-center gap-2', group && 'pl-9')}>{keyword && <span className="w-[4.5rem] text-xs font-black tracking-wider text-sky-300">{keyword}</span>}<span className="text-xs italic text-muted-foreground">no condition yet: add one</span></div>}
+      {lines.length === 0 && <div className={cn('flex items-center gap-2', group && 'pl-9')}>{keyword && <span className="w-[4.5rem] text-base font-black tracking-wider text-sky-300">{keyword}</span>}<span className="text-xs italic text-muted-foreground">no condition yet: add one</span></div>}
       {groups.map((g, gi) => (
         <React.Fragment key={g[0].line.cond.id}>
           {gi > 0 && (

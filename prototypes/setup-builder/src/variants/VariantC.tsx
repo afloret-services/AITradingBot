@@ -88,7 +88,7 @@ export function VariantC(p: VariantProps) {
                     <React.Fragment key={st.id}>
                       {si > 0 && <Connector st={st} />}
                       <LaneCard color={STEP_COLORS[si % 6]} selected={sel.kind === 'step' && sel.bi === bi && sel.si === si} locked={run} onClick={() => { setSel({ kind: 'step', bi, si }); p.setFocus({ bi, si }); }}
-                        title={<><span className="mr-1 inline-flex aspect-square h-5 w-5 shrink-0 items-center justify-center rounded-full leading-none text-[11px] font-bold text-black" style={{ background: STEP_COLORS[si % 6] }}>{si + 1}</span><span className="mr-1.5 text-[11px] font-black tracking-wider text-sky-300">{si === 0 ? 'IF' : 'THEN'}</span>{st.name}</>}
+                        title={<><span className="mr-1 inline-flex aspect-square h-5 w-5 shrink-0 items-center justify-center rounded-full leading-none text-[11px] font-bold text-black" style={{ background: STEP_COLORS[si % 6] }}>{si + 1}</span><span className="mr-1.5 text-sm font-black tracking-wider text-sky-300">{si === 0 ? 'IF' : 'THEN'}</span>{st.name}</>}
                         foot={<StepStats result={result} bi={bi} si={si} data={data} />}>
                         <MiniCond c={st.cond} labels={labels} />
                         {st.capture_running && <div className="mt-1 text-[11px] text-muted-foreground">captures <span className="mono">{st.capture_running.name}</span> (running {st.capture_running.field})</div>}

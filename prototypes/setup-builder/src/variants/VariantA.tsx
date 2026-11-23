@@ -96,11 +96,11 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                 <ol className="space-y-0">
                   {br.steps.map((st, k) => (
                     <li key={st.id}>
-                      {k > 0 && <div className="ml-4 border-l-2 border-dashed py-1 pl-4 text-xs text-muted-foreground"><b className="text-sky-300">THEN</b>, {st.same_bar && st.within_bars === 0 ? 'on the same bar only' : st.same_bar ? 'possibly on the same bar' : 'on a later bar'}{st.within_bars ? `, within ${st.within_bars} bars` : ''}{st.until ? `, until ${st.until}` : ''}</div>}
+                      {k > 0 && <div className="ml-4 border-l-2 border-dashed py-1 pl-4 text-xs text-muted-foreground"><b className="text-sm font-black tracking-wider text-sky-300">THEN</b>, {st.same_bar && st.within_bars === 0 ? 'on the same bar only' : st.same_bar ? 'possibly on the same bar' : 'on a later bar'}{st.within_bars ? `, within ${st.within_bars} bars` : ''}{st.until ? `, until ${st.until}` : ''}</div>}
                       <div className={cn('rounded-lg border', open === k && 'border-sky-500/50')}>
                         <div role="button" tabIndex={0} className="flex w-full cursor-pointer flex-wrap items-center gap-x-2 gap-y-0.5 px-3 py-2 text-left sm:flex-nowrap" onClick={() => { setOpen(open === k ? -1 : k); p.setFocus({ bi, si: k }); }}>
                           <span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold leading-none text-black" style={{ background: STEP_COLORS[k % 6] }}>{k + 1}</span>
-                          <span className={cn('shrink-0 text-xs font-black tracking-wider text-sky-300 sm:w-11', open === k && 'hidden sm:inline')}>{open === k ? '' : k === 0 ? 'IF' : 'THEN'}</span>
+                          <span className={cn('shrink-0 text-sm font-black tracking-wider text-sky-300 sm:w-14', open === k && 'hidden sm:inline')}>{open === k ? '' : k === 0 ? 'IF' : 'THEN'}</span>
                           <Input value={st.name} onClick={(e) => e.stopPropagation()} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-7 min-w-0 flex-1 border-transparent bg-transparent font-medium sm:w-72 sm:flex-none" />
                           <span className="order-last w-full pl-9 sm:order-none sm:w-auto sm:pl-0"><StepStats result={result} bi={bi} si={k} data={data} /></span>
                           <span className="shrink-0 text-muted-foreground sm:ml-auto">{open === k ? '▾' : '▸'}</span>
