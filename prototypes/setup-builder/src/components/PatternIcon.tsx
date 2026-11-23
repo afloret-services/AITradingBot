@@ -1,8 +1,10 @@
-// PROTOTYPE: a small glyph per pattern kind (24×24, bullish version), drawn in currentColor, shown next to its label.
+// PROTOTYPE: a small glyph per pattern kind (24×24, bullish version), its shape in the pattern-line fuchsia, shown next to its label.
 import React from 'react';
 import type { PatternKind } from '../model';
 
 const UP = '#26a69a', DN = '#ef5350', ZN = '#cbd5e1', LV = '#fbbf24';
+/** the pattern's own shape, as on the chart and in the drawings */
+const SHAPE = '#f0abfc';
 /** a candle: x, open, high, low, close in a 0–24 grid (y grows down, so a smaller number is higher) */
 const K = ({ x, o, h, l, c, w = 4 }: { x: number; o: number; h: number; l: number; c: number; w?: number }) => {
   const col = c < o ? UP : DN;
@@ -57,7 +59,7 @@ const GLYPHS: Record<PatternKind, React.ReactNode> = {
 
 export function PatternIcon({ kind, size = 18, className }: { kind: PatternKind; size?: number; className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true">
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true" style={{ color: SHAPE }}>
       {GLYPHS[kind] ?? <circle cx={12} cy={12} r={4} fill="currentColor" />}
     </svg>
   );
