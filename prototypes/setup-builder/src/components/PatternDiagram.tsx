@@ -95,7 +95,7 @@ export function PatternSchematic({ p }: { p: Pattern }) {
     rounding: { pts: [[12, 80], [40, 52], [70, 36], [100, 30], [130, 33], [160, 46], [190, 70], [210, 82], [232, 92]], lines: [[12, 80, 235, 80]], bx: 206, by: 80, tgt: 98, note: 'a slow U-turn', marks: [[12, 80, 'rim']] },
     island: { pts: [], lines: [], bx: 0, by: 0, note: 'gap down, a few bars alone, gap up' },
     bump_run: { pts: [[12, 88], [45, 78], [80, 68], [105, 50], [125, 25], [145, 20], [165, 40], [190, 64], [225, 85]], lines: [[12, 92, 235, 50]], bx: 186, by: 59, note: 'lead-in, bump, run back through the line' },
-    measured_move: { pts: [[15, 15], [75, 60], [110, 40], [180, 88]], lines: [[75, 60, 235, 60]], bx: 128, by: 60, tgt: 98, note: 'second leg ≈ first leg', marks: [[15, 15, 'A'], [75, 60, 'B'], [110, 40, 'C']] },
+    measured_move: { pts: [[15, 15], [75, 60], [110, 40], [180, 88]], lines: [[75, 60, 235, 60]], bx: 128, by: 60, tgt: 98, note: 'second swing ≈ first swing', marks: [[15, 15, 'A'], [75, 60, 'B'], [110, 40, 'C']] },
     parabolic: { pts: [[12, 90], [70, 84], [110, 72], [140, 52], [158, 28], [168, 10], [178, 26], [200, 34], [225, 45]], lines: [], bx: 178, by: 26, note: 'a fall that speeds up, then a sharp turn' },
     adam_eve: { pts: [[12, 92], [45, 70], [62, 28], [79, 72], [105, 62], [125, 40], [150, 30], [175, 40], [195, 70], [220, 90]], lines: [[30, 70, 230, 70]], bx: 196, by: 70, tgt: 98, note: 'sharp Adam, rounded Eve', marks: [[62, 28, 'Adam'], [150, 30, 'Eve']] },
     hs_complex: { pts: [[8, 90], [28, 42], [45, 58], [62, 40], [80, 58], [110, 15], [140, 58], [158, 41], [175, 58], [192, 43], [208, 58], [232, 88]], lines: [[30, 58, 235, 58]], bx: 214, by: 58, tgt: 98, note: 'two shoulders each side', marks: [[110, 15, 'head']] },

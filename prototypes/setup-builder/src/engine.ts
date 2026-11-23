@@ -699,7 +699,7 @@ export function patternSeries(data: Data, p: Pattern, side: 'long' | 'short') {
         if (leg < P.min_leg_points - 1e-9 || r < P.min_retrace_pct / 100 - 1e-9 || r > P.max_retrace_pct / 100 + 1e-9) continue;
         if (!(G[j].c > Bq.p && G[j - 1].c <= Bq.p)) continue;
         used.add(String(C.i));
-        out[j] = { line: R(Bq.p), leg, a: R(A.p), b: R(Bq.p), c: R(C.p), target: R(C.p + leg), breakout: B[j].c, time: B[j].t,
+        out[j] = { line: R(Bq.p), swing: leg, a: R(A.p), b: R(Bq.p), c: R(C.p), target: R(C.p + leg), breakout: B[j].c, time: B[j].t,
           path: [[T(A.i), R(A.p)], [T(Bq.i), R(Bq.p)], [T(C.i), R(C.p)], [T(j), B[j].c]], lines: [[T(Bq.i), R(Bq.p), T(j), R(Bq.p)]] };
       } else if (k === 'parabolic') {
         const N = Math.max(6, Number(P.run_bars) || 15), st = j - 1 - N, av = avg[j - 1];
