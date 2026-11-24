@@ -103,7 +103,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                           <span className={cn('shrink-0 text-sm font-black tracking-wider text-sky-300 sm:w-14', open === k && 'hidden sm:inline')}>{open === k ? '' : k === 0 ? 'IF' : 'THEN'}</span>
                           <Input value={st.name} onClick={(e) => e.stopPropagation()} onChange={(e) => mutate((s) => { s.branches[bi].steps[k].name = e.target.value; })} className="h-9 min-w-0 flex-1 border-transparent bg-transparent text-base font-bold tracking-tight sm:w-80 sm:flex-none" />
                           <span className="order-last w-full pl-9 sm:order-none sm:w-auto sm:pl-0"><StepStats result={result} bi={bi} si={k} data={data} /></span>
-                          <span className="shrink-0 text-muted-foreground sm:ml-auto">{open === k ? '▾' : '▸'}</span>
+                          <span aria-hidden="true" className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-input text-muted-foreground transition-transform sm:ml-auto', open === k && 'rotate-90 text-foreground')}><svg width="14" height="14" viewBox="0 0 14 14"><path d="M5 2.5 L9.5 7 L5 11.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
                         </div>
                         {open === k && (
                           <div className="space-y-2 border-t p-3">
