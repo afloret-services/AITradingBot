@@ -28,7 +28,7 @@ export function VariantB(p: VariantProps) {
   return (
     <div className="mx-auto grid max-w-[1500px] grid-cols-1 gap-6 p-3 lg:grid-cols-[minmax(0,1fr)_560px] lg:p-6">
       <Card className="min-w-0 p-4 lg:col-span-2">
-        <div className="mb-3"><div className="text-[15px] font-semibold tracking-tight">Setup at a glance</div><div className="text-xs text-muted-foreground">The document below, as a flow. Click a step to jump to its sentence.</div></div>
+        <div className="mb-3"><div className="text-xl font-bold tracking-tight">Setup at a glance</div><div className="text-sm text-muted-foreground">The document below, as a flow. Click a step to jump to its sentence.</div></div>
         <div className="mb-2"><ReviewHelp setup={setup} what="map" /></div>
         <SetupMap setup={setup} result={result} data={data} focus={p.focus} compact onStep={(f) => { p.setFocus(f); document.getElementById(`step-${setup.branches[f.bi].steps[f.si].id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} />
       </Card>
@@ -117,7 +117,7 @@ export function VariantB(p: VariantProps) {
           <div className="grid grid-cols-1 items-start gap-1 sm:grid-cols-[150px_1fr] sm:gap-3"><div className="flex items-center gap-1.5 pt-1 text-sm font-medium text-muted-foreground"><SectionIcon k="in_position" size={18} />While in a Trade</div><div className="space-y-1"><SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={ctxFor(0, 99)} look="outline" /></div></div>
         </section>
         <section className="space-y-1">
-          <h2 className="text-xl font-semibold">Notes</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Notes</h2>
           <textarea value={setup.notes} onChange={(e) => mutate((s) => { s.notes = e.target.value; })} placeholder="Free text. Never part of the Rule description or the hash." className="h-20 w-full rounded-md border border-input bg-transparent p-2 text-sm" />
           <Explain><BasicsHelp setup={setup} what="notes" /></Explain>
         </section>
@@ -131,7 +131,7 @@ export function VariantB(p: VariantProps) {
           <div className="mt-1"><ReviewHelp setup={setup} what="chart" result={runMode && runD.result ? runD.result : result} /></div>
         </Card>
         <Card className="p-3">
-          <div className="mb-1 text-sm font-semibold">Indicators in this Setup</div>
+          <div className="mb-1 text-lg font-bold tracking-tight">Indicators in this Setup</div>
           <div className="mb-1 text-[11px] text-muted-foreground">Configured the first time a step reads them. Give one a label and the description uses it.</div>
           <div className="mb-2 space-y-2"><IndicatorsPatternsIntro /><IndicatorsHelp setup={setup} /></div>
           {setup.indicators.length === 0 && <div className="text-xs italic text-muted-foreground">none yet</div>}
@@ -147,20 +147,20 @@ export function VariantB(p: VariantProps) {
           ))}
         </Card>
         <Card className="p-3">
-          <div className="mb-1 text-sm font-semibold">Patterns in this Setup</div>
+          <div className="mb-1 text-lg font-bold tracking-tight">Patterns in this Setup</div>
           <div className="mb-1 text-[11px] text-muted-foreground">Configured up front, then used by name in a sentence ("a bullish fvg forms").</div>
           <div className="mb-2"><PatternsHelp setup={setup} /></div>
           <PatternList setup={setup} mutate={mutate} compact data={data} />
         </Card>
         <Card className="p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2"><div className="text-sm font-semibold">Review & save</div>{p.saveBar}</div>
+          <div className="flex flex-wrap items-center justify-between gap-2"><div className="text-lg font-bold tracking-tight">Review & save</div>{p.saveBar}</div>
           {issues.map((i, k) => <div key={k} className={cn('mt-1 text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.where}: {i.text}</div>)}
           <div className="mt-2 space-y-2"><ReviewHelp setup={setup} what="checks" issues={issues} /><ReviewHelp setup={setup} what="save" />
             <details className="text-xs"><summary className="cursor-pointer font-medium text-foreground">Rule description (stored at Freeze)</summary>
               <div className="mt-1 space-y-1.5"><ReviewHelp setup={setup} what="rule" /><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-2 text-[11px]">{ruleDescription(setup)}</pre></div></details></div>
         </Card>
         <Card className="p-3">
-          <div className="flex items-center justify-between"><div className="text-sm font-semibold">Try it as a Run</div><Button size="sm" variant={runMode ? 'default' : 'outline'} onClick={() => setRunMode(!runMode)}>{runMode ? 'Close Run' : 'Create a Run…'}</Button></div>
+          <div className="flex items-center justify-between"><div className="text-lg font-bold tracking-tight">Try it as a Run</div><Button size="sm" variant={runMode ? 'default' : 'outline'} onClick={() => setRunMode(!runMode)}>{runMode ? 'Close Run' : 'Create a Run…'}</Button></div>
           {runMode && <div className="mt-2 space-y-2"><RunHelp setup={setup} what="intro" /><RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></div>}
           {runMode && <RunDiff setup={setup} runD={runD} ctx={ctxFor(0, 99)} base={result} data={data} />}
         </Card>
