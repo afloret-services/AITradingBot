@@ -42,7 +42,7 @@ export function VariantC(p: VariantProps) {
     <div className="flex flex-col lg:h-[calc(100vh-50px)]">
       {/* toolbar */}
       <div className="flex flex-wrap items-center gap-3 border-b px-3 py-2 text-xs">
-        <Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="h-7 w-48 font-semibold" />
+        <Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="h-9 w-64 max-w-full text-lg font-bold tracking-tight" />
         <button onClick={() => setSel({ kind: 'settings' })} className="rounded border px-2 py-1 hover:bg-accent">Base bar <b>{setup.settings.base_bar}</b> · Trading window <b>{tradingWindowText(setup.settings.trading_hours)}</b> · Trade overlap <b>{(ONE_AT_A_TIME[setup.settings.one_at_a_time]?.[0] || '').replace(/:.*$/, '').replace(/^./, (c) => c.toLowerCase())}</b> · News filter <b>{NEWS[setup.settings.news_rule.mode]?.[0].replace(/^./, (c) => c.toLowerCase())}</b> ✎</button>
         <Tabs value={mode} onChange={(v) => { setMode(v as 'build' | 'run'); if (v === 'run') setSel({ kind: 'trade' }); }} tabs={[['build', 'Build the Setup'], ['run', 'Create a Run']]} />
         {run && <><Select value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} options={INSTRUMENTS} className="h-7" />{instrumentWarnings(setup, runD.draft.instrument).map((w) => <span key={w} className="text-amber-300">{w}</span>)}</>}
@@ -52,7 +52,7 @@ export function VariantC(p: VariantProps) {
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_380px]">
         {/* library */}
         <div className={cn('order-last space-y-3 overflow-auto border-t p-3 text-sm lg:order-none lg:border-r lg:border-t-0', run && 'pointer-events-none opacity-40')}>
-          <div className="lg:hidden"><div className="text-sm font-semibold">Block library</div><div className="text-xs text-muted-foreground">{sel.kind === 'step' ? <>Tap a block to add it to <b className="text-foreground">step {sel.si + 1}</b> ({setup.branches[sel.bi]?.side}); tap another step card above to change.</> : 'Tap a step card above first, then a block to add it there.'}</div></div>
+          <div className="lg:hidden"><div className="text-lg font-bold tracking-tight">Block library</div><div className="text-xs text-muted-foreground">{sel.kind === 'step' ? <>Tap a block to add it to <b className="text-foreground">step {sel.si + 1}</b> ({setup.branches[sel.bi]?.side}); tap another step card above to change.</> : 'Tap a step card above first, then a block to add it there.'}</div></div>
           <Lib title="Indicators (configured once)">
             {setup.indicators.map((i) => (
               <LibItem key={i.token} onClick={() => insert({ id: uid(), t: 'cmp', a: i.token, op: '>', b: '' })} disabled={sel.kind !== 'step'} hint={`used ${usage[i.token] || 0}×`}><span className="inline-flex items-center gap-1.5"><IndicatorIcon token={i.token} size={16} />{i.label || shortName(i.token, {})}</span></LibItem>
