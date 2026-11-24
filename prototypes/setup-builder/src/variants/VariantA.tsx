@@ -143,7 +143,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                 <span className="w-full pl-9 text-xs text-muted-foreground">When the last step completes, the Signal places this order with its stop.</span>
               </div>
             )}
-            {stage === 4 && setup.branches.map((b, k) => <div key={b.id} className="space-y-2"><Badge>{b.side} branch</Badge><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={k} ctx={ctxOf(k, b.steps.length)} /></div>)}
+            {stage === 4 && setup.branches.map((b, k) => <div key={b.id} className={cn('space-y-3 rounded-lg border p-3', b.side === 'long' ? 'border-cyan-500/40 bg-cyan-500/[0.04]' : 'border-red-500/40 bg-red-500/[0.04]')}><div className="flex items-center gap-2"><Badge tone={b.side === 'long' ? 'go' : 'error'} className="shrink-0 whitespace-nowrap px-2.5 py-1 text-base font-black tracking-wider">{b.side === 'long' ? '▲ LONG' : '▼ SHORT'}</Badge><span className="text-sm text-muted-foreground">{b.side === 'long' ? 'buy: entry, then the stop below it' : 'sell: entry, then the stop above it'}</span></div><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={k} ctx={ctxOf(k, b.steps.length)} /></div>)}
             {stage === 5 && (
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-slate-400/30 bg-slate-400/5 px-3 py-2">
