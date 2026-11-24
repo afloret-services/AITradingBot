@@ -314,7 +314,6 @@ function PatternPalette({ onPick }: { onPick: (k: PatternKind) => void }) {
         );
       })}
       {groups.every(([g]) => !PKINDS.some((k) => (PATTERN_KINDS[k].group || 'ict') === g && keep(k))) && <div className="text-xs italic text-muted-foreground">No pattern matches these filters.</div>}
-      <div className="text-[10px] text-muted-foreground">Chart-pattern categories follow The Chart Guys' chart-pattern cheat sheet; candlesticks, which it does not cover, use the usual reading. ICT patterns have no category and show only under "All".</div>
     </div>
   );
 }
