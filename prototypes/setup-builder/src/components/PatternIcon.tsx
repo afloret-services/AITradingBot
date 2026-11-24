@@ -96,6 +96,7 @@ export function IndicatorIcon({ token, name, size = 18, className }: { token?: s
 const G_ = '#26a69a', RD = '#ef5350', WH = '#e2e8f0', AM = '#fbbf24', SK = '#74c69d';
 const SEC_GLYPHS: Record<string, React.ReactNode> = {
   // a pie: the share of capital risked per Trade
+  losing_streak: <><path d="M3 6 L8 11 L12 8 L20 17" fill="none" stroke={RD} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" /><path d="M15 17 H20 V12" fill="none" stroke={RD} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" /><rect x={3} y={18} width={5} height={3} rx={0.6} fill={AM} /></>,
   risk: <><circle cx={12} cy={12} r={9} fill="none" stroke={PR} strokeWidth={1.6} /><path d="M12 12 L12 3 A9 9 0 0 1 20.5 9 Z" fill={AM} /><text x={12} y={17.5} fontSize={7} textAnchor="middle" fill={WH} fontFamily="Inter, sans-serif" fontWeight={700}>%</text></>,
   // price falling onto the red stop line
   stop: <><L d="M2 4 L7 8 L10 6 L15 13 L18 17" color={PR} w={1.5} /><L d="M1 18 H23" color={RD} w={2.2} /><path d="M17.5 14.5 l3 3 m0 -3 l-3 3" stroke={RD} strokeWidth={1.6} strokeLinecap="round" /></>,

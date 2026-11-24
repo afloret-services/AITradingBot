@@ -894,6 +894,7 @@ export function run(data: Data, setup: Setup): RunResult {
     try { runBranch(data, setup, br, bi, base, res); } catch (e: any) { errors.push(`${br.side} branch: ${e.message}`); }
   });
   res.signals.sort((a, b) => a.i - b.i);
+  applyLosingStreak(data, setup, res.signals);
   res.ms = performance.now() - t0;
   return res;
 }
@@ -1113,3 +1114,27 @@ function simulate(data: Data, setup: Setup, br: Branch, sig: Signal, base: Int32
 }
 
 export { mirrorFieldSide };
+
+/** Losing streak (per Setup, across its branches): after N losing Trades in a row on one Trading day, later Signals that day are refused;
+ *  the next Trading day starts at cut % of the contracts until a winning Trade. PROTOTYPE: applied after the fact, so a refused Signal
+ *  does not free Trade overlap for a later one. */
+function applyLosingStreak(data: Data, setup: Setup, sigs: Signal[]) {
+  const ls = setup.trade_settings.losing_streak;
+  if (!ls || !ls.n) return;
+  let day = -1, streak = 0, stopped = false, reduced = false, stoppedDay = -1;
+  for (const s of sigs) {
+    if (s.refused) continue;
+    const d = data.m1[s.i].di;
+    if (d !== day) { if (stoppedDay === day && day >= 0) reduced = true; day = d; streak = 0; stopped = false; }
+    if (stopped) { s.refused = `losing streak: ${ls.n} losing Trades in a row today, the Setup stopped for the day`; s.trade = undefined; continue; }
+    if (reduced) {
+      // cut the total, never below 1 contract, taken from the first Take profits
+      const tot = s.legs.reduce((a, l) => a + l.contracts, 0);
+      let left = Math.max(1, Math.floor((tot * ls.cut) / 100));
+      s.legs = s.legs.map((l) => { const c = Math.min(l.contracts, left); left -= c; return { ...l, contracts: c }; }).filter((l) => l.contracts > 0);
+    }
+    const r = s.trade?.r;
+    if (r == null) continue;
+    if (r > 0) { streak = 0; reduced = false; } else if (r < 0) { streak++; if (streak >= ls.n) { stopped = true; stoppedDay = d; } }
+  }
+}

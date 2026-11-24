@@ -635,12 +635,13 @@ export function StopEditor({ value, onChange, ctx, side = 'long' }: { value: Set
 }
 
 // ---------- Trade-settings sections (the Run-overridable ones) ----------
-export type SectionKey = 'risk' | 'stop' | 'legs' | 'break_even' | 'entry_deadline' | 'expiry_and_flatten' | 'signal_guards';
-export const SECTIONS: SectionKey[] = ['risk', 'stop', 'legs', 'break_even', 'entry_deadline', 'expiry_and_flatten', 'signal_guards'];
+export type SectionKey = 'risk' | 'losing_streak' | 'stop' | 'legs' | 'break_even' | 'entry_deadline' | 'expiry_and_flatten' | 'signal_guards';
+export const SECTIONS: SectionKey[] = ['risk', 'losing_streak', 'stop', 'legs', 'break_even', 'entry_deadline', 'expiry_and_flatten', 'signal_guards'];
 export function getSection(s: Setup, k: SectionKey): any {
   const ts = s.trade_settings;
   switch (k) {
     case 'risk': return ts.risk;
+    case 'losing_streak': return ts.losing_streak || { n: 0, cut: 50 };
     case 'stop': return s.branches.map((b) => b.entry.stop);
     case 'legs': return { legs: ts.legs, leftover: ts.leftover };
     case 'break_even': return ts.break_even;
@@ -653,6 +654,7 @@ export function setSection(s: Setup, k: SectionKey, v: any) {
   const ts = s.trade_settings;
   switch (k) {
     case 'risk': ts.risk = v; break;
+    case 'losing_streak': ts.losing_streak = v; break;
     case 'stop': s.branches.forEach((b, i) => { if (v[i]) b.entry.stop = v[i]; }); break;
     case 'legs': ts.legs = v.legs; ts.leftover = v.leftover; break;
     case 'break_even': ts.break_even = v; break;
@@ -665,6 +667,7 @@ export function sectionSummary(s: Setup, k: SectionKey): string {
   const v = getSection(s, k);
   switch (k) {
     case 'risk': return `${v.pct}% of a $${v.capital} account, at most ${v.max_contracts} contracts`;
+    case 'losing_streak': return v.n ? `stop for the day after ${v.n} losers in a row; next day at ${v.cut}% risk until a winner` : 'off';
     case 'stop': return v.map((x: any, i: number) => `${x.offset} ${x.unit === 'atr' ? '× ATR' : 'ticks'} ${s.branches[i]?.side === 'short' ? 'above' : 'below'} ${shortName(x.token, {}) || '?'}`).join(' / ');
     case 'legs': return v.legs.map((l: Leg) => `${l.name} at ${l.rule === 'r' ? l.r + 'R' : l.rule === 'fraction' ? Math.round((l.fraction ?? 0) * 100) + '% to ' + shortName(l.level || '', {}) : (l.offset_ticks ? `${l.offset_ticks}t before ` : '') + shortName(l.level || '', {})}, close ${Math.round(l.share * 100)}%`).join('; ') + `; extra to ${v.leftover === 'first' ? 'TP1' : 'the last TP'}`;
     case 'break_even': return v.trigger === 'off' ? 'never' : `${v.trigger === 'after_leg' ? `after TP${v.k} fills` : `once +${v.r}R in profit`}${v.offset_ticks ? `, lock in ${v.offset_ticks} ticks` : ''}`;
@@ -676,6 +679,13 @@ export function sectionSummary(s: Setup, k: SectionKey): string {
 
 export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKey; value: any; onChange: (v: any) => void; setup: Setup; ctx: TokenCtx }) {
   switch (k) {
+    case 'losing_streak': return (
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <Select value={value.n ? 'on' : 'off'} onChange={(o) => onChange({ ...value, n: o === 'on' ? value.n || 3 : 0 })} options={[['off', 'Off: never stop'], ['on', 'Stop for the day after']]} />
+        {value.n > 0 && <span className="flex flex-wrap items-center gap-1.5"><NumInput value={value.n} onChange={(n) => onChange({ ...value, n: Math.max(1, n || 1) })} className="w-14" /> losing Trades in a row; next Trading day at
+          <NumInput step={5} value={value.cut} onChange={(n) => onChange({ ...value, cut: Math.min(100, Math.max(5, n || 50)) })} className="w-16" /> % of Risk per Trade until a winner</span>}
+      </div>
+    );
     case 'risk': return (
       <div className="flex flex-wrap gap-4">
         <Field label="Account size ($)"><NumInput value={value.capital} onChange={(n) => onChange({ ...value, capital: n })} className="w-24" /></Field>
@@ -745,6 +755,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
 // ---------- what each Trade-settings section does, with this Setup's numbers worked through ----------
 const PV = 2; // MNQ $ per point: the preview instrument (the real one is chosen per Run)
 const SECTION_HELP: Record<SectionKey | 'in_position', string> = {
+  losing_streak: "Counts this Setup's losing Trades in a row on one Trading day, across its long and short branches. When the count reaches N, the Setup opens no new Trade for the rest of that day (its Signals are logged as refused). The next Trading day it resumes at the reduced risk, a share of its usual contracts, and goes back to full risk after its first winning Trade. A Trade that ends flat does not break or extend the streak. The account-wide daily loss limit (Stand-down) still applies on top, for the whole Run.",
   risk: "How many contracts a Signal trades. Contracts = Account size × Risk each Trade % ÷ (stop distance × the instrument's $ per point), rounded down and capped at the contract limit. If even 1 contract would risk more than that, the Signal is refused (\"stop too wide\").",
   stop: 'Where the protective stop sits: a value the Setup reads (a captured low, a pattern edge…) plus an offset in ticks or in × ATR, on the far side from the entry. Every Entry must have one.',
   legs: "The Trade can be closed in parts, each part with its own take profit (TP1, TP2…). At a multiple of the risk (R): entry ± k × the stop distance. Just before a level: a price the Setup reads, e.g. the Draw on liquidity, N ticks short so it fills before the level. Part of the way to a level: that % of the way from the entry to the level. Close %: the part of the contracts each take profit closes; extra contracts that don't divide evenly go to TP1 first or to the last TP.",
@@ -768,6 +779,7 @@ function sectionExample(setup: Setup, k: SectionKey | 'in_position'): React.Reac
   const contracts = Math.min(ts.risk.max_contracts, raw);
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   switch (k) {
+    case 'losing_streak': return ts.losing_streak?.n ? <>Here: after {B(`${ts.losing_streak.n} losers in a row`)} the Setup stops for the day; the next day {B(`${contracts} contracts`)} become {B(`${Math.floor((contracts * ts.losing_streak.cut) / 100)}`)} until a winner.</> : <>Here: {B('off')}, the Setup keeps trading after any number of losers; only the Run's daily loss limit stops it.</>;
     case 'risk': return <>Here: {B(`$${ts.risk.capital} × ${ts.risk.pct}% = $${budget.toFixed(0)}`)} per Trade. With a 20-point stop on MNQ ($2 a point), 1 contract risks $40, so the Signal trades {B(`${contracts} contract${contracts === 1 ? '' : 's'}`)}{raw > ts.risk.max_contracts ? ' (capped by Max contracts)' : ''}. A stop wider than {B(`${(budget / PV).toFixed(0)} points`)} is refused.</>;
     case 'legs': {
       const n = contracts || 1, sp = splitN(n, ts.legs, ts.leftover);

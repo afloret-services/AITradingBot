@@ -214,6 +214,8 @@ export interface Leg { name: string; rule: 'r' | 'level' | 'fraction'; r?: numbe
 export interface Guard { kind: 'max_stop' | 'min_rr'; n: number; unit?: 'ticks' | 'atr'; atr?: string }
 export interface TradeSettings {
   risk: { capital: number; pct: number; max_contracts: number };
+  /** after `n` losing Trades in a row on one Trading day the Setup stops for that day; it resumes the next day at `cut` % of Risk per Trade until a winner (n 0 = off) */
+  losing_streak?: { n: number; cut: number };
   legs: Leg[];
   leftover: 'first' | 'last';
   break_even: { trigger: 'off' | 'after_leg' | 'at_r'; k?: number; r?: number; offset_ticks: number };
@@ -244,7 +246,7 @@ export interface Setup {
   in_position_rules: InPositionRule[];
 }
 export const SECTION_NAMES: Record<string, string> = {
-  risk: 'Risk per Trade', stop: 'Stop', legs: 'Take profits', break_even: 'Break-even', entry_deadline: 'Entry deadline', expiry_and_flatten: 'Closing time', signal_guards: 'Signal guards',
+  risk: 'Risk per Trade', losing_streak: 'Losing streak', stop: 'Stop', legs: 'Take profits', break_even: 'Break-even', entry_deadline: 'Entry deadline', expiry_and_flatten: 'Closing time', signal_guards: 'Signal guards',
 };
 
 let seq = 1;
