@@ -49,7 +49,7 @@ export function VariantC(p: VariantProps) {
         <button onClick={() => setSel({ kind: 'review' })} className={cn('ml-auto rounded border px-2 py-1 hover:bg-accent', sel.kind === 'review' && 'border-sky-400 bg-sky-500/10')}>Review & save {issues.some((i) => i.level === 'error') ? <span className="text-red-300">· {issues.filter((i) => i.level === 'error').length} errors</span> : issues.length ? <span className="text-amber-300">· {issues.length} warnings</span> : <span className="text-cyan-300">· ready</span>}</button>
         <div>{p.saveBar}</div>
       </div>
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[230px_minmax(0,1fr)_380px]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_380px]">
         {/* library */}
         <div className={cn('order-last space-y-3 overflow-auto border-t p-3 text-sm lg:order-none lg:border-r lg:border-t-0', run && 'pointer-events-none opacity-40')}>
           <div className="lg:hidden"><div className="text-sm font-semibold">Block library</div><div className="text-xs text-muted-foreground">{sel.kind === 'step' ? <>Tap a block to add it to <b className="text-foreground">step {sel.si + 1}</b> ({setup.branches[sel.bi]?.side}); tap another step card above to change.</> : 'Tap a step card above first, then a block to add it there.'}</div></div>
