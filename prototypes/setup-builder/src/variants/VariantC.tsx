@@ -208,7 +208,7 @@ function OverrideBox({ k, setup, runD }: { k: SectionKey; setup: any; runD: Retu
     </div>
   );
 }
-const H = ({ children }: { children: React.ReactNode }) => <div className="text-sm font-semibold">{children}</div>;
+const H = ({ children }: { children: React.ReactNode }) => <div className="text-lg font-bold tracking-tight">{children}</div>;
 const Locked = ({ what }: { what: string }) => <div className="space-y-1"><H>🔒 {what}</H><div className="text-xs text-muted-foreground">Part of the Setup version. A Run cannot change them; switch to "Build the Setup" and Freeze a new version.</div></div>;
 const Chip = ({ children }: { children: React.ReactNode }) => <span className="rounded border border-sky-500/40 bg-sky-500/10 px-1 text-sky-200">{children}</span>;
 function Lib({ title, children }: { title: string; children: React.ReactNode }) { return <div><div className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</div><div className="grid grid-cols-2 gap-1.5 lg:block lg:space-y-1">{children}</div></div>; }
