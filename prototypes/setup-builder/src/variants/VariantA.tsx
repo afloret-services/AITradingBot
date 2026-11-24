@@ -109,9 +109,10 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                           <div className="space-y-2 border-t p-3">
                             <RuleEditor cond={st.cond} ctx={ctxOf(bi, k)} side={br.side} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
                             <StepLimits step={st} isFirst={k === 0} ctx={ctxOf(bi, k)} side={br.side} look="boxes" onChange={(n: Step) => mutate((s) => { s.branches[bi].steps[k] = n; })} />
-                            <div className="flex gap-1"><Button size="sm" variant="ghost" disabled={k === 0} onClick={() => mutate((s) => { const a = s.branches[bi].steps; [a[k - 1], a[k]] = [a[k], a[k - 1]]; })}>↑ move up</Button><Button size="sm" variant="ghost" onClick={() => mutate((s) => { s.branches[bi].steps.splice(k, 1); })}>delete step</Button></div>
+                            
                           </div>
                         )}
+                        {open === k && <div className="flex flex-wrap items-center gap-1.5 border-t px-3 py-2">{k > 0 && <button type="button" className="flex h-8 items-center gap-1 rounded-md border border-input px-3 text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" onClick={() => { mutate((s) => { const a = s.branches[bi].steps; [a[k - 1], a[k]] = [a[k], a[k - 1]]; }); setOpen(k - 1); }}>↑ Move up</button>}{k < br.steps.length - 1 && <button type="button" className="flex h-8 items-center gap-1 rounded-md border border-input px-3 text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" onClick={() => { mutate((s) => { const a = s.branches[bi].steps; [a[k + 1], a[k]] = [a[k], a[k + 1]]; }); setOpen(k + 1); }}>↓ Move down</button>}<button type="button" className="ml-auto flex h-8 items-center gap-1 rounded-md border border-red-500/40 px-3 text-xs font-bold uppercase tracking-wider text-red-300 transition-colors hover:bg-red-500/10" onClick={() => { mutate((s) => { s.branches[bi].steps.splice(k, 1); }); setOpen(-1); }}>× Delete step</button></div>}
                       </div>
                     </li>
                   ))}
