@@ -26,8 +26,8 @@ export type PatternKind = 'fvg' | 'displacement' | 'order_block' | 'leg' | 'mss'
   | 'broadening' | 'broadening_wedge' | 'cup_handle' | 'diamond' | 'rounding' | 'island' | 'bump_run' | 'measured_move' | 'parabolic' | 'wyckoff' | 'wyckoff_re' | 'adam_eve' | 'hs_complex';
 export interface Pattern { name: string; kind: PatternKind; tf: TF; params: Record<string, number | boolean>; label?: string }
 type PDef = { title: string; help: string; params: [key: string, label: string, def: number | boolean][]; fields: string[]; bull: string; bear: string; named?: boolean; group?: 'ict' | 'chart' | 'candle'; cat?: PatternCat };
-/** categories as on The Chart Guys' chart-pattern cheat sheet (Type, Bias, Classical / Lesser-Known, Consolidation, Typically breaks);
- *  for candlesticks, which that page does not cover, the usual reading. `bull` / `bear` give the bias of each side. */
+/** chart-pattern categories (Type, Bias, Classical / Lesser-Known, Consolidation, Typically breaks);
+ *  candlesticks use the usual reading. `bull` / `bear` give the bias of each side. */
 export interface PatternCat { types: ('reversal' | 'continuation' | 'indeterminate')[]; bull: 'bullish' | 'neutral'; bear: 'bearish' | 'neutral'; classical: boolean; consolidation?: string; breaks?: string; source: 'chartguys' | 'usual'; note?: string }
 const DISP: PDef['params'] = [['disp_mult', 'range at least × the average range', 1.5], ['disp_body_pct', 'body % at least', 60], ['avg_len', 'average range over bars', 20]];
 const CHART_PARAMS: PDef['params'] = [['strength', 'swing: bars each side', 3], ['tolerance_pct', 'peaks equal within % of the height', 20], ['min_height_points', 'height ≥ points', 10], ['min_sep', 'peaks at least N bars apart', 5], ['max_bars', 'whole pattern within N bars', 80], ['break_within', 'neckline break within N bars of the last peak', 30]];
@@ -115,7 +115,7 @@ export const PATTERN_KINDS: Record<PatternKind, PDef> = {
   marubozu: { title: 'Marubozu', bull: 'bullish marubozu', bear: 'bearish marubozu', named: true, group: 'candle', cat: { types: ['continuation'], bull: 'bullish', bear: 'bearish', classical: false, source: 'usual' },
     help: 'A candle that is almost all body, with little or no wick: it opened near one end and closed near the other, showing one side in control. Bullish: up candle; bearish: down candle. Forms on its close.',
     params: [['min_body_pct', 'body ≥ % of the range', 90], ['range_mult', 'range ≥ × the average range (0 = any)', 1], ['avg_len', 'average range over bars', 20], ['trend_bars', 'after a move against it over N bars (0 = any)', 0]], fields: CANDLE_FIELDS },
-  // the rest of The Chart Guys' cheat sheet
+  // the remaining chart patterns
   broadening: { title: 'Broadening formation / megaphone', bull: 'megaphone breaking up', bear: 'megaphone breaking down', named: true, group: 'chart',
     cat: { types: ['indeterminate'], bull: 'neutral', bear: 'neutral', classical: true, consolidation: 'No', breaks: 'Up or down', source: 'chartguys' },
     help: 'Swings get wider: higher highs and lower lows, between a rising top line and a falling bottom line. Control keeps changing hands. The pattern forms on the first close outside the lines in the side\'s direction. Target: the megaphone\'s width at the breakout.',
