@@ -13,7 +13,8 @@ import { RuleEditor, appendAnd } from '../components/RuleEditor';
 import { TokenCtx, shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, NumInput } from '../components/ui';
 import { Cond, Setup, TFS, TF, uid, SECTION_NAMES, validate, Step, labelsOf, ruleDescription, addMirror } from '../model';
-import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
+import { useRunDraft, instrumentWarnings } from '../runDraft';
+import { InstrumentSelect } from '../components/InstrumentSelect';
 
 export function VariantB(p: VariantProps) {
   const { setup, mutate, data, result } = p;
@@ -174,7 +175,7 @@ function RunDiff({ setup, runD, ctx, base, data }: { setup: Setup; runD: ReturnT
   const [editing, setEditing] = useState<SectionKey | null>(null);
   return (
     <div className="mt-2 space-y-2 text-sm">
-      <div className="flex items-center gap-2">on <Select value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} options={INSTRUMENTS} className="h-7" /></div>
+      <div className="flex items-center gap-2">on <InstrumentSelect value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} className="h-8" /></div>
       {instrumentWarnings(setup, runD.draft.instrument).map((w) => <div key={w} className="text-amber-300">{w}</div>)}
       <div className="space-y-1.5 sm:hidden">
         {SECTIONS.map((k) => {

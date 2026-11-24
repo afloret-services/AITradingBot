@@ -10,7 +10,8 @@ import { CondEditor, tokenCtx } from '../components/CondEditor';
 import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp, ReviewHelp, IndicatorsHelp, PatternsHelp, IndicatorsPatternsIntro, WhenHelp } from '../components/sections';
 import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
 import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf, patternUsage } from '../model';
-import { useRunDraft, INSTRUMENTS, instrumentWarnings } from '../runDraft';
+import { useRunDraft, instrumentWarnings } from '../runDraft';
+import { InstrumentSelect } from '../components/InstrumentSelect';
 
 const STAGES = ['General', 'Indicators & patterns', 'When to trade', 'Signal steps', 'Entry & stop', 'Trade settings', 'Review & save', 'Create a Run'] as const;
 
@@ -213,7 +214,7 @@ function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
   return (
     <div className="space-y-3">
       <RunHelp setup={setup} what="intro" />
-      <div className="flex flex-wrap items-start gap-3"><Field label="Instrument"><Select value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} options={INSTRUMENTS} /></Field>
+      <div className="flex flex-wrap items-start gap-3"><div className="min-w-0 basis-full sm:basis-auto"><Field label="Instrument"><InstrumentSelect value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} /></Field></div>
         <Field label="Binds"><span className="mono break-words text-xs">{setup.setup_id} · Draft (a paper Run needs a frozen version that passed the gate)</span></Field></div>
       {instrumentWarnings(setup, runD.draft.instrument).map((w) => <div key={w} className="text-xs text-amber-300">{w}</div>)}
       <RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} />
