@@ -89,8 +89,9 @@ export function VariantB(p: VariantProps) {
                   <span className="w-full pl-9 text-xs text-muted-foreground">{k === 0 ? 'Starts a Candidate when its conditions hold.' : st.same_bar ? 'On the same bar as the step before, or later.' : 'On a later bar than the step before.'} · <StepStats result={result} bi={bi} si={k} data={data} /></span>
                 </div>
                 <div className="text-[15px]">
-                  <RuleEditor cond={st.cond} ctx={ctxFor(bi, k)} side={br.side} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
-                  <PhraseInput ctx={ctxFor(bi, k)} onAdd={(c, toks) => mutate((s) => { s.branches[bi].steps[k].cond = appendAnd(s.branches[bi].steps[k].cond, c); for (const t of toks) if (!s.indicators.some((i) => i.token === t)) s.indicators.push({ token: t }); })} />
+                  <StepAddLine render={(addTo, setAddTo) => <>
+                  <RuleEditor cond={st.cond} ctx={ctxFor(bi, k)} side={br.side} addTo={addTo} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
+                  <PhraseInput buttonsRef={setAddTo} ctx={ctxFor(bi, k)} onAdd={(c, toks) => mutate((s) => { s.branches[bi].steps[k].cond = appendAnd(s.branches[bi].steps[k].cond, c); for (const t of toks) if (!s.indicators.some((i) => i.token === t)) s.indicators.push({ token: t }); })} /></>} />
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">{limitsSentence(st, k === 0, labelsOf(setup))}</div>
                 <details className="mt-1 text-xs"><summary className="cursor-pointer text-muted-foreground">limits, captures and invalidation</summary>
@@ -242,7 +243,7 @@ export function parsePhrase(text: string, base: TF): { cond: Cond; tokens: strin
   if (m) return { cond: { id: uid(), t: 'time', start: m[1].padStart(5, '0'), end: m[2].padStart(5, '0'), tf: base }, tokens: [] };
   return null;
 }
-function PhraseInput({ ctx, onAdd }: { ctx: TokenCtx; onAdd: (c: Cond, tokens: string[]) => void }) {
+function PhraseInput({ ctx, onAdd, buttonsRef }: { ctx: TokenCtx; onAdd: (c: Cond, tokens: string[]) => void; buttonsRef?: (el: HTMLElement | null) => void }) {
   const [text, setText] = useState('');
   const [suggest, setSuggest] = useState<null | { cond: Cond; tokens: string[] }>(null);
   const parsed = text ? parsePhrase(text, ctx.baseBar) : null;
@@ -252,9 +253,10 @@ function PhraseInput({ ctx, onAdd }: { ctx: TokenCtx; onAdd: (c: Cond, tokens: s
     setSuggest({ cond: { id: uid(), t: 'cmp', a: `{{bar:close:${ctx.baseBar}}}`, op: '>', b: '{{level:prev_day:high}}' }, tokens: [] });
   };
   return (
-    <div className="mt-1">
-      <div className="flex items-center gap-2">
-        <Input value={text} onChange={(e) => { setText(e.target.value); setSuggest(null); }} onKeyDown={(e) => e.key === 'Enter' && submit()} placeholder='type a condition, e.g. "15m close above EMA 200", "ADX(14) > 20", "MACD crosses above signal", "10:00-11:00"' className="h-7 flex-1 border-dashed text-xs" />
+    <div className="mt-2">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Input value={text} onChange={(e) => { setText(e.target.value); setSuggest(null); }} onKeyDown={(e) => e.key === 'Enter' && submit()} placeholder='type a condition, e.g. "15m close above EMA 200", "ADX(14) > 20", "MACD crosses above signal", "10:00-11:00"' className="h-8 min-w-[14rem] flex-1 border-dashed text-xs" />
+        {buttonsRef && <span ref={buttonsRef} className="flex flex-wrap items-center gap-1.5" />}
         {text && (parsed ? <Badge tone="ok">grammar: {parsed.cond.t === 'cmp' ? `${shortName(parsed.cond.a, {})} ${parsed.cond.op} ${shortName(parsed.cond.b, {})}` : 'time range'}</Badge> : <Badge tone="warn">not a standard phrase</Badge>)}
       </div>
       {suggest && (
@@ -269,3 +271,9 @@ function PhraseInput({ ctx, onAdd }: { ctx: TokenCtx; onAdd: (c: Cond, tokens: s
   );
 }
 void NumInput;
+
+/** keeps, per step, the element the + ADD row is drawn into (beside the "type a condition" box) */
+function StepAddLine({ render }: { render: (addTo: HTMLElement | null, setAddTo: (el: HTMLElement | null) => void) => React.ReactNode }) {
+  const [el, setEl] = useState<HTMLElement | null>(null);
+  return <>{render(el, setEl)}</>;
+}
