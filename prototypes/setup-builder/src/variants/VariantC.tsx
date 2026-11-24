@@ -83,7 +83,7 @@ export function VariantC(p: VariantProps) {
             {setup.branches.map((br, bi) => (
               <div key={br.id}>
                 <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"><Badge tone={br.side === 'long' ? 'go' : 'error'} className="px-2.5 py-1 text-base font-black tracking-wider">{br.side === 'long' ? '▲ ' : '▼ '}{br.side.toUpperCase()}</Badge><span className="text-muted-foreground">a new first step while one runs: {br.on_new_start.replace('_', ' ')}</span>
-                  {setup.branches.length === 1 && !run && <button className="text-sky-300 sm:ml-auto" onClick={() => mutate((s) => { addMirror(s); })}>+ Add a {br.side === 'long' ? 'short' : 'long'} branch (mirrored copy of {br.side})</button>}</div>
+                  {setup.branches.length === 1 && !run && <button type="button" className="sm:ml-auto flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => mutate((s) => { addMirror(s); })}>+ Add a {br.side === 'long' ? 'short' : 'long'} branch (mirrored copy of {br.side})</button>}</div>
                 {br.mirrored && <div className="mb-1.5"><MirrorNote side={br.side} onHide={() => mutate((s) => { s.branches[bi].mirrored = false; })} /></div>}
                 <div className="flex flex-col items-stretch gap-0 pb-2 sm:flex-row sm:overflow-x-auto">
                   {br.steps.map((st, si) => (
