@@ -134,11 +134,11 @@ export function VariantC(p: VariantProps) {
         <div ref={inspRef} className={phone ? 'fixed inset-x-0 bottom-0 z-[61] max-h-[85vh] overflow-auto rounded-t-xl border-t bg-card px-3 pb-6 shadow-2xl' : 'overflow-auto border-l p-3'}>
           {phone && <div className="sticky top-0 z-10 -mx-3 mb-2 flex items-center gap-2 border-b bg-card px-3 py-2"><span className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/40" /><button aria-label="close" onClick={() => setSheetOpen(false)} className="absolute right-3 flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground">×</button></div>}
           {sel.kind === 'review' && <div className="space-y-3"><H>Review & save</H><ReviewHelp setup={setup} what="intro" /><ReviewHelp setup={setup} what="map" />
-            <H>Checks</H><ReviewHelp setup={setup} what="checks" issues={issues} />
+            <H2>Checks</H2><ReviewHelp setup={setup} what="checks" issues={issues} />
             {issues.length === 0 && <Badge tone="go">Ready to freeze</Badge>}
             {issues.map((i, k) => <div key={k} className={cn('text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.level === 'error' ? '✕' : '!'} {i.where}: {i.text}</div>)}
-            <H>Save</H><ReviewHelp setup={setup} what="save" /><div>{p.saveBar}</div>
-            <H>Rule description (stored at Freeze)</H><ReviewHelp setup={setup} what="rule" /><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-2 text-[11px]">{ruleDescription(setup)}</pre>
+            <H2>Save</H2><ReviewHelp setup={setup} what="save" /><div>{p.saveBar}</div>
+            <H2>Rule description (stored at Freeze)</H2><ReviewHelp setup={setup} what="rule" /><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-2 text-[11px]">{ruleDescription(setup)}</pre>
           </div>}
           {sel.kind === 'settings' && <div className="space-y-4"><H>General</H><Explain><BasicsHelp setup={setup} what="intro" /></Explain>
             <Field label="Name"><Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="w-full" /></Field><Explain><BasicsHelp setup={setup} what="name" /></Explain>
@@ -148,8 +148,8 @@ export function VariantC(p: VariantProps) {
             <TradingHoursEditor setup={setup} mutate={mutate} /><Explain><WhenHelp setup={setup} what="hours" /></Explain>
             <SessionsEditor setup={setup} mutate={mutate} /><Explain><WhenHelp setup={setup} what="sessions" /></Explain>
             <BehaviourEditor setup={setup} mutate={mutate} stacked />
-            <H>Indicators & patterns</H><IndicatorsPatternsIntro /><H>Indicators</H><IndicatorsHelp setup={setup} /><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={usage} />
-            <H>Patterns</H><PatternsHelp setup={setup} /><PatternList setup={setup} mutate={mutate} compact data={data} /></div>}
+            <H>Indicators & patterns</H><IndicatorsPatternsIntro /><H2>Indicators</H2><IndicatorsHelp setup={setup} /><IndicatorList setup={setup} mutate={mutate} ctx={tokenCtx(setup, 0, 0)} usage={usage} />
+            <H2>Patterns</H2><PatternsHelp setup={setup} /><PatternList setup={setup} mutate={mutate} compact data={data} /></div>}
           {sel.kind === 'step' && selStep && (
             run ? <Locked what="Signal steps" /> :
             <div className="space-y-3">
@@ -209,6 +209,8 @@ function OverrideBox({ k, setup, runD }: { k: SectionKey; setup: any; runD: Retu
   );
 }
 const H = ({ children }: { children: React.ReactNode }) => <div className="text-lg font-bold tracking-tight">{children}</div>;
+/** a section heading inside an inspector panel, one size under its title */
+const H2 = ({ children }: { children: React.ReactNode }) => <div className="text-base font-semibold tracking-tight">{children}</div>;
 const Locked = ({ what }: { what: string }) => <div className="space-y-1"><H>🔒 {what}</H><div className="text-xs text-muted-foreground">Part of the Setup version. A Run cannot change them; switch to "Build the Setup" and Freeze a new version.</div></div>;
 const Chip = ({ children }: { children: React.ReactNode }) => <span className="rounded border border-sky-500/40 bg-sky-500/10 px-1 text-sky-200">{children}</span>;
 function Lib({ title, children }: { title: string; children: React.ReactNode }) { return <div><div className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</div><div className="grid grid-cols-2 gap-1.5 lg:block lg:space-y-1">{children}</div></div>; }
