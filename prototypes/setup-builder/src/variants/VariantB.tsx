@@ -132,15 +132,15 @@ export function VariantB(p: VariantProps) {
         </Card>
         <Card className="p-3">
           <div className="mb-1 text-lg font-bold tracking-tight">Indicators in this Setup</div>
-          <div className="mb-1 text-[11px] text-muted-foreground">Configured the first time a step reads them. Give one a label and the description uses it.</div>
+          <div className="mb-1 text-xs text-muted-foreground">Configured the first time a step reads them. Give one a label and the description uses it.</div>
           <div className="mb-2 space-y-2"><IndicatorsPatternsIntro /><IndicatorsHelp setup={setup} /></div>
-          {setup.indicators.length === 0 && <div className="text-xs italic text-muted-foreground">none yet</div>}
+          {setup.indicators.length === 0 && <div className="text-sm italic text-muted-foreground">none yet</div>}
           {setup.indicators.map((ind, k) => (
             <div key={ind.token} className="mb-1.5 rounded-md border border-border/60 p-2 sm:mb-0 sm:border-0 sm:p-0">
-            <div className="flex flex-wrap items-center gap-2 py-0.5 text-xs sm:flex-nowrap">
-              <IndicatorIcon token={ind.token} size={18} /><span className="mono min-w-0 flex-1 sm:w-36 sm:flex-none sm:truncate" title={ind.token}>{shortName(ind.token, {})}</span>
-              <Input value={ind.label || ''} placeholder="label" onChange={(e) => mutate((s) => { s.indicators[k].label = e.target.value || undefined; })} className="order-last h-7 min-w-0 basis-full sm:order-none sm:h-6 sm:flex-1 sm:basis-0" />
-              <span className={cn('whitespace-nowrap text-right sm:w-14', usage[ind.token] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[ind.token] ? `used ${usage[ind.token]}×` : 'unused'}</span>
+            <div className="flex flex-wrap items-center gap-2 py-1 text-sm sm:flex-nowrap">
+              <IndicatorIcon token={ind.token} size={20} /><span className="mono min-w-0 flex-1 sm:w-40 sm:flex-none sm:truncate" title={ind.token}>{shortName(ind.token, {})}</span>
+              <Input value={ind.label || ''} placeholder="label" onChange={(e) => mutate((s) => { s.indicators[k].label = e.target.value || undefined; })} className="order-last h-8 min-w-0 basis-full sm:order-none sm:h-8 sm:flex-1 sm:basis-0" />
+              <span className={cn('whitespace-nowrap text-right text-xs sm:w-16', usage[ind.token] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[ind.token] ? `used ${usage[ind.token]}×` : 'unused'}</span>
             </div>
             {indHelp(ind.token) && <Hideable id="indicators:each" className="mt-1 text-[11px] text-muted-foreground sm:-mt-0.5 sm:mb-1 sm:pl-6">{indHelp(ind.token)}</Hideable>}
             </div>
@@ -148,16 +148,16 @@ export function VariantB(p: VariantProps) {
         </Card>
         <Card className="p-3">
           <div className="mb-1 text-lg font-bold tracking-tight">Patterns in this Setup</div>
-          <div className="mb-1 text-[11px] text-muted-foreground">Configured up front, then used by name in a sentence ("a bullish fvg forms").</div>
+          <div className="mb-1 text-xs text-muted-foreground">Configured up front, then used by name in a sentence ("a bullish fvg forms").</div>
           <div className="mb-2"><PatternsHelp setup={setup} /></div>
           <PatternList setup={setup} mutate={mutate} compact data={data} />
         </Card>
         <Card className="p-3">
           <div className="flex flex-wrap items-center justify-between gap-2"><div className="text-lg font-bold tracking-tight">Review & save</div>{p.saveBar}</div>
-          {issues.map((i, k) => <div key={k} className={cn('mt-1 text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.where}: {i.text}</div>)}
+          {issues.map((i, k) => <div key={k} className={cn('mt-1 text-sm', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.where}: {i.text}</div>)}
           <div className="mt-2 space-y-2"><ReviewHelp setup={setup} what="checks" issues={issues} /><ReviewHelp setup={setup} what="save" />
-            <details className="text-xs"><summary className="cursor-pointer font-medium text-foreground">Rule description (stored at Freeze)</summary>
-              <div className="mt-1 space-y-1.5"><ReviewHelp setup={setup} what="rule" /><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-2 text-[11px]">{ruleDescription(setup)}</pre></div></details></div>
+            <details className="text-sm"><summary className="cursor-pointer font-semibold text-foreground">Rule description (stored at Freeze)</summary>
+              <div className="mt-1 space-y-1.5"><ReviewHelp setup={setup} what="rule" /><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-2.5 text-xs">{ruleDescription(setup)}</pre></div></details></div>
         </Card>
         <Card className="p-3">
           <div className="flex items-center justify-between"><div className="text-lg font-bold tracking-tight">Try it as a Run</div><Button size="sm" variant={runMode ? 'default' : 'outline'} onClick={() => setRunMode(!runMode)}>{runMode ? 'Close Run' : 'Create a Run…'}</Button></div>
@@ -172,7 +172,7 @@ export function VariantB(p: VariantProps) {
 function RunDiff({ setup, runD, ctx, base, data }: { setup: Setup; runD: ReturnType<typeof useRunDraft>; ctx: TokenCtx; base: any; data: any }) {
   const [editing, setEditing] = useState<SectionKey | null>(null);
   return (
-    <div className="mt-2 space-y-2 text-xs">
+    <div className="mt-2 space-y-2 text-sm">
       <div className="flex items-center gap-2">on <Select value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} options={INSTRUMENTS} className="h-7" /></div>
       {instrumentWarnings(setup, runD.draft.instrument).map((w) => <div key={w} className="text-amber-300">{w}</div>)}
       <div className="space-y-1.5 sm:hidden">
