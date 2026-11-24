@@ -209,7 +209,7 @@ export interface Step {
   capture_running?: { name: string; field: 'low' | 'high' };
 }
 export interface Entry { order: 'market' | 'limit' | 'stop'; price?: string; stop: { token: string; offset: number; unit: 'ticks' | 'atr'; atr?: string } }
-export interface Branch { id: string; side: 'long' | 'short'; steps: Step[]; entry: Entry; on_new_start: 'start_another' | 'replace' | 'ignore' }
+export interface Branch { id: string; side: 'long' | 'short'; steps: Step[]; entry: Entry; on_new_start: 'start_another' | 'replace' | 'ignore'; /** builder only: written by "Add a short branch", until the user dismisses the check note */ mirrored?: boolean }
 export interface Leg { name: string; rule: 'r' | 'level' | 'fraction'; r?: number; level?: string; fraction?: number; offset_ticks?: number; share: number }
 export interface Guard { kind: 'max_stop' | 'min_rr'; n: number; unit?: 'ticks' | 'atr'; atr?: string }
 export interface TradeSettings {
@@ -401,6 +401,7 @@ export function addMirror(s: Setup) {
   const src = s.branches[0];
   s.branches.push(mirrorBranch(src));
   const nb = s.branches.length - 1;
+  s.branches[nb].mirrored = true;
   const rules = s.in_position_rules.filter((r) => r.branch === undefined || r.branch === 0);
   s.in_position_rules.forEach((r) => { if (r.branch === undefined) r.branch = 0; });
   for (const r of rules) s.in_position_rules.push({ ...r, id: uid('ip'), branch: nb, when: mirrorBranch({ ...src, steps: [{ id: 'x', name: '', cond: r.when }] }).steps[0].cond });

@@ -843,3 +843,13 @@ export const PatternsHelp = withHelpId(PatternsHelp_, () => 'patterns');
 export const IndicatorsPatternsIntro = withHelpId(IndicatorsPatternsIntro_, () => 'indpat:intro');
 export const EntryHelp = withHelpId(EntryHelp_, () => 'entry');
 export const SectionHelp = withHelpId(SectionHelp_, (p: any) => 'trade:' + p.k);
+/** under a branch written by "Add a short branch": the copy is a draft to check */
+export function MirrorNote({ side, onHide }: { side: 'long' | 'short'; onHide: () => void }) {
+  return (
+    <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/[0.06] px-3 py-2 text-sm text-amber-100">
+      <span aria-hidden="true">⚠</span>
+      <span className="flex-1">Copied from the {side === 'short' ? 'long' : 'short'} branch and flipped: check each step (sizes like "stop wider than N" must not flip).</span>
+      <button type="button" onClick={onHide} className="shrink-0 rounded-full border border-amber-500/40 px-2 py-0.5 text-[11px] text-amber-200 hover:bg-amber-500/10">checked ×</button>
+    </div>
+  );
+}

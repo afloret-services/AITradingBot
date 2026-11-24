@@ -6,7 +6,7 @@ import { VariantProps } from '../types';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx, AddMenu, newCmp } from '../components/CondEditor';
 import { PatternIcon, IndicatorIcon, SectionIcon } from '../components/PatternIcon';
-import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, SectionHelp, Explain, BasicsHelp, WhenHelp, IndicatorsHelp, PatternsHelp, SignalStepsHelp, ReviewHelp, RunHelp, IndicatorsPatternsIntro, ONE_AT_A_TIME, NEWS } from '../components/sections';
+import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, SectionHelp, Explain, BasicsHelp, WhenHelp, IndicatorsHelp, PatternsHelp, SignalStepsHelp, ReviewHelp, RunHelp, IndicatorsPatternsIntro, ONE_AT_A_TIME, NEWS, MirrorNote } from '../components/sections';
 import { RuleEditor, appendAnd, StepConfigure } from '../components/RuleEditor';
 import { shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs, Field, usePhone, Sheet } from '../components/ui';
@@ -83,7 +83,8 @@ export function VariantC(p: VariantProps) {
             {setup.branches.map((br, bi) => (
               <div key={br.id}>
                 <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"><Badge tone={br.side === 'long' ? 'go' : 'error'} className="px-2.5 py-1 text-base font-black tracking-wider">{br.side === 'long' ? '▲ ' : '▼ '}{br.side.toUpperCase()}</Badge><span className="text-muted-foreground">a new first step while one runs: {br.on_new_start.replace('_', ' ')}</span>
-                  {setup.branches.length === 1 && !run && <button className="text-sky-300 sm:ml-auto" onClick={() => mutate((s) => { addMirror(s); })}>duplicate as mirrored {br.side === 'long' ? 'short' : 'long'}</button>}</div>
+                  {setup.branches.length === 1 && !run && <button className="text-sky-300 sm:ml-auto" onClick={() => mutate((s) => { addMirror(s); })}>+ Add a {br.side === 'long' ? 'short' : 'long'} branch (mirrored copy of {br.side})</button>}</div>
+                {br.mirrored && <div className="mb-1.5"><MirrorNote side={br.side} onHide={() => mutate((s) => { s.branches[bi].mirrored = false; })} /></div>}
                 <div className="flex flex-col items-stretch gap-0 pb-2 sm:flex-row sm:overflow-x-auto">
                   {br.steps.map((st, si) => (
                     <React.Fragment key={st.id}>

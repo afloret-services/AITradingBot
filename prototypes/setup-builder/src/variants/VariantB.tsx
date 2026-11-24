@@ -8,7 +8,7 @@ import { Hideable } from '../components/help';
 import { IndicatorIcon, SectionIcon } from '../components/PatternIcon';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
-import { StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, Explain, BehaviourHelp, BasicsHelp, WhenHelp, SessionsEditor, SignalStepsHelp, limitsSentence, SectionHelp, IndicatorsHelp, PatternsHelp, ReviewHelp, RunHelp, IndicatorsPatternsIntro, indHelp } from '../components/sections';
+import { StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, Explain, BehaviourHelp, BasicsHelp, WhenHelp, SessionsEditor, SignalStepsHelp, limitsSentence, SectionHelp, IndicatorsHelp, PatternsHelp, ReviewHelp, RunHelp, IndicatorsPatternsIntro, indHelp, MirrorNote } from '../components/sections';
 import { RuleEditor, appendAnd } from '../components/RuleEditor';
 import { TokenCtx, shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, NumInput } from '../components/ui';
@@ -78,8 +78,9 @@ export function VariantB(p: VariantProps) {
               <span className="flex w-full flex-wrap items-center gap-x-2 sm:w-auto"><span className="text-xs font-normal text-muted-foreground">a new first step while one runs:</span>
               <InlineSelect value={br.on_new_start} onChange={(v) => mutate((s) => { s.branches[bi].on_new_start = v; })} options={[['start_another', 'starts another'], ['replace', 'replaces it'], ['ignore', 'is ignored']]} /></span>
               {setup.branches.length > 1 && <button className="ml-auto text-xs text-muted-foreground hover:text-red-400" onClick={() => mutate((s) => { s.branches.splice(bi, 1); })}>remove branch</button>}
-              {setup.branches.length === 1 && <button className="ml-auto rounded-md border border-input px-2.5 py-1 text-xs font-normal text-sky-300 hover:bg-accent" onClick={() => mutate((s) => { addMirror(s); })}>Duplicate as mirrored {br.side === 'long' ? 'short' : 'long'}</button>}
+              {setup.branches.length === 1 && <button className="ml-auto rounded-md border border-input px-2.5 py-1 text-xs font-normal text-sky-300 hover:bg-accent" onClick={() => mutate((s) => { addMirror(s); })}>+ Add a {br.side === 'long' ? 'short' : 'long'} branch (mirrored copy of {br.side})</button>}
             </h2>
+            {br.mirrored && <MirrorNote side={br.side} onHide={() => mutate((s) => { s.branches[bi].mirrored = false; })} />}
             {bi === 0 ? <SignalStepsHelp setup={setup} bi={bi} /> : <Explain label="how steps work"><SignalStepsHelp setup={setup} bi={bi} /></Explain>}
             {br.steps.map((st, k) => (
               <div key={st.id} id={`step-${st.id}`} onMouseEnter={() => p.setFocus({ bi, si: k })} className={cn('group relative rounded-md border-l-4 py-1 pl-4', p.focus?.bi === bi && p.focus?.si === k ? 'bg-accent/40' : '')} style={{ borderColor: STEP_COLORS[k % 6] }}>

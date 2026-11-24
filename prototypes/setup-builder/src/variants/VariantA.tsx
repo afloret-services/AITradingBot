@@ -7,7 +7,7 @@ import { RuleEditor, StepConfigure } from '../components/RuleEditor';
 import { SectionIcon } from '../components/PatternIcon';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
-import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp, ReviewHelp, IndicatorsHelp, PatternsHelp, IndicatorsPatternsIntro, WhenHelp } from '../components/sections';
+import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp, ReviewHelp, IndicatorsHelp, PatternsHelp, IndicatorsPatternsIntro, WhenHelp, MirrorNote } from '../components/sections';
 import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
 import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf, patternUsage } from '../model';
 import { useRunDraft, instrumentWarnings } from '../runDraft';
@@ -90,10 +90,11 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                 {inline && <div className="rounded-md border border-dashed border-sky-500/40 px-2.5 py-1.5 text-xs text-muted-foreground"><span className="font-medium text-foreground">No configuring step here.</span> In a step, <b className="text-foreground">+ add</b> lists every pattern kind: pick one and it's created with default settings, then open its <b className="text-foreground">settings</b> to change them. Click any value to pick an indicator and set its length and timeframe on the spot. One that no step uses any more is removed.</div>}
                 <div className="flex flex-wrap items-center gap-2">
                   <Tabs value={String(bi)} onChange={(v) => { setBi(Number(v)); setOpen(0); }} tabs={setup.branches.map((b, k) => [String(k), `${b.side === 'long' ? 'Long' : 'Short'} branch`] as [string, string])} />
-                  {setup.branches.length === 1 && <Button size="sm" variant="ghost" onClick={() => mutate((s) => { addMirror(s); })}>Duplicate as mirrored {br.side === 'long' ? 'short' : 'long'}</Button>}
+                  {setup.branches.length === 1 && <Button size="sm" variant="ghost" onClick={() => mutate((s) => { addMirror(s); })}>+ Add a {br.side === 'long' ? 'short' : 'long'} branch (mirrored copy of {br.side})</Button>}
                   <span className="flex w-full items-center justify-between gap-2 sm:ml-auto sm:w-auto sm:justify-end"><span className="text-xs text-muted-foreground">On a new first step while one is running:</span>
                   <Select value={br.on_new_start} onChange={(v) => mutate((s) => { s.branches[bi].on_new_start = v; })} options={[['start_another', 'start another'], ['replace', 'replace'], ['ignore', 'ignore']]} className="h-7 shrink-0" /></span>
                 </div>
+                {br.mirrored && <MirrorNote side={br.side} onHide={() => mutate((s) => { s.branches[bi].mirrored = false; })} />}
                 <ol className="space-y-0">
                   {br.steps.map((st, k) => (
                     <li key={st.id}>
