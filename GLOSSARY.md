@@ -22,6 +22,10 @@ _Avoid_: Time window, Window (that is the one-hour Silver Bullet period), killzo
 A partly formed pattern a Setup is tracking that may still become a Signal: one sequence of Rule blocks part-way done, holding the values its completed steps captured; a Setup may watch several at once, they stay inside the Setup, and each ends at its own limit or by the end of its Trading day.
 _Avoid_: Setup (that is the whole set of rules), watch, pending setup
 
+**New start**:
+Step 1 of a branch holding again while a Candidate of that branch is still waiting for its next step; the branch's setting decides what follows: Follow both (a second Candidate starts beside the first), Switch to the new one (the waiting Candidate is dropped and the new one tracked), or Stay with the first one (the new start is ignored until the first ends). The builder asks it as "when a new setup appears before the last one finished"; "setup" there, in lower case, is this new start, never a Setup.
+_Avoid_: Start another / replace / ignore (the earlier labels), overlapping Setups, new Setup
+
 **Base bar**:
 A bar of a Setup's finest timeframe; the Setup's rules are checked once at each Base bar's close, against that bar and the last closed bar of every higher timeframe.
 _Avoid_: Tick, trigger bar, chart timeframe
