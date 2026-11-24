@@ -14,9 +14,9 @@ _Avoid_: Strategy (when meaning one pattern), model, play, built-in Setup
 One configurable step of a Setup's rules, such as a price level, a candle close, an indicator value on a timeframe, a pattern, or a sequence of other Rule blocks.
 _Avoid_: Step, node, condition (alone)
 
-**Trading hours**:
-A Setup's period of New York clock time (for example 08:00–16:00) inside which its Signals may form.
-_Avoid_: Time window, Window (that is the one-hour Silver Bullet period), killzone
+**Trading window**:
+A Setup's periods of New York clock time (for example 08:00–16:00), on its chosen weekdays, inside which its Signals may form; a weekday may have its own periods instead of the usual ones.
+_Avoid_: Trading hours (the earlier name), time window, Window (that is the one-hour Silver Bullet period), killzone
 
 **Candidate**:
 A partly formed pattern a Setup is tracking that may still become a Signal: one sequence of Rule blocks part-way done, holding the values its completed steps captured; a Setup may watch several at once, they stay inside the Setup, and each ends at its own limit or by the end of its Trading day.
@@ -25,6 +25,10 @@ _Avoid_: Setup (that is the whole set of rules), watch, pending setup
 **New start**:
 Step 1 of a branch holding again while a Candidate of that branch is still waiting for its next step; the branch's setting decides what follows: Follow both (a second Candidate starts beside the first), Switch to the new one (the waiting Candidate is dropped and the new one tracked), or Stay with the first one (the new start is ignored until the first ends). The builder asks it as "when a new setup appears before the last one finished"; "setup" there, in lower case, is this new start, never a Setup.
 _Avoid_: Start another / replace / ignore (the earlier labels), overlapping Setups, new Setup
+
+**Trade overlap**:
+A Setup's setting for Signals that complete while one of its Trades is open: Allow overlap (they open further Trades), Wait for the Trade to end (no new Candidate starts meanwhile), or Skip Signals during the Trade (Candidates keep running, but one completing then gives no Signal).
+_Avoid_: One at a time (the earlier name), pyramiding
 
 **Base bar**:
 A bar of a Setup's finest timeframe; the Setup's rules are checked once at each Base bar's close, against that bar and the last closed bar of every higher timeframe.
@@ -60,7 +64,7 @@ _Avoid_: Alert, trigger
 
 **Window**:
 A one-hour period of New York clock time (the Silver Bullet hour) inside which a Signal's fair value gap must form and its entry must fill.
-_Avoid_: Killzone (a wider, separate ICT period), session, Trading hours (a Setup's wider period)
+_Avoid_: Killzone (a wider, separate ICT period), session, Trading window (a Setup's wider period)
 
 **Fair value gap (FVG)**:
 A price range left untraded across three consecutive bars: in a bullish gap the third bar's low stays above the first bar's high, in a bearish gap the third bar's high stays below the first bar's low, and the middle bar closes in the gap's direction.
@@ -90,16 +94,16 @@ _Avoid_: BOS, break of structure (alone), MSS (that needs a Liquidity sweep firs
 After a Liquidity sweep, a bar closing beyond the most recent Swing point on the other side that formed before the sweep's extreme, showing price has turned toward the Trade's direction.
 _Avoid_: Break of structure (BOS), CHoCH
 
-**Leg**:
-A move started by a Structure break: from the extreme price reached since the broken Swing point to the opposite extreme reached since then, which keeps extending until a later step of the Setup fixes it.
-_Avoid_: Impulse, swing (that is a Swing point), range
+**Swing**:
+A move started by a Structure break: from the extreme price reached since the broken Swing point to the opposite extreme reached since then, which keeps extending until a later step of the Setup fixes it; an up swing or a down swing, captured as its start and end. A measured move is two Swings.
+_Avoid_: Leg (the earlier name), impulse, range, Swing point (that is one bar)
 
 **Optimal trade entry (OTE)**:
-The part of a Leg between 61.8 % and 78.6 % of the way back from its end toward its start, centred on 70.5 %, where a Setup may look for its entry.
+The part of a Swing between 61.8 % and 78.6 % of the way back from its end toward its start, centred on 70.5 %, where a Setup may look for its entry.
 _Avoid_: Fib zone, discount/premium zone, retracement (alone)
 
 **Order block**:
-One candle of the opposite colour to the Trade inside a Leg (or just before a Displacement) whose range price later closes beyond, used as the zone for the entry and the stop.
+One candle of the opposite colour to the Trade inside a Swing (or just before a Displacement) whose range price later closes beyond, used as the zone for the entry and the stop.
 _Avoid_: OB (in prose), supply/demand zone, breaker
 
 **Bias**:
@@ -141,24 +145,24 @@ _Avoid_: Regime, Setup selection
 ### Execution
 
 **Bracket order**:
-An entry order sent together with its stop-loss and take-profit orders, so the position is never open without both exits attached. A Trade with several Take-profit legs sends one Bracket order per leg.
+An entry order sent together with its stop-loss and take-profit orders, so the position is never open without both exits attached. A Trade with several Take profits sends one Bracket order per Take profit.
 _Avoid_: OCO (that names only the two exit legs)
 
-**Take-profit leg**:
-One slice of a Trade's contracts with its own target, sent as its own Bracket order; a Trade's last leg aims at its Setup's final target (for the Silver Bullet, the Draw on liquidity).
-_Avoid_: Partial (alone), scale-out, tranche
+**Take profit**:
+One slice of a Trade's contracts with its own target, sent as its own Bracket order, numbered TP1, TP2…; a Trade's last Take profit aims at its Setup's final target (for the Silver Bullet, the Draw on liquidity).
+_Avoid_: Take-profit leg (the earlier name), leg, partial (alone), scale-out, tranche
 
 **Break-even**:
-Moving the stops of a Trade's open legs to its entry price (plus a set offset) once a chosen leg has filled or price has gone a set number of R in its favour, so the rest of the Trade can no longer lose; it never loosens a stop already tighter than that.
+Moving the stops of a Trade's open Take profits to its entry price (plus a set offset, "lock in N ticks") once a chosen Take profit has filled or price has gone a set number of R in its favour, so the rest of the Trade can no longer lose; it never loosens a stop already tighter than that.
 _Avoid_: Scratch, risk-free
 
-**In-position rule**:
-A Rule block checked at each Base bar's close while a Trade or its resting entry is open, which may close the Trade, close one Take-profit leg, tighten the stop, or cancel the entry.
-_Avoid_: Exit rule (alone), management rule, trailing stop
+**While-in-a-Trade rule**:
+A Rule block checked at each Base bar's close while a Trade or its resting entry is open, which may close the whole Trade, close one Take profit now, tighten the stop, or cancel the waiting entry.
+_Avoid_: In-position rule (the earlier name), exit rule (alone), management rule, trailing stop
 
-**Flatten time**:
-The New York clock time by which a Setup's open Trades are closed for the Trading day, never later than its instrument allows.
-_Avoid_: EOD close, cut-off
+**Closing time**:
+A Setup's Trade-settings section with two New York clock times: "Be flat by", required, by which its open Trades are closed for the Trading day, never later than its instrument allows; and "Close open Trades at", optional, an earlier time for the same.
+_Avoid_: Flatten time and expiry (the earlier names), EOD close, cut-off
 
 **Trade**:
 The life of one position, from entry fill to final exit fill, opened in response to one Signal.
@@ -198,7 +202,7 @@ _Avoid_: Trading run, deployment, job
 
 **Paper session**:
 One Trading day of a paper Run.
-_Avoid_: Run (that is the whole execution), Session (that is Asia, London or New York)
+_Avoid_: Run (that is the whole execution), Market session (that is Asia, London or New York)
 
 **Clean session**:
 A Paper session in which the bot covered every Setup's entry hours across the Trading day with no unexplained Halt (a disconnect inside the Daily reset is excused when the bot recovers cleanly), every Signal has a final Verdict, the day's replay matches what the bot did, every Trade was reviewed as matching its rules, no risk limit was breached and the net position always checked out.
@@ -216,11 +220,11 @@ _Avoid_: Test (that is the automated test suite), fire drill, chaos test
 
 **Trading day**:
 One CME trade date: from 18:00 New York the evening before to 17:00, including any holiday-morning trading that CME counts toward it. Every daily rule (Bias, previous-day levels, daily loss, Stand-down) counts in Trading days.
-_Avoid_: Session (that is Asia, London or New York), calendar day
+_Avoid_: Market session (that is Asia, London or New York), calendar day
 
-**Session**:
-One of the named periods of New York clock time a Setup can refer to: Asia (20:00–00:00), London (02:00–05:00) or New York (09:30–16:00).
-_Avoid_: Cash session, killzone, Window (that is the Silver Bullet hour), Trading hours (a Setup's own period)
+**Market session**:
+One of the named periods of New York clock time a Setup can refer to: Asia (20:00–00:00), London (02:00–05:00) or New York (09:30–16:00), copied into the Setup so its session levels (the Asia high…) read fixed times.
+_Avoid_: Session (alone, the earlier name), cash session, killzone, Window (that is the Silver Bullet hour), Trading window (a Setup's own period)
 
 **Micro contract**:
 The 1/10-size index future (MES, MNQ) the first version trades; ES and NQ are the full-size versions of the same index.
@@ -243,5 +247,9 @@ One publication of a US economic report or an FOMC statement, on the date and at
 _Avoid_: News event, data print, red folder
 
 **News day**:
-A Trading day on which an Economic release of a type the user has switched on was published; each Setup's own news rule decides which of its Signals that day are suppressed (the whole day, only those shortly before the release, or none), and suppressed Signals are logged but open no Trade.
+A Trading day on which an Economic release of a type the user has switched on was published; each Setup's own News filter decides which of its Signals that day are suppressed (the whole day, only those shortly before the release, or none), and suppressed Signals are logged but open no Trade.
 _Avoid_: Red-folder day, event day
+
+**News filter**:
+A Setup's setting for News days: Trade through the news, Skip the whole News day, or Skip around each release (from N minutes before to M minutes after its New York time).
+_Avoid_: News rule (the earlier name), news blackout
