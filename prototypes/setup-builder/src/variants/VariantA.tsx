@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { VariantProps } from '../types';
 import { SetupMap } from '../components/SetupMap';
-import { RuleEditor } from '../components/RuleEditor';
+import { RuleEditor, StepConfigure } from '../components/RuleEditor';
 import { SectionIcon } from '../components/PatternIcon';
 import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
@@ -107,8 +107,9 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                         </div>
                         {open === k && (
                           <div className="space-y-2 border-t p-3">
-                            <RuleEditor cond={st.cond} ctx={ctxOf(bi, k)} side={br.side} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
-                            <StepLimits step={st} isFirst={k === 0} ctx={ctxOf(bi, k)} side={br.side} look="boxes" onChange={(n: Step) => mutate((s) => { s.branches[bi].steps[k] = n; })} />
+                            <StepConfigure rule={(addTo) => <RuleEditor cond={st.cond} ctx={ctxOf(bi, k)} side={br.side} addTo={addTo} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />}>
+                              <StepLimits step={st} isFirst={k === 0} ctx={ctxOf(bi, k)} side={br.side} look="boxes" onChange={(n: Step) => mutate((s) => { s.branches[bi].steps[k] = n; })} />
+                            </StepConfigure>
                             
                           </div>
                         )}

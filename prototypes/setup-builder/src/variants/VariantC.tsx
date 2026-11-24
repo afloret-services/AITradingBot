@@ -7,7 +7,7 @@ import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx, AddMenu, newCmp } from '../components/CondEditor';
 import { PatternIcon, IndicatorIcon, SectionIcon } from '../components/PatternIcon';
 import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, IndicatorList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, PatternList, SectionHelp, Explain, BasicsHelp, WhenHelp, IndicatorsHelp, PatternsHelp, SignalStepsHelp, ReviewHelp, RunHelp, IndicatorsPatternsIntro, ONE_AT_A_TIME, NEWS } from '../components/sections';
-import { RuleEditor, appendAnd } from '../components/RuleEditor';
+import { RuleEditor, appendAnd, StepConfigure } from '../components/RuleEditor';
 import { shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs, Field, usePhone, Sheet } from '../components/ui';
 import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN_KINDS, patternUsage, labelsOf, validate, ruleDescription , tradingWindowText } from '../model';
@@ -160,8 +160,9 @@ export function VariantC(p: VariantProps) {
                 <span className="w-full pl-9 text-xs text-muted-foreground">{setup.branches[sel.bi].side} branch · {sel.si === 0 ? 'Starts a Candidate when its conditions hold.' : selStep.same_bar ? 'On the same bar as the step before, or later.' : 'On a later bar than the step before.'} · <StepStats result={result} bi={sel.bi} si={sel.si} data={data} /></span>
               </div>
               <SignalStepsHelp setup={setup} bi={sel.bi} />
-              <RuleEditor cond={selStep.cond} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} onChange={(c) => mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = c; })} />
-              <div className="rounded-md border p-2"><StepLimits step={selStep} isFirst={sel.si === 0} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} look="chips" onChange={(n: Step) => mutate((s) => { s.branches[sel.bi].steps[sel.si] = n; })} /></div>
+              <StepConfigure rule={(addTo) => <RuleEditor cond={selStep.cond} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} addTo={addTo} onChange={(c) => mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = c; })} />}>
+                <StepLimits step={selStep} isFirst={sel.si === 0} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} look="chips" onChange={(n: Step) => mutate((s) => { s.branches[sel.bi].steps[sel.si] = n; })} />
+              </StepConfigure>
               {sel.si === 0 && <div className="flex flex-wrap items-center gap-2 text-xs">a new first step while one runs <Select value={setup.branches[sel.bi].on_new_start} onChange={(v) => mutate((s) => { s.branches[sel.bi].on_new_start = v; })} options={[['start_another', 'start another'], ['replace', 'replace'], ['ignore', 'ignore']]} className="h-7" /></div>}
               <div className="rounded bg-muted p-2 text-[11px] text-muted-foreground">{condPhrase(selStep.cond, labels)}</div>
               <div className="flex flex-wrap items-center gap-1.5 border-t pt-3">

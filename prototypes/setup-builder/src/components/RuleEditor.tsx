@@ -2,6 +2,7 @@
 // OR (like "a and b, or c"), so each run of ANDs is drawn as one box and the boxes are joined by OR. ALL OF / ANY OF
 // groups (any number of conditions, switchable) group explicitly and nest. Underneath it is still the same Cond tree: an OR of ANDs.
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { Cond, uid, condPhrase } from '../model';
 import { CondEditor, AddMenu } from './CondEditor';
 import { TokenCtx } from './TokenPicker';
@@ -46,7 +47,7 @@ const JoinSelect = ({ value, onChange }: { value: Join; onChange: (j: Join) => v
   </button>
 );
 
-export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }: { cond: Cond; onChange: (c: Cond) => void; ctx: TokenCtx; side: 'long' | 'short'; keyword?: string; nested?: boolean; group?: 'all' | 'any' }) {
+export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, addTo }: { cond: Cond; onChange: (c: Cond) => void; ctx: TokenCtx; side: 'long' | 'short'; keyword?: string; nested?: boolean; group?: 'all' | 'any'; addTo?: HTMLElement | null }) {
   // group: the inside of an ALL OF / ANY OF box; every line has the group's join, so no AND/OR dropdowns
   const gj: Join = group === 'any' ? 'or' : 'and';
   const lines: Line[] = group ? (cond as any).items.map((x: Cond) => ({ cond: x, join: gj })) : toLines(cond);
@@ -118,12 +119,12 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }
           </div>
         </React.Fragment>
       ))}
-      <div className={cn('flex flex-wrap items-center gap-1.5', group ? 'pl-9' : 'pl-[5.5rem]')}>
+      {(() => { const btns = <>
         <AddMenu ctx={ctx} side={side} onAdd={(c) => add(c, 'and')} label="+ Add" title={group ? 'add a condition to this group' : 'add a condition, joined with AND'} buttonClass="flex h-8 items-center rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" />
         {!group && lines.length > 0 && <AddMenu ctx={ctx} side={side} onAdd={(c) => add(c, 'or')} label="+ Or" title="add a condition joined with OR (starts a new box)" buttonClass="flex h-8 items-center rounded-md border border-amber-500/40 px-3 text-xs font-bold uppercase tracking-wider text-amber-300 transition-colors hover:bg-amber-500/15" />}
         <button className="flex h-8 items-center gap-1 rounded-md border border-cyan-500/50 bg-cyan-500/10 px-3 text-xs font-bold uppercase tracking-wider text-cyan-300 transition-colors hover:bg-cyan-500/20" onClick={() => add(newGroup('all'))} title="a group where every condition must hold"><span aria-hidden="true" className="text-sm leading-none">+</span>All of</button>
         <button className="flex h-8 items-center gap-1 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 text-xs font-bold uppercase tracking-wider text-amber-300 transition-colors hover:bg-amber-500/20" onClick={() => add(newGroup('any'))} title="a group where at least one condition must hold"><span aria-hidden="true" className="text-sm leading-none">+</span>Any of</button>
-      </div>
+      </>; return addTo && !group ? createPortal(btns, addTo) : <div className={cn('flex flex-wrap items-center gap-1.5', group ? 'pl-9' : 'pl-[5.5rem]')}>{btns}</div>; })()}
       {!nested && mixed && <div className="pl-[5.5rem] text-[11px] text-muted-foreground">AND is checked before OR: each box must hold as a whole, and any one of the boxes is enough. Reads as: {condPhrase(cond, ctx.labels)}.</div>}
     </div>
   );
@@ -133,4 +134,22 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group }
 export function appendAnd(c: Cond, add: Cond): Cond {
   const ls = toLines(c);
   return fromLines([...ls, { cond: add, join: 'and' }], c.id, (c as any).label);
+}
+
+/** a step's "Configure" box: the buttons that add to the step's conditions, then whatever else configures it (the Sequence limits) */
+export function StepConfigure({ rule, children }: { rule: (addTo: HTMLElement | null) => React.ReactNode; children?: React.ReactNode }) {
+  const [el, setEl] = React.useState<HTMLElement | null>(null);
+  return (
+    <>
+      {rule(el)}
+      <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
+        <div className="text-sm font-bold tracking-tight">Configure this step</div>
+        <div className="space-y-1.5">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Add to the conditions</div>
+          <div ref={setEl} className="flex flex-wrap items-center gap-1.5" />
+        </div>
+        {children}
+      </div>
+    </>
+  );
 }
