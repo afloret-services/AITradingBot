@@ -75,8 +75,8 @@ export function VariantB(p: VariantProps) {
         {setup.branches.map((br, bi) => (
           <section key={br.id} className="space-y-3">
             <h2 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xl font-semibold"><span className="whitespace-nowrap text-3xl font-bold tracking-tight">{br.side === 'long' ? 'Going long' : 'Going short'}</span>
-              <span className="flex w-full flex-wrap items-center gap-x-2 sm:w-auto"><span className="text-xs font-normal text-muted-foreground">a new first step while one runs:</span>
-              <InlineSelect value={br.on_new_start} onChange={(v) => mutate((s) => { s.branches[bi].on_new_start = v; })} options={[['start_another', 'starts another'], ['replace', 'replaces it'], ['ignore', 'is ignored']]} /></span>
+              <span className="flex w-full flex-wrap items-center gap-x-2 sm:w-auto"><span className="text-xs font-normal text-muted-foreground">when a new setup appears before the last one finished:</span>
+              <InlineSelect value={br.on_new_start} onChange={(v) => mutate((s) => { s.branches[bi].on_new_start = v; })} options={[['start_another', 'follow both'], ['replace', 'switch to the new one'], ['ignore', 'stay with the first one']]} /></span>
               {setup.branches.length > 1 && <button className="ml-auto text-xs text-muted-foreground hover:text-red-400" onClick={() => mutate((s) => { s.branches.splice(bi, 1); })}>remove branch</button>}
               {setup.branches.length === 1 && <button type="button" className="ml-auto flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => mutate((s) => { addMirror(s); })}>+ Add a {br.side === 'long' ? 'short' : 'long'} branch (mirrored copy of {br.side})</button>}
             </h2>

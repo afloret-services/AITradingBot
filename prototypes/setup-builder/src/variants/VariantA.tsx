@@ -91,8 +91,8 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <Tabs value={String(bi)} onChange={(v) => { setBi(Number(v)); setOpen(0); }} tabs={setup.branches.map((b, k) => [String(k), `${b.side === 'long' ? 'Long' : 'Short'} branch`] as [string, string])} />
                   {setup.branches.length === 1 && <button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => mutate((s) => { addMirror(s); })}>+ Add a {br.side === 'long' ? 'short' : 'long'} branch (mirrored copy of {br.side})</button>}
-                  <span className="flex w-full items-center justify-between gap-2 sm:ml-auto sm:w-auto sm:justify-end"><span className="text-xs text-muted-foreground">On a new first step while one is running:</span>
-                  <Select value={br.on_new_start} onChange={(v) => mutate((s) => { s.branches[bi].on_new_start = v; })} options={[['start_another', 'start another'], ['replace', 'replace'], ['ignore', 'ignore']]} className="h-7 shrink-0" /></span>
+                  <span className="flex w-full items-center justify-between gap-2 sm:ml-auto sm:w-auto sm:justify-end"><span className="text-xs text-muted-foreground">When a new setup appears before the last one finished:</span>
+                  <Select value={br.on_new_start} onChange={(v) => mutate((s) => { s.branches[bi].on_new_start = v; })} options={[['start_another', 'Follow both'], ['replace', 'Switch to the new one'], ['ignore', 'Stay with the first one']]} className="h-8 shrink-0" /></span>
                 </div>
                 {br.mirrored && <MirrorNote side={br.side} onHide={() => mutate((s) => { s.branches[bi].mirrored = false; })} />}
                 <ol className="space-y-0">

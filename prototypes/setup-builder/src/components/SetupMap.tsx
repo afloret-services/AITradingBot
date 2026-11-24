@@ -72,7 +72,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
           <div key={br.id} className="rounded-xl border bg-background/40 p-3">
             <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
               <span className={cn('rounded-md px-1.5 py-0.5 font-semibold uppercase tracking-wide', long ? 'bg-cyan-500/15 text-cyan-300' : 'bg-red-500/15 text-red-300')}>{long ? '▲ long' : '▼ short'}</span>
-              <span className="text-muted-foreground">a new first step while one runs: <span className="text-foreground">{br.on_new_start.replace('_', ' ')}</span></span>
+              <span className="text-muted-foreground">when a new setup appears before the last one finished: <span className="text-foreground">{({ start_another: 'follow both', replace: 'switch to the new one', ignore: 'stay with the first one' } as Record<string, string>)[br.on_new_start]}</span></span>
               <span className="flex-1" />
               <span className="tabular-nums"><b>{sigs.length}</b> <span className="text-muted-foreground">Signals</span></span>
               <span className="tabular-nums"><b>{taken.length}</b> <span className="text-muted-foreground">Trades</span></span>

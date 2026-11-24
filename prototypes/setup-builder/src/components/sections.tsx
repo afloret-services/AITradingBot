@@ -514,9 +514,9 @@ function ReviewHelp_({ setup, what, issues, result, versions }: { setup: Setup; 
 
 // ---------- what Signal steps do ----------
 const NEW_START: Record<string, [string, string]> = {
-  start_another: ['Start another', 'Each time step 1 holds, a new Candidate starts next to the ones already running, so several can be in progress at once and each can become a Signal.'],
-  replace: ['Replace', 'Each time step 1 holds, the running Candidates are dropped and a fresh one starts. Only the most recent start can become a Signal.'],
-  ignore: ['Ignore', 'While a Candidate is running, step 1 holding again starts nothing; the first start is kept until it completes or ends. Use it when step 1 keeps holding bar after bar, so the Candidate and its running capture are not restarted every bar.'],
+  start_another: ['Follow both', 'Each time step 1 holds, a new Candidate starts next to the ones already running, so several can be in progress at once and each can become a Signal.'],
+  replace: ['Switch to the new one', 'Each time step 1 holds, the running Candidates are dropped and a fresh one starts. Only the most recent start can become a Signal.'],
+  ignore: ['Stay with the first one', 'While a Candidate is running, step 1 holding again starts nothing; the first start is kept until it completes or ends. Use it when step 1 keeps holding bar after bar, so the Candidate and its running capture are not restarted every bar.'],
 };
 /** the top of the Signal steps stage: how a branch turns into Signals */
 function SignalStepsHelp_({ setup, bi }: { setup: Setup; bi: number }) {
@@ -526,7 +526,7 @@ function SignalStepsHelp_({ setup, bi }: { setup: Setup; bi: number }) {
     <HelpBox>
       <div><T>How steps work.</T> A branch is a Sequence: step 1, then step 2, and so on. At every close of the {setup.settings.base_bar} Base bar the conditions are checked. When step 1 holds, a <T>Candidate</T> starts and waits for step 2; when the last step completes, the Candidate becomes a <T>Signal</T> and goes to the Entry. All the conditions inside a step must hold on the same bar. What a step captures (a pattern's top, the Draw on liquidity, a running low) can be read by the steps after it and by the Entry and stop.</div>
       <div><T>When a Candidate ends without a Signal:</T> a limit on the next step runs out (too many bars, past its clock time), its invalidation happens, or the Trading day ends at 18:00 NY. A Candidate that completes outside the Trading window gives no Signal.</div>
-      <div><T>On a new first step while one is running: {title}.</T> {text}</div>
+      <div><T>When a new setup appears before the last one finished (step 1 holds again while a Candidate waits): {title}.</T> {text}</div>
       <details className="text-[11px]"><summary className="cursor-pointer hover:text-foreground">compare the three, and how to read the counts</summary>
         <ul className="mt-1 space-y-1 pl-3">{Object.entries(NEW_START).map(([k, [l, t]]) => <li key={k} className={cn(k === br?.on_new_start && 'text-foreground')}><b>{l}</b>: {t}</li>)}</ul>
         <div className="mt-1.5">Each step shows two counts on the MNQ bars: <T>held alone</T> is how many bars its conditions were true on their own, ignoring the steps before it; <T>completed</T> is how many times it actually completed inside a Candidate. A step that holds often but rarely completes is waiting on the step before it.</div>
