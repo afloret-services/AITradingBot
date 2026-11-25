@@ -35,7 +35,7 @@ function kindOf(v: string): Kind {
   return (k as Kind) || 'number';
 }
 
-export function TokenPicker({ value, onChange, ctx, placeholder = 'pick a value', className, compact }: { value: string; onChange: (v: string) => void; ctx: TokenCtx; placeholder?: string; className?: string; compact?: boolean }) {
+export function TokenPicker({ value, onChange, ctx, placeholder = 'pick a value', className, compact, large }: { value: string; onChange: (v: string) => void; ctx: TokenCtx; placeholder?: string; className?: string; compact?: boolean; large?: boolean }) {
   const [open, setOpen] = useState(false);
   const phone = usePhone();
   const ref = useRef<HTMLSpanElement>(null);
@@ -48,8 +48,8 @@ export function TokenPicker({ value, onChange, ctx, placeholder = 'pick a value'
   const empty = !value;
   return (
     <span ref={ref} className={cn('relative inline-block', className)}>
-      <button onClick={() => setOpen(!open)} title={value} className={cn('rounded border px-1.5 py-0.5 text-left text-[13px] hover:border-sky-400', empty ? 'border-dashed border-amber-400/70 text-amber-300' : isToken(value) ? 'border-sky-500/40 bg-sky-500/10 text-sky-200' : 'border-input bg-muted')}>
-        {!empty && /^\{\{indicator:/.test(value) && <IndicatorIcon token={value} size={15} className="-mt-0.5 mr-1 inline-block align-middle" />}{empty ? placeholder : compact ? shortName(value, ctx.labels) : phrase(value, ctx.labels)}
+      <button onClick={() => setOpen(!open)} title={value} className={cn('rounded border text-left hover:border-sky-400', large ? 'flex min-h-9 items-center px-2.5 py-1 text-sm font-medium' : 'px-1.5 py-0.5 text-[13px]', empty ? 'border-dashed border-amber-400/70 text-amber-300' : isToken(value) ? 'border-sky-500/40 bg-sky-500/10 text-sky-200' : 'border-input bg-muted')}>
+        {!empty && /^\{\{indicator:/.test(value) && <IndicatorIcon token={value} size={large ? 18 : 15} className={large ? 'mr-1.5 shrink-0' : '-mt-0.5 mr-1 inline-block align-middle'} />}{empty ? placeholder : compact ? shortName(value, ctx.labels) : phrase(value, ctx.labels)}
       </button>
       {open && <Sheet phone={phone}><div className="fixed inset-0 z-[60] bg-black/50 sm:hidden" onClick={() => setOpen(false)} /><div className="fixed inset-x-3 bottom-3 z-[61] max-h-[75vh] overflow-auto rounded-lg border bg-card p-3 shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-0 sm:top-full sm:z-50 sm:mt-1 sm:max-h-none sm:w-[340px] sm:overflow-visible [&_select]:max-w-full"><Editor value={value} onChange={onChange} ctx={ctx} /><div className="mt-2 flex justify-end"><Button size="sm" variant="secondary" onClick={() => setOpen(false)}>Done</Button></div></div></Sheet>}
     </span>
