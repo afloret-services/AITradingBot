@@ -201,7 +201,7 @@ export function IndicatorList({ setup, mutate, ctx, usage }: { setup: Setup; mut
 }
 // ---------- Patterns, declared once ----------
 const PField = ({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) => (
-  <label className="flex flex-col gap-0.5"><span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground" title={hint}>{label}</span>{children}</label>
+  <label className="flex flex-col gap-0.5"><span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground" title={hint}>{label}</span>{children}</label>
 );
 const PKINDS = Object.keys(PATTERN_KINDS) as PatternKind[];
 const DISP_KEYS = ['disp_mult', 'disp_body_pct', 'avg_len'];
@@ -218,28 +218,28 @@ export function PatternList({ setup, mutate, compact, data, only }: { setup: Set
         const d = PATTERN_KINDS[p.kind];
         const dispOn = p.kind === 'displacement' || p.kind === 'order_block' || !!p.params.displacement;
         return (
-          <div key={k} className="relative rounded-md border p-2">
-            <div className={cn('flex flex-wrap items-end gap-2', !only && 'pr-9 sm:pr-0')}>
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))]" title={d.title}><PatternIcon kind={p.kind} size={26} /></span>
-              <PField label="Name" hint="steps read it as name.field"><Input value={p.name} onChange={(e) => { const v = e.target.value.trim(); mutate((s) => { renamePattern(s, s.patterns[k].name, v); s.patterns[k].name = v; }); }} className="mono h-7 w-24" /></PField>
-              <PField label="Pattern"><Select value={p.kind} onChange={(kind: PatternKind) => set(k, (q) => { Object.assign(q, { ...newPattern(kind, q.tf, []), name: q.name, label: q.label }); })} options={PKINDS.map((x) => [x, PATTERN_KINDS[x].title] as [PatternKind, string])} className="h-7" /></PField>
-              <PField label="Timeframe"><Select value={p.tf} onChange={(tf: TF) => set(k, (q) => { q.tf = tf; })} options={tfs.includes(p.tf) ? tfs : [p.tf, ...tfs]} className="h-7" /></PField>
-              <PField label="Display label (optional)" hint="replaces the kind in descriptions"><Input value={p.label || ''} placeholder={d.title.replace(/ \(.*\)$/, '')} onChange={(e) => set(k, (q) => { q.label = e.target.value || undefined; })} className="h-7 w-48" /></PField>
-              <span className={cn('pb-1.5 text-[11px]', usage[p.name] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[p.name] ? `used ${usage[p.name]}×` : 'unused'}</span>
-              {!only && <button aria-label="remove this pattern" className="absolute right-2 top-2 sm:static sm:mb-1.5 sm:ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" title="remove" onClick={() => mutate((s) => { s.patterns.splice(k, 1); })}>×</button>}
+          <div key={k} className="relative rounded-md border p-3">
+            <div className={cn('flex flex-wrap items-end gap-2', !only && 'pr-11 sm:pr-0')}>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))]" title={d.title}><PatternIcon kind={p.kind} size={28} /></span>
+              <PField label="Name" hint="steps read it as name.field"><Input value={p.name} onChange={(e) => { const v = e.target.value.trim(); mutate((s) => { renamePattern(s, s.patterns[k].name, v); s.patterns[k].name = v; }); }} className="mono h-9 w-28 text-sm" /></PField>
+              <PField label="Pattern"><Select value={p.kind} onChange={(kind: PatternKind) => set(k, (q) => { Object.assign(q, { ...newPattern(kind, q.tf, []), name: q.name, label: q.label }); })} options={PKINDS.map((x) => [x, PATTERN_KINDS[x].title] as [PatternKind, string])} className="h-9 text-sm" /></PField>
+              <PField label="Timeframe"><Select value={p.tf} onChange={(tf: TF) => set(k, (q) => { q.tf = tf; })} options={tfs.includes(p.tf) ? tfs : [p.tf, ...tfs]} className="h-9 text-sm" /></PField>
+              <PField label="Display label (optional)" hint="replaces the kind in descriptions"><Input value={p.label || ''} placeholder={d.title.replace(/ \(.*\)$/, '')} onChange={(e) => set(k, (q) => { q.label = e.target.value || undefined; })} className="h-9 w-52 text-sm" /></PField>
+              <span className={cn('pb-2 text-xs', usage[p.name] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[p.name] ? `used ${usage[p.name]}×` : 'unused'}</span>
+              {!only && <button aria-label="remove this pattern" className="absolute right-2 top-2 sm:static sm:mb-0 sm:ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" title="remove" onClick={() => mutate((s) => { s.patterns.splice(k, 1); })}>×</button>}
             </div>
-            <div className="mt-1 text-[11px] text-muted-foreground">Reads in a step as: <span className="text-foreground">"{patternPhrase(p, 'long')}"</span></div>
+            <div className="mt-1.5 text-sm text-muted-foreground">Reads in a step as: <span className="text-foreground">"{patternPhrase(p, 'long')}"</span></div>
             {d.cat && <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]"><PatternCatChips kind={p.kind} full />{d.cat.note && <span className="text-muted-foreground">{d.cat.note}</span>}</div>}
             <Hideable id="patterns:each" className="mt-1 text-[11px] text-muted-foreground">{d.help}</Hideable>
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
               {d.params.filter(([key]) => dispOn || !DISP_KEYS.includes(key)).map(([key, label, def]) =>
                 typeof def === 'boolean'
                   ? <label key={key} className="flex items-center gap-1 text-muted-foreground"><input type="checkbox" checked={!!p.params[key]} onChange={(e) => set(k, (q) => { q.params[key] = e.target.checked; })} />{label}</label>
-                  : <span key={key} className="flex items-center gap-1 text-muted-foreground">{label}<NumInput step={key === 'disp_mult' ? 0.1 : 1} value={p.params[key] as number} onChange={(n) => set(k, (q) => { q.params[key] = n; })} className="h-6 w-14" /></span>)}
+                  : <span key={key} className="flex items-center gap-1 text-muted-foreground">{label}<NumInput step={key === 'disp_mult' ? 0.1 : 1} value={p.params[key] as number} onChange={(n) => set(k, (q) => { q.params[key] = n; })} className="h-8 w-16 text-sm" /></span>)}
             </div>
-            <div className="mt-1 text-[11px] text-muted-foreground">captures <span className="mono">{p.name}.</span>{d.fields.filter((f) => !/^bar[123]\./.test(f)).join(', ')}{p.kind === 'fvg' ? ', bar1…bar3 (open, high, low, close)' : ''} · steps choose bullish or bearish</div>
+            <div className="mt-1 text-xs text-muted-foreground">captures <span className="mono">{p.name}.</span>{d.fields.filter((f) => !/^bar[123]\./.test(f)).join(', ')}{p.kind === 'fvg' ? ', bar1…bar3 (open, high, low, close)' : ''} · steps choose bullish or bearish</div>
             {compact
-              ? <details className="mt-1.5"><summary className="cursor-pointer text-[11px] text-sky-300">what it looks like</summary><div className="mt-1.5 flex flex-wrap gap-2"><PatternSchematic p={p} />{data && <PatternExample p={p} data={data} />}</div></details>
+              ? <details className="mt-1.5"><summary className="cursor-pointer text-xs font-medium text-sky-300">what it looks like</summary><div className="mt-1.5 flex flex-wrap gap-2"><PatternSchematic p={p} />{data && <PatternExample p={p} data={data} />}</div></details>
               : <div className="mt-2 flex flex-wrap items-start gap-3">
                   <div className="space-y-1"><PatternSchematic p={p} /><div className="text-[11px] text-muted-foreground">the idea, drawn from these settings (bullish; bearish is its mirror)</div></div>
                   {data && <div><PatternExample p={p} data={data} /><div className="text-[11px] text-muted-foreground">real ones on MNQ with these settings (the white box is the bar where it forms)</div></div>}
