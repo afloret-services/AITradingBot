@@ -589,7 +589,7 @@ export function EntryEditor({ setup, mutate, bi, ctx, result, data }: { setup: S
   return (
     <div className="space-y-2">
       {data && <EntryHelp setup={setup} bi={bi} result={result} data={data} />}
-      <Field label="Order">
+      <Field label={<span className="text-sm font-semibold normal-case tracking-normal text-foreground">Order</span>}>
         <Select value={e.order} onChange={(v) => set((x) => { x.order = v; })} options={[['market', "market (next Base bar's open)"], ['limit', 'limit'], ['stop', 'stop entry']]} />
         {e.order !== 'market' && <><span className="text-xs text-muted-foreground">at</span><TokenPicker value={e.price || ''} ctx={ctx} onChange={(v) => set((x) => { x.price = v; })} /></>}
       </Field>
