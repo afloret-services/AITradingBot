@@ -589,7 +589,7 @@ export function EntryEditor({ setup, mutate, bi, ctx, result, data }: { setup: S
   return (
     <div className="space-y-2">
       {data && <EntryHelp setup={setup} bi={bi} result={result} data={data} />}
-      <Field label={<span className="text-sm font-semibold normal-case tracking-normal text-foreground">Order</span>}>
+      <Field label={<span className="text-base font-bold tracking-tight text-foreground">Order</span>}>
         <Select value={e.order} onChange={(v) => set((x) => { x.order = v; })} options={[['market', "market (next Base bar's open)"], ['limit', 'limit'], ['stop', 'stop entry']]} />
         {e.order !== 'market' && <><span className="text-xs text-muted-foreground">at</span><TokenPicker value={e.price || ''} ctx={ctx} onChange={(v) => set((x) => { x.price = v; })} /></>}
       </Field>
@@ -623,7 +623,7 @@ function EntryHelp_({ setup, bi, result, data }: { setup: Setup; bi: number; res
 }
 export function StopEditor({ value, onChange, ctx, side = 'long' }: { value: Setup['branches'][0]['entry']['stop']; onChange: (v: Setup['branches'][0]['entry']['stop']) => void; ctx: TokenCtx; side?: 'long' | 'short' }) {
   return (
-    <Field label={<span className="flex items-center gap-2"><span className="text-sm font-semibold normal-case tracking-normal text-foreground">Stop</span><Badge tone={value.token ? 'warn' : 'error'} className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">{value.token ? '★ Required' : '★ Required: pick a level'}</Badge></span>}>
+    <Field label={<span className="flex items-center gap-2"><span className="text-base font-bold tracking-tight text-foreground">Stop</span><Badge tone={value.token ? 'warn' : 'error'} className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">{value.token ? '★ Required' : '★ Required: pick a level'}</Badge></span>}>
       <span className="text-sm">Place the stop</span>
       <NumInput step={0.05} value={value.offset} onChange={(n) => onChange({ ...value, offset: n })} className="w-16" />
       <Select value={value.unit} onChange={(u) => onChange({ ...value, unit: u })} options={[['ticks', 'ticks'], ['atr', '× ATR']]} />
