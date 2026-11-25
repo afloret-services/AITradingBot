@@ -709,7 +709,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
             <button aria-label="remove this take profit" title="remove" className="ml-auto sm:ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" onClick={() => onChange({ ...value, legs: value.legs.filter((_: Leg, j: number) => j !== i) })}>×</button>
           </div>
         ))}
-        <div className="flex items-center gap-2"><Button size="sm" variant="ghost" onClick={() => onChange({ ...value, legs: [...value.legs, { name: `TP${value.legs.length + 1}`, rule: 'r', r: 3, share: 0 }] })}>+ take profit</Button>
+        <div className="flex items-center gap-2"><button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => onChange({ ...value, legs: [...value.legs, { name: `TP${value.legs.length + 1}`, rule: 'r', r: 3, share: 0 }] })}>+ Take profit</button>
           <span className="text-xs text-muted-foreground">Extra contracts go to</span><Select value={value.leftover} onChange={(v) => onChange({ ...value, leftover: v })} options={[['first', 'TP1 first'], ['last', 'the last TP']]} className="h-7" /></div>
       </div>
     );
@@ -747,7 +747,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
             <button aria-label="remove this guard" title="remove" className="ml-auto sm:ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" onClick={() => onChange(value.filter((_: Guard, j: number) => j !== i))}>×</button>
           </div>
         ))}
-        <div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => onChange([...value, { kind: 'max_stop', n: 40, unit: 'ticks' }])}>+ Stop too wide</Button><Button size="sm" variant="ghost" onClick={() => onChange([...value, { kind: 'min_rr', n: 1 }])}>+ Reward too small</Button></div>
+        <div className="flex flex-wrap gap-1.5"><button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => onChange([...value, { kind: 'max_stop', n: 40, unit: 'ticks' }])}>+ Stop too wide</button><button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => onChange([...value, { kind: 'min_rr', n: 1 }])}>+ Reward too small</button></div>
       </div>
     );
   }
@@ -837,7 +837,7 @@ export function InPositionRules({ setup, mutate, ctx, look }: { setup: Setup; mu
           <CondEditor cond={r.when} ctx={{ ...ctx, inPosition: true }} side="long" look={look} onChange={(c) => mutate((s) => { s.in_position_rules[i].when = c; })} />
         </div>
       ))}
-      <Button size="sm" variant="ghost" onClick={() => mutate((s) => { s.in_position_rules.push({ id: uid('ip'), action: 'close_trade', when: { id: uid(), t: 'all', items: [] } }); })}>+ Add a rule</Button>
+      <button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => mutate((s) => { s.in_position_rules.push({ id: uid('ip'), action: 'close_trade', when: { id: uid(), t: 'all', items: [] } }); })}>+ Add a rule</button>
     </div>
   );
 }
