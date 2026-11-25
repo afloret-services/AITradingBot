@@ -550,7 +550,7 @@ export function limitsSentence(step: Step, isFirst: boolean, labels: Record<stri
 export function StepLimits({ step, onChange, isFirst, ctx, side, look }: { step: Step; onChange: (s: Step) => void; isFirst: boolean; ctx: TokenCtx; side: 'long' | 'short'; look: Look }) {
   return (
     <div className="space-y-1.5">
-    <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Sequence limits</div>
+    <div className="text-base font-bold tracking-tight text-foreground">Sequence limits</div>
     <HelpBox id="steps:limits">
       <div>{limitsSentence(step, isFirst, ctx.labels)}</div>
       <details className="text-[11px]"><summary className="cursor-pointer hover:text-foreground">what each control means</summary>

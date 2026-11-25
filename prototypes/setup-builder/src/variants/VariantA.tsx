@@ -215,11 +215,11 @@ function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
   return (
     <div className="space-y-3">
       <RunHelp setup={setup} what="intro" />
-      <div className="flex flex-wrap items-start gap-3"><div className="min-w-0 basis-full sm:basis-auto"><Field label="Instrument"><InstrumentSelect value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} /></Field></div>
-        <Field label="Binds"><span className="mono break-words text-xs">{setup.setup_id} · Draft (a paper Run needs a frozen version that passed the gate)</span></Field></div>
+      <div className="flex flex-wrap items-start gap-3"><div className="min-w-0 basis-full sm:basis-auto"><Field label={<span className="text-base font-bold tracking-tight text-foreground">Instrument</span>}><InstrumentSelect value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} /></Field></div>
+        <Field label={<span className="text-base font-bold tracking-tight text-foreground">Binds</span>}><span className="mono break-words text-xs">{setup.setup_id} · Draft (a paper Run needs a frozen version that passed the gate)</span></Field></div>
       {instrumentWarnings(setup, runD.draft.instrument).map((w) => <div key={w} className="text-xs text-amber-300">{w}</div>)}
       <RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} />
-      <div className="pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Risk overrides</div>
+      <div className="pt-2 text-base font-bold tracking-tight text-foreground">Risk overrides</div>
       <RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} />
       <div className="divide-y rounded-md border">
         {SECTIONS.map((k) => {

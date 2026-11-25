@@ -143,9 +143,9 @@ export function StepConfigure({ rule, children }: { rule: (addTo: HTMLElement | 
     <>
       {rule(el)}
       <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
-        <div className="text-sm font-bold tracking-tight">Configure this step</div>
+        <div className="text-lg font-bold tracking-tight">Configure this step</div>
         <div className="space-y-1.5">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Add to the conditions</div>
+          <div className="text-base font-bold tracking-tight text-foreground">Add to the conditions</div>
           <div ref={setEl} className="flex flex-wrap items-center gap-1.5" />
         </div>
         {children}
