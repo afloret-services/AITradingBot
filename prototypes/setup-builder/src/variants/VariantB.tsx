@@ -139,13 +139,13 @@ export function VariantB(p: VariantProps) {
           <div className="mb-2 space-y-2"><IndicatorsPatternsIntro /><IndicatorsHelp setup={setup} /></div>
           {setup.indicators.length === 0 && <div className="text-sm italic text-muted-foreground">none yet</div>}
           {setup.indicators.map((ind, k) => (
-            <div key={ind.token} className="mb-1.5 rounded-md border border-border/60 p-2 sm:mb-0 sm:border-0 sm:p-0">
-            <div className="flex flex-wrap items-center gap-2 py-1 text-sm sm:flex-nowrap">
-              <IndicatorIcon token={ind.token} size={20} /><span className="mono min-w-0 flex-1 sm:w-40 sm:flex-none sm:truncate" title={ind.token}>{shortName(ind.token, {})}</span>
-              <Input value={ind.label || ''} placeholder="label" onChange={(e) => mutate((s) => { s.indicators[k].label = e.target.value || undefined; })} className="order-last h-8 min-w-0 basis-full sm:order-none sm:h-8 sm:flex-1 sm:basis-0" />
-              <span className={cn('whitespace-nowrap text-right text-xs sm:w-16', usage[ind.token] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[ind.token] ? `used ${usage[ind.token]}×` : 'unused'}</span>
+            <div key={ind.token} className="mb-2 rounded-md border border-border/60 p-2 sm:mb-0 sm:border-0 sm:p-0">
+            <div className="flex flex-wrap items-center gap-2.5 py-1.5 text-base sm:flex-nowrap">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))]"><IndicatorIcon token={ind.token} size={28} /></span><span className="mono min-w-0 flex-1 font-medium sm:w-48 sm:flex-none sm:truncate" title={ind.token}>{shortName(ind.token, {})}</span>
+              <Input value={ind.label || ''} placeholder="label" onChange={(e) => mutate((s) => { s.indicators[k].label = e.target.value || undefined; })} className="order-last h-9 min-w-0 basis-full text-sm sm:order-none sm:flex-1 sm:basis-0" />
+              <span className={cn('whitespace-nowrap text-right text-sm sm:w-20', usage[ind.token] ? 'text-muted-foreground' : 'text-amber-300')}>{usage[ind.token] ? `used ${usage[ind.token]}×` : 'unused'}</span>
             </div>
-            {indHelp(ind.token) && <Hideable id="indicators:each" className="mt-1 text-[11px] text-muted-foreground sm:-mt-0.5 sm:mb-1 sm:pl-6">{indHelp(ind.token)}</Hideable>}
+            {indHelp(ind.token) && <Hideable id="indicators:each" className="mt-1 text-xs text-muted-foreground sm:-mt-0.5 sm:mb-1.5 sm:pl-[3.125rem]">{indHelp(ind.token)}</Hideable>}
             </div>
           ))}
         </Card>
