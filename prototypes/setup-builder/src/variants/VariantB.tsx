@@ -223,7 +223,7 @@ function InlineSelect<T extends string>({ value, onChange, options }: { value: T
   return <select value={value} onChange={(e) => onChange(e.target.value as T)} className="rounded border-b border-dashed border-sky-400 bg-transparent px-0.5 text-sky-200 outline-none">{options.map((o) => { const [v, l] = Array.isArray(o) ? o : [o, o]; return <option key={v} value={v} className="bg-card">{l}</option>; })}</select>;
 }
 function InlineInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return <input value={value} onChange={(e) => onChange(e.target.value)} className="w-12 border-b border-dashed border-sky-400 bg-transparent text-center text-sky-200 outline-none" />;
+  return <input value={value} onChange={(e) => onChange(e.target.value)} className="mono my-0.5 h-9 w-[4.75rem] rounded-md border border-sky-500/50 bg-sky-500/10 text-center align-middle text-base font-medium text-sky-200 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" />;
 }
 
 // ---------- the phrase grammar (a few standard phrases) and a stubbed Claude suggestion ----------
