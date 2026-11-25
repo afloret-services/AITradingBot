@@ -1,6 +1,6 @@
 // PROTOTYPE: editors for Setup settings and the Run-overridable Trade-settings sections, shared by the variants.
 import React from 'react';
-import { labelsOf, phrase, parseToken } from '../model';
+import { labelsOf, phrase, parseToken, stopPhrase } from '../model';
 import { Setup, Step, TF, TFS, Leg, Guard, InPositionRule, Cond, uid, SECTION_NAMES, condPhrase, Pattern, PatternKind, PATTERN_KINDS, newPattern, patternUsage, patternSettingsPhrase, tfMinutes, patternPhrase } from '../model';
 import { TokenPicker, TokenCtx, shortName } from './TokenPicker';
 import { CondEditor, Look } from './CondEditor';
@@ -614,7 +614,7 @@ function EntryHelp_({ setup, bi, result, data }: { setup: Setup; bi: number; res
     <HelpBox>
       <div><span className="font-medium text-foreground">Order.</span> {ORDER_HELP[e.order](long)}</div>
       <div><span className="font-medium text-foreground">Stop.</span> Placed {long ? 'below' : 'above'} a level the Setup reads (a captured low or high, a pattern edge…) by an offset: in ticks (on MNQ a tick is 0.25 points) or in × ATR, so it widens when the market is more volatile. The distance from the entry to the stop is the risk, 1R: it sizes the contracts and sets R-multiple take profits. An Entry cannot be saved without a stop.</div>
-      <div>Here: {e.order === 'market' ? B('at market') : <>a {B(e.order === 'limit' ? 'limit' : 'stop entry')} at {B(phrase(e.price || '?', labels))}</>}, stop {B(`${e.stop.offset} ${e.stop.unit === 'atr' ? '× ' + phrase(e.stop.atr || 'the ATR', labels) : e.stop.offset === 1 ? 'tick' : 'ticks'}`)} {long ? 'below' : 'above'} {B(phrase(e.stop.token || '?', labels))}{e.stop.unit === 'ticks' ? ` (${(e.stop.offset * 0.25).toFixed(2)} points)` : ''}.
+      <div>Here: {e.order === 'market' ? B('at market') : <>a {B(e.order === 'limit' ? 'limit' : 'stop entry')} at {B(phrase(e.price || '?', labels))}</>}, stop {B(stopPhrase(e.stop, long ? 'long' : 'short', (t) => phrase(t, labels)))}{e.stop.from === 'usd' ? ` (${(e.stop.offset / 2).toFixed(2)} points on MNQ)` : e.stop.unit === 'ticks' ? ` (${(e.stop.offset * 0.25).toFixed(2)} points)` : ''}.
         {sig && data && <> On its latest Signal ({when.slice(5, 10)} {when.slice(11, 16)} NY): entry {B(sig.entry.toFixed(2))}, stop {B(sig.stop.toFixed(2))}, so {B(`${Math.abs(sig.entry - sig.stop).toFixed(2)} points`)} of risk and {B(`${contracts} contract${contracts === 1 ? '' : 's'}`)}.</>}
         {!sig && result && <> No Signal of this branch was traded on these bars yet.</>}
       </div>
@@ -623,13 +623,16 @@ function EntryHelp_({ setup, bi, result, data }: { setup: Setup; bi: number; res
 }
 export function StopEditor({ value, onChange, ctx, side = 'long' }: { value: Setup['branches'][0]['entry']['stop']; onChange: (v: Setup['branches'][0]['entry']['stop']) => void; ctx: TokenCtx; side?: 'long' | 'short' }) {
   return (
-    <Field label={<span className="flex items-center gap-2"><span className="text-base font-bold tracking-tight text-foreground">Stop</span><Badge tone={value.token ? 'warn' : 'error'} className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">{value.token ? '★ Required' : '★ Required: pick a level'}</Badge></span>}>
+    <Field label={<span className="flex items-center gap-2"><span className="text-base font-bold tracking-tight text-foreground">Stop</span><Badge tone={value.token || (value.from || 'level') !== 'level' ? 'warn' : 'error'} className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">{value.token || (value.from || 'level') !== 'level' ? '★ Required' : '★ Required: pick a level'}</Badge></span>}>
+      <span className="flex basis-full flex-wrap items-center gap-2 text-sm">Measured from
+        <Select value={value.from || 'level'} onChange={(f) => onChange({ ...value, from: f as any, offset: f === 'usd' ? (value.from === 'usd' ? value.offset : 40) : value.from === 'usd' ? 2 : value.offset })} options={[['level', 'a level (a low, a pattern edge…)'], ['entry', 'the entry price'], ['usd', 'a fixed $ a contract from the entry']]} /></span>
       <span className="text-sm">Place the stop</span>
-      <NumInput step={0.05} value={value.offset} onChange={(n) => onChange({ ...value, offset: n })} className="w-16" />
-      <Select value={value.unit} onChange={(u) => onChange({ ...value, unit: u })} options={[['ticks', 'ticks'], ['atr', '× ATR']]} />
-      {value.unit === 'atr' && <span className="text-sm text-muted-foreground">using</span>}{value.unit === 'atr' && <TokenPicker value={value.atr || ''} ctx={ctx} compact onChange={(a) => onChange({ ...value, atr: a })} placeholder="which ATR" />}
-      <span className="text-sm">{side === 'long' ? 'below' : 'above'}</span>
-      <TokenPicker value={value.token} ctx={ctx} onChange={(t) => onChange({ ...value, token: t })} placeholder="pick the stop level" />
+      {value.from === 'usd' && <span className="text-sm">$</span>}
+      <NumInput step={value.from === 'usd' ? 5 : 0.05} value={value.offset} onChange={(n) => onChange({ ...value, offset: n })} className="w-16" />
+      {value.from === 'usd' ? <span className="text-sm">a contract</span> : <Select value={value.unit} onChange={(u) => onChange({ ...value, unit: u })} options={[['ticks', 'ticks'], ['atr', '× ATR']]} />}
+      {value.from !== 'usd' && value.unit === 'atr' && <span className="text-sm text-muted-foreground">using</span>}{value.from !== 'usd' && value.unit === 'atr' && <TokenPicker value={value.atr || ''} ctx={ctx} compact onChange={(a) => onChange({ ...value, atr: a })} placeholder="which ATR" />}
+      <span className="text-sm" title="set by the branch: a long stop sits below, a short one above">{side === 'long' ? 'below' : 'above'}</span>
+      {(value.from || 'level') === 'level' ? <TokenPicker value={value.token} ctx={ctx} onChange={(t) => onChange({ ...value, token: t })} placeholder="pick the stop level" /> : <span className="text-sm font-medium">the entry</span>}
     </Field>
   );
 }
@@ -668,7 +671,7 @@ export function sectionSummary(s: Setup, k: SectionKey): string {
   switch (k) {
     case 'risk': return `${v.pct}% of a $${v.capital} account, at most ${v.max_contracts} contracts`;
     case 'losing_streak': return v.n ? `stop for the day after ${v.n} losers in a row; next day at ${v.cut}% risk until a winner` : 'off';
-    case 'stop': return v.map((x: any, i: number) => `${x.offset} ${x.unit === 'atr' ? '× ATR' : 'ticks'} ${s.branches[i]?.side === 'short' ? 'above' : 'below'} ${shortName(x.token, {}) || '?'}`).join(' / ');
+    case 'stop': return v.map((x: any, i: number) => stopPhrase(x, s.branches[i]?.side || 'long', (t) => shortName(t, {}) || '?')).join(' / ');
     case 'legs': return v.legs.map((l: Leg) => `${l.name} at ${l.rule === 'r' ? l.r + 'R' : l.rule === 'fraction' ? Math.round((l.fraction ?? 0) * 100) + '% to ' + shortName(l.level || '', {}) : (l.offset_ticks ? `${l.offset_ticks}t before ` : '') + shortName(l.level || '', {})}, close ${Math.round(l.share * 100)}%`).join('; ') + `; extra to ${v.leftover === 'first' ? 'TP1' : 'the last TP'}`;
     case 'break_even': return v.trigger === 'off' ? 'never' : `${v.trigger === 'after_leg' ? `after TP${v.k} fills` : `once +${v.r}R in profit`}${v.offset_ticks ? `, lock in ${v.offset_ticks} ticks` : ''}`;
     case 'entry_deadline': return `${v.entry_deadline.kind === 'clock' ? 'wait until ' + v.entry_deadline.value : v.entry_deadline.kind === 'bars' ? 'wait ' + v.entry_deadline.value + ' Base bars' : v.entry_deadline.kind === 'end_of_hours' ? 'wait until the Trading window closes' : 'wait until the Trading day ends'}; ${v.cancel_if.length ? 'cancel if price reaches ' + v.cancel_if.map((c: string) => (c === 'first_leg' ? 'TP1' : c === 'stop' ? 'the stop' : 'the Draw')).join(' or ') + ' first' : 'no early cancel'}`;

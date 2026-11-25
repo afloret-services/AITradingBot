@@ -9,7 +9,7 @@ import { Chart, StepStats, RunSummary } from '../components/Chart';
 import { CondEditor, tokenCtx } from '../components/CondEditor';
 import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp, ReviewHelp, IndicatorsHelp, PatternsHelp, IndicatorsPatternsIntro, WhenHelp, MirrorNote } from '../components/sections';
 import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
-import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf, patternUsage } from '../model';
+import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf, patternUsage, stopPhrase } from '../model';
 import { useRunDraft, instrumentWarnings } from '../runDraft';
 import { InstrumentSelect } from '../components/InstrumentSelect';
 
@@ -127,7 +127,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                         <span className="shrink-0 text-sm font-black tracking-wider text-emerald-300 sm:w-14">SIGNAL</span>
                         <span className="min-w-0 flex-1 text-base font-bold tracking-tight">Enter the Trade</span>
                         <span className="order-last w-full pl-9 sm:order-none sm:w-auto sm:shrink-0 sm:pl-0"><span className="inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors group-hover/sig:bg-sky-500/20">Edit in Entry &amp; stop →</span></span>
-                        <span className="w-full pl-9 text-xs text-muted-foreground">When the last step completes · {br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labelsOf(setup))}`}, stop {br.entry.stop.offset} {br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} {br.side === 'long' ? 'below' : 'above'} {phrase(br.entry.stop.token || '?', labelsOf(setup))}</span>
+                        <span className="w-full pl-9 text-xs text-muted-foreground">When the last step completes · {br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labelsOf(setup))}`}, stop {stopPhrase(br.entry.stop, br.side, (t) => phrase(t, labelsOf(setup)))}</span>
                       </button>
                     </li>
                   )}

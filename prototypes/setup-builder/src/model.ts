@@ -208,7 +208,7 @@ export interface Step {
   hold?: Cond;
   capture_running?: { name: string; field: 'low' | 'high' };
 }
-export interface Entry { order: 'market' | 'limit' | 'stop'; price?: string; stop: { token: string; offset: number; unit: 'ticks' | 'atr'; atr?: string } }
+export interface Entry { order: 'market' | 'limit' | 'stop'; price?: string; stop: { token: string; offset: number; unit: 'ticks' | 'atr'; atr?: string; /** what the distance is measured from: a level (default), the entry price, or a fixed $ per contract from the entry */ from?: 'level' | 'entry' | 'usd' } }
 export interface Branch { id: string; side: 'long' | 'short'; steps: Step[]; entry: Entry; on_new_start: 'start_another' | 'replace' | 'ignore'; /** builder only: written by "Add a short branch", until the user dismisses the check note */ mirrored?: boolean }
 export interface Leg { name: string; rule: 'r' | 'level' | 'fraction'; r?: number; level?: string; fraction?: number; offset_ticks?: number; share: number }
 export interface Guard { kind: 'max_stop' | 'min_rr'; n: number; unit?: 'ticks' | 'atr'; atr?: string }
@@ -346,7 +346,7 @@ export function ruleDescription(s: Setup): string {
       lines.push(`  ${k === 0 ? 'First' : 'Then'}${lim ? ` (${lim})` : ''}: ${condPhrase(st.cond, labels)}.`);
     });
     const e = br.entry;
-    lines.push(`  Enter ${e.order === 'market' ? "at market at the next bar's open" : `with a ${e.order} at ${phrase(e.price || '?', labels)}`}; stop ${e.stop.offset} ${e.stop.unit === 'atr' ? `× ${phrase(e.stop.atr || '?', labels)}` : 'ticks'} ${br.side === 'long' ? 'below' : 'above'} ${phrase(e.stop.token || '?', labels)}.`);
+    lines.push(`  Enter ${e.order === 'market' ? "at market at the next bar's open" : `with a ${e.order} at ${phrase(e.price || '?', labels)}`}; stop ${stopPhrase(e.stop, br.side, (t) => phrase(t, labels))}.`);
   }
   const ts = s.trade_settings;
   lines.push(`Take profits: ${ts.legs.map((l) => `${l.name} ${l.rule === 'r' ? `at ${l.r}R` : l.rule === 'fraction' ? `${(l.fraction ?? 0) * 100}% of the way to ${phrase(l.level || '?')}` : `${l.offset_ticks ? `${l.offset_ticks} tick${l.offset_ticks === 1 ? "" : "s"} before ` : 'at '}${phrase(l.level || '?')}`} (${Math.round(l.share * 100)}%)`).join('; ')}.`);
@@ -472,7 +472,7 @@ export function validate(s: Setup): Issue[] {
       if (st.capture_running) caps.push(st.capture_running.name);
     });
     if (!br.steps.length) out.push({ level: 'warning', where, text: 'No steps yet.' });
-    if (!br.entry.stop.token) out.push({ level: 'error', where: `${where}, Entry`, text: 'An Entry needs a stop.' });
+    if ((br.entry.stop.from || 'level') === 'level' && !br.entry.stop.token) out.push({ level: 'error', where: `${where}, Entry`, text: 'An Entry needs a stop.' });
     if (br.entry.order !== 'market' && !br.entry.price) out.push({ level: 'error', where: `${where}, Entry`, text: 'A limit or stop entry needs a price.' });
     const readCap = (t?: string) => { if (!t) return; const p = parseToken(t); if (p.parts[0] === 'capture' && !caps.includes(p.parts[1].split('.')[0])) out.push({ level: 'error', where: `${where}, Entry`, text: `${t} is never captured by this branch.` }); };
     readCap(br.entry.price); readCap(br.entry.stop.token);
@@ -652,4 +652,12 @@ export function tradingWindowText(th: Setup['settings']['trading_hours']) {
   const r = (rs: { start: string; end: string }[]) => rs.map((x) => `${x.start}–${x.end}`).join(', ') || 'all day';
   const ov = Object.entries(th.overrides || {}).map(([d, rs]) => `${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][Number(d)]} ${r(rs)}`);
   return r(th.ranges) + (ov.length ? ` (${ov.join('; ')})` : '');
+}
+
+/** the stop in words, e.g. "2 ticks below the FVG's candle 1 low", "20 ticks below the entry", "$40 a contract below the entry" */
+export function stopPhrase(st: Entry['stop'], side: 'long' | 'short', name: (t: string) => string): string {
+  const dir = side === 'long' ? 'below' : 'above';
+  if (st.from === 'usd') return `$${st.offset} a contract ${dir} the entry`;
+  const dist = `${st.offset} ${st.unit === 'atr' ? `× ${st.atr ? name(st.atr) : 'ATR'}` : st.offset === 1 ? 'tick' : 'ticks'}`;
+  return `${dist} ${dir} ${st.from === 'entry' ? 'the entry' : name(st.token || '?')}`;
 }

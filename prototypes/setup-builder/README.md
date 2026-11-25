@@ -65,6 +65,7 @@ The letters were reordered on 2026-11-23: earlier B was Document and D was Inlin
 
 ## Decided so far (your answers while trying it)
 
+- Stop "Measured from": a level (a low, a pattern edge…; the default), the entry price (N ticks or × ATR from it), or a fixed $ a contract from the entry. Below / above stays set by the branch side (long below, short above), not a free choice.
 - Losing streak (new Trade-settings section, per Setup, a Run may override it): after N losing Trades in a row on one Trading day, across both branches, the Setup stops for the rest of that day; the next Trading day it resumes at a set % of its contracts (never below 1) until its first winning Trade. Off by default. The Run's account-wide daily loss limit (Stand-down) still applies on top.
 - Patterns are configured up front, like indicators, then used by name in steps.
 - In the Wizard, the Setup at a glance and the chart appear only in Review & save.

@@ -988,12 +988,14 @@ function makeSignal(data: Data, setup: Setup, br: Branch, bi: number, i: number,
   const ctx: Ctx = { data, i, caps: c.caps };
   const e = br.entry, long = br.side === 'long';
   const entry0 = e.order === 'market' ? data.m1[i + 1]?.o : (value(ctx, e.price || '') as number);
-  if (typeof entry0 !== 'number' || !e.stop.token) return null;
+  const from = e.stop.from || 'level';
+  if (typeof entry0 !== 'number' || (from === 'level' && !e.stop.token)) return null;
   const entry = e.order === 'market' ? entry0 : roundTick(entry0, long ? 'down' : 'up');
-  const stopBase = value(ctx, e.stop.token);
+  const stopBase = from === 'level' ? value(ctx, e.stop.token) : entry;
   if (typeof stopBase !== 'number') return null;
   let off = e.stop.offset;
-  if (e.stop.unit === 'atr') { const a = value(ctx, e.stop.atr || ''); off = typeof a === 'number' ? off * a : 0; } else off = off * TICK;
+  if (from === 'usd') off = off / POINT_VALUE; // $ a contract → points
+  else if (e.stop.unit === 'atr') { const a = value(ctx, e.stop.atr || ''); off = typeof a === 'number' ? off * a : 0; } else off = off * TICK;
   const stop = roundTick(long ? stopBase - off : stopBase + off, long ? 'down' : 'up');
   const risk = Math.abs(entry - stop);
   const caps = { ...c.caps, entry };

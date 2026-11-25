@@ -2,7 +2,7 @@
 // reads and captures, the Sequence limits on the connectors, and what the branch did on the bars. Hovering a declared
 // indicator or pattern lights up the steps that read it; clicking a step focuses it on the chart.
 import React, { useState } from 'react';
-import { Cond, Setup, Step, captureNames, condPhrase, labelsOf, patternRefs, tokensOf, PATTERN_KINDS, parseToken, patternUsage , tradingWindowText } from '../model';
+import { Cond, Setup, Step, captureNames, condPhrase, labelsOf, patternRefs, tokensOf, PATTERN_KINDS, parseToken, patternUsage , tradingWindowText, stopPhrase } from '../model';
 import { Data, RunResult } from '../engine';
 import { shortName } from './TokenPicker';
 import { PatternIcon, IndicatorIcon, SectionIcon } from './PatternIcon';
@@ -129,7 +129,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
               <Arrow lines={['Signal']} />
               <Node title="Entry" tone={long ? 'long' : 'short'} compact={compact}>
                 <Line k="order" v={br.entry.order === 'market' ? 'market, next bar' : `${br.entry.order} at ${shortName(br.entry.price || '?', labels)}`} />
-                <Line k="stop" icon="stop" v={`${br.entry.stop.offset} ${br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} ${br.side === 'long' ? 'below' : 'above'} ${shortName(br.entry.stop.token || '?', labels)}`} bad={!br.entry.stop.token} />
+                <Line k="stop" icon="stop" v={stopPhrase(br.entry.stop, br.side, (t) => shortName(t || '?', labels))} bad={(br.entry.stop.from || 'level') === 'level' && !br.entry.stop.token} />
               </Node>
               <Arrow lines={['fill']} />
               <Node title="Trade" tone="muted" compact={compact} wide>

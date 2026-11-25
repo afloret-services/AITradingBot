@@ -10,7 +10,7 @@ import { BaseBarEditor, TradingHoursEditor, BehaviourEditor, SessionsEditor, Ind
 import { RuleEditor, appendAnd, StepConfigure } from '../components/RuleEditor';
 import { shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs, Field, usePhone, Sheet } from '../components/ui';
-import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN_KINDS, patternUsage, labelsOf, validate, ruleDescription , tradingWindowText } from '../model';
+import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN_KINDS, patternUsage, labelsOf, validate, ruleDescription , tradingWindowText, stopPhrase } from '../model';
 import { useRunDraft, instrumentWarnings } from '../runDraft';
 import { InstrumentSelect } from '../components/InstrumentSelect';
 
@@ -101,7 +101,7 @@ export function VariantC(p: VariantProps) {
                   <Connector label="" />
                   <LaneCard color="#34d399" selected={sel.kind === 'entry' && sel.bi === bi} onClick={() => setSel({ kind: 'entry', bi })} title={<span className="flex items-start gap-1.5"><span className="mt-0.5 inline-flex aspect-square h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-xs font-black leading-none text-black">→</span><span className="mt-0.5 shrink-0 text-sm font-black tracking-wider text-emerald-300">SIGNAL</span><span className="text-base font-bold leading-snug tracking-tight">Enter the Trade</span></span>} overridable={run} overridden={run && 'stop' in runD.draft.overrides}>
                     <div className="text-xs">{br.entry.order}{br.entry.order !== 'market' && <> at <Chip>{shortName(br.entry.price || '?', labels)}</Chip></>}</div>
-                    <div className="mt-1 text-xs">stop {br.entry.stop.offset} {br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} {br.side === 'long' ? 'below' : 'above'} <Chip>{shortName(br.entry.stop.token || '?', labels)}</Chip></div>
+                    <div className="mt-1 text-xs">stop {(br.entry.stop.from || 'level') === 'level' ? <>{br.entry.stop.offset} {br.entry.stop.unit === 'atr' ? '× ATR' : 'ticks'} {br.side === 'long' ? 'below' : 'above'} <Chip>{shortName(br.entry.stop.token || '?', labels)}</Chip></> : stopPhrase(br.entry.stop, br.side, (t) => shortName(t, labels))}</div>
                     <div className="mt-1.5 border-t pt-1 text-[11px] leading-snug text-muted-foreground">{br.entry.order === 'market' ? 'Fills at the next bar\'s open: always in, at the market\'s price.' : br.entry.order === 'limit' ? 'Fills only if price comes back to it: a better price, but it may never fill.' : 'Fills once price breaks through it: waits for confirmation, at a worse price.'} The entry-to-stop distance is 1R.
                       {(() => { const sg = shown.signals.filter((x) => x.branch === bi && !x.refused).slice(-1)[0]; return sg ? <> Latest Signal: <b className="text-foreground">{Math.abs(sg.entry - sg.stop).toFixed(2)} pts</b> of risk, <b className="text-foreground">{sg.legs.reduce((a, l) => a + l.contracts, 0)}</b> contract(s).</> : null; })()}
                       <span className="text-sky-300/80"> Click for the full description.</span></div>
