@@ -44,10 +44,10 @@ export function VariantC(p: VariantProps) {
       {/* toolbar */}
       <div className="flex flex-wrap items-center gap-3 border-b px-3 py-2 text-xs">
         <Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="h-9 w-64 max-w-full text-lg font-bold tracking-tight" />
-        <button onClick={() => setSel({ kind: 'settings' })} className="rounded border px-2 py-1 hover:bg-accent">Base bar <b>{setup.settings.base_bar}</b> · Trading window <b>{tradingWindowText(setup.settings.trading_hours)}</b> · Trade overlap <b>{(ONE_AT_A_TIME[setup.settings.one_at_a_time]?.[0] || '').replace(/:.*$/, '').replace(/^./, (c) => c.toLowerCase())}</b> · News filter <b>{NEWS[setup.settings.news_rule.mode]?.[0].replace(/^./, (c) => c.toLowerCase())}</b> ✎</button>
+        <button onClick={() => setSel({ kind: 'settings' })} className="min-h-9 rounded-md border border-sky-500/40 bg-sky-500/[0.06] px-3 py-1.5 text-left text-sm hover:bg-accent">Base bar <b>{setup.settings.base_bar}</b> · Trading window <b>{tradingWindowText(setup.settings.trading_hours)}</b> · Trade overlap <b>{(ONE_AT_A_TIME[setup.settings.one_at_a_time]?.[0] || '').replace(/:.*$/, '').replace(/^./, (c) => c.toLowerCase())}</b> · News filter <b>{NEWS[setup.settings.news_rule.mode]?.[0].replace(/^./, (c) => c.toLowerCase())}</b> ✎</button>
         <Tabs value={mode} onChange={(v) => { setMode(v as 'build' | 'run'); if (v === 'run') setSel({ kind: 'trade' }); }} tabs={[['build', 'Build the Setup'], ['run', 'Create a Run']]} />
         {run && <><InstrumentSelect value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} className="h-8" />{instrumentWarnings(setup, runD.draft.instrument).map((w) => <span key={w} className="text-amber-300">{w}</span>)}</>}
-        <button onClick={() => setSel({ kind: 'review' })} className={cn('ml-auto rounded border px-2 py-1 hover:bg-accent', sel.kind === 'review' && 'border-sky-400 bg-sky-500/10')}>Review & save {issues.some((i) => i.level === 'error') ? <span className="text-red-300">· {issues.filter((i) => i.level === 'error').length} errors</span> : issues.length ? <span className="text-amber-300">· {issues.length} warnings</span> : <span className="text-cyan-300">· ready</span>}</button>
+        <button onClick={() => setSel({ kind: 'review' })} className={cn('ml-auto h-9 rounded-md border px-3 text-sm font-medium hover:bg-accent', sel.kind === 'review' && 'border-sky-400 bg-sky-500/10')}>Review & save {issues.some((i) => i.level === 'error') ? <span className="text-red-300">· {issues.filter((i) => i.level === 'error').length} errors</span> : issues.length ? <span className="text-amber-300">· {issues.length} warnings</span> : <span className="text-cyan-300">· ready</span>}</button>
         <div>{p.saveBar}</div>
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_380px]">
@@ -82,7 +82,7 @@ export function VariantC(p: VariantProps) {
           <div className="space-y-4 p-3">
             {setup.branches.map((br, bi) => (
               <div key={br.id}>
-                <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"><Badge tone={br.side === 'long' ? 'go' : 'error'} className="px-2.5 py-1 text-base font-black tracking-wider">{br.side === 'long' ? '▲ ' : '▼ '}{br.side.toUpperCase()}</Badge><span className="text-muted-foreground">when a new setup appears before the last one finished: {({ start_another: 'follow both', replace: 'switch to the new one', ignore: 'stay with the first one' } as Record<string, string>)[br.on_new_start]}</span>
+                <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"><Badge tone={br.side === 'long' ? 'go' : 'error'} className="px-2.5 py-1 text-base font-black tracking-wider">{br.side === 'long' ? '▲ ' : '▼ '}{br.side.toUpperCase()}</Badge><span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">when a new setup appears before the last one finished:<select value={br.on_new_start} disabled={!!run} onClick={(e) => e.stopPropagation()} onChange={(e) => { const v = e.target.value as any; mutate((s) => { s.branches[bi].on_new_start = v; }); }} className="h-9 rounded-md border border-sky-500/50 bg-sky-500/10 px-2 text-base font-medium text-sky-200 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 disabled:opacity-60">{([['start_another', 'follow both'], ['replace', 'switch to the new one'], ['ignore', 'stay with the first one']] as const).map(([v, l]) => <option key={v} value={v} className="bg-card">{l}</option>)}</select></span>
                   {setup.branches.length === 1 && !run && <button type="button" className="sm:ml-auto flex min-h-8 flex-col items-start justify-center py-1 leading-tight rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => mutate((s) => { addMirror(s); })}><span>+ Add a {br.side === 'long' ? 'short' : 'long'} branch</span><span className="text-[10px] font-medium normal-case tracking-normal opacity-80">(mirrored copy of {br.side})</span></button>}</div>
                 {br.mirrored && <div className="mb-1.5"><MirrorNote side={br.side} onHide={() => mutate((s) => { s.branches[bi].mirrored = false; })} /></div>}
                 <div className="flex flex-col items-stretch gap-0 pb-2 sm:flex-row sm:overflow-x-auto">
@@ -219,7 +219,7 @@ const H = ({ children }: { children: React.ReactNode }) => <div className="text-
 /** a section heading inside an inspector panel, one size under its title */
 const H2 = ({ children }: { children: React.ReactNode }) => <div className="text-base font-semibold tracking-tight">{children}</div>;
 const Locked = ({ what }: { what: string }) => <div className="space-y-1"><H>🔒 {what}</H><div className="text-xs text-muted-foreground">Part of the Setup version. A Run cannot change them; switch to "Build the Setup" and Freeze a new version.</div></div>;
-const Chip = ({ children }: { children: React.ReactNode }) => <span className="rounded border border-sky-500/40 bg-sky-500/10 px-1 text-sky-200">{children}</span>;
+const Chip = ({ children }: { children: React.ReactNode }) => <span className="inline-block rounded border border-sky-500/40 bg-sky-500/10 px-1.5 py-0.5 leading-tight text-sky-200">{children}</span>;
 function Lib({ title, children }: { title: string; children: React.ReactNode }) { return <div><div className="mb-1.5 flex flex-wrap items-baseline gap-x-1.5 text-sm font-bold uppercase tracking-wider text-muted-foreground">{title.replace(/ \(.*\)$/, '')}{/\(.*\)$/.test(title) && <span className="text-[11px] font-medium normal-case tracking-normal">{title.match(/\((.*)\)$/)![1]}</span>}</div><div className="grid grid-cols-2 gap-1.5 lg:block lg:space-y-1">{children}</div></div>; }
 function LibItem({ children, onClick, disabled, hint, large }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; hint?: string; large?: boolean }) {
   return <button disabled={disabled} onClick={onClick} className={cn('flex w-full flex-wrap items-center justify-between gap-x-1.5 rounded-md border border-input text-left font-medium hover:border-sky-400/50 hover:bg-accent disabled:opacity-40 lg:flex-nowrap', large ? 'min-h-12 py-1.5 pl-1.5 pr-3 text-base' : 'min-h-9 px-2.5 py-2 text-sm')}><span>{children}</span>{hint && <span className={cn('font-normal text-muted-foreground', large ? 'text-xs' : 'text-[11px]')}>{hint}</span>}</button>;
@@ -243,16 +243,16 @@ function Connector({ st, label }: { st?: Step; label?: string }) {
 }
 function MiniCond({ c, labels, depth = 0 }: { c: Cond; labels: Record<string, string>; depth?: number }) {
   if (c.t === 'all' || c.t === 'any') {
-    if (c.origin) return <div className="text-xs"><Badge tone="info">{c.origin.preset}{c.origin.edited ? ' (edited)' : ''}</Badge></div>;
-    return <div className={cn('space-y-0.5', depth > 0 && 'ml-1 border-l-2 pl-1.5', c.t === 'any' ? 'border-amber-500/60' : 'border-cyan-500/60')}>{depth > 0 && <div className="text-[10px] font-semibold text-muted-foreground">{c.t === 'all' ? 'AND' : 'OR'}</div>}{c.items.map((x) => <MiniCond key={x.id} c={x} labels={labels} depth={depth + 1} />)}{!c.items.length && <div className="text-xs italic text-muted-foreground">empty</div>}</div>;
+    if (c.origin) return <div className="text-sm"><Badge tone="info">{c.origin.preset}{c.origin.edited ? ' (edited)' : ''}</Badge></div>;
+    return <div className={cn('space-y-1', depth > 0 && 'ml-1 border-l-2 pl-1.5', c.t === 'any' ? 'border-amber-500/60' : 'border-cyan-500/60')}>{depth > 0 && <div className="text-xs font-bold text-muted-foreground">{c.t === 'all' ? 'AND' : 'OR'}</div>}{c.items.map((x) => <MiniCond key={x.id} c={x} labels={labels} depth={depth + 1} />)}{!c.items.length && <div className="text-sm italic text-muted-foreground">empty</div>}</div>;
   }
-  if (c.t === 'cmp') return <div className="text-xs">{c.origin && <Badge tone="info" className="mr-1">{c.origin.preset}</Badge>}<Chip>{shortName(c.a, labels)}</Chip> {c.op} {c.mult && c.mult !== 1 ? `${c.mult}×` : ''}<Chip>{shortName(c.b || '?', labels)}</Chip></div>;
-  if (c.t === 'pattern') return <div className="text-xs"><Badge tone="info">{c.side === 'long' ? '▲' : '▼'} {c.ref} forms</Badge></div>;
-  if (c.t === 'fvg') return <div className="text-xs"><Badge tone="info">FVG {c.tf} ≥{c.min_gap_ticks}t → {c.capture}</Badge></div>;
-  if (c.t === 'draw') return <div className="text-xs"><Badge tone="info">Draw on liquidity ≥ {c.min_framework_points} pts</Badge></div>;
-  if (c.t === 'time') return <div className="text-xs">🕒 {c.start}–{c.end}</div>;
-  if (c.t === 'for_n') return <div className="text-xs">for ≥ {c.n} bars: <MiniCond c={c.item} labels={labels} depth={depth + 1} /></div>;
-  if (c.t === 'not') return <div className="text-xs">NOT <MiniCond c={c.item} labels={labels} depth={depth + 1} /></div>;
+  if (c.t === 'cmp') return <div className="text-sm">{c.origin && <Badge tone="info" className="mr-1">{c.origin.preset}</Badge>}<Chip>{shortName(c.a, labels)}</Chip> {c.op} {c.mult && c.mult !== 1 ? `${c.mult}×` : ''}<Chip>{shortName(c.b || '?', labels)}</Chip></div>;
+  if (c.t === 'pattern') return <div className="text-sm"><Badge tone="info">{c.side === 'long' ? '▲' : '▼'} {c.ref} forms</Badge></div>;
+  if (c.t === 'fvg') return <div className="text-sm"><Badge tone="info">FVG {c.tf} ≥{c.min_gap_ticks}t → {c.capture}</Badge></div>;
+  if (c.t === 'draw') return <div className="text-sm"><Badge tone="info">Draw on liquidity ≥ {c.min_framework_points} pts</Badge></div>;
+  if (c.t === 'time') return <div className="text-sm">🕒 {c.start}–{c.end}</div>;
+  if (c.t === 'for_n') return <div className="text-sm">for ≥ {c.n} bars: <MiniCond c={c.item} labels={labels} depth={depth + 1} /></div>;
+  if (c.t === 'not') return <div className="text-sm">NOT <MiniCond c={c.item} labels={labels} depth={depth + 1} /></div>;
   return null;
 }
 void AddMenu;
