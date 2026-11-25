@@ -623,7 +623,7 @@ function EntryHelp_({ setup, bi, result, data }: { setup: Setup; bi: number; res
 }
 export function StopEditor({ value, onChange, ctx, side = 'long' }: { value: Setup['branches'][0]['entry']['stop']; onChange: (v: Setup['branches'][0]['entry']['stop']) => void; ctx: TokenCtx; side?: 'long' | 'short' }) {
   return (
-    <Field label={<>Stop <Badge tone={value.token ? 'outline' : 'error'}>required</Badge></>}>
+    <Field label={<span className="flex items-center gap-2"><span className="text-sm font-semibold normal-case tracking-normal text-foreground">Stop</span><Badge tone={value.token ? 'warn' : 'error'} className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">{value.token ? '★ Required' : '★ Required: pick a level'}</Badge></span>}>
       <span className="text-sm">Place the stop</span>
       <NumInput step={0.05} value={value.offset} onChange={(n) => onChange({ ...value, offset: n })} className="w-16" />
       <Select value={value.unit} onChange={(u) => onChange({ ...value, unit: u })} options={[['ticks', 'ticks'], ['atr', '× ATR']]} />
@@ -723,7 +723,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
     );
     case 'entry_deadline': return (
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Badge tone="outline">mandatory</Badge>
+        <Badge tone="warn" className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">★ Required</Badge>
         <Select value={value.entry_deadline.kind} onChange={(kk) => onChange({ ...value, entry_deadline: { kind: kk, value: kk === 'clock' ? '11:00' : kk === 'bars' ? '3' : '' } })} options={[['clock', 'Wait until a set time (NY)'], ['bars', 'Wait N Base bars'], ['end_of_hours', 'Wait until the Trading window closes'], ['end_of_day', 'Wait until the Trading day ends']]} />
         {(value.entry_deadline.kind === 'clock' || value.entry_deadline.kind === 'bars') && <Input value={value.entry_deadline.value} onChange={(e) => onChange({ ...value, entry_deadline: { ...value.entry_deadline, value: e.target.value } })} className="w-16" />}
         <span className="text-xs text-muted-foreground">Cancel if price reaches first:</span>
@@ -733,7 +733,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
     case 'expiry_and_flatten': return (
       <div className="flex flex-wrap items-center gap-2 text-sm">
         Close open Trades at <Input value={value.expiry || ''} placeholder="off" onChange={(e) => onChange({ ...value, expiry: e.target.value || undefined })} className="w-16" /><span className="text-xs text-muted-foreground">(optional)</span>
-        Be flat by <Input value={value.flatten_time} onChange={(e) => onChange({ ...value, flatten_time: e.target.value })} className="w-16" /><Badge tone="outline">required</Badge>
+        Be flat by <Input value={value.flatten_time} onChange={(e) => onChange({ ...value, flatten_time: e.target.value })} className="w-16" /><Badge tone="warn" className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">★ Required</Badge>
       </div>
     );
     case 'signal_guards': return (
