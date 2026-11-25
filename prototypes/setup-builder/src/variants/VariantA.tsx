@@ -43,7 +43,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
   const chartResult = stage === 7 && runD.result ? runD.result : result;
 
   return (
-    <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 p-3 md:grid-cols-[220px_1fr] md:p-4">
+    <div className="ctl-lg mx-auto grid max-w-[1400px] grid-cols-1 gap-4 p-3 md:grid-cols-[220px_1fr] md:p-4">
       <nav className="h-fit md:sticky md:top-16">
         <div className="mb-2 px-2 md:mb-3"><div className="text-lg font-semibold">{setup.name}</div><div className="text-xs text-muted-foreground">Draft · Base bar {setup.settings.base_bar}</div></div>
         <div ref={navRow} className="flex gap-1 overflow-x-auto pb-1 md:block md:space-y-0.5 md:overflow-visible md:pb-0">
