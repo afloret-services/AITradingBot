@@ -284,16 +284,16 @@ function PatternPalette({ onPick, title = 'Configure a pattern' }: { onPick: (k:
     return true;
   };
   const Seg = ({ value, set, opts }: { value: string; set: (v: string) => void; opts: [string, string][] }) => (
-    <div className="inline-flex rounded-md border p-0.5">{opts.map(([v, l]) => <button key={v} onClick={() => set(v)} className={cn('rounded px-2 py-0.5 text-[11px]', value === v ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground')}>{l}</button>)}</div>
+    <div className="inline-flex flex-wrap gap-0.5 rounded-md border p-0.5">{opts.map(([v, l]) => <button key={v} aria-pressed={value === v} onClick={() => set(v)} className={cn('h-8 rounded px-2 text-sm font-medium transition-colors sm:px-3', value === v ? 'bg-sky-500/20 text-sky-200 ring-1 ring-inset ring-sky-500/40' : 'text-muted-foreground hover:bg-accent hover:text-foreground')}>{l}</button>)}</div>
   );
   const groups = [['ict', 'ICT'], ['chart', 'Chart patterns'], ['candle', 'Candlesticks']] as const;
   return (
     <div className="w-full space-y-2 pt-1">
       <div className="text-base font-bold tracking-tight text-foreground">{title}</div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
-        <span className="flex items-center gap-1.5"><span className="text-muted-foreground">Type</span><Seg value={type} set={setType} opts={[['all', 'All'], ['continuation', 'Continuation'], ['reversal', 'Reversal'], ['indeterminate', 'Indeterminate']]} /></span>
-        <span className="flex items-center gap-1.5"><span className="text-muted-foreground">Bias</span><Seg value={bias} set={setBias} opts={[['all', 'All'], ['bullish', 'Bullish'], ['bearish', 'Bearish'], ['neutral', 'Neutral']]} /></span>
-        <span className="flex items-center gap-1.5"><span className="text-muted-foreground">Known as</span><Seg value={pop} set={setPop} opts={[['all', 'All'], ['classical', 'Classical'], ['lesser', 'Lesser-Known']]} /></span>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+        <span className="flex flex-wrap items-center gap-1.5"><span className="text-muted-foreground">Type</span><Seg value={type} set={setType} opts={[['all', 'All'], ['continuation', 'Continuation'], ['reversal', 'Reversal'], ['indeterminate', 'Indeterminate']]} /></span>
+        <span className="flex flex-wrap items-center gap-1.5"><span className="text-muted-foreground">Bias</span><Seg value={bias} set={setBias} opts={[['all', 'All'], ['bullish', 'Bullish'], ['bearish', 'Bearish'], ['neutral', 'Neutral']]} /></span>
+        <span className="flex flex-wrap items-center gap-1.5"><span className="text-muted-foreground">Known as</span><Seg value={pop} set={setPop} opts={[['all', 'All'], ['classical', 'Classical'], ['lesser', 'Lesser-Known']]} /></span>
       </div>
       {groups.map(([g, title]) => {
         const ks = PKINDS.filter((k) => (PATTERN_KINDS[k].group || 'ict') === g && keep(k));
