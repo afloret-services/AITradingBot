@@ -300,12 +300,12 @@ function PatternPalette({ onPick, title = 'Configure a pattern' }: { onPick: (k:
         if (!ks.length) return null;
         return (
           <div key={g}>
-            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
-            <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
+            <div className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</div>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               {ks.map((kind) => (
                 <button key={kind} onClick={() => onPick(kind)} title={PATTERN_KINDS[kind].help}
-                  className="flex items-center gap-2 rounded-md border border-input bg-card/40 py-1 pl-1.5 pr-2.5 text-left text-xs font-medium transition-colors hover:border-sky-400/60 hover:bg-accent">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-[hsl(var(--chart))]"><PatternIcon kind={kind} size={22} /></span>
+                  className="flex min-h-11 items-center gap-2.5 rounded-md border border-input bg-card/40 py-1.5 pl-2 pr-3 text-left text-sm font-medium transition-colors hover:border-sky-400/60 hover:bg-accent">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-[hsl(var(--chart))]"><PatternIcon kind={kind} size={28} /></span>
                   <span className="flex flex-col gap-0.5"><span>{PATTERN_KINDS[kind].title.replace(/ \(.*\)$/, '').replace('Fair value gap', 'FVG')}</span><PatternCatChips kind={kind} /></span>
                 </button>
               ))}
