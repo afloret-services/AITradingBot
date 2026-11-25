@@ -831,8 +831,8 @@ export function InPositionRules({ setup, mutate, ctx, look }: { setup: Setup; mu
     <div className="space-y-2">
       {setup.in_position_rules.map((r, i) => (
         <div key={r.id} className="space-y-1 rounded-md border p-2">
-          <div className="flex flex-wrap items-center gap-1.5 text-sm"><span className="font-medium">If</span><span className="text-muted-foreground">this holds at a bar close</span>
-            <span className="ml-auto flex min-w-0 max-w-full items-center gap-1"><span className="font-medium">then</span>
+          <div className="flex flex-wrap items-center gap-1.5 text-sm"><span className="text-sm font-black tracking-wider text-sky-300">IF</span><span className="text-muted-foreground">this holds at a bar close</span>
+            <span className="ml-auto flex min-w-0 max-w-full items-center gap-1"><span className="text-sm font-black tracking-wider text-sky-300">THEN</span>
               <Select value={r.action} onChange={(a) => mutate((s) => { s.in_position_rules[i].action = a; })} options={[['close_trade', 'Close the whole Trade'], ['close_leg', 'Close TP k now'], ['move_stop', 'Tighten the stop'], ['cancel_entry', 'Cancel the waiting entry']]} className="h-7 min-w-0 flex-1" />
               {r.action === 'close_leg' && <NumInput value={r.leg} onChange={(n) => mutate((s) => { s.in_position_rules[i].leg = n; })} className="h-7 w-12" />}
               <button aria-label="remove this rule" title="remove" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" onClick={() => mutate((s) => { s.in_position_rules.splice(i, 1); })}>×</button></span>
