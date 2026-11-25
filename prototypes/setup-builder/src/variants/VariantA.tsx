@@ -153,11 +153,11 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                   <span className="w-full pl-9 text-xs text-muted-foreground">Once the entry fills, these settings size, protect and close the Trade.</span>
                 </div>
                 {SECTIONS.filter((k) => k !== 'stop').map((k) => (
-                  <div key={k}><div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-base font-bold tracking-tight"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={k} size={18} /></span>{SECTION_NAMES[k]}</div>
+                  <div key={k} className="rounded-lg border bg-card/40 p-3 sm:p-4"><div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-base font-bold tracking-tight"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={k} size={18} /></span>{SECTION_NAMES[k]}</div>
                     <SectionHelp setup={setup} k={k} />
                     <SectionEditor k={k} value={getSection(setup, k)} setup={setup} ctx={ctxOf(0, 99)} onChange={(v) => mutate((s) => { setSection(s, k, v); })} /></div>
                 ))}
-                <div><div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-base font-bold tracking-tight"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={'in_position'} size={18} /></span>While in a Trade <span className="basis-full text-xs font-normal text-muted-foreground sm:basis-auto">(part of the Setup version; a Run cannot override them)</span></div>
+                <div className="rounded-lg border border-dashed bg-card/40 p-3 sm:p-4"><div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-base font-bold tracking-tight"><span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))] align-middle"><SectionIcon k={'in_position'} size={18} /></span>While in a Trade <span className="basis-full text-xs font-normal text-muted-foreground sm:basis-auto">(part of the Setup version; a Run cannot override them)</span></div>
                   <SectionHelp setup={setup} k="in_position" /><InPositionRules setup={setup} mutate={mutate} ctx={ctxOf(0, 99)} look="boxes" /></div>
               </div>
             )}
