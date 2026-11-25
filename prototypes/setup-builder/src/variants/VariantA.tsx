@@ -67,9 +67,9 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
               <div className="space-y-4">
                 <BasicsHelp setup={setup} what="intro" />
                 <div className="grid gap-5 md:grid-cols-2">
-                  <div className="space-y-1.5"><Field label="Name"><Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="w-full sm:w-64" /></Field><BasicsHelp setup={setup} what="name" /></div>
+                  <div className="space-y-1.5"><Field label={<><span className="text-base font-bold tracking-tight text-foreground">Name</span></>}><Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="w-full sm:w-64" /></Field><BasicsHelp setup={setup} what="name" /></div>
                   <div className="space-y-1.5"><BaseBarEditor setup={setup} mutate={mutate} /><BasicsHelp setup={setup} what="base_bar" /></div>
-                  <div className="space-y-1.5"><Field label="Notes"><textarea value={setup.notes} onChange={(e) => mutate((s) => { s.notes = e.target.value; })} className="h-16 w-full rounded-md border border-input bg-transparent p-2 text-sm" /></Field><BasicsHelp setup={setup} what="notes" /></div>
+                  <div className="space-y-1.5"><Field label={<><span className="text-base font-bold tracking-tight text-foreground">Notes</span></>}><textarea value={setup.notes} onChange={(e) => mutate((s) => { s.notes = e.target.value; })} className="h-16 w-full rounded-md border border-input bg-transparent p-2 text-sm" /></Field><BasicsHelp setup={setup} what="notes" /></div>
                 </div>
               </div>
             )}

@@ -16,7 +16,7 @@ export type Mutate = (fn: (s: Setup) => void) => void;
 // ---------- Setup settings ----------
 export function BaseBarEditor({ setup, mutate }: { setup: Setup; mutate: Mutate }) {
   return (
-    <Field label="Base bar" hint="The evaluator runs once per Base-bar close. Tokens finer than it are refused.">
+    <Field label={<><span className="text-base font-bold tracking-tight text-foreground">Base bar</span></>} hint="The evaluator runs once per Base-bar close. Tokens finer than it are refused.">
       <Select value={setup.settings.base_bar} onChange={(v: TF) => mutate((s) => { s.settings.base_bar = v; })} options={TFS.filter((t) => t !== '1d')} />
     </Field>
   );
@@ -48,7 +48,7 @@ export function TradingHoursEditor({ setup, mutate }: { setup: Setup; mutate: Mu
   const allWeek = th.weekdays.length === 7 && th.ranges.length === 0 && ovDays.length === 0;
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2"><Label>Trading window (NY, checked on the Signal's bar)</Label>
+      <div className="flex items-center gap-2"><Label><span className="text-base font-bold tracking-tight text-foreground">Trading window</span> <span className="font-normal text-muted-foreground">(NY, checked on the Signal's bar)</span></Label>
         <button aria-pressed={allWeek} onClick={() => mutate((s) => { s.settings.trading_hours = { ranges: [], weekdays: [0, 1, 2, 3, 4, 5, 6] }; })} className={cn('ml-auto h-7 rounded-full border px-2.5 text-xs font-medium transition-colors', allWeek ? 'border-sky-400/50 bg-sky-500/20 text-sky-100' : 'border-input text-muted-foreground hover:bg-accent')} title="every day, all day: crypto and other markets that never close">24/7</button></div>
       <div className="flex flex-wrap items-center gap-1 text-xs"><span className="w-full text-muted-foreground sm:w-16">Days</span>
         <span className="flex flex-wrap gap-1">{WD.map((d, k) => <button key={d} aria-pressed={th.weekdays.includes(k)} onClick={() => mutate((s) => { const w = s.settings.trading_hours.weekdays; s.settings.trading_hours.weekdays = w.includes(k) ? w.filter((x) => x !== k) : [...w, k].sort(); if (w.includes(k) && s.settings.trading_hours.overrides) delete s.settings.trading_hours.overrides[String(k)]; })} className={cn('h-8 min-w-[2.5rem] rounded-md border px-1.5 text-xs font-medium transition-colors sm:min-w-[2.75rem] sm:px-2', th.weekdays.includes(k) ? (String(k) in ov ? 'border-amber-400/60 bg-amber-500/15 text-amber-100' : 'border-sky-400/50 bg-sky-500/20 text-sky-100') : 'border-input text-muted-foreground hover:bg-accent')} title={String(k) in ov ? 'has its own hours' : undefined}>{d}</button>)}</span>
@@ -76,7 +76,7 @@ export function TradingHoursEditor({ setup, mutate }: { setup: Setup; mutate: Mu
 export function SessionsEditor({ setup, mutate }: { setup: Setup; mutate: Mutate }) {
   return (
     <div className="space-y-1">
-      <Label>Market sessions (copied into the Setup, editable)</Label>
+      <Label><span className="text-base font-bold tracking-tight text-foreground">Market sessions</span> <span className="font-normal text-muted-foreground">(copied into the Setup, editable)</span></Label>
       <div className="space-y-1.5">
         {Object.entries(setup.settings.sessions).map(([n, r]) => (
           <div key={n} className="flex items-center gap-1 text-xs"><span className="w-16 capitalize text-muted-foreground">{n.replace('_', ' ')}</span>
@@ -107,7 +107,7 @@ export function BehaviourEditor({ setup, mutate, stacked }: { setup: Setup; muta
   return (
     <div className={cn('grid gap-5', !stacked && 'md:grid-cols-2')}>
       <div>
-        <Field label="Trade overlap" hint="What happens to new setups while a Trade of this Setup is live.">
+        <Field label={<><span className="text-base font-bold tracking-tight text-foreground">Trade overlap</span></>} hint="What happens to new setups while a Trade of this Setup is live.">
           <Select value={oat} onChange={(v) => mutate((s) => { s.settings.one_at_a_time = v as any; })} options={Object.entries(ONE_AT_A_TIME).map(([k, [l]]) => [k, l] as [string, string])} />
         </Field>
         {desc(...ONE_AT_A_TIME[oat], undefined, 'when:oat')}
@@ -116,7 +116,7 @@ export function BehaviourEditor({ setup, mutate, stacked }: { setup: Setup; muta
         </details>
       </div>
       <div>
-        <Field label="News filter" hint="Which Signals an Economic release suppresses on a News day.">
+        <Field label={<><span className="text-base font-bold tracking-tight text-foreground">News filter</span></>} hint="Which Signals an Economic release suppresses on a News day.">
           <Select value={n.mode} onChange={(v) => mutate((s) => { s.settings.news_rule.mode = v as any; if (v === 'span') { s.settings.news_rule.before ??= 30; s.settings.news_rule.after ??= 30; } })} options={Object.entries(NEWS).map(([k, [l]]) => [k, l] as [string, string])} />
           {n.mode === 'span' && <span className="flex basis-full flex-wrap items-center gap-1.5 text-xs">from<NumInput value={n.before} onChange={(x) => mutate((s) => { s.settings.news_rule.before = x; })} className="w-14" />min before to<NumInput value={n.after} onChange={(x) => mutate((s) => { s.settings.news_rule.after = x; })} className="w-14" />min after</span>}
         </Field>
