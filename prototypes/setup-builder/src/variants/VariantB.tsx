@@ -58,7 +58,7 @@ export function VariantB(p: VariantProps) {
             {' '}Around news:{' '}
             <InlineSelect value={setup.settings.news_rule.mode} onChange={(v) => mutate((s) => { s.settings.news_rule.mode = v; if (v === 'span') { s.settings.news_rule.before ??= 30; s.settings.news_rule.after ??= 30; } })} options={[['off', 'trade through the news'], ['whole_day', 'skip the whole News day'], ['span', `skip ${setup.settings.news_rule.before ?? 30} min before a release`]]} />.
           </p>
-          <p className="text-xs text-muted-foreground">Market sessions used by levels: {Object.entries(setup.settings.sessions).map(([n, r]) => `${n.replace('_', ' ')} ${r.start}–${r.end}`).join(' · ')} (copied into the Setup).</p>
+          <div className="pt-1"><SessionsEditor setup={setup} mutate={mutate} /></div>
           <Explain>
             <BasicsHelp setup={setup} what="intro" />
             <BasicsHelp setup={setup} what="name" />
@@ -67,7 +67,6 @@ export function VariantB(p: VariantProps) {
             <WhenHelp setup={setup} what="intro" />
             <WhenHelp setup={setup} what="hours" />
             <BehaviourHelp setup={setup} />
-            <SessionsEditor setup={setup} mutate={mutate} />
             <WhenHelp setup={setup} what="sessions" />
           </Explain>
         </header>
