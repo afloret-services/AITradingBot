@@ -195,7 +195,7 @@ export function IndicatorList({ setup, mutate, ctx, usage }: { setup: Setup; mut
           {indHelp(ind.token) && <Hideable id="indicators:each" className="mt-1 pl-1 text-[11px] text-muted-foreground sm:-mt-0.5 sm:mb-1">{indHelp(ind.token)}</Hideable>}
         </div>
       ))}
-      <button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => mutate((s) => { s.indicators.push({ token: `{{indicator:ema:200:${s.settings.base_bar}}}` }); })}><span aria-hidden="true" className="text-sm leading-none">+</span>Configure an indicator</button>
+      <button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => mutate((s) => { s.indicators.push({ token: `{{indicator:ema:200:${s.settings.base_bar}}}` }); })}><span aria-hidden="true" className="text-sm leading-none">+</span>{setup.indicators.length ? 'Configure another indicator' : 'Configure an indicator'}</button>
     </div>
   );
 }
@@ -248,7 +248,7 @@ export function PatternList({ setup, mutate, compact, data, only }: { setup: Set
         );
       })}
       <div className="flex flex-wrap items-center gap-1">
-        {!only && <PatternPalette onPick={(kind) => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })} />}
+        {!only && <PatternPalette onPick={(kind) => mutate((s) => { s.patterns = s.patterns || []; s.patterns.push(newPattern(kind, s.settings.base_bar, s.patterns.map((q) => q.name))); })} title={pats.length ? 'Configure another pattern' : 'Configure a pattern'} />}
       </div>
     </div>
   );
@@ -270,8 +270,8 @@ export function PatternCatChips({ kind, full }: { kind: PatternKind; full?: bool
     </span>
   );
 }
-/** the "+ configure" palette, with the cheat sheet's filters: Type, Bias, Classical / Lesser-Known */
-function PatternPalette({ onPick }: { onPick: (k: PatternKind) => void }) {
+/** the "Configure a pattern" palette, with the cheat sheet's filters: Type, Bias, Classical / Lesser-Known */
+function PatternPalette({ onPick, title = 'Configure a pattern' }: { onPick: (k: PatternKind) => void; title?: string }) {
   const [type, setType] = React.useState<string>('all');
   const [bias, setBias] = React.useState<string>('all');
   const [pop, setPop] = React.useState<string>('all');
@@ -289,11 +289,11 @@ function PatternPalette({ onPick }: { onPick: (k: PatternKind) => void }) {
   const groups = [['ict', 'ICT'], ['chart', 'Chart patterns'], ['candle', 'Candlesticks']] as const;
   return (
     <div className="w-full space-y-2 pt-1">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">+ configure</span>
-        <Seg value={type} set={setType} opts={[['all', 'All'], ['continuation', 'Continuation'], ['reversal', 'Reversal'], ['indeterminate', 'Indeterminate']]} />
-        <Seg value={bias} set={setBias} opts={[['all', 'All'], ['bullish', 'Bullish'], ['bearish', 'Bearish'], ['neutral', 'Neutral']]} />
-        <Seg value={pop} set={setPop} opts={[['all', 'All'], ['classical', 'Classical'], ['lesser', 'Lesser-Known']]} />
+      <div className="text-base font-bold tracking-tight text-foreground">{title}</div>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+        <span className="flex items-center gap-1.5"><span className="text-muted-foreground">Type</span><Seg value={type} set={setType} opts={[['all', 'All'], ['continuation', 'Continuation'], ['reversal', 'Reversal'], ['indeterminate', 'Indeterminate']]} /></span>
+        <span className="flex items-center gap-1.5"><span className="text-muted-foreground">Bias</span><Seg value={bias} set={setBias} opts={[['all', 'All'], ['bullish', 'Bullish'], ['bearish', 'Bearish'], ['neutral', 'Neutral']]} /></span>
+        <span className="flex items-center gap-1.5"><span className="text-muted-foreground">Known as</span><Seg value={pop} set={setPop} opts={[['all', 'All'], ['classical', 'Classical'], ['lesser', 'Lesser-Known']]} /></span>
       </div>
       {groups.map(([g, title]) => {
         const ks = PKINDS.filter((k) => (PATTERN_KINDS[k].group || 'ict') === g && keep(k));
