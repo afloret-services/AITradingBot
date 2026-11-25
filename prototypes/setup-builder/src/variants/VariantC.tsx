@@ -62,7 +62,7 @@ export function VariantC(p: VariantProps) {
           </Lib>
           <Lib title="Patterns (configured once)">
             {(setup.patterns || []).map((pt) => (
-              <LibItem key={pt.name} onClick={() => insert({ id: uid(), t: 'pattern', ref: pt.name, side: side() })} disabled={sel.kind !== 'step'} hint={`${pt.tf} · used ${patternUsage(setup)[pt.name] || 0}×`}><span className="inline-flex items-center gap-1.5"><PatternIcon kind={pt.kind} size={16} />{pt.name}: {PATTERN_KINDS[pt.kind].title.replace(/ \(.*\)$/, '')}</span></LibItem>
+              <LibItem key={pt.name} onClick={() => insert({ id: uid(), t: 'pattern', ref: pt.name, side: side() })} disabled={sel.kind !== 'step'} large><span className="flex items-center gap-2.5"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-[hsl(var(--chart))]"><PatternIcon kind={pt.kind} size={26} /></span><span className="flex flex-col leading-tight">{pt.name}: {PATTERN_KINDS[pt.kind].title.replace(/ \(.*\)$/, '')}<span className="text-xs font-normal text-muted-foreground">{pt.tf} · used {patternUsage(setup)[pt.name] || 0}×</span></span></span></LibItem>
             ))}
             <button className="col-span-2 py-1 text-left text-xs text-sky-300" onClick={() => setSel({ kind: 'settings' })}>manage / configure…</button>
           </Lib>
