@@ -165,16 +165,16 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
               <div className="space-y-5">
               <ReviewHelp setup={setup} what="intro" />
               <div>
-                <div className="mb-2 space-y-1.5"><div className="text-sm font-semibold">Setup at a glance</div><ReviewHelp setup={setup} what="map" /></div>
+                <div className="mb-2 space-y-1.5"><div className="text-base font-bold tracking-tight text-foreground">Setup at a glance</div><ReviewHelp setup={setup} what="map" /></div>
                 <SetupMap setup={setup} result={result} data={data} focus={p.focus} onStep={(f) => { setStage(3); setBi(f.bi); setOpen(f.si); p.setFocus(f); }} onDeclared={() => setStage(1)} />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <div><div className="mb-1 text-sm font-medium">Rule description (generated, stored at Freeze)</div><div className="mb-2"><ReviewHelp setup={setup} what="rule" /></div><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{ruleDescription(setup)}</pre></div>
-                <div className="space-y-2"><div className="text-sm font-medium">Checks</div>
+                <div><div className="mb-1 text-base font-bold tracking-tight text-foreground">Rule description (generated, stored at Freeze)</div><div className="mb-2"><ReviewHelp setup={setup} what="rule" /></div><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{ruleDescription(setup)}</pre></div>
+                <div className="space-y-2"><div className="text-base font-bold tracking-tight text-foreground">Checks</div>
                   <ReviewHelp setup={setup} what="checks" issues={issues} />
                   {issues.length === 0 && <Badge tone="go">Ready to freeze</Badge>}
                   {issues.map((i, k) => <div key={k} className={cn('text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.level === 'error' ? '✕' : '!'} {i.where}: {i.text}</div>)}
-                  <div className="pt-2 text-sm font-medium">Save</div>
+                  <div className="pt-2 text-base font-bold tracking-tight text-foreground">Save</div>
                   <ReviewHelp setup={setup} what="save" />
                   {p.saveBar}
                 </div>
@@ -186,7 +186,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
         </Card>
         {stage === 6 && (
           <Card className="p-4">
-            <div className="mb-2 text-sm font-semibold">What it did on MNQ</div>
+            <div className="mb-2 text-base font-bold tracking-tight text-foreground">What it did on MNQ</div>
             <div className="mb-3"><ReviewHelp setup={setup} what="chart" result={chartResult} /></div>
             <div className="mb-3 flex items-center justify-between"><RunSummary result={chartResult} data={data} /></div>
             <Chart data={data} setup={setup} result={chartResult} day={p.day} setDay={p.setDay} focus={p.focus} selected={p.selected} setSelected={p.setSelected} />
