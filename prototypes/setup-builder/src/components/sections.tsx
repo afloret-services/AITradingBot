@@ -77,14 +77,14 @@ export function SessionsEditor({ setup, mutate }: { setup: Setup; mutate: Mutate
   return (
     <div className="space-y-1">
       <Label><span className="text-base font-bold tracking-tight text-foreground">Market sessions</span> <span className="font-normal text-muted-foreground">(copied into the Setup, editable)</span></Label>
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {Object.entries(setup.settings.sessions).map(([n, r]) => (
-          <div key={n} className="flex items-center gap-1 text-xs"><span className="w-16 capitalize text-muted-foreground">{n.replace('_', ' ')}</span>
-            <Input value={r.start} onChange={(e) => mutate((s) => { s.settings.sessions[n].start = e.target.value; })} className="h-7 w-14" />–
-            <Input value={r.end} onChange={(e) => mutate((s) => { s.settings.sessions[n].end = e.target.value; })} className="h-7 w-14" /></div>
+          <div key={n} className="flex items-center gap-2 text-sm"><span className="w-24 font-medium capitalize text-foreground">{n.replace('_', ' ')}</span>
+            <Input value={r.start} onChange={(e) => mutate((s) => { s.settings.sessions[n].start = e.target.value; })} className="mono h-9 w-20 text-sm" /><span className="text-muted-foreground">–</span>
+            <Input value={r.end} onChange={(e) => mutate((s) => { s.settings.sessions[n].end = e.target.value; })} className="mono h-9 w-20 text-sm" /></div>
         ))}
       </div>
-      <div className="text-[11px] text-muted-foreground">Session levels (Asia high, …) read these times.</div>
+      <div className="text-xs text-muted-foreground">Session levels (Asia high, …) read these times.</div>
     </div>
   );
 }
