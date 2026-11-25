@@ -835,7 +835,7 @@ export function InPositionRules({ setup, mutate, ctx, look }: { setup: Setup; mu
             <span className="ml-auto flex w-full min-w-0 items-center gap-1 sm:w-auto"><span className="text-sm font-black tracking-wider text-sky-300">THEN</span>
               <Select value={r.action} onChange={(a) => mutate((s) => { s.in_position_rules[i].action = a; })} options={[['close_trade', 'Close the whole Trade'], ['close_leg', 'Close TP k now'], ['move_stop', 'Tighten the stop'], ['cancel_entry', 'Cancel the waiting entry']]} className="h-7 min-w-0 flex-1" />
               {r.action === 'close_leg' && <NumInput value={r.leg} onChange={(n) => mutate((s) => { s.in_position_rules[i].leg = n; })} className="h-7 !w-14 shrink-0" />}
-              <button aria-label="remove this rule" title="remove" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" onClick={() => mutate((s) => { s.in_position_rules.splice(i, 1); })}>×</button></span>
+              <button aria-label="remove this rule" title="remove" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-input text-xl leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" onClick={() => mutate((s) => { s.in_position_rules.splice(i, 1); })}>×</button></span>
           </div>
           <CondEditor cond={r.when} ctx={{ ...ctx, inPosition: true }} side="long" look={look} onChange={(c) => mutate((s) => { s.in_position_rules[i].when = c; })} />
         </div>

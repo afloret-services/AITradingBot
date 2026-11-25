@@ -87,7 +87,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, 
                 <div className={cn('flex flex-wrap items-center gap-2 border-b px-2 py-1 text-[11px]', all ? 'border-cyan-500/25' : 'border-amber-500/25')}>
                   <button onClick={() => setLine(i, { ...(c as any), t: all ? 'any' : 'all' })} title="switch between ALL OF and ANY OF" className={cn('h-8 rounded-md border px-3 text-sm font-black uppercase tracking-wider', all ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300' : 'border-amber-500/50 bg-amber-500/15 text-amber-300')}>{all ? 'All of' : 'Any of'} ⇄</button>
                   <span className="text-muted-foreground">{all ? 'every condition below must hold' : 'at least one condition below must hold'}</span>
-                  <button title="remove this group" aria-label="remove this group" onClick={() => remove(i)} className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button>
+                  <button title="remove this group" aria-label="remove this group" onClick={() => remove(i)} className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-input text-xl leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button>
                 </div>
                 <div className="p-2"><RuleEditor cond={c} onChange={(x) => setLine(i, x)} ctx={ctx} side={side} nested group={gt} /></div>
               </div>); })()
@@ -97,7 +97,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, 
           <button aria-label="move up" title="move up" disabled={i === 0} onClick={() => move(i, -1)} className="flex h-8 w-8 items-center justify-center rounded-md border border-input text-xs text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30">↑</button>
           <button aria-label="move down" title="move down" disabled={i === lines.length - 1} onClick={() => move(i, 1)} className="flex h-8 w-8 items-center justify-center rounded-md border border-input text-xs text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30">↓</button>
           <AddMenu ctx={ctx} side={side} onAdd={(x) => insert(i, x)} label="+ Insert" title="insert a condition above this one" buttonClass="flex h-8 items-center rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" />
-          {!isPlainGroup(c) && <button title="remove this condition" aria-label="remove this condition" onClick={() => remove(i)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button>}
+          {!isPlainGroup(c) && <button title="remove this condition" aria-label="remove this condition" onClick={() => remove(i)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-input text-xl leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button>}
         </span>
       </div>
     );
