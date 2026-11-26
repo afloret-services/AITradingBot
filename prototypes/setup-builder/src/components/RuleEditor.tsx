@@ -77,7 +77,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, 
     if (!prev || !sameRule) return;
     for (const id of ids) if (!prev.has(id)) {
       const el = boxRef.current?.querySelector(`[data-cid="${id}"]`) as HTMLElement | null;
-      el?.animate([{ boxShadow: '0 0 0 2px rgba(149,213,178,1), 0 0 14px 2px rgba(149,213,178,0.45)', backgroundColor: 'rgba(149,213,178,0.2)' }, { boxShadow: '0 0 0 2px rgba(149,213,178,1), 0 0 14px 2px rgba(149,213,178,0.45)', backgroundColor: 'rgba(149,213,178,0.2)', offset: 0.4 }, { boxShadow: '0 0 0 2px rgba(149,213,178,0), 0 0 14px 2px rgba(149,213,178,0)', backgroundColor: 'rgba(149,213,178,0)' }], { duration: 4500, easing: 'ease-out' });
+      el?.animate([{ boxShadow: '0 0 0 2px rgba(183,228,199,1), 0 0 20px 4px rgba(149,213,178,0.65)', backgroundColor: 'rgba(149,213,178,0.28)' }, { boxShadow: '0 0 0 2px rgba(183,228,199,1), 0 0 20px 4px rgba(149,213,178,0.65)', backgroundColor: 'rgba(149,213,178,0.28)', offset: 0.4 }, { boxShadow: '0 0 0 2px rgba(183,228,199,0), 0 0 20px 4px rgba(149,213,178,0)', backgroundColor: 'rgba(149,213,178,0)' }], { duration: 4500, easing: 'ease-out' });
     }
   });
 
