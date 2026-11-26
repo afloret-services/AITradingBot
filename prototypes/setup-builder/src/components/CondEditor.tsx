@@ -92,9 +92,9 @@ export function CondEditor({ cond, onChange, onRemove, ctx, side, look, depth = 
   if (cond.t === 'not' || cond.t === 'for_n') {
     return (
       <div className={cn('rounded-md', look === 'boxes' && 'border p-2')}>
-        <div className="flex items-center gap-1 text-xs">
-          <span className="rounded bg-violet-500/15 px-1.5 py-0.5 font-semibold uppercase text-violet-300">{cond.t === 'not' ? 'Not' : 'For at least'}</span>
-          {cond.t === 'for_n' && <><NumInput value={cond.n} onChange={(n) => onChange(markEdited({ ...cond, n }))} className="h-6 w-12" /><span className="text-muted-foreground">{ctx.baseBar} bars in a row</span></>}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+          <span className="flex h-8 shrink-0 items-center whitespace-nowrap rounded-md border border-violet-500/50 bg-violet-500/15 px-3 text-sm font-black uppercase tracking-wider text-violet-300">{cond.t === 'not' ? 'Not' : 'For at least'}</span>
+          {cond.t === 'for_n' && <><NumInput value={cond.n} onChange={(n) => onChange(markEdited({ ...cond, n }))} className="h-8 !w-16 shrink-0" /><span className="whitespace-nowrap text-muted-foreground">{ctx.baseBar} bars in a row</span></>}
           {rm}
         </div>
         <div className="ml-3 mt-1"><CondEditor cond={cond.item} ctx={ctx} side={side} look={look} depth={depth + 1} onChange={(c) => onChange(markEdited({ ...cond, item: c }))} /></div>

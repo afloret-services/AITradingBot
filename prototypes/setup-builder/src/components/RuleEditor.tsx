@@ -70,8 +70,8 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, 
   const lineView = (l: Line, i: number) => {
     const c = l.cond;
     const lead = group ? <span className={cn('w-7 shrink-0 pt-1.5 text-[10px] font-bold uppercase tracking-wide', group === 'all' ? 'text-cyan-300/70' : 'text-amber-300/70')}>{i === 0 ? '' : group === 'all' ? 'and' : 'or'}</span>
-      : i === 0 ? (keyword ? <span className="flex h-8 w-[4.5rem] shrink-0 items-center text-base font-black tracking-wider text-sky-300">{keyword}</span> : <span className="w-[4.5rem] shrink-0" />)
-      : <span className="w-[4.5rem] shrink-0 pt-0.5">{l.join === 'and' ? <JoinSelect value="and" onChange={(j) => setJoin(i, j)} /> : null}</span>;
+      : i === 0 ? (keyword ? <span className="flex h-8 basis-full shrink-0 items-center text-base font-black tracking-wider text-sky-300 [@container(min-width:38rem)]:w-[4.5rem] [@container(min-width:38rem)]:basis-auto">{keyword}</span> : <span className="hidden w-[4.5rem] shrink-0 [@container(min-width:38rem)]:block" />)
+      : <span className={cn('shrink-0 pt-0.5 [@container(min-width:38rem)]:block [@container(min-width:38rem)]:w-[4.5rem] [@container(min-width:38rem)]:basis-auto', l.join === 'and' ? 'basis-full' : 'hidden')}>{l.join === 'and' ? <JoinSelect value="and" onChange={(j) => setJoin(i, j)} /> : null}</span>;
     return (
       <div key={c.id} className={cn('group/line flex flex-wrap items-start gap-2 rounded-md [@container(min-width:38rem)]:flex-nowrap', drag === i && 'opacity-40', over === i && drag != null && drag !== i && 'ring-1 ring-sky-400/60')}
         onDragOver={(e) => { if (drag != null) { e.preventDefault(); setOver(i); } }} onDragLeave={() => setOver((o) => (o === i ? null : o))}
@@ -80,7 +80,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, 
         <span className="flex shrink-0 flex-col items-center gap-0.5 pt-0.5">
           <span draggable onDragStart={(e) => { setDrag(i); e.dataTransfer.effectAllowed = 'move'; }} onDragEnd={() => { setDrag(null); setOver(null); }} title="drag to reorder" className="flex h-7 w-5 cursor-grab items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground active:cursor-grabbing">⠿</span>
         </span>
-        <div className="min-w-0 flex-1 basis-[calc(100%-7.5rem)] [@container(min-width:38rem)]:basis-0">
+        <div className="min-w-0 flex-1 basis-[calc(100%-2.5rem)] [@container(min-width:38rem)]:basis-0">
           {isPlainGroup(c)
             ? (() => { const gt = (c as any).t as 'all' | 'any'; const all = gt === 'all'; return (
               <div className={cn('rounded-md border', all ? 'border-cyan-500/40 bg-cyan-500/[0.04]' : 'border-amber-500/40 bg-amber-500/[0.04]')}>
