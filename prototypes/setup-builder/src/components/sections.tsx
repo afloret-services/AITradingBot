@@ -698,22 +698,24 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
     );
     case 'stop': return <div className="space-y-2">{value.map((st: any, i: number) => <div key={i}><Badge>{setup.branches[i]?.side}</Badge><StopEditor value={st} side={setup.branches[i]?.side} ctx={{ ...ctx, captures: ctxCaps(setup, i, ctx) }} onChange={(v) => onChange(value.map((x: any, j: number) => (j === i ? v : x)))} /></div>)}</div>;
     case 'legs': return (
-      <div className="space-y-1.5">
+      <div className="space-y-3">
+        <div className="divide-y divide-border/70 rounded-md border border-border/60">
         {value.legs.map((l: Leg, i: number) => (
-          <div key={i} className="flex flex-wrap items-center gap-1.5 rounded-md border border-border/60 p-2 text-sm sm:border-0 sm:p-0">
+          <div key={i} className="flex flex-wrap items-center gap-x-1.5 gap-y-2 p-2.5 text-sm">
             <Input value={l.name} onChange={(e) => onChange({ ...value, legs: value.legs.map((x: Leg, j: number) => (j === i ? { ...x, name: e.target.value } : x)) })} className="h-7 w-14" />
             <Select value={l.rule} onChange={(r) => onChange({ ...value, legs: value.legs.map((x: Leg, j: number) => (j === i ? { ...x, rule: r, r: x.r ?? 2, level: x.level ?? '{{draw}}', fraction: x.fraction ?? 0.5 } : x)) })} options={[['r', 'At a multiple of the risk (R)'], ['level', 'Just before a level'], ['fraction', 'Part of the way to a level']]} className="h-7" />
-            {l.rule === 'r' && <><span className="text-xs text-muted-foreground">at</span><NumInput step={0.25} value={l.r} onChange={(n) => onChange({ ...value, legs: value.legs.map((x: Leg, j: number) => (j === i ? { ...x, r: n } : x)) })} className="h-7 w-16" />R</>}
+            {l.rule === 'r' && <span className="flex items-center gap-1.5 whitespace-nowrap"><span className="text-xs text-muted-foreground">at</span><NumInput step={0.25} value={l.r} onChange={(n) => onChange({ ...value, legs: value.legs.map((x: Leg, j: number) => (j === i ? { ...x, r: n } : x)) })} className="h-7 w-16" />R</span>}
             {l.rule === 'fraction' && <><NumInput step={5} value={l.fraction == null ? undefined : Math.round(l.fraction * 1000) / 10} onChange={(n) => onChange({ ...value, legs: value.legs.map((x: Leg, j: number) => (j === i ? { ...x, fraction: n / 100 } : x)) })} className="h-7 w-16" />% of the way to</>}
             {l.rule === 'level' && <><NumInput value={l.offset_ticks} onChange={(n) => onChange({ ...value, legs: value.legs.map((x: Leg, j: number) => (j === i ? { ...x, offset_ticks: n } : x)) })} className="h-7 w-14" /> ticks before</>}
             {l.rule !== 'r' && <TokenPicker value={l.level || ''} ctx={ctx} compact onChange={(v) => onChange({ ...value, legs: value.legs.map((x: Leg, j: number) => (j === i ? { ...x, level: v } : x)) })} />}
-            <span className="text-xs text-muted-foreground">close</span>
-            <NumInput step={5} value={Math.round(l.share * 1000) / 10} onChange={(n) => onChange({ ...value, legs: value.legs.map((x: Leg, j: number) => (j === i ? { ...x, share: n / 100 } : x)) })} className="h-7 w-16" /><span className="text-xs text-muted-foreground">% of the contracts</span>
+            <span className="flex items-center gap-1.5 whitespace-nowrap"><span className="text-xs text-muted-foreground">close</span>
+            <NumInput step={5} value={Math.round(l.share * 1000) / 10} onChange={(n) => onChange({ ...value, legs: value.legs.map((x: Leg, j: number) => (j === i ? { ...x, share: n / 100 } : x)) })} className="h-7 w-16" /><span className="text-xs text-muted-foreground">% of the contracts</span></span>
             <button aria-label="remove this take profit" title="remove" className="ml-auto sm:ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" onClick={() => onChange({ ...value, legs: value.legs.filter((_: Leg, j: number) => j !== i) })}>×</button>
           </div>
         ))}
-        <div className="flex items-center gap-2"><button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => onChange({ ...value, legs: [...value.legs, { name: `TP${value.legs.length + 1}`, rule: 'r', r: 3, share: 0 }] })}>+ Take profit</button>
-          <span className="text-xs text-muted-foreground">Extra contracts go to</span><Select value={value.leftover} onChange={(v) => onChange({ ...value, leftover: v })} options={[['first', `${value.legs[0]?.name || 'TP1'} first`], ['last', `${value.legs[value.legs.length - 1]?.name || 'the last TP'} first (the last)`]]} className="h-7" /></div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2"><span className="text-sm text-muted-foreground">Extra contracts go to</span><Select value={value.leftover} onChange={(v) => onChange({ ...value, leftover: v })} options={[['first', `${value.legs[0]?.name || 'TP1'} first`], ['last', `${value.legs[value.legs.length - 1]?.name || 'the last TP'} first (the last)`]]} className="h-7" /></div>
+        <div><button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => onChange({ ...value, legs: [...value.legs, { name: `TP${value.legs.length + 1}`, rule: 'r', r: 3, share: 0 }] })}>+ Take profit</button></div>
       </div>
     );
     case 'break_even': return (
