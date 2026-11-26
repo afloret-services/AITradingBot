@@ -77,7 +77,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, 
     if (!prev || !sameRule) return;
     for (const id of ids) if (!prev.has(id)) {
       const el = boxRef.current?.querySelector(`[data-cid="${id}"]`) as HTMLElement | null;
-      el?.animate([{ boxShadow: '0 0 0 2px rgba(116,198,157,0.9)', backgroundColor: 'rgba(116,198,157,0.12)' }, { boxShadow: '0 0 0 2px rgba(116,198,157,0)', backgroundColor: 'rgba(116,198,157,0)' }], { duration: 1600, easing: 'ease-out' });
+      el?.animate([{ boxShadow: '0 0 0 2px rgba(116,198,157,0.9)', backgroundColor: 'rgba(116,198,157,0.12)' }, { boxShadow: '0 0 0 2px rgba(116,198,157,0.9)', backgroundColor: 'rgba(116,198,157,0.12)', offset: 0.4 }, { boxShadow: '0 0 0 2px rgba(116,198,157,0)', backgroundColor: 'rgba(116,198,157,0)' }], { duration: 3000, easing: 'ease-out' });
     }
   });
 
