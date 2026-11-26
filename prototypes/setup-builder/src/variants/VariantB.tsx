@@ -91,7 +91,7 @@ export function VariantB(p: VariantProps) {
                 </div>
                 <div className="text-[15px]">
                   <StepAddLine render={(addTo, setAddTo) => <>
-                  <RuleEditor cond={st.cond} ctx={ctxFor(bi, k)} side={br.side} addTo={addTo} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
+                  <RuleEditor cond={st.cond} ctx={ctxFor(bi, k)} side={br.side} addTo={addTo} flashNew onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />
                   <PhraseInput buttonsRef={setAddTo} ctx={ctxFor(bi, k)} onAdd={(c, toks) => mutate((s) => { s.branches[bi].steps[k].cond = appendAnd(s.branches[bi].steps[k].cond, c); for (const t of toks) if (!s.indicators.some((i) => i.token === t)) s.indicators.push({ token: t }); })} /></>} />
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">{limitsSentence(st, k === 0, labelsOf(setup))}</div>

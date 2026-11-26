@@ -47,7 +47,7 @@ const JoinSelect = ({ value, onChange }: { value: Join; onChange: (j: Join) => v
   </button>
 );
 
-export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, addTo }: { cond: Cond; onChange: (c: Cond) => void; ctx: TokenCtx; side: 'long' | 'short'; keyword?: string; nested?: boolean; group?: 'all' | 'any'; addTo?: HTMLElement | null }) {
+export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, addTo, flashNew }: { cond: Cond; onChange: (c: Cond) => void; ctx: TokenCtx; side: 'long' | 'short'; keyword?: string; nested?: boolean; group?: 'all' | 'any'; addTo?: HTMLElement | null; /** briefly glow green around a condition line that was just added */ flashNew?: boolean }) {
   // group: the inside of an ALL OF / ANY OF box; every line has the group's join, so no AND/OR dropdowns
   const gj: Join = group === 'any' ? 'or' : 'and';
   const lines: Line[] = group ? (cond as any).items.map((x: Cond) => ({ cond: x, join: gj })) : toLines(cond);
@@ -66,6 +66,18 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, 
   const drop = (to: number) => { if (drag == null || drag === to) return; const conds = lines.map((l) => l.cond); const [c] = conds.splice(drag, 1); conds.splice(to, 0, c); set(lines.map((l, k) => ({ ...l, cond: conds[k] }))); };
   const groups = group ? (lines.length ? [lines.map((line, idx) => ({ line, idx }))] : []) : runs(lines);
   const mixed = groups.length > 1 && groups.some((g) => g.length > 1);
+  // flashNew: compare this render's line ids with the last one's; a new id is a condition just added, so make it glow
+  const boxRef = React.useRef<HTMLDivElement>(null);
+  const seen = React.useRef<Set<string> | null>(null);
+  React.useEffect(() => {
+    if (!flashNew) return;
+    const ids = new Set(lines.map((l) => l.cond.id)); const prev = seen.current; seen.current = ids;
+    if (!prev) return;
+    for (const id of ids) if (!prev.has(id)) {
+      const el = boxRef.current?.querySelector(`[data-cid="${id}"]`) as HTMLElement | null;
+      el?.animate([{ boxShadow: '0 0 0 2px rgba(116,198,157,0.9)', backgroundColor: 'rgba(116,198,157,0.12)' }, { boxShadow: '0 0 0 2px rgba(116,198,157,0)', backgroundColor: 'rgba(116,198,157,0)' }], { duration: 1600, easing: 'ease-out' });
+    }
+  });
 
   const lineView = (l: Line, i: number) => {
     const c = l.cond;
@@ -73,7 +85,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, 
       : i === 0 ? (keyword ? <span className="flex h-8 basis-full shrink-0 items-center text-base font-black tracking-wider text-sky-300 [@container(min-width:38rem)]:w-[5.5rem] [@container(min-width:38rem)]:basis-auto">{keyword}</span> : <span className="hidden w-[5.5rem] shrink-0 [@container(min-width:38rem)]:block" />)
       : <span className={cn('shrink-0 pt-0.5 [@container(min-width:38rem)]:block [@container(min-width:38rem)]:w-[5.5rem] [@container(min-width:38rem)]:basis-auto', l.join === 'and' ? 'basis-full' : 'hidden')}>{l.join === 'and' ? <JoinSelect value="and" onChange={(j) => setJoin(i, j)} /> : null}</span>;
     return (
-      <div key={c.id} className={cn('group/line flex flex-wrap items-start gap-2 rounded-md [@container(min-width:38rem)]:flex-nowrap', drag === i && 'opacity-40', over === i && drag != null && drag !== i && 'ring-1 ring-sky-400/60')}
+      <div key={c.id} data-cid={c.id} className={cn('group/line flex flex-wrap items-start gap-2 rounded-md [@container(min-width:38rem)]:flex-nowrap', drag === i && 'opacity-40', over === i && drag != null && drag !== i && 'ring-1 ring-sky-400/60')}
         onDragOver={(e) => { if (drag != null) { e.preventDefault(); setOver(i); } }} onDragLeave={() => setOver((o) => (o === i ? null : o))}
         onDrop={(e) => { e.preventDefault(); drop(i); setDrag(null); setOver(null); }}>
         {lead}
@@ -89,7 +101,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, 
                   <span className="text-muted-foreground">{all ? 'every condition below must hold' : 'at least one condition below must hold'}</span>
                   <button title="remove this group" aria-label="remove this group" onClick={() => remove(i)} className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-input text-xl leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400">×</button>
                 </div>
-                <div className="p-2"><RuleEditor cond={c} onChange={(x) => setLine(i, x)} ctx={ctx} side={side} nested group={gt} /></div>
+                <div className="p-2"><RuleEditor cond={c} onChange={(x) => setLine(i, x)} ctx={ctx} side={side} nested group={gt} flashNew={flashNew} /></div>
               </div>); })()
             : <CondEditor cond={c} ctx={ctx} side={side} look="boxes" depth={1} onChange={(x) => setLine(i, x)} />}
         </div>
@@ -104,7 +116,7 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, 
   };
 
   return (
-    <div className="space-y-1.5 [container-type:inline-size]">
+    <div ref={boxRef} className="space-y-1.5 [container-type:inline-size]">
       {lines.length === 0 && <div className={cn('flex items-center gap-2', group && 'pl-9')}>{keyword && <span className="w-[5.5rem] text-base font-black tracking-wider text-sky-300">{keyword}</span>}<span className="text-xs italic text-muted-foreground">no condition yet: add one</span></div>}
       {groups.map((g, gi) => (
         <React.Fragment key={g[0].line.cond.id}>
