@@ -117,7 +117,7 @@ export function VariantB(p: VariantProps) {
         ))}
 
         <section className="space-y-3">
-          <h2 className="contents"><div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-slate-400/30 bg-slate-400/5 px-3 py-2"><span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-300 text-sm font-black leading-none text-black">→</span><span className="shrink-0 text-sm font-black tracking-wider text-slate-300">FILLED</span><span className="min-w-0 flex-1 text-base font-bold tracking-tight">Manage the Trade</span><span className="w-full pl-9 text-xs text-muted-foreground">Once the entry fills, these settings size, protect and close the Trade.</span></div></h2>
+          <h2 className="contents"><div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-slate-400/30 bg-slate-400/5 px-3 py-2"><span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-300 text-sm font-black leading-none text-black">→</span><span className="shrink-0 text-sm font-black tracking-wider text-slate-300 sm:w-14">FILLED</span><span className="min-w-0 flex-1 text-base font-bold tracking-tight">Manage the Trade</span><span className="w-full pl-9 text-xs text-muted-foreground">Once the entry fills, these settings size, protect and close the Trade.</span></div></h2>
           {SECTIONS.filter((k) => k !== 'stop').map((k) => (
             <div key={k} className="grid grid-cols-1 items-start gap-1 sm:grid-cols-[150px_1fr] sm:gap-3">
               <div className="flex items-center gap-1.5 pt-1 text-sm font-medium text-muted-foreground"><SectionIcon k={k} size={18} />{SECTION_NAMES[k]}</div>
