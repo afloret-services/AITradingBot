@@ -91,7 +91,7 @@ export function VariantC(p: VariantProps) {
                   {br.steps.map((st, si) => (
                     <React.Fragment key={st.id}>
                       {si > 0 && <Connector st={st} />}
-                      <LaneCard color={STEP_COLORS[si % 6]} selected={sel.kind === 'step' && sel.bi === bi && sel.si === si} locked={run} onClick={() => { setSel({ kind: 'step', bi, si }); p.setFocus({ bi, si }); }}
+                      <LaneCard color={STEP_COLORS[si % 6]} selected={sel.kind === 'step' && sel.bi === bi && sel.si === si} locked={run} onClick={() => { setSel({ kind: 'step', bi, si }); p.setFocus({ bi, si }); showPanel(); }}
                         title={<span className="flex items-start gap-1.5"><span className="mt-0.5 inline-flex aspect-square h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold leading-none text-black" style={{ background: STEP_COLORS[si % 6] }}>{si + 1}</span><span className="mt-0.5 shrink-0 text-sm font-black tracking-wider text-sky-300">{si === 0 ? 'IF' : 'THEN'}</span><span className="text-base font-bold leading-snug tracking-tight">{st.name}</span></span>}
                         foot={<StepStats result={result} bi={bi} si={si} data={data} />}>
                         <MiniCond c={st.cond} labels={labels} />
