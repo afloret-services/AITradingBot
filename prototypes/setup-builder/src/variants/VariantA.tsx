@@ -12,6 +12,7 @@ import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, 
 import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf, patternUsage, stopPhrase } from '../model';
 import { useRunDraft, instrumentWarnings } from '../runDraft';
 import { InstrumentSelect } from '../components/InstrumentSelect';
+import { TrialBacktest } from '../components/TrialBacktest';
 
 const STAGES = ['General', 'Indicators & patterns', 'When to trade', 'Signal steps', 'Entry & stop loss', 'Trade settings', 'Review & save', 'Create a Run'] as const;
 
@@ -179,6 +180,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                   {p.saveBar}
                 </div>
               </div>
+              <div><div className="mb-2 text-base font-bold tracking-tight text-foreground">Trial backtest</div><TrialBacktest setup={setup} data={data} /></div>
               </div>
             )}
             {stage === 7 && <RunStage {...p} runD={runD} />}

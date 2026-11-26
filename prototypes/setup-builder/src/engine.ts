@@ -6,6 +6,7 @@ import { tfMinutes, parseToken, mirrorFieldSide, PATTERN_KINDS } from './model';
 export const TICK = 0.25;
 export const MIN = 60000;
 export const POINT_VALUE = 2; // MNQ $ per point
+let PV = POINT_VALUE; // the $ a point of the run in progress
 
 // ---------- New York time (as in strategy-lab) ----------
 const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -879,7 +880,9 @@ export function baseCloses(data: Data, tf: TF): Int32Array {
 
 function roundTick(x: number, dir: 'up' | 'down') { return dir === 'up' ? Math.ceil(x / TICK - 1e-9) * TICK : Math.floor(x / TICK + 1e-9) * TICK; }
 
-export function run(data: Data, setup: Setup): RunResult {
+/** opts.pointValue: $ a point for sizing (default MNQ's $2); a trial on NQ runs MNQ's bars at $20 a point */
+export function run(data: Data, setup: Setup, opts: { pointValue?: number } = {}): RunResult {
+  PV = opts.pointValue ?? POINT_VALUE;
   const t0 = performance.now();
   const errors: string[] = [];
   const base = baseCloses(data, setup.settings.base_bar);
@@ -994,7 +997,7 @@ function makeSignal(data: Data, setup: Setup, br: Branch, bi: number, i: number,
   const stopBase = from === 'level' ? value(ctx, e.stop.token) : entry;
   if (typeof stopBase !== 'number') return null;
   let off = e.stop.offset;
-  if (from === 'usd') off = off / POINT_VALUE; // $ a contract → points
+  if (from === 'usd') off = off / PV; // $ a contract → points
   else if (e.stop.unit === 'atr') { const a = value(ctx, e.stop.atr || ''); off = typeof a === 'number' ? off * a : 0; } else off = off * TICK;
   const stop = roundTick(long ? stopBase - off : stopBase + off, long ? 'down' : 'up');
   const risk = Math.abs(entry - stop);
@@ -1009,8 +1012,8 @@ function makeSignal(data: Data, setup: Setup, br: Branch, bi: number, i: number,
     if (risk > lim + 1e-9) { sig.refused = `stop loss ${risk.toFixed(2)} pts wider than ${stopGuard.n} ${stopGuard.unit === 'atr' ? '× ATR' : 'ticks'}`; return sig; }
   }
   // contracts from Risk per Trade
-  const contracts = Math.max(0, Math.min(ts.risk.max_contracts, Math.floor((ts.risk.capital * ts.risk.pct) / 100 / (risk * POINT_VALUE))));
-  if (contracts < 1) { sig.refused = `stop loss too wide: 1 contract risks $${(risk * POINT_VALUE).toFixed(0)}, more than Risk per Trade`; return sig; }
+  const contracts = Math.max(0, Math.min(ts.risk.max_contracts, Math.floor((ts.risk.capital * ts.risk.pct) / 100 / (risk * PV))));
+  if (contracts < 1) { sig.refused = `stop loss too wide: 1 contract risks $${(risk * PV).toFixed(0)}, more than Risk per Trade`; return sig; }
   const shares = splitContracts(contracts, ts.legs, ts.leftover);
   sig.legs = ts.legs.map((L, k) => ({ name: L.name, price: legPrice(ctx, L, entry, stop, long), contracts: shares[k] })).filter((l) => l.contracts > 0 && isFinite(l.price));
   const rrGuard = ts.signal_guards.find((g) => g.kind === 'min_rr');
