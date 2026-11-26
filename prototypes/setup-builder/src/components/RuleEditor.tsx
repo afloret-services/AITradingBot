@@ -42,7 +42,7 @@ function runs(lines: Line[]) {
 /** AND / OR as a button: tap to switch */
 const JoinSelect = ({ value, onChange }: { value: Join; onChange: (j: Join) => void }) => (
   <button type="button" onClick={() => onChange(value === 'and' ? 'or' : 'and')} title={value === 'and' ? 'switch to OR' : 'switch to AND'}
-    className={cn('flex h-8 items-center gap-1 rounded-md border px-3 text-xs font-black uppercase tracking-wider transition-colors', value === 'and' ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25' : 'border-amber-500/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25')}>
+    className={cn('flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm font-black uppercase tracking-wider transition-colors', value === 'and' ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25' : 'border-amber-500/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25')}>
     {value === 'and' ? 'And' : 'Or'} <span aria-hidden="true">⇄</span>
   </button>
 );
@@ -70,8 +70,8 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, 
   const lineView = (l: Line, i: number) => {
     const c = l.cond;
     const lead = group ? <span className={cn('w-7 shrink-0 pt-1.5 text-[10px] font-bold uppercase tracking-wide', group === 'all' ? 'text-cyan-300/70' : 'text-amber-300/70')}>{i === 0 ? '' : group === 'all' ? 'and' : 'or'}</span>
-      : i === 0 ? (keyword ? <span className="flex h-8 basis-full shrink-0 items-center text-base font-black tracking-wider text-sky-300 [@container(min-width:38rem)]:w-[4.5rem] [@container(min-width:38rem)]:basis-auto">{keyword}</span> : <span className="hidden w-[4.5rem] shrink-0 [@container(min-width:38rem)]:block" />)
-      : <span className={cn('shrink-0 pt-0.5 [@container(min-width:38rem)]:block [@container(min-width:38rem)]:w-[4.5rem] [@container(min-width:38rem)]:basis-auto', l.join === 'and' ? 'basis-full' : 'hidden')}>{l.join === 'and' ? <JoinSelect value="and" onChange={(j) => setJoin(i, j)} /> : null}</span>;
+      : i === 0 ? (keyword ? <span className="flex h-8 basis-full shrink-0 items-center text-base font-black tracking-wider text-sky-300 [@container(min-width:38rem)]:w-[5.5rem] [@container(min-width:38rem)]:basis-auto">{keyword}</span> : <span className="hidden w-[5.5rem] shrink-0 [@container(min-width:38rem)]:block" />)
+      : <span className={cn('shrink-0 pt-0.5 [@container(min-width:38rem)]:block [@container(min-width:38rem)]:w-[5.5rem] [@container(min-width:38rem)]:basis-auto', l.join === 'and' ? 'basis-full' : 'hidden')}>{l.join === 'and' ? <JoinSelect value="and" onChange={(j) => setJoin(i, j)} /> : null}</span>;
     return (
       <div key={c.id} className={cn('group/line flex flex-wrap items-start gap-2 rounded-md [@container(min-width:38rem)]:flex-nowrap', drag === i && 'opacity-40', over === i && drag != null && drag !== i && 'ring-1 ring-sky-400/60')}
         onDragOver={(e) => { if (drag != null) { e.preventDefault(); setOver(i); } }} onDragLeave={() => setOver((o) => (o === i ? null : o))}
@@ -105,12 +105,12 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, 
 
   return (
     <div className="space-y-1.5 [container-type:inline-size]">
-      {lines.length === 0 && <div className={cn('flex items-center gap-2', group && 'pl-9')}>{keyword && <span className="w-[4.5rem] text-base font-black tracking-wider text-sky-300">{keyword}</span>}<span className="text-xs italic text-muted-foreground">no condition yet: add one</span></div>}
+      {lines.length === 0 && <div className={cn('flex items-center gap-2', group && 'pl-9')}>{keyword && <span className="w-[5.5rem] text-base font-black tracking-wider text-sky-300">{keyword}</span>}<span className="text-xs italic text-muted-foreground">no condition yet: add one</span></div>}
       {groups.map((g, gi) => (
         <React.Fragment key={g[0].line.cond.id}>
           {gi > 0 && (
             <div className="flex items-center gap-2 py-0.5">
-              <span className="w-[4.5rem] shrink-0"><JoinSelect value="or" onChange={(j) => setJoin(g[0].idx, j)} /></span>
+              <span className="w-[5.5rem] shrink-0"><JoinSelect value="or" onChange={(j) => setJoin(g[0].idx, j)} /></span>
               <div className="h-px flex-1 bg-amber-500/25" />
             </div>
           )}
