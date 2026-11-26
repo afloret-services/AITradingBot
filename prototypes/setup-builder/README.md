@@ -16,7 +16,7 @@ npm run dev          # http://127.0.0.1:5176/?variant=A&setup=silver_bullet
 
 Four builders over one shared Setup model, switched with the floating bar at the bottom (or ← →):
 
-- `?variant=A` **Wizard**: a fixed order of eight stages (general → indicators → when to trade → Signal steps → entry & stop → Trade settings → review & save → create a Run), with the overview and the chart only in Review & save (your call on the ticket: the editing stages stay uncluttered). Indicators are configured in their own stage and then picked. Steps are an accordion, and each step reads as a rule: **IF** a **AND** b **OR** c, then **THEN** … for the next step, ending in **→ SIGNAL** (the Entry). Each condition line has its own AND / OR; AND binds tighter than OR, so each run of ANDs is drawn as one box and the boxes are joined by OR. **ALL OF** and **ANY OF** groups (switchable from their header) group explicitly and nest. Underneath it is the same condition tree (an OR of ANDs). Run overrides use one row per section: Setup default / Override radio, then the same editor.
+- `?variant=A` **Wizard**: a fixed order of eight stages (general → indicators → when to trade → Signal steps → entry & stop loss → Trade settings → review & save → create a Run), with the overview and the chart only in Review & save (your call on the ticket: the editing stages stay uncluttered). Indicators are configured in their own stage and then picked. Steps are an accordion, and each step reads as a rule: **IF** a **AND** b **OR** c, then **THEN** … for the next step, ending in **→ SIGNAL** (the Entry). Each condition line has its own AND / OR; AND binds tighter than OR, so each run of ANDs is drawn as one box and the boxes are joined by OR. **ALL OF** and **ANY OF** groups (switchable from their header) group explicitly and nest. Underneath it is the same condition tree (an OR of ANDs). Run overrides use one row per section: Setup default / Override radio, then the same editor.
 - `?variant=B` **Inline**: the Wizard without the Indicators & patterns step. In a step, **+ add** lists every pattern kind: picking one creates it with default settings and uses it there; its **settings** open in place. Any value can be an indicator, set up on the spot. Indicators and patterns no step uses any more are removed automatically. (Underneath, the Setup file still lists them once, so the engine and the hash are unchanged.)
 - `?variant=C` **Lanes**: each branch is a horizontal lane, Step → Step → Entry → Trade, with the Sequence limits written on the connectors. A block library on the left inserts into the selected card and an inspector on the right edits it. Nesting is AND/OR chips. Settings sit in a toolbar. "Create a Run" mode locks the Signal cards and lets you override Trade sections in place.
 - `?variant=D` **Document**: the Setup is edited as its own Rule description, top to bottom, with every token a chip. Indicators are configured the first time a step reads them, and the sidebar lists them with labels and use counts. Nesting is an indented outline. Free text goes through a small phrase grammar ("15m close above EMA 200", "ADX(14) > 20", "MACD crosses above signal", "10:00-11:00"). Anything else gets a stubbed "Claude suggests" box to confirm. Run overrides are a diff table: default ↔ this Run, with Signal and In-position rules locked.
@@ -65,7 +65,8 @@ The letters were reordered on 2026-11-23: earlier B was Document and D was Inlin
 
 ## Decided so far (your answers while trying it)
 
-- Stop "Measured from": a level (a low, a pattern edge…; the default), the entry price (N ticks or × ATR from it), or a fixed $ a contract from the entry. Below / above stays set by the branch side (long below, short above), not a free choice.
+- The protective stop is called **Stop loss** everywhere (the "Entry & stop loss" step, its editor, the summaries, the Rule description, refusal reasons). "Stop entry" keeps its name: it is the order type that fills on a break through a price.
+- Stop loss "Measured from": a level (a low, a pattern edge…; the default), the entry price (N ticks or × ATR from it), or a fixed $ a contract from the entry. Below / above stays set by the branch side (long below, short above), not a free choice.
 - Losing streak (new Trade-settings section, per Setup, a Run may override it): after N losing Trades in a row on one Trading day, across both branches, the Setup stops for the rest of that day; the next Trading day it resumes at a set % of its contracts (never below 1) until its first winning Trade. Off by default. The Run's account-wide daily loss limit (Stand-down) still applies on top.
 - Patterns are configured up front, like indicators, then used by name in steps.
 - In the Wizard, the Setup at a glance and the chart appear only in Review & save.
@@ -75,14 +76,14 @@ The letters were reordered on 2026-11-23: earlier B was Document and D was Inlin
 - "One at a time" is called Trade overlap: Allow overlap / Wait for the Trade to end / Skip Signals during the Trade.
 - "Trading hours" is called Trading window.
 - "Sessions" are called Market sessions.
-- While in a Trade (was In-position rules): "If … at a bar close, then Close the whole Trade / Close TP k now / Tighten the stop / Cancel the waiting entry"; "+ Add a rule".
+- While in a Trade (was In-position rules): "If … at a bar close, then Close the whole Trade / Close TP k now / Tighten the stop loss / Cancel the waiting entry"; "+ Add a rule".
 - Take profits: "At a multiple of the risk (R)" / "Just before a level" / "Part of the way to a level"; "close N % of the contracts"; "Extra contracts go to TP1 first / the last TP".
-- Stop: "Place the stop [N] [ticks | × ATR using ATR] below [level]" ("above" on a short branch), badge "required".
+- Stop loss: "Place the stop loss [N] [ticks | × ATR using ATR] below [level]" ("above" on a short branch), badge "required".
 - Risk per Trade fields: Account size ($) / Risk each Trade (% of account) / At most N contracts.
 - "Expiry and Flatten time" is called Closing time: "Close open Trades at (optional)" and "Be flat by (required)".
-- Signal guards: "Skip if the stop is wider than N ticks / × ATR" and "Skip if the reward is under N × the risk", added with "+ Stop too wide" / "+ Reward too small".
+- Signal guards: "Skip if the stop loss is wider than N ticks / × ATR" and "Skip if the reward is under N × the risk", added with "+ Stop loss too wide" / "+ Reward too small".
 - Break-even options: Never / After TP k fills / Once price is +X R in profit; the offset is "lock in N ticks".
-- Entry deadline options: Wait until a set time (NY) / Wait N Base bars / Wait until the Trading window closes / Wait until the Trading day ends; "Cancel if price reaches first: the stop / TP1 / the Draw".
+- Entry deadline options: Wait until a set time (NY) / Wait N Base bars / Wait until the Trading window closes / Wait until the Trading day ends; "Cancel if price reaches first: the stop loss / TP1 / the Draw".
 - "News rule" is called News filter: Trade through the news / Skip the whole News day / Skip around each release.
 - The Leg pattern is called Swing (an up swing / a down swing, captured as swing.start, swing.end…), and the measured move's legs are its first and second swing (captured as mm.swing).
 - "Take profits" replaces "Take-profit legs": the section is Take profits, each one TP1, TP2… (your call while trying it; the glossary term "Take-profit legs" would change with it).

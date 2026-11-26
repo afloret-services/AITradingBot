@@ -246,7 +246,7 @@ export interface Setup {
   in_position_rules: InPositionRule[];
 }
 export const SECTION_NAMES: Record<string, string> = {
-  risk: 'Risk per Trade', losing_streak: 'Losing streak', stop: 'Stop', legs: 'Take profits', break_even: 'Break-even', entry_deadline: 'Entry deadline', expiry_and_flatten: 'Closing time', signal_guards: 'Signal guards',
+  risk: 'Risk per Trade', losing_streak: 'Losing streak', stop: 'Stop loss', legs: 'Take profits', break_even: 'Break-even', entry_deadline: 'Entry deadline', expiry_and_flatten: 'Closing time', signal_guards: 'Signal guards',
 };
 
 let seq = 1;
@@ -346,7 +346,7 @@ export function ruleDescription(s: Setup): string {
       lines.push(`  ${k === 0 ? 'First' : 'Then'}${lim ? ` (${lim})` : ''}: ${condPhrase(st.cond, labels)}.`);
     });
     const e = br.entry;
-    lines.push(`  Enter ${e.order === 'market' ? "at market at the next bar's open" : `with a ${e.order} at ${phrase(e.price || '?', labels)}`}; stop ${stopPhrase(e.stop, br.side, (t) => phrase(t, labels))}.`);
+    lines.push(`  Enter ${e.order === 'market' ? "at market at the next bar's open" : `with a ${e.order} at ${phrase(e.price || '?', labels)}`}; stop loss ${stopPhrase(e.stop, br.side, (t) => phrase(t, labels))}.`);
   }
   const ts = s.trade_settings;
   lines.push(`Take profits: ${ts.legs.map((l) => `${l.name} ${l.rule === 'r' ? `at ${l.r}R` : l.rule === 'fraction' ? `${(l.fraction ?? 0) * 100}% of the way to ${phrase(l.level || '?')}` : `${l.offset_ticks ? `${l.offset_ticks} tick${l.offset_ticks === 1 ? "" : "s"} before ` : 'at '}${phrase(l.level || '?')}`} (${Math.round(l.share * 100)}%)`).join('; ')}.`);
@@ -472,7 +472,7 @@ export function validate(s: Setup): Issue[] {
       if (st.capture_running) caps.push(st.capture_running.name);
     });
     if (!br.steps.length) out.push({ level: 'warning', where, text: 'No steps yet.' });
-    if ((br.entry.stop.from || 'level') === 'level' && !br.entry.stop.token) out.push({ level: 'error', where: `${where}, Entry`, text: 'An Entry needs a stop.' });
+    if ((br.entry.stop.from || 'level') === 'level' && !br.entry.stop.token) out.push({ level: 'error', where: `${where}, Entry`, text: 'An Entry needs a stop loss.' });
     if (br.entry.order !== 'market' && !br.entry.price) out.push({ level: 'error', where: `${where}, Entry`, text: 'A limit or stop entry needs a price.' });
     const readCap = (t?: string) => { if (!t) return; const p = parseToken(t); if (p.parts[0] === 'capture' && !caps.includes(p.parts[1].split('.')[0])) out.push({ level: 'error', where: `${where}, Entry`, text: `${t} is never captured by this branch.` }); };
     readCap(br.entry.price); readCap(br.entry.stop.token);

@@ -1000,17 +1000,17 @@ function makeSignal(data: Data, setup: Setup, br: Branch, bi: number, i: number,
   const risk = Math.abs(entry - stop);
   const caps = { ...c.caps, entry };
   const sig: Signal = { branch: bi, side: br.side, i, caps, entry, stop, legs: [], stepBars: c.stepBars };
-  if (risk <= 0) { sig.refused = 'stop on the wrong side of the entry'; return sig; }
+  if (risk <= 0) { sig.refused = 'stop loss on the wrong side of the entry'; return sig; }
   const ts = setup.trade_settings;
   const stopGuard = ts.signal_guards.find((g) => g.kind === 'max_stop');
   if (stopGuard) {
     let lim = stopGuard.n * TICK;
     if (stopGuard.unit === 'atr') { const a = value(ctx, stopGuard.atr || ''); lim = typeof a === 'number' ? stopGuard.n * a : Infinity; }
-    if (risk > lim + 1e-9) { sig.refused = `stop ${risk.toFixed(2)} pts wider than ${stopGuard.n} ${stopGuard.unit === 'atr' ? '× ATR' : 'ticks'}`; return sig; }
+    if (risk > lim + 1e-9) { sig.refused = `stop loss ${risk.toFixed(2)} pts wider than ${stopGuard.n} ${stopGuard.unit === 'atr' ? '× ATR' : 'ticks'}`; return sig; }
   }
   // contracts from Risk per Trade
   const contracts = Math.max(0, Math.min(ts.risk.max_contracts, Math.floor((ts.risk.capital * ts.risk.pct) / 100 / (risk * POINT_VALUE))));
-  if (contracts < 1) { sig.refused = `stop too wide: 1 contract risks $${(risk * POINT_VALUE).toFixed(0)}, more than Risk per Trade`; return sig; }
+  if (contracts < 1) { sig.refused = `stop loss too wide: 1 contract risks $${(risk * POINT_VALUE).toFixed(0)}, more than Risk per Trade`; return sig; }
   const shares = splitContracts(contracts, ts.legs, ts.leftover);
   sig.legs = ts.legs.map((L, k) => ({ name: L.name, price: legPrice(ctx, L, entry, stop, long), contracts: shares[k] })).filter((l) => l.contracts > 0 && isFinite(l.price));
   const rrGuard = ts.signal_guards.find((g) => g.kind === 'min_rr');
@@ -1090,7 +1090,7 @@ function simulate(data: Data, setup: Setup, br: Branch, sig: Signal, base: Int32
   for (let k = fill; k < M.length; k++) {
     const b = M[k];
     if (b.di !== day || b.min >= flat && M[fill].min < flat) { open.filter((l) => !l.done).forEach((l) => exitLeg(l, b.o, k, 'Flat by time')); break; }
-    if (long ? b.l <= stop : b.h >= stop) { open.filter((l) => !l.done).forEach((l) => exitLeg(l, stop, k, stop === sig.stop ? 'stop' : 'moved stop')); break; }
+    if (long ? b.l <= stop : b.h >= stop) { open.filter((l) => !l.done).forEach((l) => exitLeg(l, stop, k, stop === sig.stop ? 'stop' : 'moved stop loss')); break; }
     open.forEach((l, li) => {
       if (!l.done && (long ? b.h >= l.price : b.l <= l.price)) {
         exitLeg(l, l.price, k, l.name); legsFilled++;

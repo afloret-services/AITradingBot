@@ -13,7 +13,7 @@ import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase,
 import { useRunDraft, instrumentWarnings } from '../runDraft';
 import { InstrumentSelect } from '../components/InstrumentSelect';
 
-const STAGES = ['General', 'Indicators & patterns', 'When to trade', 'Signal steps', 'Entry & stop', 'Trade settings', 'Review & save', 'Create a Run'] as const;
+const STAGES = ['General', 'Indicators & patterns', 'When to trade', 'Signal steps', 'Entry & stop loss', 'Trade settings', 'Review & save', 'Create a Run'] as const;
 
 export function VariantA(p: VariantProps & { inline?: boolean }) {
   const { setup, mutate, data, result } = p;
@@ -127,8 +127,8 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                         <span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black leading-none text-black">→</span>
                         <span className="shrink-0 text-sm font-black tracking-wider text-emerald-300 sm:w-14">SIGNAL</span>
                         <span className="min-w-0 flex-1 text-base font-bold tracking-tight">Enter the Trade</span>
-                        <span className="w-full pl-9 text-xs text-muted-foreground">When the last step completes · {br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labelsOf(setup))}`}, stop {stopPhrase(br.entry.stop, br.side, (t) => phrase(t, labelsOf(setup)))}</span>
-                        <span className="w-full pl-9"><span className="inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors group-hover/sig:bg-sky-500/20">Edit in Entry &amp; stop →</span></span>
+                        <span className="w-full pl-9 text-xs text-muted-foreground">When the last step completes · {br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labelsOf(setup))}`}, stop loss {stopPhrase(br.entry.stop, br.side, (t) => phrase(t, labelsOf(setup)))}</span>
+                        <span className="w-full pl-9"><span className="inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors group-hover/sig:bg-sky-500/20">Edit in Entry &amp; stop loss →</span></span>
                       </button>
                     </li>
                   )}
@@ -140,10 +140,10 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                 <span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black leading-none text-black">→</span>
                 <span className="shrink-0 text-sm font-black tracking-wider text-emerald-300 sm:w-14">SIGNAL</span>
                 <span className="min-w-0 flex-1 text-base font-bold tracking-tight">Enter the Trade</span>
-                <span className="w-full pl-9 text-xs text-muted-foreground">When the last step completes, the Signal places this order with its stop.</span>
+                <span className="w-full pl-9 text-xs text-muted-foreground">When the last step completes, the Signal places this order with its stop loss.</span>
               </div>
             )}
-            {stage === 4 && setup.branches.map((b, k) => <div key={b.id} className={cn('space-y-3 rounded-lg border p-3', b.side === 'long' ? 'border-cyan-500/40 bg-cyan-500/[0.04]' : 'border-red-500/40 bg-red-500/[0.04]')}><div className="flex items-center gap-2"><Badge tone={b.side === 'long' ? 'go' : 'error'} className="shrink-0 whitespace-nowrap px-2.5 py-1 text-base font-black tracking-wider">{b.side === 'long' ? '▲ LONG' : '▼ SHORT'}</Badge><span className="text-sm text-muted-foreground">{b.side === 'long' ? 'buy: entry, then the stop below it' : 'sell: entry, then the stop above it'}</span></div><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={k} ctx={ctxOf(k, b.steps.length)} /></div>)}
+            {stage === 4 && setup.branches.map((b, k) => <div key={b.id} className={cn('space-y-3 rounded-lg border p-3', b.side === 'long' ? 'border-cyan-500/40 bg-cyan-500/[0.04]' : 'border-red-500/40 bg-red-500/[0.04]')}><div className="flex items-center gap-2"><Badge tone={b.side === 'long' ? 'go' : 'error'} className="shrink-0 whitespace-nowrap px-2.5 py-1 text-base font-black tracking-wider">{b.side === 'long' ? '▲ LONG' : '▼ SHORT'}</Badge><span className="text-sm text-muted-foreground">{b.side === 'long' ? 'buy: entry, then the stop loss below it' : 'sell: entry, then the stop loss above it'}</span></div><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={k} ctx={ctxOf(k, b.steps.length)} /></div>)}
             {stage === 5 && (
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-slate-400/30 bg-slate-400/5 px-3 py-2">
@@ -203,7 +203,7 @@ const SUBS = [
   'Every indicator and pattern the Setup reads, configured once. Steps pick from these lists.',
   'Trading window, Market sessions, Trade overlap and the News filter.',
   'First A, then B: each step is one Sequence link. The counts show how often each step held and completed on MNQ.',
-  'The Entry block: order type, price and the mandatory stop.',
+  'The Entry block: order type, price and the mandatory stop loss.',
   'The Setup defaults a Run may override section by section, plus the While-in-a-Trade rules.',
   'The whole Setup at a glance, what it did on MNQ, what the engine will read, and what still blocks a Freeze.',
   'Bind this Setup to an instrument and override whole sections. Overrides make no new version.',

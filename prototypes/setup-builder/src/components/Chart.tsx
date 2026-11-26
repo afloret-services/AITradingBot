@@ -27,7 +27,7 @@ interface ReplayEvent { i: number; label: string; tone: 'step' | 'signal' | 'fil
 export function signalEvents(data: Data, setup: Setup, s: Signal): ReplayEvent[] {
   const br = setup.branches[s.branch];
   const ev: ReplayEvent[] = s.stepBars.map((i, k) => ({ i, label: `Step ${k + 1} completes · ${br?.steps[k]?.name || ''}`, tone: 'step', color: STEP_COLORS[k % STEP_COLORS.length] }));
-  ev.push({ i: s.i, label: s.refused ? `Signal refused: ${s.refused}` : `Signal · ${br?.entry.order} entry ${s.entry.toFixed(2)}, stop ${s.stop.toFixed(2)}`, tone: 'signal', color: s.side === 'long' ? C.reward : C.risk });
+  ev.push({ i: s.i, label: s.refused ? `Signal refused: ${s.refused}` : `Signal · ${br?.entry.order} entry ${s.entry.toFixed(2)}, stop loss ${s.stop.toFixed(2)}`, tone: 'signal', color: s.side === 'long' ? C.reward : C.risk });
   const t = s.trade;
   if (t?.fillI != null) ev.push({ i: t.fillI, label: `Filled at ${s.entry.toFixed(2)}`, tone: 'fill', color: C.entry });
   if (t?.cancelI != null) ev.push({ i: t.cancelI, label: t.outcome, tone: 'cancel', color: '#94a3b8' });
@@ -352,7 +352,7 @@ function SignalPanel({ data, s, events, replay, setReplay, playing, play, onClos
       {!s.refused && (
         <div className="mt-2 grid grid-cols-3 gap-3 sm:grid-cols-6">
           {stat('Entry', s.entry.toFixed(2))}
-          {stat('Stop', s.stop.toFixed(2), 'text-red-300')}
+          {stat('Stop loss', s.stop.toFixed(2), 'text-red-300')}
           {stat('Risk', `${risk.toFixed(2)} pts`)}
           {s.legs.slice(0, 2).map((l) => stat(`${l.name} ×${l.contracts}`, l.price.toFixed(2), 'text-emerald-300'))}
           {s.caps.draw && stat('Draw', s.caps.draw.price.toFixed(2), 'text-violet-300')}
