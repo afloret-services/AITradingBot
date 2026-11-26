@@ -42,7 +42,7 @@ export function VariantC(p: VariantProps) {
       const el = inspRef.current?.querySelectorAll('[aria-label="move up"]'); const last = el?.[el.length - 1] as HTMLElement | undefined; if (!last) return;
       last.scrollIntoView({ behavior: 'smooth', block: 'center' });
       const line = last.closest('.group\\/line') as HTMLElement | null;
-      if (line && !mounted) { line.animate([{ boxShadow: '0 0 0 2px rgba(183,228,199,1), 0 0 20px 4px rgba(149,213,178,0.65)', backgroundColor: 'rgba(149,213,178,0.28)' }, { boxShadow: '0 0 0 2px rgba(183,228,199,1), 0 0 20px 4px rgba(149,213,178,0.65)', backgroundColor: 'rgba(149,213,178,0.28)', offset: 0.4 }, { boxShadow: '0 0 0 2px rgba(183,228,199,0), 0 0 20px 4px rgba(149,213,178,0)', backgroundColor: 'rgba(149,213,178,0)' }], { duration: 6000, easing: 'ease-out' }); }
+      if (line && !mounted) { line.animate([{ boxShadow: '0 0 0 3px rgba(216,243,220,1), 0 0 26px 6px rgba(149,213,178,0.8)', backgroundColor: 'rgba(149,213,178,0.35)' }, { boxShadow: '0 0 0 3px rgba(216,243,220,1), 0 0 26px 6px rgba(149,213,178,0.8)', backgroundColor: 'rgba(149,213,178,0.35)', offset: 0.4 }, { boxShadow: '0 0 0 3px rgba(216,243,220,0), 0 0 26px 6px rgba(149,213,178,0)', backgroundColor: 'rgba(149,213,178,0)' }], { duration: 6000, easing: 'ease-out' }); }
     }, 60);
   };
   const run = mode === 'run';
