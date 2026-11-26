@@ -107,16 +107,17 @@ export function VariantC(p: VariantProps) {
                   </LaneCard>
                   {bi === 0 && <>
                     <Connector label="" />
-                    <LaneCard color="#94a3b8" selected={sel.kind === 'trade' || sel.kind === 'section'} onClick={() => setSel({ kind: 'trade' })} title={<span className="flex items-start gap-1.5"><span className="mt-0.5 inline-flex aspect-square h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-300 text-xs font-black leading-none text-black">→</span><span className="mt-0.5 shrink-0 text-sm font-black tracking-wider text-slate-300">FILLED</span><span className="text-base font-bold leading-snug tracking-tight">Manage the Trade</span></span>} wide overridable={run}>
+                    <LaneCard color="rgba(148,163,184,0.3)" className="border-slate-400/30 !bg-slate-400/5 hover:!bg-slate-400/10" selected={sel.kind === 'trade' || sel.kind === 'section'} onClick={() => setSel({ kind: 'trade' })} title={<span className="flex items-start gap-2"><span className="inline-flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-300 text-sm font-black leading-none text-black">→</span><span className="mt-1 shrink-0 text-sm font-black tracking-wider text-slate-300">FILLED</span><span className="mt-0.5 text-base font-bold leading-snug tracking-tight">Manage the Trade</span></span>} wide overridable={run}>
+                      <div className="mb-1.5 pl-9 text-xs leading-snug text-muted-foreground">Once the entry fills, these settings size, protect and close the Trade.</div>
                       {SECTIONS.filter((k) => k !== 'stop').map((k) => {
                         const ov = run && k in runD.draft.overrides;
                         return (
-                          <button key={k} onClick={(e) => { e.stopPropagation(); setSel({ kind: 'section', k }); }} className={cn('block w-full rounded px-1 py-0.5 text-left text-[11px] hover:bg-accent', sel.kind === 'section' && sel.k === k && 'bg-accent', ov && 'bg-sky-500/10')}>
-                            <SectionIcon k={k} size={14} className="-mt-0.5 mr-1 inline-block align-middle" /><span className="font-medium">{SECTION_NAMES[k]}</span> <span className="text-muted-foreground">{sectionSummary(ov ? runD.effective : setup, k)}</span>{ov && <Badge tone="info" className="ml-1">override</Badge>}
+                          <button key={k} onClick={(e) => { e.stopPropagation(); setSel({ kind: 'section', k }); }} className={cn('block w-full rounded-md px-1.5 py-1 text-left text-xs hover:bg-accent', sel.kind === 'section' && sel.k === k && 'bg-accent', ov && 'bg-sky-500/10')}>
+                            <SectionIcon k={k} size={16} className="-mt-0.5 mr-1 inline-block align-middle" /><span className="font-medium">{SECTION_NAMES[k]}</span> <span className="text-muted-foreground">{sectionSummary(ov ? runD.effective : setup, k)}</span>{ov && <Badge tone="info" className="ml-1">override</Badge>}
                           </button>
                         );
                       })}
-                      <div className={cn('mt-1 border-t pt-1 text-[11px] text-muted-foreground', run && 'opacity-50')}>{run && '🔒 '}While in a Trade: {setup.in_position_rules.length} rule(s)</div>
+                      <div className={cn('mt-1.5 border-t pt-1.5 text-xs text-muted-foreground', run && 'opacity-50')}>{run && '🔒 '}While in a Trade: {setup.in_position_rules.length} rule(s)</div>
                     </LaneCard>
                   </>}
                 </div>
