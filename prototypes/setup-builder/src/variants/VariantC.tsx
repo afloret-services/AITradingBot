@@ -133,7 +133,7 @@ export function VariantC(p: VariantProps) {
         {/* inspector */}
         {(!phone || sheetOpen) && <Sheet phone={phone}>
         {phone && <div className="fixed inset-0 z-[60] bg-black/50" onClick={() => setSheetOpen(false)} />}
-        <div ref={inspRef} className={phone ? 'fixed inset-x-0 bottom-0 z-[61] max-h-[85vh] overflow-auto rounded-t-xl border-t bg-card px-3 pb-6 shadow-2xl' : 'overflow-auto border-l p-3'}>
+        <div ref={inspRef} className={cn('ctl-lg', phone ? 'fixed inset-x-0 bottom-0 z-[61] max-h-[85vh] overflow-auto rounded-t-xl border-t bg-card px-3 pb-6 shadow-2xl' : 'overflow-auto border-l p-3')}>
           {phone && <div className="sticky top-0 z-10 -mx-3 mb-2 flex items-center gap-2 border-b bg-card px-3 py-2"><span className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/40" /><button aria-label="close" onClick={() => setSheetOpen(false)} className="absolute right-3 flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground">×</button></div>}
           {sel.kind === 'review' && <div className="space-y-3"><H>Review & save</H><ReviewHelp setup={setup} what="intro" /><ReviewHelp setup={setup} what="map" />
             <H2>Checks</H2><ReviewHelp setup={setup} what="checks" issues={issues} />
