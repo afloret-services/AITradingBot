@@ -1,6 +1,6 @@
-// PROTOTYPE: a trial backtest in Review & save. It checks how the Draft trades on each instrument before Freeze.
-// It runs on the build years only (the held-out last 12 months stay locked for the Promotion gate), saves nothing
-// and is not a Run. Here only MNQ bars exist: NQ replays them at $20 a point (same Nasdaq-100 prices); every other
+// PROTOTYPE: a Draft backtest Run from Review & save (ADR 0007). It shows how the Draft trades on each instrument before Freeze.
+// It is a backtest Run that binds the Draft: build years only (the held-out last 12 months stay locked), listed with the
+// Runs and marked Draft, never promoted and never read by the Promotion gate. Here only MNQ bars exist: NQ replays them at $20 a point (same Nasdaq-100 prices); every other
 // instrument shows what it would change (hours, volume) but has no numbers.
 import React, { useMemo, useState } from 'react';
 import { Data, run, RunResult } from '../engine';
@@ -58,8 +58,8 @@ export function TrialBacktest({ setup, data }: { setup: Setup; data: Data }) {
   return (
     <div className="space-y-3 [container-type:inline-size]">
       <HelpBox id="review:trial">
-        <div>Checks how this Draft trades on each instrument before you freeze it. The same Rule blocks give different results per instrument: the $ a point changes the contracts and which Signals are refused as too wide, and hours or missing volume refuse others.</div>
-        <div><b className="text-foreground">Build years only:</b> it runs on the first 4 of the 5 years. The last 12 months stay locked for the Promotion gate, which judges a frozen version per instrument. Nothing is saved, and this is not a Run.</div>
+        <div>A backtest Run of this Draft shows how it trades on each instrument before you freeze it. The same Rule blocks give different results per instrument: the $ a point changes the contracts and which Signals are refused as too wide, and hours or missing volume refuse others.</div>
+        <div><b className="text-foreground">Build years only:</b> it runs on the first 4 of the 5 years. The last 12 months stay locked for the Promotion gate, which judges a frozen version per instrument. It is a backtest Run, listed with the Runs and marked Draft: it can never be promoted, and the gate never reads it. The latest one per instrument is kept, plus any you pin.</div>
         <div><b className="text-foreground">In this prototype:</b> the loaded MNQ sample ({from} to {to}, {days} Trading days) stands in for the build years. NQ replays the same Nasdaq-100 prices at $20 a point; other instruments show only what they would change.</div>
       </HelpBox>
       <div className="space-y-1.5">
@@ -74,9 +74,9 @@ export function TrialBacktest({ setup, data }: { setup: Setup; data: Data }) {
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <button type="button" className={BTN} disabled={!picked.length} onClick={go}>▶ Run trial backtest</button>
+        <button type="button" className={BTN} disabled={!picked.length} onClick={go}>▶ Create a backtest Run</button>
         <span className="text-xs text-muted-foreground">{picked.length} instrument{picked.length === 1 ? '' : 's'} picked</span>
-        {stale && <span className="text-xs text-amber-300">The Setup changed since this trial: run it again.</span>}
+        {stale && <span className="text-xs text-amber-300">The Setup changed since this backtest Run: create a new one.</span>}
       </div>
       {rows && (
         <div className={cn('space-y-2', stale && 'opacity-60')}>

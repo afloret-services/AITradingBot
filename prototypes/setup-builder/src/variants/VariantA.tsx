@@ -180,7 +180,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                   {p.saveBar}
                 </div>
               </div>
-              <div><div className="mb-2 text-base font-bold tracking-tight text-foreground">Trial backtest</div><TrialBacktest setup={setup} data={data} /></div>
+              <div><div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest Run on this Draft</div><TrialBacktest setup={setup} data={data} /></div>
               </div>
             )}
             {stage === 7 && <RunStage {...p} runD={runD} />}
