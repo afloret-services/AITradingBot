@@ -33,7 +33,14 @@ export function VariantC(p: VariantProps) {
   const insert = (c: Cond) => {
     if (sel.kind !== 'step') return;
     mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = appendAnd(s.branches[sel.bi].steps[sel.si].cond, c); });
-    if (phone) { setSheetOpen(true); setTimeout(() => { const el = inspRef.current?.querySelectorAll('[aria-label="move up"]'); el?.[el.length - 1]?.scrollIntoView({ block: 'center' }); }, 50); } // phone: show the new condition in its step
+    // show the new condition in its step: open the sheet on a phone, then scroll the inspector to its last line and flash it
+    if (phone) setSheetOpen(true);
+    setTimeout(() => {
+      const el = inspRef.current?.querySelectorAll('[aria-label="move up"]'); const last = el?.[el.length - 1] as HTMLElement | undefined; if (!last) return;
+      last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const line = last.closest('.group\\/line') as HTMLElement | null;
+      if (line) { line.animate([{ boxShadow: '0 0 0 2px rgba(116,198,157,0.9)' }, { boxShadow: '0 0 0 2px rgba(116,198,157,0)' }], { duration: 1400, easing: 'ease-out' }); }
+    }, 60);
   };
   const run = mode === 'run';
   const shown = run && runD.result ? runD.result : result;
