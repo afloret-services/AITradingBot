@@ -12,7 +12,7 @@ import { StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, setSectio
 import { RuleEditor, appendAnd } from '../components/RuleEditor';
 import { TokenCtx, shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, NumInput } from '../components/ui';
-import { Cond, Setup, TFS, TF, uid, SECTION_NAMES, validate, Step, labelsOf, ruleDescription, addMirror } from '../model';
+import { Cond, Setup, TFS, TF, uid, SECTION_NAMES, validate, Step, labelsOf, ruleDescription, addMirror, phrase, stopPhrase } from '../model';
 import { useRunDraft, instrumentWarnings } from '../runDraft';
 import { InstrumentSelect } from '../components/InstrumentSelect';
 
@@ -101,8 +101,16 @@ export function VariantB(p: VariantProps) {
               </div>
             ))}
             <button type="button" className="flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-dashed border-sky-500/50 bg-sky-500/10 px-4 text-sm font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: 'what this step is', cond: { id: uid(), t: 'all', items: [] } }); })}>+ Add another step</button>
+            <div>
+              <div aria-hidden="true" className="ml-[1.6rem] h-4 border-l-2 border-dashed" />
+              <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2">
+                <span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black leading-none text-black">→</span>
+                <span className="shrink-0 text-sm font-black tracking-wider text-emerald-300 sm:w-14">SIGNAL</span>
+                <span className="min-w-0 flex-1 text-base font-bold tracking-tight">Enter the Trade</span>
+                <span className="w-full pl-9 text-xs text-muted-foreground">When the last step completes · {br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labelsOf(setup))}`}, stop {stopPhrase(br.entry.stop, br.side, (t) => phrase(t, labelsOf(setup)))}. Set below.</span>
+              </div>
+            </div>
             <div className="rounded-md border-l-4 border-slate-400 py-1 pl-4">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2"><span className="flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black leading-none text-black">→</span><span className="shrink-0 text-sm font-black tracking-wider text-emerald-300">SIGNAL</span><span className="min-w-0 flex-1 text-base font-bold tracking-tight">Enter the Trade</span><span className="w-full pl-9 text-xs text-muted-foreground">When the last step completes, the Signal places this order with its stop.</span></div>
               <EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={bi} ctx={ctxFor(bi, br.steps.length)} />
             </div>
           </section>
