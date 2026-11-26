@@ -109,7 +109,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                         </div>
                         {open === k && (
                           <div className="space-y-2 border-t p-3">
-                            <StepConfigure rule={(addTo) => <RuleEditor cond={st.cond} ctx={ctxOf(bi, k)} side={br.side} addTo={addTo} onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />}>
+                            <StepConfigure rule={(addTo) => <RuleEditor cond={st.cond} ctx={ctxOf(bi, k)} side={br.side} addTo={addTo} flashNew onChange={(c) => mutate((s) => { s.branches[bi].steps[k].cond = c; })} />}>
                               <StepLimits step={st} isFirst={k === 0} ctx={ctxOf(bi, k)} side={br.side} look="boxes" onChange={(n: Step) => mutate((s) => { s.branches[bi].steps[k] = n; })} />
                             </StepConfigure>
                             
