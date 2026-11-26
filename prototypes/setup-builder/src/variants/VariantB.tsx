@@ -108,6 +108,8 @@ export function VariantB(p: VariantProps) {
                 <span className="shrink-0 text-sm font-black tracking-wider text-emerald-300 sm:w-14">SIGNAL</span>
                 <span className="min-w-0 flex-1 text-base font-bold tracking-tight">Enter the Trade</span>
                 <span className="w-full pl-9 text-xs text-muted-foreground">When the last step completes · {br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labelsOf(setup))}`}, stop {stopPhrase(br.entry.stop, br.side, (t) => phrase(t, labelsOf(setup)))}. Set below.</span>
+                <div className="mt-1 w-full border-t pt-1.5 pl-9 text-xs leading-snug text-muted-foreground">{br.entry.order === 'market' ? 'Fills at the next bar\'s open: always in, at the market\'s price.' : br.entry.order === 'limit' ? 'Fills only if price comes back to it: a better price, but it may never fill.' : 'Fills once price breaks through it: waits for confirmation, at a worse price.'} The entry-to-stop distance is 1R.
+                  {(() => { const sg = result.signals.filter((x) => x.branch === bi && !x.refused).slice(-1)[0]; return sg ? <> Latest Signal: <b className="text-foreground">{Math.abs(sg.entry - sg.stop).toFixed(2)} pts</b> of risk, <b className="text-foreground">{sg.legs.reduce((a, l) => a + l.contracts, 0)}</b> contract(s).</> : null; })()}</div>
               </div>
             </div>
             <div className="rounded-md border-l-4 border-slate-400 py-1 pl-4">
