@@ -119,6 +119,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                       </div>
                     </li>
                   ))}
+                  <li className="pt-1"><button type="button" className="flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-dashed border-sky-500/50 bg-sky-500/10 px-4 text-sm font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => { mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: `Step ${s.branches[bi].steps.length + 1}`, cond: { id: uid(), t: 'all', items: [] } }); }); setOpen(br.steps.length); }}>+ Add another step</button></li>
                   {br.steps.length > 0 && (
                     <li>
                       <div aria-hidden="true" className="ml-[1.6rem] h-4 border-l-2 border-dashed" />
@@ -132,7 +133,6 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                     </li>
                   )}
                 </ol>
-                <button type="button" className="flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-dashed border-sky-500/50 bg-sky-500/10 px-4 text-sm font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => { mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: `Step ${s.branches[bi].steps.length + 1}`, cond: { id: uid(), t: 'all', items: [] } }); }); setOpen(br.steps.length); }}>+ Add another step</button>
               </div>
             )}
             {stage === 4 && (
