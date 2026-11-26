@@ -42,7 +42,7 @@ export function VariantC(p: VariantProps) {
       const el = inspRef.current?.querySelectorAll('[aria-label="move up"]'); const last = el?.[el.length - 1] as HTMLElement | undefined; if (!last) return;
       last.scrollIntoView({ behavior: 'smooth', block: 'center' });
       const line = last.closest('.group\\/line') as HTMLElement | null;
-      if (line && !mounted) { line.animate([{ boxShadow: '0 0 0 2px rgba(116,198,157,0.9)', backgroundColor: 'rgba(116,198,157,0.12)' }, { boxShadow: '0 0 0 2px rgba(116,198,157,0.9)', backgroundColor: 'rgba(116,198,157,0.12)', offset: 0.4 }, { boxShadow: '0 0 0 2px rgba(116,198,157,0)', backgroundColor: 'rgba(116,198,157,0)' }], { duration: 3000, easing: 'ease-out' }); }
+      if (line && !mounted) { line.animate([{ boxShadow: '0 0 0 2px rgba(149,213,178,1), 0 0 14px 2px rgba(149,213,178,0.45)', backgroundColor: 'rgba(149,213,178,0.2)' }, { boxShadow: '0 0 0 2px rgba(149,213,178,1), 0 0 14px 2px rgba(149,213,178,0.45)', backgroundColor: 'rgba(149,213,178,0.2)', offset: 0.4 }, { boxShadow: '0 0 0 2px rgba(149,213,178,0), 0 0 14px 2px rgba(149,213,178,0)', backgroundColor: 'rgba(149,213,178,0)' }], { duration: 3000, easing: 'ease-out' }); }
     }, 60);
   };
   const run = mode === 'run';
