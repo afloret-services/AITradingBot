@@ -672,7 +672,7 @@ export function sectionSummary(s: Setup, k: SectionKey): string {
     case 'risk': return `${v.pct}% of a $${v.capital} account, at most ${v.max_contracts} contracts`;
     case 'losing_streak': return v.n ? `stop for the day after ${v.n} losers in a row; next day at ${v.cut}% risk until a winner` : 'off';
     case 'stop': return v.map((x: any, i: number) => stopPhrase(x, s.branches[i]?.side || 'long', (t) => shortName(t, {}) || '?')).join(' / ');
-    case 'legs': return v.legs.map((l: Leg) => `${l.name} at ${l.rule === 'r' ? l.r + 'R' : l.rule === 'fraction' ? Math.round((l.fraction ?? 0) * 100) + '% to ' + shortName(l.level || '', {}) : (l.offset_ticks ? `${l.offset_ticks}t before ` : '') + shortName(l.level || '', {})}, close ${Math.round(l.share * 100)}%`).join('; ') + `; extra to ${v.leftover === 'first' ? 'TP1' : 'the last TP'}`;
+    case 'legs': return v.legs.map((l: Leg) => `${l.name} at ${l.rule === 'r' ? l.r + 'R' : l.rule === 'fraction' ? Math.round((l.fraction ?? 0) * 100) + '% to ' + shortName(l.level || '', {}) : (l.offset_ticks ? `${l.offset_ticks}t before ` : '') + shortName(l.level || '', {})}, close ${Math.round(l.share * 100)}%`).join('; ') + `; extra to ${v.leftover === 'first' ? (v.legs[0]?.name || 'TP1') : (v.legs[v.legs.length - 1]?.name || 'the last TP')}`;
     case 'break_even': return v.trigger === 'off' ? 'never' : `${v.trigger === 'after_leg' ? `after TP${v.k} fills` : `once +${v.r}R in profit`}${v.offset_ticks ? `, lock in ${v.offset_ticks} ticks` : ''}`;
     case 'entry_deadline': return `${v.entry_deadline.kind === 'clock' ? 'wait until ' + v.entry_deadline.value : v.entry_deadline.kind === 'bars' ? 'wait ' + v.entry_deadline.value + ' Base bars' : v.entry_deadline.kind === 'end_of_hours' ? 'wait until the Trading window closes' : 'wait until the Trading day ends'}; ${v.cancel_if.length ? 'cancel if price reaches ' + v.cancel_if.map((c: string) => (c === 'first_leg' ? 'TP1' : c === 'stop' ? 'the stop' : 'the Draw')).join(' or ') + ' first' : 'no early cancel'}`;
     case 'expiry_and_flatten': return `${v.expiry ? 'close Trades at ' + v.expiry + ', ' : ''}flat by ${v.flatten_time}`;
@@ -713,7 +713,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
           </div>
         ))}
         <div className="flex items-center gap-2"><button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => onChange({ ...value, legs: [...value.legs, { name: `TP${value.legs.length + 1}`, rule: 'r', r: 3, share: 0 }] })}>+ Take profit</button>
-          <span className="text-xs text-muted-foreground">Extra contracts go to</span><Select value={value.leftover} onChange={(v) => onChange({ ...value, leftover: v })} options={[['first', 'TP1 first'], ['last', 'the last TP']]} className="h-7" /></div>
+          <span className="text-xs text-muted-foreground">Extra contracts go to</span><Select value={value.leftover} onChange={(v) => onChange({ ...value, leftover: v })} options={[['first', `${value.legs[0]?.name || 'TP1'} first`], ['last', `${value.legs[value.legs.length - 1]?.name || 'the last TP'} first (the last)`]]} className="h-7" /></div>
       </div>
     );
     case 'break_even': return (
