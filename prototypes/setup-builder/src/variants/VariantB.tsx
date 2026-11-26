@@ -186,7 +186,7 @@ function RunDiff({ setup, runD, ctx, base, data }: { setup: Setup; runD: ReturnT
   const [editing, setEditing] = useState<SectionKey | null>(null);
   return (
     <div className="mt-2 space-y-2 text-sm">
-      <div className="flex items-center gap-2">on <InstrumentSelect value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} className="h-8" /></div>
+      <div className="flex items-start gap-2"><span className="pt-1.5">on</span><InstrumentSelect value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} className="min-w-0 flex-1" /></div>
       {instrumentWarnings(setup, runD.draft.instrument).map((w) => <div key={w} className="text-amber-300">{w}</div>)}
       <div className="space-y-1.5 sm:hidden">
         {SECTIONS.map((k) => {

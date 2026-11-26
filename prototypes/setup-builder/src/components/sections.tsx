@@ -9,6 +9,7 @@ import { HelpBox, Hideable, withHelpId, useHelp } from './help';
 import { PatternSchematic, PatternExample } from './PatternDiagram';
 import type { Data, RunResult } from '../engine';
 import { chartTime } from '../engine';
+import { parseInstrument, instrumentLabel } from './InstrumentSelect';
 import { Button, Field, Input, NumInput, Select, Switch, Badge, Label, cn } from './ui';
 
 export type Mutate = (fn: (s: Setup) => void) => void;
@@ -437,6 +438,14 @@ function BasicsHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'name' | '
 }
 
 // ---------- Create a Run ----------
+/** what the instrument changes, for one that is not a CME equity future */
+function instrumentHere(v: string): string {
+  const t = parseInstrument(v).type;
+  if (t === 'stock') return 'is sized in shares: a 20-point stop loss risks $20 a share, so the Risk per Trade buys that many shares. It trades 09:30–16:00 New York.';
+  if (t === 'option') return 'is sized by the premium: one contract controls 100 shares and can lose at most what it cost. The Setup still reads the underlying\'s chart; the option\'s own price is not simulated here.';
+  if (t === 'forex') return 'is sized in units, with no volume; a pip is its tick. The prototype has no bars for it.';
+  return 'has its own tick and point value, and the prototype has no bars for it.';
+}
 const SPECS: Record<string, { pt: number; tick: number; unit: string } | undefined> = {
   MNQ: { pt: 2, tick: 0.25, unit: 'points' }, NQ: { pt: 20, tick: 0.25, unit: 'points' }, MES: { pt: 5, tick: 0.25, unit: 'points' }, ES: { pt: 50, tick: 0.25, unit: 'points' },
 };
@@ -455,7 +464,7 @@ function RunHelp_({ setup, what, instrument, overrides }: { setup: Setup; what: 
       <HelpBox>
         <div>The Rule blocks name no instrument, so the same Setup can trade several. The instrument sets the tick size and the dollars per point, so the same stop loss in points risks a different amount, and changes the number of contracts.</div>
         {sp ? <div>Here: {B(instrument)} is {B(`$${sp.pt} a point`)}, tick {sp.tick}. With this Setup's {B(`$${budget.toFixed(0)}`)} Risk per Trade, a 20-point stop loss risks ${(20 * sp.pt).toFixed(0)} per contract, so {Math.floor(budget / (20 * sp.pt)) >= 1 ? <>it trades {B(`${Math.min(setup.trade_settings.risk.max_contracts, Math.floor(budget / (20 * sp.pt)))} contract(s)`)}</> : <>{B('every such Signal is refused')} ("stop loss too wide"): raise Risk per Trade in an override or pick the micro contract</>}.</div>
-          : <div>Here: {B(instrument)} is not a CME equity future; its tick and point value differ, and the prototype has no bars for it.</div>}
+          : <div>Here: {B(instrumentLabel(instrument || ''))} {instrumentHere(instrument || '')}</div>}
       </HelpBox>
     );
   }

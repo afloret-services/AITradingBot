@@ -1,7 +1,8 @@
 // PROTOTYPE: a Run binds a Setup version to an instrument and may override whole Trade-settings sections.
 import { useMemo, useState } from 'react';
 import { Data, run } from './engine';
-import { Setup } from './model';
+import { Setup, tradingWindowText } from './model';
+import { parseInstrument } from './components/InstrumentSelect';
 import { SectionKey, getSection, setSection } from './components/sections';
 export interface RunDraft { instrument: string; overrides: Partial<Record<SectionKey, any>> }
 export function applyOverrides(s: Setup, r: RunDraft): Setup {
@@ -17,10 +18,16 @@ export function useRunDraft(data: Data, setup: Setup) {
   const setOverride = (k: SectionKey, v: any) => setDraft((d) => ({ ...d, overrides: { ...d.overrides, [k]: v } }));
   return { draft, setDraft, effective, result, override, setOverride };
 }
-export const INSTRUMENTS = [['MNQ', 'MNQ (bars loaded)'], ['MES', 'MES'], ['NQ', 'NQ'], ['ES', 'ES'], ['M6E', 'M6E (EUR/USD micro future)'], ['EURUSD', 'EUR/USD spot (no volume)']] as [string, string][];
 export function instrumentWarnings(s: Setup, inst: string) {
   const out: string[] = [];
-  if (inst === 'EURUSD' && JSON.stringify(s).includes(':volume:')) out.push('This Setup reads volume, which spot FX lacks: the Run would be refused.');
-  if (inst !== 'MNQ') out.push(`No ${inst} bars in this prototype: the preview stays on MNQ.`);
+  const p = parseInstrument(inst);
+  if (p.type === 'forex' && JSON.stringify(s).includes(':volume:')) out.push('This Setup reads volume, which spot FX lacks: the Run would be refused.');
+  if (p.type === 'stock' || p.type === 'option') {
+    const mins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0); };
+    const outside = s.settings.trading_hours.ranges.some((r) => mins(r.start) > mins(r.end) || mins(r.start) < 570 || mins(r.end) > 960);
+    if (outside) out.push(`${p.type === 'stock' ? 'Stocks' : 'Options'} trade 09:30–16:00 New York; this Setup's Trading window (${tradingWindowText(s.settings.trading_hours)}) reaches outside it, so Signals then would be refused.`);
+  }
+  if (p.type === 'option') out.push('This prototype does not price options: the preview shows the underlying\'s moves, not the option\'s.');
+  if (inst !== 'MNQ') out.push(`No ${p.type === 'option' ? p.code : inst} bars in this prototype: the preview stays on MNQ.`);
   return out;
 }
