@@ -244,7 +244,8 @@ function Connector({ st, label }: { st?: Step; label?: string }) {
 function MiniCond({ c, labels, depth = 0 }: { c: Cond; labels: Record<string, string>; depth?: number }) {
   if (c.t === 'all' || c.t === 'any') {
     if (c.origin) return <div className="text-sm"><Badge tone="info">{c.origin.preset}{c.origin.edited ? ' (edited)' : ''}</Badge></div>;
-    return <div className={cn('space-y-1', depth > 0 && 'ml-1 border-l-2 pl-1.5', c.t === 'any' ? 'border-amber-500/60' : 'border-cyan-500/60')}>{depth > 0 && <div className="text-xs font-bold text-muted-foreground">{c.t === 'all' ? 'AND' : 'OR'}</div>}{c.items.map((x) => <MiniCond key={x.id} c={x} labels={labels} depth={depth + 1} />)}{!c.items.length && <div className="text-sm italic text-muted-foreground">empty</div>}</div>;
+    const J = c.t === 'all' ? 'AND' : 'OR';
+    return <div className={cn('space-y-1', depth > 0 && 'ml-1 border-l-2 pl-1.5', c.t === 'any' ? 'border-amber-500/60' : 'border-cyan-500/60')}>{c.items.map((x, k) => <React.Fragment key={x.id}>{k > 0 && <div><span className={cn('inline-block rounded border px-1.5 py-0.5 text-xs font-black leading-none tracking-wider', c.t === 'all' ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300' : 'border-amber-500/50 bg-amber-500/15 text-amber-300')}>{J}</span></div>}<MiniCond c={x} labels={labels} depth={depth + 1} /></React.Fragment>)}{!c.items.length && <div className="text-sm italic text-muted-foreground">empty</div>}</div>;
   }
   if (c.t === 'cmp') return <div className="text-sm">{c.origin && <Badge tone="info" className="mr-1">{c.origin.preset}</Badge>}<Chip>{shortName(c.a, labels)}</Chip> {c.op} {c.mult && c.mult !== 1 ? `${c.mult}×` : ''}<Chip>{shortName(c.b || '?', labels)}</Chip></div>;
   if (c.t === 'pattern') return <div className="text-sm"><Badge tone="info">{c.side === 'long' ? '▲' : '▼'} {c.ref} forms</Badge></div>;
