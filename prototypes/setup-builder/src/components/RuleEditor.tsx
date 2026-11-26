@@ -69,10 +69,12 @@ export function RuleEditor({ cond, onChange, ctx, side, keyword, nested, group, 
   // flashNew: compare this render's line ids with the last one's; a new id is a condition just added, so make it glow
   const boxRef = React.useRef<HTMLDivElement>(null);
   const seen = React.useRef<Set<string> | null>(null);
+  const seenRule = React.useRef<string | null>(null); // the rule those ids belong to: an editor reused for another step starts over, without glowing
   React.useEffect(() => {
     if (!flashNew) return;
     const ids = new Set(lines.map((l) => l.cond.id)); const prev = seen.current; seen.current = ids;
-    if (!prev) return;
+    const sameRule = seenRule.current === cond.id; seenRule.current = cond.id;
+    if (!prev || !sameRule) return;
     for (const id of ids) if (!prev.has(id)) {
       const el = boxRef.current?.querySelector(`[data-cid="${id}"]`) as HTMLElement | null;
       el?.animate([{ boxShadow: '0 0 0 2px rgba(116,198,157,0.9)', backgroundColor: 'rgba(116,198,157,0.12)' }, { boxShadow: '0 0 0 2px rgba(116,198,157,0)', backgroundColor: 'rgba(116,198,157,0)' }], { duration: 1600, easing: 'ease-out' });

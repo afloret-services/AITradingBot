@@ -33,13 +33,16 @@ export function VariantC(p: VariantProps) {
   const insert = (c: Cond) => {
     if (sel.kind !== 'step') return;
     mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = appendAnd(s.branches[sel.bi].steps[sel.si].cond, c); });
-    // show the new condition in its step: open the sheet on a phone, then scroll the inspector to its last line and flash it
+    // show the new condition in its step: open the sheet on a phone, then scroll the inspector to its last line.
+    // The step's editor makes a new line glow itself (flashNew); a phone sheet that was closed mounts the editor
+    // with the line already there, so that one case glows from here.
+    const mounted = !phone || sheetOpen;
     if (phone) setSheetOpen(true);
     setTimeout(() => {
       const el = inspRef.current?.querySelectorAll('[aria-label="move up"]'); const last = el?.[el.length - 1] as HTMLElement | undefined; if (!last) return;
       last.scrollIntoView({ behavior: 'smooth', block: 'center' });
       const line = last.closest('.group\\/line') as HTMLElement | null;
-      if (line) { line.animate([{ boxShadow: '0 0 0 2px rgba(116,198,157,0.9)' }, { boxShadow: '0 0 0 2px rgba(116,198,157,0)' }], { duration: 1400, easing: 'ease-out' }); }
+      if (line && !mounted) { line.animate([{ boxShadow: '0 0 0 2px rgba(116,198,157,0.9)' }, { boxShadow: '0 0 0 2px rgba(116,198,157,0)' }], { duration: 1400, easing: 'ease-out' }); }
     }, 60);
   };
   const run = mode === 'run';
@@ -171,7 +174,7 @@ export function VariantC(p: VariantProps) {
                 <span className="w-full pl-9 text-xs text-muted-foreground">{setup.branches[sel.bi].side} branch · {sel.si === 0 ? 'Starts a Candidate when its conditions hold.' : selStep.same_bar ? 'On the same bar as the step before, or later.' : 'On a later bar than the step before.'} · <StepStats result={result} bi={sel.bi} si={sel.si} data={data} /></span>
               </div>
               <SignalStepsHelp setup={setup} bi={sel.bi} />
-              <StepConfigure rule={(addTo) => <RuleEditor cond={selStep.cond} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} addTo={addTo} onChange={(c) => mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = c; })} />}>
+              <StepConfigure rule={(addTo) => <RuleEditor cond={selStep.cond} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} addTo={addTo} flashNew onChange={(c) => mutate((s) => { s.branches[sel.bi].steps[sel.si].cond = c; })} />}>
                 <StepLimits step={selStep} isFirst={sel.si === 0} ctx={tokenCtx(setup, sel.bi, sel.si)} side={setup.branches[sel.bi].side} look="chips" onChange={(n: Step) => mutate((s) => { s.branches[sel.bi].steps[sel.si] = n; })} />
               </StepConfigure>
               {sel.si === 0 && <div className="flex flex-wrap items-center gap-2 text-xs">When a new setup appears before the last one finished: <Select value={setup.branches[sel.bi].on_new_start} onChange={(v) => mutate((s) => { s.branches[sel.bi].on_new_start = v; })} options={[['start_another', 'Follow both'], ['replace', 'Switch to the new one'], ['ignore', 'Stay with the first one']]} className="h-8" /></div>}
