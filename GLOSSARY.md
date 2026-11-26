@@ -38,6 +38,10 @@ _Avoid_: Tick, trigger bar, chart timeframe
 The one editable copy of a Setup's Rule blocks and default settings, from which versions are frozen; it may be backtested only on the build years, never on the held-out period or on paper.
 _Avoid_: Working copy, unsaved version
 
+**Trial backtest**:
+A backtest of a Draft, run from the builder before freezing to see how it trades on one or more instruments: it covers the build years only, uses the Setup's defaults, saves nothing that counts, and is never a Run, so it can neither be promoted nor be read by the Promotion gate.
+_Avoid_: Quick backtest, test Run, preview Run
+
 **Setup version**:
 An immutable, numbered freeze of a Setup's Draft (v1, v2…), identified by a hash of everything the engine reads; renaming or relabelling never makes a new one.
 _Avoid_: Revision, snapshot, release
