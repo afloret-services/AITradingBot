@@ -22,6 +22,8 @@ export function VariantC(p: VariantProps) {
   // phone: the inspector is a bottom sheet that opens when a card (or Review & save, a section…) is picked
   const phone = usePhone();
   const [sheetOpen, setSheetOpen] = useState(false);
+  /** after picking what the inspector shows: scroll it back to its top, and bring it into view on desktop */
+  const showPanel = () => setTimeout(() => { inspRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); if (!phone) inspRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 60);
   const inspRef = useRef<HTMLDivElement>(null);
   const firstSel = useRef(true);
   useEffect(() => { if (firstSel.current) { firstSel.current = false; return; } setSheetOpen(true); }, [sel]);
@@ -101,7 +103,7 @@ export function VariantC(p: VariantProps) {
                   <Connector label="" />
                   <LaneCard color="rgba(16,185,129,0.3)" className="border-emerald-500/30 !bg-emerald-500/5 hover:!bg-emerald-500/10" selected={sel.kind === 'entry' && sel.bi === bi} onClick={() => setSel({ kind: 'entry', bi })} title={<span className="flex items-start gap-2"><span className="inline-flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black leading-none text-black">→</span><span className="mt-1 shrink-0 text-sm font-black tracking-wider text-emerald-300">SIGNAL</span><span className="mt-0.5 text-base font-bold leading-snug tracking-tight">Enter the Trade</span></span>} overridable={run} overridden={run && 'stop' in runD.draft.overrides}>
                     <div className="pl-9 text-xs leading-snug text-muted-foreground">When the last step completes · {br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labels)}`}, stop {stopPhrase(br.entry.stop, br.side, (t) => phrase(t, labels))}</div>
-                    <div className="mt-2 pl-9"><button type="button" onClick={(e) => { e.stopPropagation(); setSel({ kind: 'entry', bi }); setTimeout(() => { inspRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); if (!phone) inspRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 60); }} className="inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20">Edit in Entry &amp; stop →</button></div>
+                    <div className="mt-2 pl-9"><button type="button" onClick={(e) => { e.stopPropagation(); setSel({ kind: 'entry', bi }); showPanel(); }} className="inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20">Edit in Entry &amp; stop →</button></div>
                     <div className="mt-2 border-t pt-1.5 pl-9 text-xs leading-snug text-muted-foreground">{br.entry.order === 'market' ? 'Fills at the next bar\'s open: always in, at the market\'s price.' : br.entry.order === 'limit' ? 'Fills only if price comes back to it: a better price, but it may never fill.' : 'Fills once price breaks through it: waits for confirmation, at a worse price.'} The entry-to-stop distance is 1R.
                       {(() => { const sg = shown.signals.filter((x) => x.branch === bi && !x.refused).slice(-1)[0]; return sg ? <> Latest Signal: <b className="text-foreground">{Math.abs(sg.entry - sg.stop).toFixed(2)} pts</b> of risk, <b className="text-foreground">{sg.legs.reduce((a, l) => a + l.contracts, 0)}</b> contract(s).</> : null; })()}</div>
                   </LaneCard>
@@ -112,7 +114,7 @@ export function VariantC(p: VariantProps) {
                       {SECTIONS.filter((k) => k !== 'stop').map((k) => {
                         const ov = run && k in runD.draft.overrides;
                         return (
-                          <button key={k} onClick={(e) => { e.stopPropagation(); setSel({ kind: 'section', k }); }} className={cn('block w-full rounded-md px-1.5 py-1 text-left text-xs hover:bg-accent', sel.kind === 'section' && sel.k === k && 'bg-accent', ov && 'bg-sky-500/10')}>
+                          <button key={k} onClick={(e) => { e.stopPropagation(); setSel({ kind: 'section', k }); showPanel(); }} className={cn('block w-full rounded-md px-1.5 py-1 text-left text-xs hover:bg-accent', sel.kind === 'section' && sel.k === k && 'bg-accent', ov && 'bg-sky-500/10')}>
                             <SectionIcon k={k} size={16} className="-mt-0.5 mr-1 inline-block align-middle" /><span className="font-medium">{SECTION_NAMES[k]}</span> <span className="text-muted-foreground">{sectionSummary(ov ? runD.effective : setup, k)}</span>{ov && <Badge tone="info" className="ml-1">override</Badge>}
                           </button>
                         );
