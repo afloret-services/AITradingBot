@@ -729,8 +729,8 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
         <Badge tone="warn" className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">★ Required</Badge>
         <Select value={value.entry_deadline.kind} onChange={(kk) => onChange({ ...value, entry_deadline: { kind: kk, value: kk === 'clock' ? '11:00' : kk === 'bars' ? '3' : '' } })} options={[['clock', 'Wait until a set time (NY)'], ['bars', 'Wait N Base bars'], ['end_of_hours', 'Wait until the Trading window closes'], ['end_of_day', 'Wait until the Trading day ends']]} />
         {(value.entry_deadline.kind === 'clock' || value.entry_deadline.kind === 'bars') && <Input value={value.entry_deadline.value} onChange={(e) => onChange({ ...value, entry_deadline: { ...value.entry_deadline, value: e.target.value } })} className="w-16" />}
-        <span className="text-xs text-muted-foreground">Cancel if price reaches first:</span>
-        {(['stop', 'first_leg', 'draw'] as const).map((c) => <label key={c} className="flex items-center gap-1 text-xs"><input type="checkbox" checked={value.cancel_if.includes(c)} onChange={(e) => onChange({ ...value, cancel_if: e.target.checked ? [...value.cancel_if, c] : value.cancel_if.filter((x: string) => x !== c) })} />{c === 'first_leg' ? 'TP1' : c === 'stop' ? 'the stop' : 'the Draw'}</label>)}
+        <div className="flex basis-full flex-wrap items-center gap-x-3 gap-y-1 pt-1"><span className="text-sm font-medium text-muted-foreground">Cancel if price reaches first:</span>
+        {(['stop', 'first_leg', 'draw'] as const).map((c) => <label key={c} className="flex items-center gap-1.5 text-sm"><input type="checkbox" checked={value.cancel_if.includes(c)} onChange={(e) => onChange({ ...value, cancel_if: e.target.checked ? [...value.cancel_if, c] : value.cancel_if.filter((x: string) => x !== c) })} />{c === 'first_leg' ? 'TP1' : c === 'stop' ? 'the stop' : 'the Draw'}</label>)}</div>
       </div>
     );
     case 'expiry_and_flatten': return (
