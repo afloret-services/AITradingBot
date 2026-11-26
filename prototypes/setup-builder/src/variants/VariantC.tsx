@@ -219,7 +219,7 @@ const H = ({ children }: { children: React.ReactNode }) => <div className="text-
 /** a section heading inside an inspector panel, one size under its title */
 const H2 = ({ children }: { children: React.ReactNode }) => <div className="text-base font-semibold tracking-tight">{children}</div>;
 const Locked = ({ what }: { what: string }) => <div className="space-y-1"><H>🔒 {what}</H><div className="text-xs text-muted-foreground">Part of the Setup version. A Run cannot change them; switch to "Build the Setup" and Freeze a new version.</div></div>;
-const Chip = ({ children }: { children: React.ReactNode }) => <span className="inline-block rounded border border-sky-500/40 bg-sky-500/10 px-1.5 py-0.5 leading-tight text-sky-200">{children}</span>;
+const Chip = ({ children }: { children: React.ReactNode }) => <span className="inline-block rounded-md border border-sky-500/40 bg-sky-500/10 px-2 py-1 leading-tight text-sky-200">{children}</span>;
 function Lib({ title, children }: { title: string; children: React.ReactNode }) { return <div><div className="mb-1.5 flex flex-wrap items-baseline gap-x-1.5 text-sm font-bold uppercase tracking-wider text-muted-foreground">{title.replace(/ \(.*\)$/, '')}{/\(.*\)$/.test(title) && <span className="text-[11px] font-medium normal-case tracking-normal">{title.match(/\((.*)\)$/)![1]}</span>}</div><div className="grid grid-cols-2 gap-1.5 lg:block lg:space-y-1">{children}</div></div>; }
 function LibItem({ children, onClick, disabled, hint, large }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; hint?: string; large?: boolean }) {
   return <button disabled={disabled} onClick={onClick} className={cn('flex w-full flex-wrap items-center justify-between gap-x-1.5 rounded-md border border-input text-left font-medium hover:border-sky-400/50 hover:bg-accent disabled:opacity-40 lg:flex-nowrap', large ? 'min-h-12 py-1.5 pl-1.5 pr-3 text-base' : 'min-h-9 px-2.5 py-2 text-sm')}><span>{children}</span>{hint && <span className={cn('font-normal text-muted-foreground', large ? 'text-xs' : 'text-[11px]')}>{hint}</span>}</button>;
@@ -243,17 +243,17 @@ function Connector({ st, label }: { st?: Step; label?: string }) {
 }
 function MiniCond({ c, labels, depth = 0 }: { c: Cond; labels: Record<string, string>; depth?: number }) {
   if (c.t === 'all' || c.t === 'any') {
-    if (c.origin) return <div className="text-sm"><Badge tone="info">{c.origin.preset}{c.origin.edited ? ' (edited)' : ''}</Badge></div>;
+    if (c.origin) return <div className="text-[15px] leading-relaxed"><Badge tone="info" className="!px-2 !py-1 !text-sm">{c.origin.preset}{c.origin.edited ? ' (edited)' : ''}</Badge></div>;
     const J = c.t === 'all' ? 'AND' : 'OR';
-    return <div className={cn('space-y-1', depth > 0 && 'ml-1 border-l-2 pl-1.5', c.t === 'any' ? 'border-amber-500/60' : 'border-cyan-500/60')}>{c.items.map((x, k) => <React.Fragment key={x.id}>{k > 0 && <div><span className={cn('inline-block rounded border px-1.5 py-0.5 text-xs font-black leading-none tracking-wider', c.t === 'all' ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300' : 'border-amber-500/50 bg-amber-500/15 text-amber-300')}>{J}</span></div>}<MiniCond c={x} labels={labels} depth={depth + 1} /></React.Fragment>)}{!c.items.length && <div className="text-sm italic text-muted-foreground">empty</div>}</div>;
+    return <div className={cn('space-y-1.5', depth > 0 && 'ml-1 border-l-2 pl-1.5', c.t === 'any' ? 'border-amber-500/60' : 'border-cyan-500/60')}>{c.items.map((x, k) => <React.Fragment key={x.id}>{k > 0 && <div><span className={cn('inline-block rounded-md border px-2 py-1 text-xs font-black leading-none tracking-wider', c.t === 'all' ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300' : 'border-amber-500/50 bg-amber-500/15 text-amber-300')}>{J}</span></div>}<MiniCond c={x} labels={labels} depth={depth + 1} /></React.Fragment>)}{!c.items.length && <div className="text-sm italic text-muted-foreground">empty</div>}</div>;
   }
-  if (c.t === 'cmp') return <div className="text-sm">{c.origin && <Badge tone="info" className="mr-1">{c.origin.preset}</Badge>}<Chip>{shortName(c.a, labels)}</Chip> {c.op} {c.mult && c.mult !== 1 ? `${c.mult}×` : ''}<Chip>{shortName(c.b || '?', labels)}</Chip></div>;
-  if (c.t === 'pattern') return <div className="text-sm"><Badge tone="info">{c.side === 'long' ? '▲' : '▼'} {c.ref} forms</Badge></div>;
-  if (c.t === 'fvg') return <div className="text-sm"><Badge tone="info">FVG {c.tf} ≥{c.min_gap_ticks}t → {c.capture}</Badge></div>;
-  if (c.t === 'draw') return <div className="text-sm"><Badge tone="info">Draw on liquidity ≥ {c.min_framework_points} pts</Badge></div>;
-  if (c.t === 'time') return <div className="text-sm">🕒 {c.start}–{c.end}</div>;
-  if (c.t === 'for_n') return <div className="text-sm">for ≥ {c.n} bars: <MiniCond c={c.item} labels={labels} depth={depth + 1} /></div>;
-  if (c.t === 'not') return <div className="text-sm">NOT <MiniCond c={c.item} labels={labels} depth={depth + 1} /></div>;
+  if (c.t === 'cmp') return <div className="text-[15px] leading-relaxed">{c.origin && <Badge tone="info" className="mr-1 !px-2 !py-1 !text-sm">{c.origin.preset}</Badge>}<Chip>{shortName(c.a, labels)}</Chip> {c.op} {c.mult && c.mult !== 1 ? `${c.mult}×` : ''}<Chip>{shortName(c.b || '?', labels)}</Chip></div>;
+  if (c.t === 'pattern') return <div className="text-[15px] leading-relaxed"><Badge tone="info" className="!px-2 !py-1 !text-sm">{c.side === 'long' ? '▲' : '▼'} {c.ref} forms</Badge></div>;
+  if (c.t === 'fvg') return <div className="text-[15px] leading-relaxed"><Badge tone="info" className="!px-2 !py-1 !text-sm">FVG {c.tf} ≥{c.min_gap_ticks}t → {c.capture}</Badge></div>;
+  if (c.t === 'draw') return <div className="text-[15px] leading-relaxed"><Badge tone="info" className="!px-2 !py-1 !text-sm">Draw on liquidity ≥ {c.min_framework_points} pts</Badge></div>;
+  if (c.t === 'time') return <div className="text-[15px] leading-relaxed">🕒 {c.start}–{c.end}</div>;
+  if (c.t === 'for_n') return <div className="text-[15px] leading-relaxed">for ≥ {c.n} bars: <MiniCond c={c.item} labels={labels} depth={depth + 1} /></div>;
+  if (c.t === 'not') return <div className="text-[15px] leading-relaxed">NOT <MiniCond c={c.item} labels={labels} depth={depth + 1} /></div>;
   return null;
 }
 void AddMenu;
