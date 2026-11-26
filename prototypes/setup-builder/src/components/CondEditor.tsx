@@ -71,7 +71,7 @@ export function CondEditor({ cond, onChange, onRemove, ctx, side, look, depth = 
       <div className="flex flex-wrap items-center gap-1.5 text-xs">
         {cond.origin && <button onClick={() => setCollapsed(true)} className="text-muted-foreground">▾</button>}
         {originBadge}
-        <button onClick={() => onChange({ ...cond, t: cond.t === 'all' ? 'any' : 'all' })} className={cn('h-8 rounded-md border px-3 text-sm font-black uppercase tracking-wider', cond.t === 'all' ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300' : 'border-amber-500/50 bg-amber-500/15 text-amber-300')} title="switch between ALL OF and ANY OF">{look === 'chips' ? (cond.t === 'all' ? 'AND' : 'OR') : word}</button>
+        <button onClick={() => onChange({ ...cond, t: cond.t === 'all' ? 'any' : 'all' })} className={cn('h-8 rounded-md border px-3 text-sm font-black uppercase tracking-wider', cond.t === 'all' ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300' : 'border-amber-500/50 bg-amber-500/15 text-amber-300')} title="switch between ALL OF and ANY OF">{word}</button>
         <AddMenu ctx={ctx} side={side} label="+ Add" title="add a condition to this group" buttonClass="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onAdd={(c) => setItems([...cond.items, c])} />
         {rm}
       </div>
