@@ -35,12 +35,8 @@ A bar of a Setup's finest timeframe; the Setup's rules are checked once at each 
 _Avoid_: Tick, trigger bar, chart timeframe
 
 **Draft**:
-The one editable copy of a Setup's Rule blocks and default settings, from which versions are frozen; it may be backtested only on the build years, never on the held-out period or on paper.
+The one editable copy of a Setup's Rule blocks and default settings, from which versions are frozen; it may be backtested only on the build years, in a backtest Run that binds it alone, never on the held-out period or on paper, and the Promotion gate never reads such a Run.
 _Avoid_: Working copy, unsaved version
-
-**Trial backtest**:
-A backtest of a Draft, run from the builder before freezing to see how it trades on one or more instruments: it covers the build years only, uses the Setup's defaults, saves nothing that counts, and is never a Run, so it can neither be promoted nor be read by the Promotion gate.
-_Avoid_: Quick backtest, test Run, preview Run
 
 **Setup version**:
 An immutable, numbered freeze of a Setup's Draft (v1, v2…), identified by a hash of everything the engine reads; renaming or relabelling never makes a new one.
@@ -205,8 +201,8 @@ The IBKR simulated account the bot trades in; no real money moves.
 _Avoid_: Demo, sim
 
 **Run**:
-One execution of a chosen set of Setup versions, each bound to the instrument it trades, with its own risk settings: a backtest Run on history, or a paper Run on the Paper account.
-_Avoid_: Trading run, deployment, job
+One execution of a chosen set of Setup versions, each bound to the instrument it trades, with its own risk settings: a backtest Run on history, or a paper Run on the Paper account. A backtest Run may instead bind one Draft, on one or more instruments and on the build years only; it is marked Draft and can never be promoted.
+_Avoid_: Trading run, deployment, job, trial, trial backtest
 
 **Paper session**:
 One Trading day of a paper Run.
