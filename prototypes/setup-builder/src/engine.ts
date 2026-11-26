@@ -990,7 +990,7 @@ function makeSignal(data: Data, setup: Setup, br: Branch, bi: number, i: number,
   const entry0 = e.order === 'market' ? data.m1[i + 1]?.o : (value(ctx, e.price || '') as number);
   const from = e.stop.from || 'level';
   if (typeof entry0 !== 'number' || (from === 'level' && !e.stop.token)) return null;
-  const entry = e.order === 'market' ? entry0 : roundTick(entry0, long ? 'down' : 'up');
+  const entry = e.order === 'market' ? entry0 : roundTick(entry0, (e.order === 'limit') === long ? 'down' : 'up');
   const stopBase = from === 'level' ? value(ctx, e.stop.token) : entry;
   if (typeof stopBase !== 'number') return null;
   let off = e.stop.offset;
@@ -1060,12 +1060,18 @@ function simulate(data: Data, setup: Setup, br: Branch, sig: Signal, base: Int32
   const res: TradeResult = { outcome: '', exits: [] };
   let i = sig.i + 1, fill = -1;
   const firstLeg = sig.legs[0]?.price;
-  // the entry rests (limit) or fills at the next bar's open (market)
+  // the entry rests (limit or stop) or fills at the next bar's open (market).
+  // A limit fills once price comes back to it (long: the low reaches it); a stop fills once price breaks through it
+  // (long: the high reaches it). A bar that opens past the price fills at its open: better for a limit, worse for a stop.
+  const isStop = br.entry.order === 'stop';
+  const reaches = (b: Bar) => (isStop === long ? b.h >= sig.entry : b.l <= sig.entry);
+  const gapped = (b: Bar) => (isStop === long ? b.o > sig.entry : b.o < sig.entry);
+  let fillPx = sig.entry;
   if (br.entry.order === 'market') fill = i;
   else for (; i < M.length; i++) {
     if (deadline(i) || M[i].di !== day) { res.outcome = 'entry cancelled at the deadline'; res.cancelI = i; return res; }
     const b = M[i];
-    if (long ? b.l <= sig.entry : b.h >= sig.entry) { fill = i; break; }
+    if (reaches(b)) { fill = i; if (gapped(b)) fillPx = b.o; break; }
     for (const cx of ts.cancel_if) {
       const lv = cx === 'stop' ? sig.stop : cx === 'first_leg' ? firstLeg : cx === 'draw' ? sig.caps.draw?.price : undefined;
       if (lv != null && (long ? (cx === 'stop' ? b.l <= lv : b.h >= lv) : cx === 'stop' ? b.h >= lv : b.l <= lv)) { res.outcome = `entry cancelled: ${cx.replace('_', ' ')} reached first`; res.cancelI = i; return res; }
@@ -1073,7 +1079,7 @@ function simulate(data: Data, setup: Setup, br: Branch, sig: Signal, base: Int32
   }
   if (fill < 0) { res.outcome = 'no fill'; return res; }
   res.fillI = fill;
-  const entry = br.entry.order === 'market' ? M[fill].o : sig.entry;
+  const entry = br.entry.order === 'market' ? M[fill].o : fillPx;
   const risk = Math.abs(entry - sig.stop);
   let stop = sig.stop;
   const open = sig.legs.map((l) => ({ ...l, done: false }));
