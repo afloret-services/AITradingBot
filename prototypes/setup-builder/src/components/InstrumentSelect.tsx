@@ -2,136 +2,17 @@
 // recent picks and Instrument lists, and each row saying whether 5 years of history exist for it.
 // Stocks and options joined the scope on 2026-11-26. An option instrument is one code, "OPT:<underlying>:<expiry>:<strike>";
 // the branch decides calls or puts (a long branch buys calls, a short branch buys puts).
-// The catalog below is a made-up stand-in for the Market data module's list (2026-11-27), sized to feel a bigger list.
+// Instruments and Instrument lists come from the Instrument management module (src/instrumentManagement.ts); this file only picks.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from './ui';
+import { instrumentManagement, InstrumentType, Instrument } from '../instrumentManagement';
 
-export type InstrumentType = 'future' | 'forex' | 'stock' | 'option';
-type Item = { v: string; tag: string; name: string; group: string; noHistory?: string };
-
-const rows = (s: string) => s.trim().split('\n').map((l) => l.trim().split('|'));
-const FUTURES = rows(`
-MNQ|Micro Nasdaq-100 · $2 a point (bars loaded)|Index futures
-MES|Micro S&P 500 · $5 a point|Index futures
-NQ|E-mini Nasdaq-100 · $20 a point|Index futures
-ES|E-mini S&P 500 · $50 a point|Index futures
-M2K|Micro Russell 2000 · $5 a point|Index futures|-
-RTY|E-mini Russell 2000 · $50 a point|Index futures|-
-MYM|Micro Dow · $0.50 a point|Index futures|-
-YM|E-mini Dow · $5 a point|Index futures|-
-M6E|Micro EUR/USD · $1.25 a tick|Currency futures
-6E|Euro FX · $6.25 a tick|Currency futures|-
-6B|British pound · $6.25 a tick|Currency futures|-
-6J|Japanese yen · $6.25 a tick|Currency futures|-
-MGC|Micro gold · $1 a tick|Metals and energy|-
-GC|Gold · $10 a tick|Metals and energy|-
-MCL|Micro crude oil · $1 a tick|Metals and energy|-
-CL|Crude oil · $10 a tick|Metals and energy|-`);
-const FOREX = rows(`
-EURUSD|Euro / US dollar|Majors
-GBPUSD|British pound / US dollar|Majors
-USDJPY|US dollar / Japanese yen|Majors
-USDCHF|US dollar / Swiss franc|Majors
-AUDUSD|Australian dollar / US dollar|Majors
-USDCAD|US dollar / Canadian dollar|Majors
-NZDUSD|New Zealand dollar / US dollar|Majors
-EURGBP|Euro / British pound|Crosses
-EURJPY|Euro / Japanese yen|Crosses
-GBPJPY|British pound / Japanese yen|Crosses
-EURCHF|Euro / Swiss franc|Crosses
-AUDJPY|Australian dollar / Japanese yen|Crosses
-EURAUD|Euro / Australian dollar|Crosses
-GBPCHF|British pound / Swiss franc|Crosses
-CADJPY|Canadian dollar / Japanese yen|Crosses
-NZDJPY|New Zealand dollar / Japanese yen|Crosses
-USDMXN|US dollar / Mexican peso|Exotics
-USDZAR|US dollar / South African rand|Exotics
-USDSEK|US dollar / Swedish krona|Exotics
-USDTRY|US dollar / Turkish lira|Exotics|-`);
-const STOCKS = rows(`
-SPY|S&P 500 ETF|Index ETFs
-QQQ|Nasdaq-100 ETF|Index ETFs
-IWM|Russell 2000 ETF|Index ETFs
-DIA|Dow Jones ETF|Index ETFs
-XLK|Technology sector ETF|Sector ETFs
-XLF|Financials sector ETF|Sector ETFs
-XLE|Energy sector ETF|Sector ETFs
-XLV|Health care sector ETF|Sector ETFs
-SMH|Semiconductor ETF|Sector ETFs
-AAPL|Apple|Shares
-MSFT|Microsoft|Shares
-NVDA|NVIDIA|Shares
-AMZN|Amazon|Shares
-GOOGL|Alphabet|Shares
-META|Meta Platforms|Shares
-TSLA|Tesla|Shares
-AVGO|Broadcom|Shares
-AMD|Advanced Micro Devices|Shares
-NFLX|Netflix|Shares
-ADBE|Adobe|Shares
-CRM|Salesforce|Shares
-ORCL|Oracle|Shares
-INTC|Intel|Shares
-QCOM|Qualcomm|Shares
-MU|Micron|Shares
-TXN|Texas Instruments|Shares
-CSCO|Cisco|Shares
-IBM|IBM|Shares
-JPM|JPMorgan Chase|Shares
-BAC|Bank of America|Shares
-GS|Goldman Sachs|Shares
-MS|Morgan Stanley|Shares
-WFC|Wells Fargo|Shares
-V|Visa|Shares
-MA|Mastercard|Shares
-PYPL|PayPal|Shares
-XOM|Exxon Mobil|Shares
-CVX|Chevron|Shares
-COP|ConocoPhillips|Shares
-UNH|UnitedHealth|Shares
-JNJ|Johnson & Johnson|Shares
-LLY|Eli Lilly|Shares
-PFE|Pfizer|Shares
-MRK|Merck|Shares
-ABBV|AbbVie|Shares
-KO|Coca-Cola|Shares
-PEP|PepsiCo|Shares
-MCD|McDonald's|Shares
-WMT|Walmart|Shares
-COST|Costco|Shares
-HD|Home Depot|Shares
-NKE|Nike|Shares
-DIS|Disney|Shares
-BA|Boeing|Shares
-CAT|Caterpillar|Shares
-GE|GE Aerospace|Shares
-UBER|Uber|Shares
-COIN|Coinbase|Shares
-PLTR|Palantir|Shares
-ARM|Arm Holdings · listed 2023|Shares|ipo
-RDDT|Reddit · listed 2024|Shares|ipo`);
-
-const toItems = (rs: string[][], opt = false): Item[] => rs.map(([c, name, group, nh]) => ({
-  v: opt ? `OPT:${c}` : c, tag: opt ? `${c} opt.` : c, name: opt ? `${c} options · ${name.replace(/ · listed.*/, '')}` : name, group: opt ? `${group.replace(/s$/, '')} options` : group,
-  noHistory: nh === 'ipo' ? 'listed less than 5 years ago' : nh === '-' ? 'no 5-year history bought yet' : undefined,
-}));
-export const CATALOG: { key: InstrumentType; label: string; short: string; items: Item[] }[] = [
-  { key: 'future', label: 'Futures', short: 'Fut', items: toItems(FUTURES) },
-  { key: 'forex', label: 'Forex', short: 'FX', items: toItems(FOREX) },
-  { key: 'stock', label: 'Stocks', short: 'Stk', items: toItems(STOCKS) },
-  { key: 'option', label: 'Options', short: 'Opt', items: toItems(STOCKS, true) },
-];
-const ALL = CATALOG.flatMap((t) => t.items.map((i) => ({ ...i, type: t.key, typeLabel: t.label, short: t.short })));
+export type { InstrumentType } from '../instrumentManagement';
+const CATEGORIES = instrumentManagement.categories();
+const ALL = instrumentManagement.instruments().map((i) => ({ ...i, v: i.id }));
 const BY_V = Object.fromEntries(ALL.map((i) => [i.v, i]));
 const ORDER = ALL.map((i) => i.v);
-/** Instrument lists: one click adds every instrument in it */
-const SAVED: [string, string[]][] = [
-  ['Index futures', ['MNQ', 'MES', 'NQ', 'ES']],
-  ['Micro futures', ['MNQ', 'MES', 'M2K', 'MYM', 'M6E', 'MGC', 'MCL']],
-  ['Forex majors', ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'USDCAD', 'NZDUSD']],
-  ['Index ETFs', ['SPY', 'QQQ', 'IWM', 'DIA']],
-  ['Mega-cap tech', ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'TSLA']],
-];
+type Item = (typeof ALL)[number];
 /** recent picks, kept for the page's life (in memory, like the rest of the prototype) */
 let RECENT: string[] = ['MNQ', 'SPY', 'EURUSD', 'OPT:QQQ'];
 
@@ -187,7 +68,7 @@ export function InstrumentMultiSelect({ value, onChange, className }: { value: s
   const drop = (bs: string[]) => onChange(picked.filter((v) => !bs.includes(baseOf(v))));
   const toggle = (b: string) => (has(b) ? drop([b]) : add([b]));
   const ql = q.trim().toLowerCase();
-  const match = (i: Item & { typeLabel: string }) => !ql || i.tag.toLowerCase().startsWith(ql) || i.v.toLowerCase().startsWith(ql) || i.name.toLowerCase().includes(ql) || i.group.toLowerCase().includes(ql);
+  const match = (i: Item) => !ql || i.tag.toLowerCase().startsWith(ql) || i.v.toLowerCase().startsWith(ql) || i.name.toLowerCase().includes(ql) || i.group.toLowerCase().includes(ql);
   // symbol matches first, then names starting with it, then the rest; category order kept within each rank
   const rank = (i: Item) => (!ql ? 0 : i.tag.toLowerCase().startsWith(ql) ? 0 : i.name.toLowerCase().split(/[\s/·&]+/).some((w) => w.startsWith(ql)) ? 1 : 2);
   const hits = useMemo(() => ALL.filter(match).map((i, k) => ({ i, k, r: rank(i) })).sort((a, b) => a.r - b.r || a.k - b.k).map((x) => x.i), [ql]);
@@ -219,20 +100,21 @@ export function InstrumentMultiSelect({ value, onChange, className }: { value: s
       {recent.map((v) => BY_V[v] && row(BY_V[v]))}
       {head('Instrument lists')}
       <div className="flex flex-wrap gap-1.5 px-2 pb-1">
-        {SAVED.map(([name, vs]) => {
-          const all = vs.filter((v) => !BY_V[v]?.noHistory).every(has);
+        {instrumentManagement.lists().map(({ id, name, instruments: vs }) => {
+          const ok = vs.filter((v) => !BY_V[v]?.noHistory), skipped = vs.filter((v) => BY_V[v]?.noHistory);
+          const all = ok.every(has);
           return (
-            <button key={name} type="button" onClick={() => (all ? drop(vs) : add(vs))} title={vs.join(', ')}
+            <button key={id} type="button" onClick={() => (all ? drop(vs) : add(vs))} title={vs.join(', ') + (skipped.length ? `\nSkipped (no 5-year history): ${skipped.join(', ')}` : '')}
               className={cn('h-8 rounded-md border px-2.5 text-xs font-semibold', all ? 'border-sky-500/60 bg-sky-500/15 text-sky-200' : 'border-input text-muted-foreground hover:bg-accent hover:text-foreground')}>
-              {all ? '✓ ' : '+ '}{name} <span className="font-normal opacity-70">· {vs.length}</span>
+              {all ? '✓ ' : '+ '}{name} <span className="font-normal opacity-70">· {ok.length}{skipped.length > 0 && ` (${skipped.length} skipped)`}</span>
             </button>
           );
         })}
       </div>
-      <div className="px-2 pb-2 pt-1 text-xs text-muted-foreground">Type a symbol or a name, or pick a tab to browse a whole category.</div>
+      <div className="px-2 pb-2 pt-1 text-xs text-muted-foreground">Type a symbol or a name, or pick a tab to browse a whole category. Instruments and Instrument lists are managed in Instrument management.</div>
     </>;
   } else if (tab === 'all') {
-    body = CATALOG.map((t) => {
+    body = CATEGORIES.map((t) => {
       const list = hits.filter((i) => i.type === t.key);
       if (!list.length) return null;
       return (
@@ -258,7 +140,7 @@ export function InstrumentMultiSelect({ value, onChange, className }: { value: s
           </div>
         );
       })}
-      {!list.length && <div className="px-2 py-3 text-sm text-muted-foreground">No {CATALOG.find((t) => t.key === tab)!.label.toLowerCase()} match “{q}”.</div>}
+      {!list.length && <div className="px-2 py-3 text-sm text-muted-foreground">No {CATEGORIES.find((t) => t.key === tab)!.label.toLowerCase()} match “{q}”.</div>}
       {list.length > shown && <div className="px-2 py-2">{linkBtn(() => setShown(shown + PAGE), <>Show {Math.min(PAGE, list.length - shown)} more ({list.length - shown} left)</>)}</div>}
     </>;
   }
@@ -290,10 +172,10 @@ export function InstrumentMultiSelect({ value, onChange, className }: { value: s
       {open && (
         <div className="rounded-md border bg-card shadow-lg">
           <div role="tablist" aria-label="Instrument category" className="flex flex-wrap gap-1 border-b p-1">
-            {(['all', ...CATALOG.map((t) => t.key)] as Tab[]).map((k) => (
+            {(['all', ...CATEGORIES.map((t) => t.key)] as Tab[]).map((k) => (
               <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
                 className={cn('h-8 shrink-0 rounded px-2.5 text-xs font-semibold', tab === k ? 'bg-sky-500/15 text-sky-200' : 'text-muted-foreground hover:bg-accent hover:text-foreground')}>
-                {k === 'all' ? 'All' : CATALOG.find((t) => t.key === k)!.label} <span className="font-normal opacity-70">{count(k)}</span>
+                {k === 'all' ? 'All' : CATEGORIES.find((t) => t.key === k)!.label} <span className="font-normal opacity-70">{count(k)}</span>
               </button>
             ))}
           </div>
