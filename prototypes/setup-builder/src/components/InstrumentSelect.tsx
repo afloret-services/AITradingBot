@@ -175,6 +175,8 @@ export function InstrumentMultiSelect({ value, onChange, className }: { value: s
     document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h);
   }, [open]);
   useEffect(() => setShown(PAGE), [tab, q]);
+  const [recent, setRecent] = useState(RECENT);
+  useEffect(() => { if (open) setRecent(RECENT); }, [open]);
   const picked = sortInstruments(value);
   const has = (b: string) => picked.some((v) => baseOf(v) === b);
   const add = (bs: string[]) => {
@@ -193,10 +195,10 @@ export function InstrumentMultiSelect({ value, onChange, className }: { value: s
   const options = picked.filter((v) => v.startsWith('OPT:'));
   const tags = allTags ? picked : picked.slice(0, TAGS_SHOWN);
 
-  const Row = ({ i }: { i: (typeof ALL)[number] }) => {
+  const row = (i: (typeof ALL)[number]) => {
     const on = has(i.v), off = !!i.noHistory && !on;
     return (
-      <button type="button" role="option" aria-selected={on} aria-disabled={off} onClick={() => !off && toggle(i.v)}
+      <button key={i.v} type="button" role="option" aria-selected={on} aria-disabled={off} onClick={() => !off && toggle(i.v)}
         className={cn('flex w-full items-center gap-2.5 rounded px-2 py-1.5 text-left text-sm', off ? 'cursor-not-allowed opacity-45' : 'hover:bg-accent', on && 'bg-sky-500/10')}>
         <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs font-black', on ? 'border-sky-400 bg-sky-500 text-black' : 'border-input')}>{on ? '✓' : ''}</span>
         <span className="w-20 shrink-0 font-semibold">{i.tag}</span>
@@ -205,17 +207,17 @@ export function InstrumentMultiSelect({ value, onChange, className }: { value: s
       </button>
     );
   };
-  const Head = ({ children, right }: { children: React.ReactNode; right?: React.ReactNode }) => (
-    <div className="sticky top-0 z-10 -mx-1 flex items-center justify-between gap-2 bg-card px-3 pb-1 pt-2"><span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{children}</span>{right}</div>
+  const head = (children: React.ReactNode, right?: React.ReactNode) => (
+    <div className="flex items-center justify-between gap-2 px-2 pb-1 pt-2"><span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{children}</span>{right}</div>
   );
-  const LinkBtn = ({ onClick, children }: { onClick: () => void; children: React.ReactNode }) => <button type="button" onClick={onClick} className="text-xs font-semibold text-sky-300 hover:underline">{children}</button>;
+  const linkBtn = (onClick: () => void, children: React.ReactNode) => <button type="button" onClick={onClick} className="text-xs font-semibold text-sky-300 hover:underline">{children}</button>;
 
   let body: React.ReactNode;
   if (tab === 'all' && !ql) {
     body = <>
-      <Head>Recent</Head>
-      {RECENT.map((v) => BY_V[v] && <Row key={v} i={BY_V[v]} />)}
-      <Head>Instrument lists</Head>
+      {head('Recent')}
+      {recent.map((v) => BY_V[v] && row(BY_V[v]))}
+      {head('Instrument lists')}
       <div className="flex flex-wrap gap-1.5 px-2 pb-1">
         {SAVED.map(([name, vs]) => {
           const all = vs.filter((v) => !BY_V[v]?.noHistory).every(has);
@@ -235,8 +237,8 @@ export function InstrumentMultiSelect({ value, onChange, className }: { value: s
       if (!list.length) return null;
       return (
         <div key={t.key}>
-          <Head right={list.length > PER_CAT && <LinkBtn onClick={() => setTab(t.key)}>Show all {list.length} →</LinkBtn>}>{t.label} <span className="font-normal normal-case tracking-normal">· {list.length}</span></Head>
-          {list.slice(0, PER_CAT).map((i) => <Row key={i.v} i={i} />)}
+          {head(<>{t.label} <span className="font-normal normal-case tracking-normal">· {list.length}</span></>, list.length > PER_CAT && linkBtn(() => setTab(t.key), <>Show all {list.length} →</>))}
+          {list.slice(0, PER_CAT).map((i) => row(i))}
         </div>
       );
     });
@@ -251,13 +253,13 @@ export function InstrumentMultiSelect({ value, onChange, className }: { value: s
         const all = avail.length > 0 && avail.every(has);
         return (
           <div key={g}>
-            <Head right={avail.length > 0 && avail.length <= 12 && <LinkBtn onClick={() => (all ? drop(avail) : add(avail))}>{all ? 'Clear' : 'Select all'}</LinkBtn>}>{g}</Head>
-            {gi.map((i) => <Row key={i.v} i={i} />)}
+            {head(g, avail.length > 0 && avail.length <= 12 && linkBtn(() => (all ? drop(avail) : add(avail)), <>{all ? 'Clear' : 'Select all'}</>))}
+            {gi.map((i) => row(i))}
           </div>
         );
       })}
       {!list.length && <div className="px-2 py-3 text-sm text-muted-foreground">No {CATALOG.find((t) => t.key === tab)!.label.toLowerCase()} match “{q}”.</div>}
-      {list.length > shown && <div className="px-2 py-2"><LinkBtn onClick={() => setShown(shown + PAGE)}>Show {Math.min(PAGE, list.length - shown)} more ({list.length - shown} left)</LinkBtn></div>}
+      {list.length > shown && <div className="px-2 py-2">{linkBtn(() => setShown(shown + PAGE), <>Show {Math.min(PAGE, list.length - shown)} more ({list.length - shown} left)</>)}</div>}
     </>;
   }
 
@@ -281,7 +283,7 @@ export function InstrumentMultiSelect({ value, onChange, className }: { value: s
         )}
         {picked.length > 1 && <button type="button" onClick={(e) => { e.stopPropagation(); onChange([]); }} className="h-7 px-1.5 text-xs text-muted-foreground hover:text-foreground">Clear all</button>}
         <input value={q} onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
-          onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); if (e.key === 'Backspace' && !q && picked.length) drop([baseOf(picked[picked.length - 1])]); }}
+          onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); }}
           placeholder={picked.length ? 'Search to add…' : 'Search symbols or names…'} aria-label="Search instruments" className="h-7 min-w-[8rem] flex-1 bg-transparent px-1 outline-none placeholder:text-muted-foreground" />
         <button type="button" aria-label={open ? 'close the list' : 'open the list'} onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className="ml-auto flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-accent">{open ? '▴' : '▾'}</button>
       </div>
