@@ -1,17 +1,17 @@
-// PROTOTYPE: a Run binds a Setup version to an instrument and may override whole Trade-settings sections.
+// PROTOTYPE: a Run binds a Setup version to one or more instruments (one binding each, the same overrides) and may override whole Trade-settings sections.
 import { useMemo, useState } from 'react';
 import { Data, run } from './engine';
 import { Setup, tradingWindowText } from './model';
 import { parseInstrument } from './components/InstrumentSelect';
 import { SectionKey, getSection, setSection } from './components/sections';
-export interface RunDraft { instrument: string; overrides: Partial<Record<SectionKey, any>> }
+export interface RunDraft { instruments: string[]; overrides: Partial<Record<SectionKey, any>> }
 export function applyOverrides(s: Setup, r: RunDraft): Setup {
   const c = structuredClone(s);
   for (const [k, v] of Object.entries(r.overrides)) setSection(c, k as SectionKey, structuredClone(v));
   return c;
 }
 export function useRunDraft(data: Data, setup: Setup) {
-  const [draft, setDraft] = useState<RunDraft>({ instrument: 'MNQ', overrides: {} });
+  const [draft, setDraft] = useState<RunDraft>({ instruments: ['MNQ'], overrides: {} });
   const effective = useMemo(() => applyOverrides(setup, draft), [setup, draft]);
   const result = useMemo(() => (Object.keys(draft.overrides).length ? run(data, effective) : null), [data, effective, draft]);
   const override = (k: SectionKey, on: boolean) => setDraft((d) => { const o = { ...d.overrides }; if (on) o[k] = structuredClone(getSection(setup, k)); else delete o[k]; return { ...d, overrides: o }; });
@@ -30,4 +30,8 @@ export function instrumentWarnings(s: Setup, inst: string) {
   if (p.type === 'option') out.push('This prototype does not price options: the preview shows the underlying\'s moves, not the option\'s.');
   if (inst !== 'MNQ') out.push(`No ${p.type === 'option' ? p.code : inst} bars in this prototype: the preview stays on MNQ.`);
   return out;
+}
+/** every picked instrument's warnings, each prefixed with its name when there are several */
+export function runWarnings(s: Setup, insts: string[]) {
+  return insts.flatMap((i) => instrumentWarnings(s, i).map((w) => (insts.length > 1 ? `${parseInstrument(i).type === 'option' ? `${parseInstrument(i).code} options` : i}: ${w}` : w)));
 }

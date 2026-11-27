@@ -13,8 +13,8 @@ import { RuleEditor, appendAnd } from '../components/RuleEditor';
 import { TokenCtx, shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, NumInput } from '../components/ui';
 import { Cond, Setup, TFS, TF, uid, SECTION_NAMES, validate, Step, labelsOf, ruleDescription, addMirror, phrase, stopPhrase } from '../model';
-import { useRunDraft, instrumentWarnings } from '../runDraft';
-import { InstrumentSelect } from '../components/InstrumentSelect';
+import { useRunDraft, instrumentWarnings, runWarnings } from '../runDraft';
+import { InstrumentMultiSelect } from '../components/InstrumentSelect';
 import { TrialBacktest } from '../components/TrialBacktest';
 
 export function VariantB(p: VariantProps) {
@@ -179,7 +179,7 @@ export function VariantB(p: VariantProps) {
         </Card>
         <Card className="p-3">
           <div className="flex items-center justify-between"><div className="text-lg font-bold tracking-tight">Try it as a Run</div><Button size="sm" variant={runMode ? 'default' : 'outline'} onClick={() => setRunMode(!runMode)}>{runMode ? 'Close Run' : 'Create a Run…'}</Button></div>
-          {runMode && <div className="mt-2 space-y-2"><RunHelp setup={setup} what="intro" /><RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></div>}
+          {runMode && <div className="mt-2 space-y-2"><RunHelp setup={setup} what="intro" /><RunHelp setup={setup} what="instrument" instruments={runD.draft.instruments} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></div>}
           {runMode && <RunDiff setup={setup} runD={runD} ctx={ctxFor(0, 99)} base={result} data={data} />}
         </Card>
       </aside>
@@ -191,8 +191,8 @@ function RunDiff({ setup, runD, ctx, base, data }: { setup: Setup; runD: ReturnT
   const [editing, setEditing] = useState<SectionKey | null>(null);
   return (
     <div className="mt-2 space-y-2 text-sm">
-      <div className="flex items-start gap-2"><span className="pt-1.5">on</span><InstrumentSelect value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} className="min-w-0 flex-1" /></div>
-      {instrumentWarnings(setup, runD.draft.instrument).map((w) => <div key={w} className="text-amber-300">{w}</div>)}
+      <div className="flex items-start gap-2"><span className="pt-1.5">on</span><InstrumentMultiSelect value={runD.draft.instruments} onChange={(v) => runD.setDraft({ ...runD.draft, instruments: v })} className="min-w-0 flex-1" /></div>
+      {runWarnings(setup, runD.draft.instruments).map((w) => <div key={w} className="text-amber-300">{w}</div>)}
       <div className="space-y-1.5 sm:hidden">
         {SECTIONS.map((k) => {
           const on = k in runD.draft.overrides;

@@ -11,8 +11,8 @@ import { RuleEditor, appendAnd, StepConfigure } from '../components/RuleEditor';
 import { shortName } from '../components/TokenPicker';
 import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs, Field, usePhone, Sheet } from '../components/ui';
 import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN_KINDS, patternUsage, labelsOf, validate, ruleDescription , tradingWindowText, stopPhrase, phrase } from '../model';
-import { useRunDraft, instrumentWarnings } from '../runDraft';
-import { InstrumentSelect } from '../components/InstrumentSelect';
+import { useRunDraft, instrumentWarnings, runWarnings } from '../runDraft';
+import { InstrumentMultiSelect } from '../components/InstrumentSelect';
 import { TrialBacktest } from '../components/TrialBacktest';
 import { SetupMap } from '../components/SetupMap';
 
@@ -60,7 +60,7 @@ export function VariantC(p: VariantProps) {
         <Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="h-9 w-64 max-w-full text-lg font-bold tracking-tight" />
         <button onClick={() => setSel({ kind: 'settings' })} className="min-h-9 rounded-md border border-sky-500/40 bg-sky-500/[0.06] px-3 py-1.5 text-left text-sm hover:bg-accent">Base bar <b>{setup.settings.base_bar}</b> · Trading window <b>{tradingWindowText(setup.settings.trading_hours)}</b> · Trade overlap <b>{(ONE_AT_A_TIME[setup.settings.one_at_a_time]?.[0] || '').replace(/:.*$/, '').replace(/^./, (c) => c.toLowerCase())}</b> · News filter <b>{NEWS[setup.settings.news_rule.mode]?.[0].replace(/^./, (c) => c.toLowerCase())}</b> ✎</button>
         <Tabs value={mode} onChange={(v) => { setMode(v as 'build' | 'run'); if (v === 'run') setSel({ kind: 'trade' }); }} tabs={[['build', 'Build the Setup'], ['run', 'Create a Run']]} />
-        {run && <div className="order-last flex basis-full flex-wrap items-start gap-x-4 gap-y-1.5 border-t pt-2"><InstrumentSelect value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} className="max-w-xl" /><div className="min-w-0 flex-1 basis-64 space-y-1 text-xs text-amber-300">{instrumentWarnings(setup, runD.draft.instrument).map((w) => <div key={w}>{w}</div>)}</div></div>}
+        {run && <div className="order-last flex min-w-0 basis-full flex-wrap items-start gap-x-4 gap-y-1.5 border-t pt-2"><InstrumentMultiSelect value={runD.draft.instruments} onChange={(v) => runD.setDraft({ ...runD.draft, instruments: v })} className="w-full max-w-xl" /><div className="min-w-0 flex-1 basis-64 space-y-1 text-xs text-amber-300">{runWarnings(setup, runD.draft.instruments).map((w) => <div key={w}>{w}</div>)}</div></div>}
         <button onClick={() => setSel({ kind: 'review' })} className={cn('ml-auto h-9 rounded-md border px-3 text-sm font-medium hover:bg-accent', sel.kind === 'review' && 'border-sky-400 bg-sky-500/10')}>Review & save {issues.some((i) => i.level === 'error') ? <span className="text-red-300">· {issues.filter((i) => i.level === 'error').length} errors</span> : issues.length ? <span className="text-amber-300">· {issues.length} warnings</span> : <span className="text-cyan-300">· ready</span>}</button>
         <div>{p.saveBar}</div>
       </div>
@@ -205,7 +205,7 @@ export function VariantC(p: VariantProps) {
             <div className="space-y-2"><H>Entry · {setup.branches[sel.bi].side}</H><EntryEditor result={result} data={data} setup={setup} mutate={mutate} bi={sel.bi} ctx={tokenCtx(setup, sel.bi, 99)} /></div>
           )}
           {sel.kind === 'trade' && (
-            run ? <div className="space-y-2"><H>Create a Run</H><div className="text-xs text-muted-foreground">Pick a section on the Trade card to override it for this Run. Signal steps and While-in-a-Trade rules are locked: changing them makes a new Setup version.</div><RunHelp setup={setup} what="intro" /><RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></div> :
+            run ? <div className="space-y-2"><H>Create a Run</H><div className="text-xs text-muted-foreground">Pick a section on the Trade card to override it for this Run. Signal steps and While-in-a-Trade rules are locked: changing them makes a new Setup version.</div><RunHelp setup={setup} what="intro" /><RunHelp setup={setup} what="instrument" instruments={runD.draft.instruments} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></div> :
             <div className="space-y-3"><H>Trade settings</H><div className="text-xs text-muted-foreground">The Setup's defaults; a Run may override each section. Click a section to edit it.</div>
               {SECTIONS.filter((k) => k !== 'stop').map((k) => (
                 <button key={k} onClick={() => setSel({ kind: 'section', k })} className="block w-full space-y-1 rounded-md border p-2 text-left hover:border-sky-400/60">

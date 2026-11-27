@@ -449,7 +449,7 @@ function instrumentHere(v: string): string {
 const SPECS: Record<string, { pt: number; tick: number; unit: string } | undefined> = {
   MNQ: { pt: 2, tick: 0.25, unit: 'points' }, NQ: { pt: 20, tick: 0.25, unit: 'points' }, MES: { pt: 5, tick: 0.25, unit: 'points' }, ES: { pt: 50, tick: 0.25, unit: 'points' },
 };
-function RunHelp_({ setup, what, instrument, overrides }: { setup: Setup; what: 'intro' | 'instrument' | 'overrides'; instrument?: string; overrides?: number }) {
+function RunHelp_({ setup, what, instruments, overrides }: { setup: Setup; what: 'intro' | 'instrument' | 'overrides'; instruments?: string[]; overrides?: number }) {
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   if (what === 'intro') return (
     <HelpBox>
@@ -458,13 +458,17 @@ function RunHelp_({ setup, what, instrument, overrides }: { setup: Setup; what: 
     </HelpBox>
   );
   if (what === 'instrument') {
-    const sp = SPECS[instrument || 'MNQ'];
     const budget = (setup.trade_settings.risk.capital * setup.trade_settings.risk.pct) / 100;
+    const here = (instrument: string) => {
+      const sp = SPECS[instrument];
+      return sp ? <>{B(instrument)} is {B(`$${sp.pt} a point`)}, tick {sp.tick}. With this Setup's {B(`$${budget.toFixed(0)}`)} Risk per Trade, a 20-point stop loss risks ${(20 * sp.pt).toFixed(0)} per contract, so {Math.floor(budget / (20 * sp.pt)) >= 1 ? <>it trades {B(`${Math.min(setup.trade_settings.risk.max_contracts, Math.floor(budget / (20 * sp.pt)))} contract(s)`)}</> : <>{B('every such Signal is refused')} ("stop loss too wide"): raise Risk per Trade in an override or pick the micro contract</>}.</>
+        : <>{B(instrumentLabel(instrument))} {instrumentHere(instrument)}</>;
+    };
+    const list = instruments?.length ? instruments : ['MNQ'];
     return (
       <HelpBox>
-        <div>The Rule blocks name no instrument, so the same Setup can trade several. The instrument sets the tick size and the dollars per point, so the same stop loss in points risks a different amount, and changes the number of contracts.</div>
-        {sp ? <div>Here: {B(instrument)} is {B(`$${sp.pt} a point`)}, tick {sp.tick}. With this Setup's {B(`$${budget.toFixed(0)}`)} Risk per Trade, a 20-point stop loss risks ${(20 * sp.pt).toFixed(0)} per contract, so {Math.floor(budget / (20 * sp.pt)) >= 1 ? <>it trades {B(`${Math.min(setup.trade_settings.risk.max_contracts, Math.floor(budget / (20 * sp.pt)))} contract(s)`)}</> : <>{B('every such Signal is refused')} ("stop loss too wide"): raise Risk per Trade in an override or pick the micro contract</>}.</div>
-          : <div>Here: {B(instrumentLabel(instrument || ''))} {instrumentHere(instrument || '')}</div>}
+        <div>The Rule blocks name no instrument, so the same Setup can trade several. Pick one or more: the Run binds this Setup version once per instrument, each binding with the same risk overrides and its own results. The instrument sets the tick size and the dollars per point, so the same stop loss in points risks a different amount, and changes the number of contracts.</div>
+        {list.length === 1 ? <div>Here: {here(list[0])}</div> : <ul className="list-disc space-y-0.5 pl-5">{list.map((i) => <li key={i}>{here(i)}</li>)}</ul>}
       </HelpBox>
     );
   }

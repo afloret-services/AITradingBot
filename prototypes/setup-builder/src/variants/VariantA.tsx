@@ -10,8 +10,8 @@ import { CondEditor, tokenCtx } from '../components/CondEditor';
 import { BaseBarEditor, TradingHoursEditor, SessionsEditor, BehaviourEditor, IndicatorList, PatternList, StepLimits, EntryEditor, SECTIONS, SectionEditor, getSection, sectionSummary, InPositionRules, indicatorUsage, SectionKey, setSection, SectionHelp, SignalStepsHelp, BasicsHelp, RunHelp, ReviewHelp, IndicatorsHelp, PatternsHelp, IndicatorsPatternsIntro, WhenHelp, MirrorNote } from '../components/sections';
 import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, Field } from '../components/ui';
 import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf, patternUsage, stopPhrase } from '../model';
-import { useRunDraft, instrumentWarnings } from '../runDraft';
-import { InstrumentSelect } from '../components/InstrumentSelect';
+import { useRunDraft, instrumentWarnings, runWarnings } from '../runDraft';
+import { InstrumentMultiSelect } from '../components/InstrumentSelect';
 import { TrialBacktest } from '../components/TrialBacktest';
 
 const STAGES = ['General', 'Indicators & patterns', 'When to trade', 'Signal steps', 'Entry & stop loss', 'Trade settings', 'Review & save', 'Create a Run'] as const;
@@ -213,7 +213,7 @@ const SUBS = [
   'The Entry block: order type, price and the mandatory stop loss.',
   'The Setup defaults a Run may override section by section, plus the While-in-a-Trade rules.',
   'The whole Setup at a glance, what it did on MNQ, what the engine will read, and what still blocks a Freeze.',
-  'Bind this Setup to an instrument and override whole sections. Overrides make no new version.',
+  'Bind this Setup to one or more instruments and override whole sections. Overrides make no new version.',
 ];
 
 function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
@@ -222,10 +222,10 @@ function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
   return (
     <div className="space-y-3">
       <RunHelp setup={setup} what="intro" />
-      <div className="flex flex-wrap items-start gap-3"><div className="min-w-0 basis-full sm:basis-auto"><Field label={<span className="text-base font-bold tracking-tight text-foreground">Instrument</span>}><InstrumentSelect value={runD.draft.instrument} onChange={(v) => runD.setDraft({ ...runD.draft, instrument: v })} /></Field></div>
+      <div className="flex flex-wrap items-start gap-3"><div className="min-w-0 basis-full sm:max-w-xl sm:flex-1"><Field label={<span className="text-base font-bold tracking-tight text-foreground">Instruments</span>}><InstrumentMultiSelect value={runD.draft.instruments} onChange={(v) => runD.setDraft({ ...runD.draft, instruments: v })} /></Field></div>
         <Field label={<span className="text-base font-bold tracking-tight text-foreground">Binds</span>}><span className="mono break-words text-xs">{setup.setup_id} · Draft (a paper Run needs a frozen version that passed the gate)</span></Field></div>
-      {instrumentWarnings(setup, runD.draft.instrument).map((w) => <div key={w} className="text-xs text-amber-300">{w}</div>)}
-      <RunHelp setup={setup} what="instrument" instrument={runD.draft.instrument} />
+      {runWarnings(setup, runD.draft.instruments).map((w) => <div key={w} className="text-xs text-amber-300">{w}</div>)}
+      <RunHelp setup={setup} what="instrument" instruments={runD.draft.instruments} />
       <div className="pt-2 text-base font-bold tracking-tight text-foreground">Risk overrides</div>
       <RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} />
       <div className="divide-y rounded-md border">

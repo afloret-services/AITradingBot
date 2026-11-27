@@ -35,7 +35,7 @@ Read this first in a new session. It replaces the long conversation history.
 
 - Stop loss "Measured from": a level, the entry price, or a fixed $ a contract.
 - Losing streak: per Setup, stop for the day after N losers, resume next day at reduced risk (never below 1 contract).
-- Stocks and options are in scope (map Notes); Create a Run picks the instrument by type.
+- Stocks and options are in scope (map Notes); Create a Run and the Draft backtest pick instruments with a multi-select (tags, grouped by category); a Run binds the version once per instrument.
 - Review & save has a **backtest Run on this Draft** (ADR 0007, ticket #88): build years only, listed with the Runs marked Draft, never promoted, never read by the gate. The prototype computes MNQ for real and NQ on MNQ bars at $20 a point; everything else shows "no numbers".
 - Engine: stop entries fill on a break through the price; a bar opening past a resting price fills at its open; `run(data, setup, { pointValue })`.
 
