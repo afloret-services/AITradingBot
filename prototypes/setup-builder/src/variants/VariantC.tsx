@@ -15,7 +15,6 @@ import { useRunDraft, instrumentWarnings, runWarnings } from '../runDraft';
 import { InstrumentMultiSelect } from '../components/InstrumentSelect';
 import { TrialBacktest } from '../components/TrialBacktest';
 import { RunStage } from './VariantA';
-import { SetupMap } from '../components/SetupMap';
 
 type Sel = { kind: 'step'; bi: number; si: number } | { kind: 'entry'; bi: number } | { kind: 'trade' } | { kind: 'settings' } | { kind: 'section'; k: SectionKey } | { kind: 'review' };
 
@@ -93,7 +92,7 @@ export function VariantC(p: VariantProps) {
           <div className="hidden text-[11px] text-muted-foreground lg:block">Click to add to the selected step card.</div>
         </div>
         {/* lanes + chart */}
-        <div className="min-w-0 overflow-auto">
+        <div id="lanes-area" className="min-w-0 scroll-mt-16 overflow-auto">
           <div className="space-y-4 p-3">
             {setup.branches.map((br, bi) => (
               <div key={br.id}>
@@ -151,13 +150,12 @@ export function VariantC(p: VariantProps) {
         <div ref={inspRef} className={cn('ctl-lg', phone ? 'fixed inset-x-0 bottom-0 z-[61] max-h-[85vh] overflow-auto rounded-t-xl border-t bg-card px-3 pb-6 shadow-2xl' : 'overflow-auto border-l p-3')}>
           {phone && <div className="sticky top-0 z-10 -mx-3 mb-2 flex items-center gap-2 border-b bg-card px-3 py-2"><span className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/40" /><button aria-label="close" onClick={() => setSheetOpen(false)} className="absolute right-3 flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground">×</button></div>}
           {run && sel.kind !== 'review' ? <div className="space-y-3"><H>Create a Run</H><RunStage {...p} runD={runD} hideCompare /></div> : <>
-          {sel.kind === 'review' && <div className="space-y-4"><H>Review & save</H>
+          {sel.kind === 'review' && <div className="space-y-4">
             <Card className="space-y-5 p-4">
+              <div className="text-lg font-bold tracking-tight">Review & save</div>
               <ReviewHelp setup={setup} what="intro" />
-              <div>
-                <div className="mb-2 space-y-1.5"><div className="text-base font-bold tracking-tight text-foreground">Setup at a glance</div><ReviewHelp setup={setup} what="map" /></div>
-                <SetupMap setup={setup} result={result} data={data} focus={p.focus} compact onStep={(f) => { setSel({ kind: 'step', bi: f.bi, si: f.si }); p.setFocus(f); showPanel(); }} onDeclared={() => { setSel({ kind: 'settings' }); showPanel(); }} />
-              </div>
+              <div className="space-y-1.5"><div className="text-base font-bold tracking-tight text-foreground">Setup at a glance</div>
+                <button type="button" onClick={() => { if (phone) setSheetOpen(false); const el = document.getElementById('lanes-area'); el?.scrollTo({ top: 0, behavior: 'smooth' }); el?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20">← See it in the lanes</button></div>
               <div><div className="mb-1 text-base font-bold tracking-tight text-foreground">Rule description (generated, stored at Freeze)</div><div className="mb-2"><ReviewHelp setup={setup} what="rule" /></div><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{ruleDescription(setup)}</pre></div>
               <div className="space-y-2"><div className="text-base font-bold tracking-tight text-foreground">Checks</div>
                 <ReviewHelp setup={setup} what="checks" issues={issues} />
