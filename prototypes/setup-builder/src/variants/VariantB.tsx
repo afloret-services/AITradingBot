@@ -16,6 +16,7 @@ import { Cond, Setup, TFS, TF, uid, SECTION_NAMES, validate, Step, labelsOf, rul
 import { useRunDraft, instrumentWarnings, runWarnings } from '../runDraft';
 import { InstrumentMultiSelect } from '../components/InstrumentSelect';
 import { TrialBacktest } from '../components/TrialBacktest';
+import { RunStage } from './VariantA';
 
 export function VariantB(p: VariantProps) {
   const { setup, mutate, data, result } = p;
@@ -177,60 +178,11 @@ export function VariantB(p: VariantProps) {
           <div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest Run on this Draft</div>
           <TrialBacktest setup={setup} data={data} />
         </Card>
-        <Card className="p-3">
-          <div className="flex items-center justify-between"><div className="text-lg font-bold tracking-tight">Try it as a Run</div><Button size="sm" variant={runMode ? 'default' : 'outline'} onClick={() => setRunMode(!runMode)}>{runMode ? 'Close Run' : 'Create a Run…'}</Button></div>
-          {runMode && <div className="mt-2 space-y-2"><RunHelp setup={setup} what="intro" /><RunHelp setup={setup} what="instrument" instruments={runD.draft.instruments} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /></div>}
-          {runMode && <RunDiff setup={setup} runD={runD} ctx={ctxFor(0, 99)} base={result} data={data} />}
+        <Card className="p-4">
+          <div className="flex items-center justify-between"><div className="text-base font-bold tracking-tight text-foreground">Create a Run</div><Button size="sm" variant={runMode ? 'default' : 'outline'} onClick={() => setRunMode(!runMode)}>{runMode ? 'Close Run' : 'Create a Run…'}</Button></div>
+          {runMode && <div className="mt-3"><RunStage {...p} runD={runD} /></div>}
         </Card>
       </aside>
-    </div>
-  );
-}
-
-function RunDiff({ setup, runD, ctx, base, data }: { setup: Setup; runD: ReturnType<typeof useRunDraft>; ctx: TokenCtx; base: any; data: any }) {
-  const [editing, setEditing] = useState<SectionKey | null>(null);
-  return (
-    <div className="mt-2 space-y-2 text-sm">
-      <div className="flex items-start gap-2"><span className="pt-1.5">on</span><InstrumentMultiSelect value={runD.draft.instruments} onChange={(v) => runD.setDraft({ ...runD.draft, instruments: v })} className="min-w-0 flex-1" /></div>
-      {runWarnings(setup, runD.draft.instruments).map((w) => <div key={w} className="text-amber-300">{w}</div>)}
-      <div className="space-y-1.5 sm:hidden">
-        {SECTIONS.map((k) => {
-          const on = k in runD.draft.overrides;
-          return (
-            <div key={k} className={cn('rounded-md border p-2', on && 'border-sky-500/40 bg-sky-500/5')}>
-              <div className="flex items-center gap-2 font-medium"><SectionIcon k={k} size={16} />{SECTION_NAMES[k]}
-                <span className="ml-auto flex gap-1.5">{on && <button className="h-7 rounded-md border border-input px-2 font-normal text-muted-foreground" onClick={() => { runD.override(k, false); setEditing(null); }}>reset</button>}<button className="h-7 rounded-md border border-sky-500/40 px-2 font-normal text-sky-300" onClick={() => { if (!on) runD.override(k, true); setEditing(editing === k ? null : k); }}>{on ? (editing === k ? 'done' : 'edit') : 'override'}</button></span></div>
-              <div className={cn('mt-1', on ? 'text-red-300/80 line-through' : 'text-muted-foreground')}>{sectionSummary(setup, k)}</div>
-              {on && <div className="mt-0.5 text-emerald-300">→ {sectionSummary(runD.effective, k)}</div>}
-              {editing === k && on && <div className="mt-2 rounded-md border p-2"><SectionEditor k={k} value={runD.draft.overrides[k]} setup={setup} ctx={ctx} onChange={(v) => runD.setOverride(k, v)} /></div>}
-            </div>
-          );
-        })}
-        <div className="rounded-md border p-2 text-muted-foreground">🔒 Signal steps and While in a Trade are part of the Setup version.</div>
-      </div>
-      <table className="hidden w-full sm:table">
-        <thead><tr className="text-left text-muted-foreground"><th className="py-1">Section</th><th>Setup default</th><th>This Run</th></tr></thead>
-        <tbody>
-          {SECTIONS.map((k) => {
-            const on = k in runD.draft.overrides;
-            return (
-              <React.Fragment key={k}>
-                <tr className={cn('border-t align-top', on && 'bg-sky-500/5')}>
-                  <td className="py-1 pr-2 font-medium"><span className="inline-flex items-center gap-1.5"><SectionIcon k={k} size={16} />{SECTION_NAMES[k]}</span></td>
-                  <td className={cn('pr-2', on && 'text-red-300/80 line-through')}>{sectionSummary(setup, k)}</td>
-                  <td>{on ? <span className="text-emerald-300">{sectionSummary(runD.effective, k)}</span> : <span className="text-muted-foreground">same</span>}
-                    <div className="flex gap-2"><button className="text-sky-300" onClick={() => { if (!on) runD.override(k, true); setEditing(editing === k ? null : k); }}>{on ? 'edit' : 'override'}</button>{on && <button className="text-muted-foreground" onClick={() => { runD.override(k, false); setEditing(null); }}>reset</button>}</div></td>
-                </tr>
-                {editing === k && on && <tr><td colSpan={3} className="pb-2"><div className="rounded-md border p-2"><SectionEditor k={k} value={runD.draft.overrides[k]} setup={setup} ctx={ctx} onChange={(v) => runD.setOverride(k, v)} /></div></td></tr>}
-              </React.Fragment>
-            );
-          })}
-          <tr className="border-t text-muted-foreground"><td className="py-1">Signal steps</td><td colSpan={2}>🔒 part of the Setup version</td></tr>
-          <tr className="border-t text-muted-foreground"><td className="py-1">While in a Trade</td><td colSpan={2}>🔒 part of the Setup version</td></tr>
-        </tbody>
-      </table>
-      {runD.result && <div className="grid gap-2 sm:grid-cols-2"><div className="rounded-md border p-2"><div className="mb-1 font-medium text-muted-foreground">Setup defaults</div><RunSummary result={base} data={data} /></div><div className="rounded-md border border-sky-500/40 bg-sky-500/5 p-2"><div className="mb-1 font-medium text-sky-300">With this Run's overrides</div><RunSummary result={runD.result} data={data} /></div></div>}
-      <div className="text-muted-foreground">Overrides make no new version; the gate judges the defaults.</div>
     </div>
   );
 }

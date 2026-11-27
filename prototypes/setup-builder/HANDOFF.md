@@ -41,11 +41,11 @@ Read this first in a new session. It replaces the long conversation history.
 
 ## Still open (do not answer for the user)
 
-#76's five questions (also on the map and in the README):
+#76's questions (also on the map and in the README; 4 is decided):
 1. Which design wins: A Wizard, B Inline, C Lanes or D Document?
 2. Steps in a fixed order, or edit them in any order?
 3. Indicators configured up front (A, C) or on first use (B, D)?
-4. A Run's overrides: per-section choice (A, B, C) or side-by-side table (D)? (Lanes dropped in-place overrides on the cards on 2026-11-27.)
+4. ~~A Run's overrides~~: decided 2026-11-27, a per-section choice (Setup default / Override) in every design; Lanes and Document now show the Wizard's Create a Run.
 5. Should a Candidate survive the 18:00 Trading-day start?
 
 When answered: post a resolution comment on #76 and close it, add a line to the map's "Decisions so far", remove "Waiting on you", and include the decisions above.

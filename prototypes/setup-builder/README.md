@@ -58,7 +58,7 @@ The ticket resolves once these are answered; the same list is on the ticket's pr
 1. Which design wins: A Wizard, B Inline, C Lanes or D Document?
 2. Steps in a fixed order, or edit them in any order?
 3. Indicators: configured up front (A, C) or on first use (B, D)?
-4. A Run's overrides: a per-section choice (A, B, C) or a side-by-side table (D)? (On 2026-11-27 Lanes dropped its in-place overrides on the cards for the Wizard's per-section list.)
+4. ~~A Run's overrides: a per-section choice or a side-by-side table?~~ **Decided 2026-11-27: a per-section choice (Setup default / Override) in every design.** Lanes dropped its in-place overrides on the cards and Document its side-by-side table; both now show the Wizard's Create a Run.
 5. Should a Candidate survive the 18:00 Trading-day start?
 
 The letters were reordered on 2026-11-23: earlier B was Document and D was Inline.
