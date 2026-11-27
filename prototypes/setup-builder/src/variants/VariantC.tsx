@@ -154,7 +154,7 @@ export function VariantC(p: VariantProps) {
             {issues.map((i, k) => <div key={k} className={cn('text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.level === 'error' ? '✕' : '!'} {i.where}: {i.text}</div>)}
             <H2>Save</H2><ReviewHelp setup={setup} what="save" /><div>{p.saveBar}</div>
             <H2>Rule description (stored at Freeze)</H2><ReviewHelp setup={setup} what="rule" /><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-2 text-[11px]">{ruleDescription(setup)}</pre>
-            <div className="space-y-2 rounded-lg border bg-card/40 p-3"><H2>Backtest Run on this Draft</H2><TrialBacktest setup={setup} data={data} /></div>
+            <Card className="p-4"><div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest Run on this Draft</div><TrialBacktest setup={setup} data={data} /></Card>
           </div>}
           {sel.kind === 'settings' && <div className="space-y-4"><H>General</H><Explain><BasicsHelp setup={setup} what="intro" /></Explain>
             <Field label="Name"><Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="w-full" /></Field><Explain><BasicsHelp setup={setup} what="name" /></Explain>
