@@ -216,7 +216,7 @@ const SUBS = [
   'Bind this Setup to one or more instruments and override whole sections. Overrides make no new version.',
 ];
 
-export function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
+export function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft>; hideCompare?: boolean }) {
   const { setup, runD } = p;
   const ctx = tokenCtx(setup, 0, 99);
   return (
@@ -245,7 +245,7 @@ export function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft
         })}
         <div className="p-3 text-xs text-muted-foreground">Signal rules and While-in-a-Trade rules are part of the Setup version and cannot be overridden here.</div>
       </div>
-      {runD.result && <div className="grid gap-2 text-xs sm:grid-cols-2"><div className="rounded-md border p-2"><div className="mb-1 font-medium text-muted-foreground">Setup defaults</div><RunSummary result={p.result} data={p.data} /></div><div className="rounded-md border border-sky-500/40 bg-sky-500/5 p-2"><div className="mb-1 font-medium text-sky-300">With this Run's overrides</div><RunSummary result={runD.result} data={p.data} /></div></div>}
+      {!p.hideCompare && runD.result && <div className="grid gap-2 text-xs sm:grid-cols-2"><div className="rounded-md border p-2"><div className="mb-1 font-medium text-muted-foreground">Setup defaults</div><RunSummary result={p.result} data={p.data} /></div><div className="rounded-md border border-sky-500/40 bg-sky-500/5 p-2"><div className="mb-1 font-medium text-sky-300">With this Run's overrides</div><RunSummary result={runD.result} data={p.data} /></div></div>}
     </div>
   );
 }
