@@ -216,7 +216,7 @@ const SUBS = [
   'Bind this Setup to one or more instruments and override whole sections. Overrides make no new version.',
 ];
 
-function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
+export function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
   const { setup, runD } = p;
   const ctx = tokenCtx(setup, 0, 99);
   return (
@@ -228,16 +228,16 @@ function RunStage(p: VariantProps & { runD: ReturnType<typeof useRunDraft> }) {
       <RunHelp setup={setup} what="instrument" instruments={runD.draft.instruments} />
       <div className="pt-2 text-base font-bold tracking-tight text-foreground">Risk overrides</div>
       <RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} />
-      <div className="divide-y rounded-md border">
+      <div className="divide-y rounded-md border [container-type:inline-size]">
         {SECTIONS.map((k) => {
           const on = k in runD.draft.overrides;
           return (
-            <div key={k} className="p-3">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:flex-nowrap">
-                <div className="flex basis-full items-center gap-2 text-sm font-medium sm:w-52 sm:basis-auto sm:shrink-0"><SectionIcon k={k} size={18} />{SECTION_NAMES[k]}</div>
+            <div key={k} id={`run-sec-${k}`} className="scroll-mt-2 p-3">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 [@container(min-width:36rem)]:flex-nowrap">
+                <div className="flex basis-full items-center gap-2 text-sm font-medium [@container(min-width:36rem)]:w-52 [@container(min-width:36rem)]:basis-auto [@container(min-width:36rem)]:shrink-0"><SectionIcon k={k} size={18} />{SECTION_NAMES[k]}</div>
                 <label className="flex items-center gap-1 text-xs"><input type="radio" checked={!on} onChange={() => runD.override(k, false)} />Setup default</label>
                 <label className="flex items-center gap-1 text-xs"><input type="radio" checked={on} onChange={() => runD.override(k, true)} />Override</label>
-                <span className={cn('basis-full text-xs sm:basis-auto', on ? 'text-muted-foreground line-through' : 'text-muted-foreground')}>{sectionSummary(setup, k)}</span>
+                <span className={cn('basis-full text-xs [@container(min-width:36rem)]:basis-auto', on ? 'text-muted-foreground line-through' : 'text-muted-foreground')}>{sectionSummary(setup, k)}</span>
               </div>
               {on && <div className="mt-2 rounded-md bg-sky-500/5 p-2"><SectionEditor k={k} value={runD.draft.overrides[k]} setup={setup} ctx={ctx} onChange={(v) => runD.setOverride(k, v)} /><div className="mt-1 text-xs text-sky-300">→ {sectionSummary(runD.effective, k)}</div></div>}
             </div>

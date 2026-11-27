@@ -14,6 +14,7 @@ import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN
 import { useRunDraft, instrumentWarnings, runWarnings } from '../runDraft';
 import { InstrumentMultiSelect } from '../components/InstrumentSelect';
 import { TrialBacktest } from '../components/TrialBacktest';
+import { RunStage } from './VariantA';
 import { SetupMap } from '../components/SetupMap';
 
 type Sel = { kind: 'step'; bi: number; si: number } | { kind: 'entry'; bi: number } | { kind: 'trade' } | { kind: 'settings' } | { kind: 'section'; k: SectionKey } | { kind: 'review' };
@@ -25,6 +26,7 @@ export function VariantC(p: VariantProps) {
   const phone = usePhone();
   const [sheetOpen, setSheetOpen] = useState(false);
   /** after picking what the inspector shows: scroll it back to its top, and bring it into view on desktop */
+  const showRunRow = (k: string) => { if (phone) setSheetOpen(true); setTimeout(() => { const el = inspRef.current?.querySelector(`#run-sec-${k}`) as HTMLElement | null; if (el && inspRef.current) inspRef.current.scrollTo({ top: inspRef.current.scrollTop + el.getBoundingClientRect().top - inspRef.current.getBoundingClientRect().top - 56, behavior: 'smooth' }); if (!phone) inspRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 80); };
   const showPanel = () => setTimeout(() => { inspRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); if (!phone) inspRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 60);
   const inspRef = useRef<HTMLDivElement>(null);
   const firstSel = useRef(true);
@@ -60,7 +62,6 @@ export function VariantC(p: VariantProps) {
         <Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="h-9 w-64 max-w-full text-lg font-bold tracking-tight" />
         <button onClick={() => setSel({ kind: 'settings' })} className="min-h-9 rounded-md border border-sky-500/40 bg-sky-500/[0.06] px-3 py-1.5 text-left text-sm hover:bg-accent">Base bar <b>{setup.settings.base_bar}</b> · Trading window <b>{tradingWindowText(setup.settings.trading_hours)}</b> · Trade overlap <b>{(ONE_AT_A_TIME[setup.settings.one_at_a_time]?.[0] || '').replace(/:.*$/, '').replace(/^./, (c) => c.toLowerCase())}</b> · News filter <b>{NEWS[setup.settings.news_rule.mode]?.[0].replace(/^./, (c) => c.toLowerCase())}</b> ✎</button>
         <Tabs value={mode} onChange={(v) => { setMode(v as 'build' | 'run'); if (v === 'run') setSel({ kind: 'trade' }); }} tabs={[['build', 'Build the Setup'], ['run', 'Create a Run']]} />
-        {run && <div className="order-last flex min-w-0 basis-full flex-wrap items-start gap-x-4 gap-y-1.5 border-t pt-2"><InstrumentMultiSelect value={runD.draft.instruments} onChange={(v) => runD.setDraft({ ...runD.draft, instruments: v })} className="w-full max-w-xl" /><div className="min-w-0 flex-1 basis-64 space-y-1 text-xs text-amber-300">{runWarnings(setup, runD.draft.instruments).map((w) => <div key={w}>{w}</div>)}</div></div>}
         <button onClick={() => setSel({ kind: 'review' })} className={cn('ml-auto h-9 rounded-md border px-3 text-sm font-medium hover:bg-accent', sel.kind === 'review' && 'border-sky-400 bg-sky-500/10')}>Review & save {issues.some((i) => i.level === 'error') ? <span className="text-red-300">· {issues.filter((i) => i.level === 'error').length} errors</span> : issues.length ? <span className="text-amber-300">· {issues.length} warnings</span> : <span className="text-cyan-300">· ready</span>}</button>
         <div>{p.saveBar}</div>
       </div>
@@ -113,9 +114,9 @@ export function VariantC(p: VariantProps) {
                   ))}
                   {!run && <button className="mt-1.5 min-h-11 self-stretch rounded-md border border-dashed border-sky-500/50 bg-sky-500/10 px-3 py-2.5 text-sm font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20 sm:mx-2 sm:mt-0 sm:self-center sm:rounded-xl sm:px-3 sm:py-6" onClick={() => { mutate((s) => { s.branches[bi].steps.push({ id: uid('st'), name: 'New step', cond: { id: uid(), t: 'all', items: [] } }); }); setSel({ kind: 'step', bi, si: br.steps.length }); }}><span className="sm:block sm:max-w-[6.5rem] sm:text-center sm:leading-snug">+ Add another step</span></button>}
                   <Connector label="" />
-                  <LaneCard color="rgba(16,185,129,0.3)" className="border-emerald-500/30 !bg-emerald-500/5 hover:!bg-emerald-500/10" selected={sel.kind === 'entry' && sel.bi === bi} onClick={() => { setSel({ kind: 'entry', bi }); showPanel(); }} title={<span className="flex items-start gap-2"><span className="inline-flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black leading-none text-black">→</span><span className="mt-1 shrink-0 text-sm font-black tracking-wider text-emerald-300">SIGNAL</span><span className="mt-0.5 text-base font-bold leading-snug tracking-tight">Enter the Trade</span></span>} overridable={run} overridden={run && 'stop' in runD.draft.overrides}>
+                  <LaneCard color="rgba(16,185,129,0.3)" className="border-emerald-500/30 !bg-emerald-500/5 hover:!bg-emerald-500/10" selected={sel.kind === 'entry' && sel.bi === bi} onClick={() => { setSel({ kind: 'entry', bi }); if (run) showRunRow('stop'); else showPanel(); }} title={<span className="flex items-start gap-2"><span className="inline-flex aspect-square h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black leading-none text-black">→</span><span className="mt-1 shrink-0 text-sm font-black tracking-wider text-emerald-300">SIGNAL</span><span className="mt-0.5 text-base font-bold leading-snug tracking-tight">Enter the Trade</span></span>} overridable={run} overridden={run && 'stop' in runD.draft.overrides}>
                     <div className="pl-9 text-xs leading-snug text-muted-foreground">When the last step completes · {br.side} entry: {br.entry.order === 'market' ? 'at market' : `${br.entry.order} at ${phrase(br.entry.price || '?', labels)}`}, stop loss {stopPhrase(br.entry.stop, br.side, (t) => phrase(t, labels))}</div>
-                    <div className="mt-2 pl-9"><button type="button" onClick={(e) => { e.stopPropagation(); setSel({ kind: 'entry', bi }); showPanel(); }} className="inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20">Edit in Entry &amp; stop loss →</button></div>
+                    <div className="mt-2 pl-9"><button type="button" onClick={(e) => { e.stopPropagation(); setSel({ kind: 'entry', bi }); if (run) showRunRow('stop'); else showPanel(); }} className="inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20">Edit in Entry &amp; stop loss →</button></div>
                     <div className="mt-2 border-t pt-1.5 pl-9 text-xs leading-snug text-muted-foreground">{br.entry.order === 'market' ? 'Fills at the next bar\'s open: always in, at the market\'s price.' : br.entry.order === 'limit' ? 'Fills only if price comes back to it: a better price, but it may never fill.' : 'Fills once price breaks through it: waits for confirmation, at a worse price.'} The distance from the entry to the stop loss is 1R.
                       {(() => { const sg = shown.signals.filter((x) => x.branch === bi && !x.refused).slice(-1)[0]; return sg ? <> Latest Signal: <b className="text-foreground">{Math.abs(sg.entry - sg.stop).toFixed(2)} pts</b> of risk, <b className="text-foreground">{sg.legs.reduce((a, l) => a + l.contracts, 0)}</b> contract(s).</> : null; })()}</div>
                   </LaneCard>
@@ -126,7 +127,7 @@ export function VariantC(p: VariantProps) {
                       {SECTIONS.filter((k) => k !== 'stop').map((k) => {
                         const ov = run && k in runD.draft.overrides;
                         return (
-                          <button key={k} onClick={(e) => { e.stopPropagation(); setSel({ kind: 'section', k }); showPanel(); }} className={cn('block w-full rounded-md px-1.5 py-1 text-left text-xs hover:bg-accent', sel.kind === 'section' && sel.k === k && 'bg-accent', ov && 'bg-sky-500/10')}>
+                          <button key={k} onClick={(e) => { e.stopPropagation(); setSel({ kind: 'section', k }); if (run) showRunRow(k); else showPanel(); }} className={cn('block w-full rounded-md px-1.5 py-1 text-left text-xs hover:bg-accent', sel.kind === 'section' && sel.k === k && 'bg-accent', ov && 'bg-sky-500/10')}>
                             <SectionIcon k={k} size={16} className="-mt-0.5 mr-1 inline-block align-middle" /><span className="font-medium">{SECTION_NAMES[k]}</span> <span className="text-muted-foreground">{sectionSummary(ov ? runD.effective : setup, k)}</span>{ov && <Badge tone="info" className="ml-1">override</Badge>}
                           </button>
                         );
@@ -149,6 +150,7 @@ export function VariantC(p: VariantProps) {
         {phone && <div className="fixed inset-0 z-[60] bg-black/50" onClick={() => setSheetOpen(false)} />}
         <div ref={inspRef} className={cn('ctl-lg', phone ? 'fixed inset-x-0 bottom-0 z-[61] max-h-[85vh] overflow-auto rounded-t-xl border-t bg-card px-3 pb-6 shadow-2xl' : 'overflow-auto border-l p-3')}>
           {phone && <div className="sticky top-0 z-10 -mx-3 mb-2 flex items-center gap-2 border-b bg-card px-3 py-2"><span className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/40" /><button aria-label="close" onClick={() => setSheetOpen(false)} className="absolute right-3 flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground">×</button></div>}
+          {run && sel.kind !== 'review' ? <div className="space-y-3"><H>Create a Run</H><RunStage {...p} runD={runD} /></div> : <>
           {sel.kind === 'review' && <div className="space-y-4"><H>Review & save</H>
             <Card className="space-y-5 p-4">
               <ReviewHelp setup={setup} what="intro" />
@@ -218,6 +220,7 @@ export function VariantC(p: VariantProps) {
             run ? <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Run override</H><SectionHelp setup={setup} k={sel.k} /><RunHelp setup={setup} what="overrides" overrides={Object.keys(runD.draft.overrides).length} /><OverrideBox k={sel.k} setup={setup} runD={runD} />{phone && runD.result && <RunCompare base={result} over={runD.result} data={data} />}</div> :
             <div className="space-y-2"><H>{SECTION_NAMES[sel.k]} · Setup default</H><SectionHelp setup={setup} k={sel.k} /><SectionEditor k={sel.k} value={getSection(setup, sel.k)} setup={setup} ctx={tokenCtx(setup, 0, 99)} onChange={(v) => mutate((s) => { setSection(s, sel.k, v); })} /></div>
           )}
+          </>}
         </div>
         </Sheet>}
       </div>
