@@ -1,5 +1,5 @@
 // PROTOTYPE: the instruments a Run (or a Draft backtest Run) trades: one search across every category, category tabs,
-// recent picks and saved lists, and each row saying whether 5 years of history exist for it.
+// recent picks and Instrument lists, and each row saying whether 5 years of history exist for it.
 // Stocks and options joined the scope on 2026-11-26. An option instrument is one code, "OPT:<underlying>:<expiry>:<strike>";
 // the branch decides calls or puts (a long branch buys calls, a short branch buys puts).
 // The catalog below is a made-up stand-in for the Market data module's list (2026-11-27), sized to feel a bigger list.
@@ -124,7 +124,7 @@ export const CATALOG: { key: InstrumentType; label: string; short: string; items
 const ALL = CATALOG.flatMap((t) => t.items.map((i) => ({ ...i, type: t.key, typeLabel: t.label, short: t.short })));
 const BY_V = Object.fromEntries(ALL.map((i) => [i.v, i]));
 const ORDER = ALL.map((i) => i.v);
-/** saved lists: one click adds every instrument in it */
+/** Instrument lists: one click adds every instrument in it */
 const SAVED: [string, string[]][] = [
   ['Index futures', ['MNQ', 'MES', 'NQ', 'ES']],
   ['Micro futures', ['MNQ', 'MES', 'M2K', 'MYM', 'M6E', 'MGC', 'MCL']],
@@ -215,7 +215,7 @@ export function InstrumentMultiSelect({ value, onChange, className }: { value: s
     body = <>
       <Head>Recent</Head>
       {RECENT.map((v) => BY_V[v] && <Row key={v} i={BY_V[v]} />)}
-      <Head>Saved lists</Head>
+      <Head>Instrument lists</Head>
       <div className="flex flex-wrap gap-1.5 px-2 pb-1">
         {SAVED.map(([name, vs]) => {
           const all = vs.filter((v) => !BY_V[v]?.noHistory).every(has);
