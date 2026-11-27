@@ -51,7 +51,9 @@ Read this first in a new session. It replaces the long conversation history.
 
 When answered: post a resolution comment on #76 and close it, add a line to the map's "Decisions so far", remove "Waiting on you", and include the decisions above.
 
-Next map ticket ready for the user: #91 "Stocks and options as Run instruments: sizing, hours, shorting and the gate" (grilling; #89 and #90 research are done).
+Map tickets ready for the user (both grilling, open and unblocked):
+- #91 "Stocks and options as Run instruments: sizing, hours, shorting and the gate" (#89 and #90 research are done).
+- #92 "Instrument management: Instruments and Instrument lists" (filed 2026-11-27): where the module that owns Instruments and Instrument lists lives, what an Instrument holds and where each field comes from, how instruments are added and whether "has 5 years of history" is stored or computed, who makes Instrument lists (built-in, the user's, or both), what a list does with instruments lacking history, whether a list holds an option's expiry and strike rule, and what happens when a bound Instrument is edited or removed. The prototype's `src/instrumentManagement.ts` is its stand-in. It overlaps #91 on per-instrument specs.
 
 ## Rules carried over
 
