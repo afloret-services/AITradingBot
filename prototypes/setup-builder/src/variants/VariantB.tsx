@@ -172,7 +172,10 @@ export function VariantB(p: VariantProps) {
           <div className="mt-2 space-y-2"><ReviewHelp setup={setup} what="checks" issues={issues} /><ReviewHelp setup={setup} what="save" />
             <details className="text-sm"><summary className="cursor-pointer font-semibold text-foreground">Rule description (stored at Freeze)</summary>
               <div className="mt-1 space-y-1.5"><ReviewHelp setup={setup} what="rule" /><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-2.5 text-xs">{ruleDescription(setup)}</pre></div></details></div>
-          <div className="mt-4 border-t pt-3"><div className="mb-2 text-base font-bold tracking-tight">Backtest Run on this Draft</div><TrialBacktest setup={setup} data={data} /></div>
+        </Card>
+        <Card className="p-3">
+          <div className="mb-2 text-lg font-bold tracking-tight">Backtest Run on this Draft</div>
+          <TrialBacktest setup={setup} data={data} />
         </Card>
         <Card className="p-3">
           <div className="flex items-center justify-between"><div className="text-lg font-bold tracking-tight">Try it as a Run</div><Button size="sm" variant={runMode ? 'default' : 'outline'} onClick={() => setRunMode(!runMode)}>{runMode ? 'Close Run' : 'Create a Run…'}</Button></div>

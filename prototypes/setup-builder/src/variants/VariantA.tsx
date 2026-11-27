@@ -180,12 +180,17 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
                   {p.saveBar}
                 </div>
               </div>
-              <div><div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest Run on this Draft</div><TrialBacktest setup={setup} data={data} /></div>
               </div>
             )}
             {stage === 7 && <RunStage {...p} runD={runD} />}
           </div>
         </Card>
+        {stage === 6 && (
+          <Card className="p-4">
+            <div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest Run on this Draft</div>
+            <TrialBacktest setup={setup} data={data} />
+          </Card>
+        )}
         {stage === 6 && (
           <Card className="p-4">
             <div className="mb-2 text-base font-bold tracking-tight text-foreground">What it did on MNQ</div>
