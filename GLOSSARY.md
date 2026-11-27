@@ -201,7 +201,7 @@ The IBKR simulated account the bot trades in; no real money moves.
 _Avoid_: Demo, sim
 
 **Run**:
-One execution of a chosen set of Setup versions, each bound to the instrument it trades, with its own risk settings: a backtest Run on history, or a paper Run on the Paper account. A backtest Run may instead bind one Draft, on one or more instruments and on the build years only; it is marked Draft and can never be promoted.
+One execution of a chosen set of Setup versions, each bound to one or more instruments (one binding per instrument, each with its own results), with its own risk settings shared by every binding: a backtest Run on history, or a paper Run on the Paper account, where each binding needs a version Promoted on that instrument. A backtest Run may instead bind one Draft, on one or more instruments and on the build years only; it is marked Draft and can never be promoted.
 _Avoid_: Trading run, deployment, job, trial, trial backtest
 
 **Paper session**:
