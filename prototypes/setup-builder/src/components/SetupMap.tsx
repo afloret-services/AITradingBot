@@ -42,7 +42,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
   const th = tradingWindowText(setup.settings.trading_hours);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 [container-type:inline-size]">
       {/* declared once */}
       <div className="flex flex-wrap items-center gap-1.5 text-xs">
         <span className="mr-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Configured</span>
@@ -78,7 +78,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
               <span className="tabular-nums"><b>{taken.length}</b> <span className="text-muted-foreground">Trades</span></span>
               <span className={cn('font-semibold tabular-nums', r >= 0 ? 'text-emerald-400' : 'text-red-400')}>{r >= 0 ? '+' : ''}{r.toFixed(2)}R</span>
             </div>
-            <div className="flex flex-col items-stretch gap-0 pb-1 sm:flex-row sm:overflow-x-auto">
+            <div className="flex flex-col items-stretch gap-0 pb-1 [@container(min-width:40rem)]:flex-row [@container(min-width:40rem)]:overflow-x-auto">
               <Node title="When" tone="muted" compact={compact}>
                 <Line k="Base bar" v={setup.settings.base_bar} />
                 <Line k="hours" v={`${th} NY`} />
@@ -96,7 +96,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
                   <React.Fragment key={st.id}>
                     <Arrow lines={si === 0 ? ['starts a Candidate'] : connectorText(st)} warn={!!st.invalidate} />
                     <button onClick={() => onStep?.({ bi, si })}
-                      className={cn('flex flex-col sm:min-w-[170px] sm:flex-1 sm:basis-0 justify-start rounded-lg border bg-card p-2.5 text-left transition hover:border-foreground/30', isFocus && 'ring-2 ring-sky-400/60', lit && 'border-amber-400 shadow-[0_0_0_3px_rgba(251,191,36,0.15)]', hover && !lit && 'opacity-50')}
+                      className={cn('flex flex-col [@container(min-width:40rem)]:min-w-[170px] [@container(min-width:40rem)]:flex-1 [@container(min-width:40rem)]:basis-0 justify-start rounded-lg border bg-card p-2.5 text-left transition hover:border-foreground/30', isFocus && 'ring-2 ring-sky-400/60', lit && 'border-amber-400 shadow-[0_0_0_3px_rgba(251,191,36,0.15)]', hover && !lit && 'opacity-50')}
                       style={{ borderTopColor: STEP_COLORS[si % 6], borderTopWidth: 3 }}>
                       <div className="flex items-center gap-1.5">
                         <span className="flex aspect-square h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] leading-none font-bold text-black" style={{ background: STEP_COLORS[si % 6] }}>{si + 1}</span>
@@ -152,7 +152,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
 
 function Node({ title, tone, children, compact, wide }: { title: string; tone: 'muted' | 'long' | 'short'; children: React.ReactNode; compact?: boolean; wide?: boolean }) {
   return (
-    <div className={cn('shrink-0 rounded-lg border p-2.5', wide ? 'w-full sm:w-[215px]' : 'w-full sm:w-[150px]', tone === 'muted' ? 'bg-muted/40' : tone === 'long' ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5', compact && 'p-2')}>
+    <div className={cn('shrink-0 rounded-lg border p-2.5', wide ? 'w-full [@container(min-width:40rem)]:w-[215px]' : 'w-full [@container(min-width:40rem)]:w-[150px]', tone === 'muted' ? 'bg-muted/40' : tone === 'long' ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5', compact && 'p-2')}>
       <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
       <div className="space-y-0.5">{children}</div>
     </div>
@@ -163,10 +163,10 @@ function Line({ k, v, bad, icon }: { k: string; v: string; bad?: boolean; icon?:
 }
 function Arrow({ lines, warn }: { lines: string[]; warn?: boolean }) {
   return (
-    <div className="flex w-full shrink-0 flex-row flex-wrap items-center justify-center gap-x-1.5 px-1 py-1 text-center text-[10px] leading-tight text-muted-foreground sm:w-[50px] sm:flex-col sm:flex-nowrap sm:gap-0 sm:py-0">
+    <div className="flex w-full shrink-0 flex-row flex-wrap items-center justify-center gap-x-1.5 px-1 py-1 text-center text-[10px] leading-tight text-muted-foreground [@container(min-width:40rem)]:w-[50px] [@container(min-width:40rem)]:flex-col [@container(min-width:40rem)]:flex-nowrap [@container(min-width:40rem)]:gap-0 [@container(min-width:40rem)]:py-0">
       {lines.map((l) => <span key={l}>{l}</span>)}
-      <svg width="10" height="16" className="order-first sm:hidden"><line x1="5" y1="0" x2="5" y2="10" stroke="currentColor" strokeWidth="1.2" /><path d="M1 10 L5 16 L9 10 Z" fill="currentColor" /></svg>
-      <svg width="44" height="10" className="my-0.5 hidden sm:block"><line x1="0" y1="5" x2="41" y2="5" stroke="currentColor" strokeWidth="1.2" /><path d="M41 1 L48 5 L41 9 Z" fill="currentColor" /></svg>
+      <svg width="10" height="16" className="order-first [@container(min-width:40rem)]:hidden"><line x1="5" y1="0" x2="5" y2="10" stroke="currentColor" strokeWidth="1.2" /><path d="M1 10 L5 16 L9 10 Z" fill="currentColor" /></svg>
+      <svg width="44" height="10" className="my-0.5 hidden [@container(min-width:40rem)]:block"><line x1="0" y1="5" x2="41" y2="5" stroke="currentColor" strokeWidth="1.2" /><path d="M41 1 L48 5 L41 9 Z" fill="currentColor" /></svg>
       {warn && <span className="text-red-300/80">can be invalidated</span>}
     </div>
   );

@@ -14,6 +14,7 @@ import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN
 import { useRunDraft, instrumentWarnings } from '../runDraft';
 import { InstrumentSelect } from '../components/InstrumentSelect';
 import { TrialBacktest } from '../components/TrialBacktest';
+import { SetupMap } from '../components/SetupMap';
 
 type Sel = { kind: 'step'; bi: number; si: number } | { kind: 'entry'; bi: number } | { kind: 'trade' } | { kind: 'settings' } | { kind: 'section'; k: SectionKey } | { kind: 'review' };
 
@@ -148,12 +149,23 @@ export function VariantC(p: VariantProps) {
         {phone && <div className="fixed inset-0 z-[60] bg-black/50" onClick={() => setSheetOpen(false)} />}
         <div ref={inspRef} className={cn('ctl-lg', phone ? 'fixed inset-x-0 bottom-0 z-[61] max-h-[85vh] overflow-auto rounded-t-xl border-t bg-card px-3 pb-6 shadow-2xl' : 'overflow-auto border-l p-3')}>
           {phone && <div className="sticky top-0 z-10 -mx-3 mb-2 flex items-center gap-2 border-b bg-card px-3 py-2"><span className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/40" /><button aria-label="close" onClick={() => setSheetOpen(false)} className="absolute right-3 flex h-7 w-7 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground">×</button></div>}
-          {sel.kind === 'review' && <div className="space-y-3"><H>Review & save</H><ReviewHelp setup={setup} what="intro" /><ReviewHelp setup={setup} what="map" />
-            <H2>Checks</H2><ReviewHelp setup={setup} what="checks" issues={issues} />
-            {issues.length === 0 && <Badge tone="go">Ready to freeze</Badge>}
-            {issues.map((i, k) => <div key={k} className={cn('text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.level === 'error' ? '✕' : '!'} {i.where}: {i.text}</div>)}
-            <H2>Save</H2><ReviewHelp setup={setup} what="save" /><div>{p.saveBar}</div>
-            <H2>Rule description (stored at Freeze)</H2><ReviewHelp setup={setup} what="rule" /><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-2 text-[11px]">{ruleDescription(setup)}</pre>
+          {sel.kind === 'review' && <div className="space-y-4"><H>Review & save</H>
+            <Card className="space-y-5 p-4">
+              <ReviewHelp setup={setup} what="intro" />
+              <div>
+                <div className="mb-2 space-y-1.5"><div className="text-base font-bold tracking-tight text-foreground">Setup at a glance</div><ReviewHelp setup={setup} what="map" /></div>
+                <SetupMap setup={setup} result={result} data={data} focus={p.focus} compact onStep={(f) => { setSel({ kind: 'step', bi: f.bi, si: f.si }); p.setFocus(f); showPanel(); }} onDeclared={() => { setSel({ kind: 'settings' }); showPanel(); }} />
+              </div>
+              <div><div className="mb-1 text-base font-bold tracking-tight text-foreground">Rule description (generated, stored at Freeze)</div><div className="mb-2"><ReviewHelp setup={setup} what="rule" /></div><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{ruleDescription(setup)}</pre></div>
+              <div className="space-y-2"><div className="text-base font-bold tracking-tight text-foreground">Checks</div>
+                <ReviewHelp setup={setup} what="checks" issues={issues} />
+                {issues.length === 0 && <Badge tone="go">Ready to freeze</Badge>}
+                {issues.map((i, k) => <div key={k} className={cn('text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.level === 'error' ? '✕' : '!'} {i.where}: {i.text}</div>)}
+                <div className="pt-2 text-base font-bold tracking-tight text-foreground">Save</div>
+                <ReviewHelp setup={setup} what="save" />
+                <div>{p.saveBar}</div>
+              </div>
+            </Card>
             <Card className="p-4"><div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest Run on this Draft</div><TrialBacktest setup={setup} data={data} /></Card>
           </div>}
           {sel.kind === 'settings' && <div className="space-y-4"><H>General</H><Explain><BasicsHelp setup={setup} what="intro" /></Explain>
