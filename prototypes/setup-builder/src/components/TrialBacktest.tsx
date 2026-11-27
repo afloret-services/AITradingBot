@@ -2,7 +2,7 @@
 // It is a backtest Run that binds the Draft: build years only (the held-out last 12 months stay locked), listed with the
 // Runs and marked Draft, never promoted and never read by the Promotion gate. Here only MNQ bars exist: NQ replays them at $20 a point (same Nasdaq-100 prices); every other
 // instrument shows what it would change (hours, volume) but has no numbers.
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Data, run, RunResult } from '../engine';
 import { Setup } from '../model';
 import { instrumentWarnings } from '../runDraft';
@@ -13,10 +13,77 @@ import { cn } from './ui';
 const BTN = 'flex h-9 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-4 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20 disabled:opacity-40';
 /** instruments the prototype can replay: their $ a point on the loaded MNQ bars */
 const REPLAY: Record<string, { pv: number; note?: string }> = { MNQ: { pv: 2 }, NQ: { pv: 20, note: 'same Nasdaq-100 prices as MNQ, at $20 a point' } };
-const CHOICES: { type: string; items: [string, string][] }[] = INSTRUMENT_TYPES.map((t) => ({
+/** [value, tag, description], in category order */
+const CHOICES: { type: string; items: [string, string, string][] }[] = INSTRUMENT_TYPES.map((t) => ({
   type: t.label,
-  items: t.groups.flatMap((g) => g.items.map(([c]) => [t.key === 'option' ? `OPT:${c}:0dte:atm` : c, t.key === 'option' ? `${c} opt.` : c] as [string, string])),
+  items: t.groups.flatMap((g) => g.items.map(([c, d]) => (t.key === 'option'
+    ? [`OPT:${c}:0dte:atm`, `${c} opt.`, `${d} · 0DTE · at the money`]
+    : [c, c, d.replace(/^[^·]*·\s*/, '') || d]) as [string, string, string])),
 }));
+const ORDER = CHOICES.flatMap((t) => t.items.map(([v]) => v));
+const TAG = Object.fromEntries(CHOICES.flatMap((t) => t.items.map(([v, l]) => [v, l])));
+const TYPE_OF = Object.fromEntries(CHOICES.flatMap((t) => t.items.map(([v]) => [v, t.type])));
+
+/** multi-select: the picked instruments as tags, a dropdown listing them by category */
+function InstrumentMulti({ picked, setPicked }: { picked: string[]; setPicked: (v: string[]) => void }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const h = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h);
+  }, [open]);
+  const sorted = ORDER.filter((v) => picked.includes(v));
+  const toggle = (v: string) => setPicked(picked.includes(v) ? picked.filter((x) => x !== v) : ORDER.filter((x) => x === v || picked.includes(x)));
+  const ql = q.trim().toLowerCase();
+  const groups = CHOICES.map((t) => ({ ...t, items: t.items.filter(([, l, d]) => !ql || `${l} ${d} ${t.type}`.toLowerCase().includes(ql)) })).filter((t) => t.items.length);
+  return (
+    <div ref={ref} className="relative">
+      <div role="combobox" aria-expanded={open} onClick={() => setOpen(true)}
+        className={cn('flex min-h-11 cursor-text flex-wrap items-center gap-1.5 rounded-md border bg-transparent px-2 py-1.5 text-sm', open ? 'border-sky-400 ring-2 ring-sky-500/30' : 'border-input')}>
+        {sorted.map((v) => (
+          <span key={v} className="inline-flex h-7 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/15 pl-2 pr-1 text-sm font-medium text-sky-200">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-sky-300/70">{TYPE_OF[v].slice(0, 3)}</span>{TAG[v]}
+            <button type="button" aria-label={`remove ${TAG[v]}`} onClick={(e) => { e.stopPropagation(); toggle(v); }} className="flex h-5 w-5 items-center justify-center rounded text-base leading-none text-sky-300 hover:bg-sky-500/30">×</button>
+          </span>
+        ))}
+        <input value={q} onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); if (e.key === 'Backspace' && !q && sorted.length) toggle(sorted[sorted.length - 1]); }}
+          placeholder={sorted.length ? 'Add…' : 'Pick instruments…'} className="h-7 min-w-[6rem] flex-1 bg-transparent px-1 outline-none placeholder:text-muted-foreground" />
+        <button type="button" aria-label={open ? 'close the list' : 'open the list'} onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className="ml-auto flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-accent">{open ? '▴' : '▾'}</button>
+      </div>
+      {open && (
+        <div role="listbox" aria-multiselectable className="mt-1 max-h-80 overflow-auto rounded-md border bg-card p-1 shadow-lg">
+          {groups.length === 0 && <div className="px-2 py-2 text-sm text-muted-foreground">No instrument matches “{q}”.</div>}
+          {groups.map((t) => {
+            const all = t.items.every(([v]) => picked.includes(v));
+            return (
+              <div key={t.type} className="py-1">
+                <div className="sticky top-0 z-10 -mx-1 flex items-center justify-between bg-card px-3 py-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.type}</span>
+                  <button type="button" className="text-xs font-semibold text-sky-300 hover:underline"
+                    onClick={() => { const vs = t.items.map(([v]) => v); setPicked(all ? picked.filter((x) => !vs.includes(x)) : ORDER.filter((x) => vs.includes(x) || picked.includes(x))); }}>{all ? 'Clear' : 'Select all'}</button>
+                </div>
+                {t.items.map(([v, l, d]) => {
+                  const on = picked.includes(v);
+                  return (
+                    <button key={v} type="button" role="option" aria-selected={on} onClick={() => toggle(v)}
+                      className={cn('flex w-full items-center gap-2.5 rounded px-2 py-1.5 text-left text-sm hover:bg-accent', on && 'bg-sky-500/10')}>
+                      <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs font-black', on ? 'border-sky-400 bg-sky-500 text-black' : 'border-input')}>{on ? '✓' : ''}</span>
+                      <span className="w-20 shrink-0 font-semibold">{l}</span>
+                      <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{d}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface Row { inst: string; res?: RunResult; pv?: number; info?: string; notes: string[] }
 function stats(r: RunResult, pv: number) {
@@ -44,9 +111,8 @@ export function TrialBacktest({ setup, data }: { setup: Setup; data: Data }) {
   const [ranOn, setRanOn] = useState('');
   const key = useMemo(() => JSON.stringify(setup), [setup]);
   const days = data.days.length, from = data.m1[0]?.td, to = data.m1[data.m1.length - 1]?.td;
-  const toggle = (c: string) => setPicked((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c]));
   const go = () => {
-    setRows(picked.map((inst) => {
+    setRows(ORDER.filter((v) => picked.includes(v)).map((inst) => {
       const notes = instrumentWarnings(setup, inst).filter((w) => !/^No .* bars in this prototype/.test(w));
       const rp = REPLAY[inst];
       if (!rp) return { inst, notes: [...notes, 'No bars for it in this prototype.'] };
@@ -62,17 +128,7 @@ export function TrialBacktest({ setup, data }: { setup: Setup; data: Data }) {
         <div><b className="text-foreground">Build years only:</b> it runs on the first 4 of the 5 years. The last 12 months stay locked for the Promotion gate, which judges a frozen version per instrument. It is a backtest Run, listed with the Runs and marked Draft: it can never be promoted, and the gate never reads it. The latest one per instrument is kept, plus any you pin.</div>
         <div><b className="text-foreground">In this prototype:</b> the loaded MNQ sample ({from} to {to}, {days} Trading days) stands in for the build years. NQ replays the same Nasdaq-100 prices at $20 a point; other instruments show only what they would change.</div>
       </HelpBox>
-      <div className="space-y-1.5">
-        {CHOICES.map((t) => (
-          <div key={t.type} className="flex flex-wrap items-center gap-1.5">
-            <span className="w-20 shrink-0 text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.type}</span>
-            {t.items.map(([c, l]) => (
-              <button key={c} type="button" aria-pressed={picked.includes(c)} onClick={() => toggle(c)}
-                className={cn('h-8 rounded-md border px-2.5 text-sm font-medium transition-colors', picked.includes(c) ? 'border-sky-500/60 bg-sky-500/15 text-sky-200' : 'border-input text-muted-foreground hover:bg-accent hover:text-foreground')}>{l}</button>
-            ))}
-          </div>
-        ))}
-      </div>
+      <InstrumentMulti picked={picked} setPicked={setPicked} />
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" className={BTN} disabled={!picked.length} onClick={go}>▶ Create a backtest Run</button>
         <span className="text-xs text-muted-foreground">{picked.length} instrument{picked.length === 1 ? '' : 's'} picked</span>
