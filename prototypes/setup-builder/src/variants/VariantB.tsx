@@ -30,7 +30,7 @@ export function VariantB(p: VariantProps) {
 
   return (
     <div className="mx-auto grid max-w-[1500px] grid-cols-1 gap-6 p-3 lg:grid-cols-[minmax(0,1fr)_560px] lg:p-6">
-      <Card className="min-w-0 p-4 lg:col-span-2">
+      <Card id="setup-glance" className="min-w-0 scroll-mt-16 p-4 lg:col-span-2">
         <div className="mb-3"><div className="text-xl font-bold tracking-tight">Setup at a glance</div><div className="text-sm text-muted-foreground">The document below, as a flow. Click a step to jump to its sentence.</div></div>
         <div className="mb-2"><ReviewHelp setup={setup} what="map" /></div>
         <SetupMap setup={setup} result={result} data={data} focus={p.focus} compact onStep={(f) => { p.setFocus(f); document.getElementById(`step-${setup.branches[f.bi].steps[f.si].id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} />
@@ -167,12 +167,20 @@ export function VariantB(p: VariantProps) {
           <div className="mb-2"><PatternsHelp setup={setup} /></div>
           <PatternList setup={setup} mutate={mutate} compact data={data} />
         </Card>
-        <Card className="p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2"><div className="text-lg font-bold tracking-tight">Review & save</div>{p.saveBar}</div>
-          {issues.map((i, k) => <div key={k} className={cn('mt-1 text-sm', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.where}: {i.text}</div>)}
-          <div className="mt-2 space-y-2"><ReviewHelp setup={setup} what="checks" issues={issues} /><ReviewHelp setup={setup} what="save" />
-            <details className="text-sm"><summary className="cursor-pointer font-semibold text-foreground">Rule description (stored at Freeze)</summary>
-              <div className="mt-1 space-y-1.5"><ReviewHelp setup={setup} what="rule" /><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-2.5 text-xs">{ruleDescription(setup)}</pre></div></details></div>
+        <Card className="space-y-5 p-4">
+          <div className="text-lg font-bold tracking-tight">Review & save</div>
+          <ReviewHelp setup={setup} what="intro" />
+          <div className="space-y-1.5"><div className="text-base font-bold tracking-tight text-foreground">Setup at a glance</div>
+            <button type="button" onClick={() => document.getElementById('setup-glance')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20">↑ See it at the top of the page</button></div>
+          <div><div className="mb-1 text-base font-bold tracking-tight text-foreground">Rule description (generated, stored at Freeze)</div><div className="mb-2"><ReviewHelp setup={setup} what="rule" /></div><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{ruleDescription(setup)}</pre></div>
+          <div className="space-y-2"><div className="text-base font-bold tracking-tight text-foreground">Checks</div>
+            <ReviewHelp setup={setup} what="checks" issues={issues} />
+            {issues.length === 0 && <Badge tone="go">Ready to freeze</Badge>}
+            {issues.map((i, k) => <div key={k} className={cn('text-xs', i.level === 'error' ? 'text-red-300' : 'text-amber-300')}>{i.level === 'error' ? '✕' : '!'} {i.where}: {i.text}</div>)}
+            <div className="pt-2 text-base font-bold tracking-tight text-foreground">Save</div>
+            <ReviewHelp setup={setup} what="save" />
+            <div>{p.saveBar}</div>
+          </div>
         </Card>
         <Card className="p-4">
           <div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest Run on this Draft</div>
