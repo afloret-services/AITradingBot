@@ -13,13 +13,15 @@ import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, Tabs, Field, usePh
 import { Cond, PRESETS, uid, SECTION_NAMES, condPhrase, Step, addMirror, PATTERN_KINDS, patternUsage, labelsOf, validate, ruleDescription , tradingWindowText, stopPhrase, phrase } from '../model';
 import { useRunDraft, instrumentWarnings, runWarnings } from '../runDraft';
 import { InstrumentMultiSelect } from '../components/InstrumentSelect';
-import { TrialBacktest } from '../components/TrialBacktest';
+import { TrialBacktest, useDraftBacktest } from '../components/TrialBacktest';
+import { BacktestResults } from '../components/BacktestResults';
 import { RunStage } from './VariantA';
 
 type Sel = { kind: 'step'; bi: number; si: number } | { kind: 'entry'; bi: number } | { kind: 'trade' } | { kind: 'settings' } | { kind: 'section'; k: SectionKey } | { kind: 'review' };
 
 export function VariantC(p: VariantProps) {
   const { setup, mutate, data, result } = p;
+  const bt = useDraftBacktest(setup, data);
   const [sel, setSel] = useState<Sel>({ kind: 'step', bi: 0, si: 0 });
   // phone: the inspector is a bottom sheet that opens when a card (or Review & save, a section…) is picked
   const phone = usePhone();
@@ -166,7 +168,8 @@ export function VariantC(p: VariantProps) {
                 <div>{p.saveBar}</div>
               </div>
             </Card>
-            <Card className="p-4"><div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest Run on this Draft</div><TrialBacktest setup={setup} data={data} /></Card>
+            <Card className="p-4"><div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest Run on this Draft</div><TrialBacktest setup={setup} data={data} bt={bt} /></Card>
+            <Card className="p-4"><div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest results</div><BacktestResults setup={setup} data={data} bt={bt} focus={p.focus} /></Card>
           </div>}
           {sel.kind === 'settings' && <div className="space-y-4"><H>General</H><Explain><BasicsHelp setup={setup} what="intro" /></Explain>
             <Field label="Name"><Input value={setup.name} onChange={(e) => mutate((s) => { s.name = e.target.value; })} className="w-full" /></Field><Explain><BasicsHelp setup={setup} what="name" /></Explain>

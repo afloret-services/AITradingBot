@@ -13,7 +13,32 @@ import { cn } from './ui';
 const BTN = 'flex h-9 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-4 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20 disabled:opacity-40';
 /** instruments the prototype can replay: their $ a point on the loaded MNQ bars */
 const REPLAY: Record<string, { pv: number; note?: string }> = { MNQ: { pv: 2 }, NQ: { pv: 20, note: 'same Nasdaq-100 prices as MNQ, at $20 a point' } };
-interface Row { inst: string; res?: RunResult; pv?: number; info?: string; notes: string[] }
+export interface Row { inst: string; res?: RunResult; pv?: number; info?: string; notes: string[] }
+/** the Signals of a result whose bar falls in the Trading days [from, to] */
+export const inPeriod = (data: Data, r: RunResult, from: number, to: number): RunResult => ({ ...r, signals: r.signals.filter((g) => { const d = data.m1[g.i].di; return d >= from && d <= to; }) });
+
+/** the Draft backtest Run: what to run (instruments, period) and what the last run gave, shared by its card and its results */
+export function useDraftBacktest(setup: Setup, data: Data) {
+  const [picked, setPicked] = useState<string[]>(['MNQ', 'MES', 'NQ', 'ES']);
+  const [from, setFrom] = useState(0);
+  const [to, setTo] = useState(Math.max(0, data.days.length - 1));
+  const [rows, setRows] = useState<Row[] | null>(null);
+  const [ran, setRan] = useState<{ key: string; from: number; to: number } | null>(null);
+  const key = useMemo(() => JSON.stringify(setup), [setup]);
+  const go = () => {
+    setRows(sortInstruments(picked).map((inst) => {
+      const notes = instrumentWarnings(setup, inst).filter((w) => !/^No .* bars in this prototype/.test(w));
+      const rp = REPLAY[inst];
+      if (!rp) return { inst, notes: [...notes, 'No bars for it in this prototype.'] };
+      // the engine warms up on every bar; only Signals inside the period count
+      return { inst, res: inPeriod(data, run(data, setup, { pointValue: rp.pv }), from, to), pv: rp.pv, info: rp.note, notes };
+    }));
+    setRan({ key, from, to });
+  };
+  const stale = !!rows && !!ran && (ran.key !== key || ran.from !== from || ran.to !== to);
+  return { picked, setPicked, from, setFrom, to, setTo, rows, ran, go, stale, capital: setup.trade_settings.risk.capital };
+}
+export type DraftBacktest = ReturnType<typeof useDraftBacktest>;
 function stats(r: RunResult, pv: number) {
   const refused = r.signals.filter((g) => g.refused);
   const why = Object.entries(refused.reduce<Record<string, number>>((a, g) => { const k = (g.refused || '').split(':')[0]; a[k] = (a[k] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1]);
@@ -33,22 +58,9 @@ function stats(r: RunResult, pv: number) {
 const fmtR = (x: number) => `${x > 0 ? '+' : ''}${x.toFixed(2)}R`;
 const fmtUsd = (x: number) => `${x < 0 ? '−' : x > 0 ? '+' : ''}$${Math.abs(x).toFixed(0)}`;
 
-export function TrialBacktest({ setup, data }: { setup: Setup; data: Data }) {
-  const [picked, setPicked] = useState<string[]>(['MNQ', 'MES', 'NQ', 'ES']);
-  const [rows, setRows] = useState<Row[] | null>(null);
-  const [ranOn, setRanOn] = useState('');
-  const key = useMemo(() => JSON.stringify(setup), [setup]);
+export function TrialBacktest({ setup, data, bt }: { setup: Setup; data: Data; bt: DraftBacktest }) {
+  const { picked, setPicked, rows, go, stale } = bt;
   const days = data.days.length, from = data.m1[0]?.td, to = data.m1[data.m1.length - 1]?.td;
-  const go = () => {
-    setRows(sortInstruments(picked).map((inst) => {
-      const notes = instrumentWarnings(setup, inst).filter((w) => !/^No .* bars in this prototype/.test(w));
-      const rp = REPLAY[inst];
-      if (!rp) return { inst, notes: [...notes, 'No bars for it in this prototype.'] };
-      return { inst, res: run(data, setup, { pointValue: rp.pv }), pv: rp.pv, info: rp.note, notes };
-    }));
-    setRanOn(key);
-  };
-  const stale = rows && ranOn !== key;
   return (
     <div className="space-y-3 [container-type:inline-size]">
       <HelpBox id="review:trial">
@@ -57,10 +69,11 @@ export function TrialBacktest({ setup, data }: { setup: Setup; data: Data }) {
         <div><b className="text-foreground">In this prototype:</b> the loaded MNQ sample ({from} to {to}, {days} Trading days) stands in for the build years. NQ replays the same Nasdaq-100 prices at $20 a point; other instruments show only what they would change.</div>
       </HelpBox>
       <InstrumentMultiSelect value={picked} onChange={setPicked} />
+      <PeriodPicker data={data} bt={bt} />
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" className={BTN} disabled={!picked.length} onClick={go}>▶ Create a backtest Run</button>
         <span className="text-xs text-muted-foreground">{picked.length} instrument{picked.length === 1 ? '' : 's'} picked</span>
-        {stale && <span className="text-xs text-amber-300">The Setup changed since this backtest Run: create a new one.</span>}
+        {stale && <span className="text-xs text-amber-300">The Setup or the period changed since this backtest Run: create a new one.</span>}
       </div>
       {rows && (
         <div className={cn('space-y-2', stale && 'opacity-60')}>
@@ -114,6 +127,35 @@ export function TrialBacktest({ setup, data }: { setup: Setup; data: Data }) {
           <div className="text-xs text-muted-foreground">R is what each Trade risked at its stop loss, so R totals compare across instruments; the $ result and the contracts show the sizing.</div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** the backtest period: whole Trading days inside the build years (here: the loaded sample) */
+function PeriodPicker({ data, bt }: { data: Data; bt: DraftBacktest }) {
+  const n = data.days.length, last = n - 1;
+  const label = (d: number) => new Date(data.days[d].td + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  const presets: [string, number, number][] = [['Whole sample', 0, last], ['Last 20 days', Math.max(0, n - 20), last], ['Last 10 days', Math.max(0, n - 10), last]];
+  const SELC = 'h-9 rounded-md border border-input bg-card px-2 text-sm';
+  return (
+    <div className="space-y-1.5">
+      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Period</div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {presets.map(([l, f, t]) => (
+          <button key={l} type="button" onClick={() => { bt.setFrom(f); bt.setTo(t); }}
+            className={cn('h-8 rounded-md border px-2.5 text-xs font-semibold', bt.from === f && bt.to === t ? 'border-sky-500/60 bg-sky-500/15 text-sky-200' : 'border-input text-muted-foreground hover:bg-accent hover:text-foreground')}>{l}</button>
+        ))}
+        <span className="flex flex-wrap items-center gap-1.5 text-sm">
+          <select aria-label="Period start" value={bt.from} onChange={(e) => { const f = Number(e.target.value); bt.setFrom(f); if (bt.to < f) bt.setTo(f); }} className={SELC}>
+            {data.days.map((_, d) => <option key={d} value={d}>{label(d)}</option>)}
+          </select>
+          <span className="text-muted-foreground">to</span>
+          <select aria-label="Period end" value={bt.to} onChange={(e) => { const t = Number(e.target.value); bt.setTo(t); if (bt.from > t) bt.setFrom(t); }} className={SELC}>
+            {data.days.map((_, d) => <option key={d} value={d}>{label(d)}</option>)}
+          </select>
+          <span className="text-xs text-muted-foreground">· {bt.to - bt.from + 1} Trading days</span>
+        </span>
+      </div>
     </div>
   );
 }

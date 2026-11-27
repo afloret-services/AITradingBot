@@ -15,11 +15,13 @@ import { Badge, Button, Card, Input, Select, STEP_COLORS, cn, NumInput } from '.
 import { Cond, Setup, TFS, TF, uid, SECTION_NAMES, validate, Step, labelsOf, ruleDescription, addMirror, phrase, stopPhrase } from '../model';
 import { useRunDraft, instrumentWarnings, runWarnings } from '../runDraft';
 import { InstrumentMultiSelect } from '../components/InstrumentSelect';
-import { TrialBacktest } from '../components/TrialBacktest';
+import { TrialBacktest, useDraftBacktest } from '../components/TrialBacktest';
+import { BacktestResults } from '../components/BacktestResults';
 import { RunStage } from './VariantA';
 
 export function VariantB(p: VariantProps) {
   const { setup, mutate, data, result } = p;
+  const bt = useDraftBacktest(setup, data);
   const [runMode, setRunMode] = useState(false);
   const runD = useRunDraft(data, setup);
   const declare = (tok: string) => mutate((s) => { if (!s.indicators.some((i) => i.token === tok)) s.indicators.push({ token: tok }); });
@@ -184,7 +186,11 @@ export function VariantB(p: VariantProps) {
         </Card>
         <Card className="p-4">
           <div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest Run on this Draft</div>
-          <TrialBacktest setup={setup} data={data} />
+          <TrialBacktest setup={setup} data={data} bt={bt} />
+        </Card>
+        <Card className="p-4">
+          <div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest results</div>
+          <BacktestResults setup={setup} data={data} bt={bt} focus={p.focus} />
         </Card>
         <Card className="p-4">
           <div className="flex items-center justify-between"><div className="text-base font-bold tracking-tight text-foreground">Create a Run</div><Button size="sm" variant={runMode ? 'default' : 'outline'} onClick={() => setRunMode(!runMode)}>{runMode ? 'Close Run' : 'Create a Run…'}</Button></div>

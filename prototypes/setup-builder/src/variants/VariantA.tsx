@@ -12,12 +12,14 @@ import { Badge, Button, Card, CardHeader, Input, Select, Tabs, STEP_COLORS, cn, 
 import { ruleDescription, validate, uid, addMirror, SECTION_NAMES, Step, phrase, labelsOf, patternUsage, stopPhrase } from '../model';
 import { useRunDraft, instrumentWarnings, runWarnings } from '../runDraft';
 import { InstrumentMultiSelect } from '../components/InstrumentSelect';
-import { TrialBacktest } from '../components/TrialBacktest';
+import { TrialBacktest, useDraftBacktest } from '../components/TrialBacktest';
+import { BacktestResults } from '../components/BacktestResults';
 
 const STAGES = ['General', 'Indicators & patterns', 'When to trade', 'Signal steps', 'Entry & stop loss', 'Trade settings', 'Review & save', 'Create a Run'] as const;
 
 export function VariantA(p: VariantProps & { inline?: boolean }) {
   const { setup, mutate, data, result } = p;
+  const bt = useDraftBacktest(setup, data);
   const inline = !!p.inline;
   const [stage, setStage] = useState(0);
   // phone: the step row scrolls sideways so the current step is in view (never the page)
@@ -188,15 +190,13 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
         {stage === 6 && (
           <Card className="p-4">
             <div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest Run on this Draft</div>
-            <TrialBacktest setup={setup} data={data} />
+            <TrialBacktest setup={setup} data={data} bt={bt} />
           </Card>
         )}
         {stage === 6 && (
           <Card className="p-4">
-            <div className="mb-2 text-base font-bold tracking-tight text-foreground">What it did on MNQ</div>
-            <div className="mb-3"><ReviewHelp setup={setup} what="chart" result={chartResult} /></div>
-            <div className="mb-3 flex items-center justify-between"><RunSummary result={chartResult} data={data} /></div>
-            <Chart data={data} setup={setup} result={chartResult} day={p.day} setDay={p.setDay} focus={p.focus} selected={p.selected} setSelected={p.setSelected} />
+            <div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest results</div>
+            <BacktestResults setup={setup} data={data} bt={bt} focus={p.focus} />
           </Card>
         )}
       </main>
