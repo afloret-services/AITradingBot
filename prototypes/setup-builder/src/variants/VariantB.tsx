@@ -173,8 +173,8 @@ export function VariantB(p: VariantProps) {
             <details className="text-sm"><summary className="cursor-pointer font-semibold text-foreground">Rule description (stored at Freeze)</summary>
               <div className="mt-1 space-y-1.5"><ReviewHelp setup={setup} what="rule" /><pre className="mono whitespace-pre-wrap rounded-md bg-muted p-2.5 text-xs">{ruleDescription(setup)}</pre></div></details></div>
         </Card>
-        <Card className="p-3">
-          <div className="mb-2 text-lg font-bold tracking-tight">Backtest Run on this Draft</div>
+        <Card className="p-4">
+          <div className="mb-2 text-base font-bold tracking-tight text-foreground">Backtest Run on this Draft</div>
           <TrialBacktest setup={setup} data={data} />
         </Card>
         <Card className="p-3">
