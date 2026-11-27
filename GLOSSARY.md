@@ -222,6 +222,14 @@ _Avoid_: Test (that is the automated test suite), fire drill, chaos test
 
 ### Markets
 
+**Instrument**:
+What one binding of a Run trades: an index or currency future, a spot forex pair, a US stock or ETF, or an option on a stock or ETF, named by its underlying, expiry rule and strike rule. An Instrument without 5 years of history can be neither backtested nor promoted, so no Run binds it.
+_Avoid_: Symbol (a symbol may also be read as a condition input), ticker, product, asset
+
+**Instrument list**:
+A named set of Instruments picked together for a Run, such as Index futures or Forex majors; it only speeds up the choice, and the Run keeps its own bindings, never the list.
+_Avoid_: Watchlist, basket, portfolio
+
 **Trading day**:
 One CME trade date: from 18:00 New York the evening before to 17:00, including any holiday-morning trading that CME counts toward it. Every daily rule (Bias, previous-day levels, daily loss, Stand-down) counts in Trading days.
 _Avoid_: Market session (that is Asia, London or New York), calendar day
