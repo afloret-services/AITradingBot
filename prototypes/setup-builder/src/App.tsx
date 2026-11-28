@@ -60,8 +60,8 @@ export default function App() {
       {!issues.length && <Badge tone="go">valid</Badge>}
       <Button size="sm" variant="outline" onClick={saveDraft}>{dirty ? 'Save Draft' : 'Draft saved'}</Button>
       <Button size="sm" variant={errors.length ? 'outline' : 'default'} onClick={freeze} title="Freeze makes an immutable numbered Setup version">Freeze → v{versions.length + 1}</Button>
-      <Button size="sm" variant="ghost" onClick={exportFile}>Export file</Button>
-      <Button size="sm" variant="ghost" onClick={() => setShowJson(!showJson)}>{showJson ? 'Hide' : 'Show'} file</Button>
+      <Button size="sm" variant="outline" onClick={exportFile}>Export file</Button>
+      <Button size="sm" variant="outline" onClick={() => setShowJson(!showJson)}>{showJson ? 'Hide' : 'Show'} file</Button>
     </div>
   );
 
