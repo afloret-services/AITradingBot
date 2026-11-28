@@ -49,9 +49,22 @@ export default function App() {
     setVersions([...versions, { v: versions.length + 1, hash, at: new Date().toLocaleTimeString() }]);
     flash(`Frozen as v${versions.length + 1} · ${hash.slice(0, 12)}…`);
   };
+  // on the published page, files are saved through the viewer's `downloads` capability (a confirmation the viewer
+  // accepts); run locally there is no viewer, so a plain browser download
+  const downloads = React.useRef<any>(null);
+  React.useEffect(() => { (window as any).claude?.use?.('downloads').then((d: any) => { downloads.current = d; }).catch(() => {}); }, []);
+  const [exportNote, setExportNote] = useState('');
   const exportFile = () => {
-    const blob = new Blob([JSON.stringify({ ...setup, rule_description: ruleDescription(setup) }, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${setup.setup_id}.draft.json`; a.click();
+    const text = JSON.stringify({ ...setup, rule_description: ruleDescription(setup) }, null, 2), filename = `${setup.setup_id}.draft.json`;
+    setExportNote('');
+    if (downloads.current) {
+      downloads.current.save({ filename, data: text }).catch((e: any) => {
+        if (e?.code === 'declined') return;
+        setExportNote(e?.code === 'rate_limited' ? 'A save is already waiting: try again in a moment.' : 'Export is not available here.');
+      });
+      return;
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = filename; a.click();
   };
   const dirty = saved !== json;
   const saveBar = (
@@ -62,6 +75,7 @@ export default function App() {
       <Button size="sm" variant={errors.length ? 'outline' : 'default'} onClick={freeze} title="Freeze makes an immutable numbered Setup version">Freeze → v{versions.length + 1}</Button>
       <Button size="sm" variant="outline" onClick={exportFile}>Export file</Button>
       <Button size="sm" variant="outline" onClick={() => setShowJson(!showJson)}>{showJson ? 'Hide' : 'Show'} file</Button>
+      {exportNote && <span className="text-xs text-amber-300">{exportNote}</span>}
     </div>
   );
 
