@@ -21,6 +21,7 @@ export const inPeriod = (data: Data, r: RunResult, from: number, to: number): Ru
 export function useDraftBacktest(setup: Setup, data: Data) {
   const [picked, setPicked] = useState<string[]>(['MNQ', 'MES', 'NQ', 'ES']);
   const [from, setFrom] = useState(0);
+  const [preset, setPreset] = useState<string>('3m');
   const [to, setTo] = useState(Math.max(0, data.days.length - 1));
   const [rows, setRows] = useState<Row[] | null>(null);
   const [ran, setRan] = useState<{ key: string; from: number; to: number } | null>(null);
@@ -36,7 +37,7 @@ export function useDraftBacktest(setup: Setup, data: Data) {
     setRan({ key, from, to });
   };
   const stale = !!rows && !!ran && (ran.key !== key || ran.from !== from || ran.to !== to);
-  return { picked, setPicked, from, setFrom, to, setTo, rows, ran, go, stale, capital: setup.trade_settings.risk.capital };
+  return { picked, setPicked, from, setFrom, to, setTo, preset, setPreset, rows, ran, go, stale, capital: setup.trade_settings.risk.capital };
 }
 export type DraftBacktest = ReturnType<typeof useDraftBacktest>;
 function stats(r: RunResult, pv: number) {
@@ -131,30 +132,64 @@ export function TrialBacktest({ setup, data, bt }: { setup: Setup; data: Data; b
   );
 }
 
-/** the backtest period: whole Trading days inside the build years (here: the loaded sample) */
+/** the backtest period. Presets count back from the end of the build years (a Draft never sees the held-out last
+ * 12 months, ADR 0007), so at most 4 years; "Custom" picks any start and end date inside the build years. */
+const PRESETS: [key: string, label: string, back: { d?: number; m?: number; y?: number }][] = [
+  ['30d', 'Last 30 days', { d: 30 }], ['3m', 'Last 3 months', { m: 3 }], ['6m', 'Last 6 months', { m: 6 }], ['1y', 'Last year', { y: 1 }],
+  ['2y', '2 years', { y: 2 }], ['3y', '3 years', { y: 3 }], ['4y', '4 years', { y: 4 }], ['5y', '5 years', { y: 5 }],
+];
+const BUILD_YEARS = 4;
 function PeriodPicker({ data, bt }: { data: Data; bt: DraftBacktest }) {
-  const n = data.days.length, last = n - 1;
-  const label = (d: number) => new Date(data.days[d].td + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
-  const presets: [string, number, number][] = [['Whole sample', 0, last], ['Last 20 days', Math.max(0, n - 20), last], ['Last 10 days', Math.max(0, n - 10), last]];
-  const SELC = 'h-9 rounded-md border border-input bg-card px-2 text-sm';
+  const last = data.days.length - 1;
+  const dayOf = (iso: string, side: 'from' | 'to') => {
+    if (side === 'from') { const k = data.days.findIndex((d) => d.td >= iso); return k < 0 ? last : k; }
+    let k = -1; data.days.forEach((d, j) => { if (d.td <= iso) k = j; }); return k < 0 ? 0 : k;
+  };
+  const end = data.days[last].td;
+  const startOf = (b: { d?: number; m?: number; y?: number }) => {
+    const t = new Date(end + 'T12:00:00Z');
+    if (b.d) t.setUTCDate(t.getUTCDate() - b.d + 1);
+    if (b.m) t.setUTCMonth(t.getUTCMonth() - b.m);
+    if (b.y) t.setUTCFullYear(t.getUTCFullYear() - b.y);
+    return t.toISOString().slice(0, 10);
+  };
+  const choose = (key: string, b: { d?: number; m?: number; y?: number }) => { bt.setPreset(key); bt.setFrom(dayOf(startOf(b), 'from')); bt.setTo(last); };
+  // the default preset applies once the bars are known
+  React.useEffect(() => { const p = PRESETS.find(([k]) => k === bt.preset); if (p) choose(p[0], p[2]); }, [data]);
+  const fmt = (td: string) => new Date(td + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  const preset = PRESETS.find(([k]) => k === bt.preset);
+  const wanted = preset ? startOf(preset[2]) : null;
+  const clipped = wanted && wanted < data.days[0].td;
+  const DATE = 'h-9 rounded-md border border-input bg-card px-2 text-sm [color-scheme:dark]';
   return (
     <div className="space-y-1.5">
       <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Period</div>
       <div className="flex flex-wrap items-center gap-1.5">
-        {presets.map(([l, f, t]) => (
-          <button key={l} type="button" onClick={() => { bt.setFrom(f); bt.setTo(t); }}
-            className={cn('h-8 rounded-md border px-2.5 text-xs font-semibold', bt.from === f && bt.to === t ? 'border-sky-500/60 bg-sky-500/15 text-sky-200' : 'border-input text-muted-foreground hover:bg-accent hover:text-foreground')}>{l}</button>
-        ))}
-        <span className="flex flex-wrap items-center gap-1.5 text-sm">
-          <select aria-label="Period start" value={bt.from} onChange={(e) => { const f = Number(e.target.value); bt.setFrom(f); if (bt.to < f) bt.setTo(f); }} className={SELC}>
-            {data.days.map((_, d) => <option key={d} value={d}>{label(d)}</option>)}
-          </select>
+        {PRESETS.map(([k, l, b]) => {
+          const locked = (b.y || 0) > BUILD_YEARS;
+          return (
+            <button key={k} type="button" disabled={locked} onClick={() => choose(k, b)}
+              title={locked ? 'A Draft backtest covers at most the 4 build years: the last 12 months of the 5 are held out for the Promotion gate.' : undefined}
+              className={cn('h-8 rounded-md border px-2.5 text-xs font-semibold', bt.preset === k ? 'border-sky-500/60 bg-sky-500/15 text-sky-200' : 'border-input text-muted-foreground hover:bg-accent hover:text-foreground', locked && 'cursor-not-allowed opacity-40 hover:bg-transparent')}>
+              {locked ? '🔒 ' : ''}{l}
+            </button>
+          );
+        })}
+        <button type="button" onClick={() => bt.setPreset('custom')}
+          className={cn('h-8 rounded-md border px-2.5 text-xs font-semibold', bt.preset === 'custom' ? 'border-sky-500/60 bg-sky-500/15 text-sky-200' : 'border-input text-muted-foreground hover:bg-accent hover:text-foreground')}>Custom dates</button>
+      </div>
+      {bt.preset === 'custom' && (
+        <div className="flex flex-wrap items-center gap-1.5 text-sm">
+          <input type="date" aria-label="Period start" min={data.days[0].td} max={end} value={data.days[bt.from].td}
+            onChange={(e) => { if (!e.target.value) return; const f = dayOf(e.target.value, 'from'); bt.setFrom(f); if (bt.to < f) bt.setTo(f); }} className={DATE} />
           <span className="text-muted-foreground">to</span>
-          <select aria-label="Period end" value={bt.to} onChange={(e) => { const t = Number(e.target.value); bt.setTo(t); if (bt.from > t) bt.setFrom(t); }} className={SELC}>
-            {data.days.map((_, d) => <option key={d} value={d}>{label(d)}</option>)}
-          </select>
-          <span className="text-xs text-muted-foreground">· {bt.to - bt.from + 1} Trading days</span>
-        </span>
+          <input type="date" aria-label="Period end" min={data.days[0].td} max={end} value={data.days[bt.to].td}
+            onChange={(e) => { if (!e.target.value) return; const t = dayOf(e.target.value, 'to'); bt.setTo(t); if (bt.from > t) bt.setFrom(t); }} className={DATE} />
+        </div>
+      )}
+      <div className="text-xs text-muted-foreground">
+        {fmt(data.days[bt.from].td)} – {fmt(data.days[bt.to].td)} · {bt.to - bt.from + 1} Trading days
+        {clipped && <span className="text-amber-300"> · this prototype holds only {data.days.length} Trading days of MNQ, so "{preset![1]}" runs on all of them</span>}
       </div>
     </div>
   );
