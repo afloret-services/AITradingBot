@@ -74,7 +74,7 @@ export default function App() {
         <span className="flex items-center gap-2 pr-2 text-sm font-semibold tracking-tight"><span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-sky-400 to-indigo-500 text-[11px] font-bold text-white">S</span>Setup builder</span>
         <Badge tone="warn" title="nothing is persisted: reload to reset">PROTOTYPE · throwaway · nothing is persisted, reload to reset</Badge>
         <span className="flex w-full items-center gap-2 whitespace-nowrap sm:w-auto"><span className="text-base font-semibold text-foreground">Select preset Setup</span>
-        <Select value={starter} onChange={loadStarter} options={[['silver_bullet', 'Silver Bullet (built)'], ['ema_macd', 'EMA 200 + MACD (built)'], ['double_bottom', 'Double bottom (chart-pattern demo)'], ['blank', 'New Setup (empty)']]} className="h-9 min-w-0 flex-1 text-sm font-medium sm:min-w-[16rem] sm:flex-none" /></span>
+        <Select value={starter} onChange={loadStarter} options={[['silver_bullet', 'Silver Bullet (built)'], ['ema_macd', 'EMA 200 + MACD (built)'], ['double_bottom', 'Double bottom (chart-pattern demo)'], ['full_trade_demo', 'Full Trade demo (every step)'], ['blank', 'New Setup (empty)']]} className="h-9 min-w-0 flex-1 text-sm font-medium sm:min-w-[16rem] sm:flex-none" /></span>
         {versions.length > 0 && <span className="text-muted-foreground">versions: {versions.map((v) => <span key={v.v} className="mono mr-1">v{v.v}·{v.hash.slice(0, 8)}</span>)}</span>}
         <span className="ml-auto flex flex-wrap items-center gap-3"><HelpToggle /></span>
       </div>

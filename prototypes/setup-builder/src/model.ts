@@ -645,7 +645,17 @@ export function doubleBottom(): Setup {
   addMirror(s);
   return s;
 }
-export const STARTERS: Record<string, () => Setup> = { blank: blankSetup, silver_bullet: silverBullet, ema_macd: emaMacd, double_bottom: doubleBottom };
+/** PROTOTYPE demo: EMA 200 + MACD sized on a bigger account, with two Take profits and break-even after TP1, so a backtest
+ *  shows a Trade through every step (TP1 reached, break-even, then TP2 or the break-even stop, then the exit): Sep 18 and Oct 5. */
+export function fullTradeDemo(): Setup {
+  const s = emaMacd();
+  s.setup_id = 'stp_full_trade_demo'; s.name = 'Full Trade demo (EMA 200 + MACD, 2 TPs, break-even)';
+  s.trade_settings.risk = { capital: 50000, pct: 1, max_contracts: 10 };
+  s.trade_settings.legs = [{ name: 'TP1', rule: 'r', r: 0.5, share: 0.5 }, { name: 'TP2', rule: 'r', r: 2, share: 0.5 }];
+  s.trade_settings.break_even = { trigger: 'after_leg', k: 1, offset_ticks: 0 };
+  return s;
+}
+export const STARTERS: Record<string, () => Setup> = { blank: blankSetup, silver_bullet: silverBullet, ema_macd: emaMacd, double_bottom: doubleBottom, full_trade_demo: fullTradeDemo };
 
 /** "09:30–16:00 (Fri 09:30–12:00)": the usual ranges, then each weekday that has its own */
 export function tradingWindowText(th: Setup['settings']['trading_hours']) {
