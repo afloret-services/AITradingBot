@@ -7,7 +7,7 @@ An automated trading bot that runs several Setups at once (ICT patterns such as 
 ### Strategy
 
 **Setup**:
-One entry pattern, ICT or indicator-based, put together from Rule blocks that decide when a trade is valid, which way it goes, and where its entry, Stop loss and target sit. The bot runs several Setups at once; each one reaches the Paper account only after passing the Promotion gate.
+One entry pattern, ICT or indicator-based, put together from Rule blocks that decide when a trade is valid, which way it goes, and where its entry, Stop Loss and target sit. The bot runs several Setups at once; each one reaches the Paper account only after passing the Promotion gate.
 _Avoid_: Strategy (when meaning one pattern), model, play, built-in Setup
 
 **Rule block**:
@@ -55,7 +55,7 @@ A Setup version that passed its Promotion gate on one instrument, and the only r
 _Avoid_: Live config, current settings
 
 **R**:
-The amount a Trade would lose if its Stop loss were hit; every Trade is sized so that 1R is the day's risk amount, and results, expectancy and drawdowns are measured in multiples of it.
+The amount a Trade would lose if its Stop Loss were hit; every Trade is sized so that 1R is the day's risk amount, and results, expectancy and drawdowns are measured in multiples of it.
 _Avoid_: Risk unit, units
 
 **Signal**:
@@ -103,7 +103,7 @@ The part of a Swing between 61.8 % and 78.6 % of the way back from its end towar
 _Avoid_: Fib zone, discount/premium zone, retracement (alone)
 
 **Order block**:
-One candle of the opposite colour to the Trade inside a Swing (or just before a Displacement) whose range price later closes beyond, used as the zone for the entry and the Stop loss.
+One candle of the opposite colour to the Trade inside a Swing (or just before a Displacement) whose range price later closes beyond, used as the zone for the entry and the Stop Loss.
 _Avoid_: OB (in prose), supply/demand zone, breaker
 
 **Bias**:
@@ -145,10 +145,10 @@ _Avoid_: Regime, Setup selection
 ### Execution
 
 **Bracket order**:
-An entry order sent together with its stop-loss and take-profit orders, so the position is never open without both exits attached. A Trade with several Take profits sends one Bracket order per Take profit.
+An entry order sent together with its Stop Loss and take-profit orders, so the position is never open without both exits attached. A Trade with several Take profits sends one Bracket order per Take profit.
 _Avoid_: OCO (that names only the two exit legs)
 
-**Stop loss**:
+**Stop Loss**:
 The exit that caps a Trade's loss: a price on the far side of the entry from its targets, set by the Setup's Entry block (a set distance from a level, from the entry price, or a fixed $ a contract from the entry). Every Trade has one, attached in each of its Bracket orders; the distance from the entry to it is the Trade's 1R.
 _Avoid_: Stop (alone: a stop entry is an order type that fills on a break through a price), SL, protective stop, hard stop
 
@@ -157,11 +157,11 @@ One slice of a Trade's contracts with its own target, sent as its own Bracket or
 _Avoid_: Take-profit leg (the earlier name), leg, partial (alone), scale-out, tranche
 
 **Break-even**:
-Moving the Stop loss of a Trade's open Take profits to its entry price (plus a set offset, "lock in N ticks") once a chosen Take profit has filled or price has gone a set number of R in its favour, so the rest of the Trade can no longer lose; it never loosens a Stop loss already tighter than that.
+Moving the Stop Loss of a Trade's open Take profits to its entry price (plus a set offset, "lock in N ticks") once a chosen Take profit has filled or price has gone a set number of R in its favour, so the rest of the Trade can no longer lose; it never loosens a Stop Loss already tighter than that.
 _Avoid_: Scratch, risk-free
 
 **While-in-a-Trade rule**:
-A Rule block checked at each Base bar's close while a Trade or its resting entry is open, which may close the whole Trade, close one Take profit now, tighten the Stop loss, or cancel the waiting entry.
+A Rule block checked at each Base bar's close while a Trade or its resting entry is open, which may close the whole Trade, close one Take profit now, tighten the Stop Loss, or cancel the waiting entry.
 _Avoid_: In-position rule (the earlier name), exit rule (alone), management rule, trailing stop
 
 **Closing time**:
@@ -173,7 +173,7 @@ The life of one position, from entry fill to final exit fill, opened in response
 _Avoid_: Position (the current holding), order
 
 **Halt**:
-The bot stopping itself after something it cannot account for: it opens no new Trades, leaves existing Stop loss and Take profit orders in place, and waits for a human to restart it.
+The bot stopping itself after something it cannot account for: it opens no new Trades, leaves existing Stop Loss and Take profit orders in place, and waits for a human to restart it.
 _Avoid_: Kill switch, pause
 
 **Stand-down**:
@@ -185,7 +185,7 @@ The account size the bot sizes its Trades against, set by the user rather than r
 _Avoid_: Balance, equity, net liquidation (the broker's figure)
 
 **Risk per Trade**:
-The share of Trading capital one Trade may lose at its Stop loss: a default on each Setup that a Run may override; applied to the Trading capital at the start of each Trading day, it gives that Setup's risk amount for the day, which is its 1R.
+The share of Trading capital one Trade may lose at its Stop Loss: a default on each Setup that a Run may override; applied to the Trading capital at the start of each Trading day, it gives that Setup's risk amount for the day, which is its 1R.
 _Avoid_: Position size
 
 **Peak capital**:
@@ -217,7 +217,7 @@ IBKR's nightly maintenance window, inside the CME Trading day, during which the 
 _Avoid_: Daily restart (that is IB Gateway's own scheduled restart), maintenance, outage
 
 **Drill**:
-A deliberate exercise on the Paper account that forces one failure or limit (an unexpected position, a missing Stop loss, a Stand-down, a Gateway restart) to show the bot reacts as its rules say; it trades only a built-in test Setup and never counts as a Paper session toward the Clean-session count.
+A deliberate exercise on the Paper account that forces one failure or limit (an unexpected position, a missing Stop Loss, a Stand-down, a Gateway restart) to show the bot reacts as its rules say; it trades only a built-in test Setup and never counts as a Paper session toward the Clean-session count.
 _Avoid_: Test (that is the automated test suite), fire drill, chaos test
 
 ### Markets
