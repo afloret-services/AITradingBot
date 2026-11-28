@@ -18,7 +18,7 @@ const C = { up: '#26a69a', down: '#ef5350', zone: '#cbd5e1', draw: '#a78bfa', ri
 
 type Shape =
   | { k: 'rect'; t1: number; t2: number; p1: number; p2: number; fill: string; stroke?: string; dash?: boolean; label?: string; labelColor?: string; right?: boolean; /** label on the left side, away from the markers at the right end: mid-height, or just inside the p2 edge */ atFar?: 'mid' | 'edge' }
-  | { k: 'line'; t1: number; t2: number; p1: number; p2: number; stroke: string; dash?: boolean; label?: string; width?: number; /** label above the start of the line, away from the Signal-bar markers at its end */ labelStart?: boolean }
+  | { k: 'line'; t1: number; t2: number; p1: number; p2: number; stroke: string; dash?: boolean; label?: string; width?: number; /** hide the label when the line is shorter than this (px) */ minLabelW?: number; /** label above the start of the line, away from the Signal-bar markers at its end */ labelStart?: boolean }
   | { k: 'band'; t1: number; t2: number; fill: string };
 
 interface LegendRow { label: string; color: string; value: string; onPrice?: boolean }
@@ -104,7 +104,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
         } else {
           parts.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${sh.stroke}" stroke-width="${sh.width || 1.5}" ${sh.dash ? 'stroke-dasharray="4 3"' : ''}/>`);
           if (sh.label && sh.labelStart) parts.push(`<text x="${Math.min(x1, x2) + 14}" y="${(x1 <= x2 ? y1 : y2) - 5}" font-size="10" font-weight="600" fill="${sh.stroke}">${sh.label}</text>`);
-          else if (sh.label) parts.push(`<text x="${Math.max(x1, x2) + 4}" y="${(sh.p2 >= sh.p1 ? Math.min(y1, y2) : Math.max(y1, y2)) + 3}" font-size="10" font-weight="600" fill="${sh.stroke}">${sh.label}</text>`);
+          else if (sh.label && !(sh.minLabelW && Math.abs(x2 - x1) < sh.minLabelW)) parts.push(`<text x="${Math.max(x1, x2) + 4}" y="${(sh.p2 >= sh.p1 ? Math.min(y1, y2) : Math.max(y1, y2)) + 3}" font-size="10" font-weight="600" fill="${sh.stroke}">${sh.label}</text>`);
         }
       }
       const key = parts.join('');
@@ -261,7 +261,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
         const mv = (t.stopMoves || []).filter((m) => cutI == null || m.i <= cutI);
         const tMove = mv.length ? tOf1m(mv[0].i) : tEnd;
         sh.push({ k: 'rect', t1: tf0, t2: tMove, p1: t.fillPx ?? sel.entry, p2: sel.stop, fill: 'rgba(239,68,68,0.16)', label: 'risk', labelColor: '#fca5a5', atFar: 'mid' });
-        mv.forEach((m, k) => sh.push({ k: 'line', t1: tOf1m(m.i), t2: k + 1 < mv.length ? tOf1m(mv[k + 1].i) : tEnd, p1: m.price, p2: m.price, stroke: '#f59e0b', width: 2, dash: true, label: /break-even/.test(m.why) ? 'BE' : 'moved stop' }));
+        mv.forEach((m, k) => sh.push({ k: 'line', t1: tOf1m(m.i), t2: k + 1 < mv.length ? tOf1m(mv[k + 1].i) : tEnd, p1: m.price, p2: m.price, stroke: '#f59e0b', width: 2, dash: true, label: /break-even/.test(m.why) ? 'BE' : 'moved stop', minLabelW: 40 }));
         sh.push({ k: 'rect', t1: tf0, t2: tEnd, p1: sel.entry, p2: far, fill: 'rgba(34,197,94,0.14)', label: 'reward', labelColor: '#86efac', atFar: 'edge' });
         for (const l of sel.legs) sh.push({ k: 'line', t1: tf0, t2: tEnd, p1: l.price, p2: l.price, stroke: 'rgba(134,239,172,0.8)', label: `${l.name} ×${l.contracts}` });
       } else if (showTrade) {
