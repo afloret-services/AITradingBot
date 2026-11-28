@@ -127,7 +127,7 @@ export function TrialBacktest({ setup, data, bt }: { setup: Setup; data: Data; b
               );
             })}
           </div>
-          <div className="text-xs text-muted-foreground">R is what each Trade risked at its stop loss, so R totals compare across instruments; the $ result and the number of contracts show the sizing.</div>
+          <div className="text-xs text-muted-foreground">R is what each Trade risked at its Stop Loss, so R totals compare across instruments; the $ result and the number of contracts show the sizing.</div>
         </div>
       )}
     </div>

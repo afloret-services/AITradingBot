@@ -863,7 +863,7 @@ function drawAt(ctx: Ctx, c: Extract<Cond, { t: 'draw' }>): Hit {
 export interface StepHit { step: number; i: number }
 export interface Signal { branch: number; side: 'long' | 'short'; i: number; caps: Record<string, any>; entry: number; stop: number; legs: { name: string; price: number; contracts: number }[]; refused?: string; trade?: TradeResult; stepBars: number[] }
 export interface TradeResult { fillI?: number; fillPx?: number; exitI?: number; cancelI?: number; r?: number; outcome: string; exits: { i: number; price: number; why: string }[];
-  /** each time the Stop loss moved (break-even), in order */
+  /** each time the Stop Loss moved (break-even), in order */
   stopMoves?: { i: number; price: number; why: string }[] }
 export interface RunResult {
   base: Int32Array;
@@ -1005,17 +1005,17 @@ function makeSignal(data: Data, setup: Setup, br: Branch, bi: number, i: number,
   const risk = Math.abs(entry - stop);
   const caps = { ...c.caps, entry };
   const sig: Signal = { branch: bi, side: br.side, i, caps, entry, stop, legs: [], stepBars: c.stepBars };
-  if (risk <= 0) { sig.refused = 'stop loss on the wrong side of the entry'; return sig; }
+  if (risk <= 0) { sig.refused = 'Stop Loss on the wrong side of the entry'; return sig; }
   const ts = setup.trade_settings;
   const stopGuard = ts.signal_guards.find((g) => g.kind === 'max_stop');
   if (stopGuard) {
     let lim = stopGuard.n * TICK;
     if (stopGuard.unit === 'atr') { const a = value(ctx, stopGuard.atr || ''); lim = typeof a === 'number' ? stopGuard.n * a : Infinity; }
-    if (risk > lim + 1e-9) { sig.refused = `stop loss ${risk.toFixed(2)} pts wider than ${stopGuard.n} ${stopGuard.unit === 'atr' ? '× ATR' : 'ticks'}`; return sig; }
+    if (risk > lim + 1e-9) { sig.refused = `Stop Loss ${risk.toFixed(2)} pts wider than ${stopGuard.n} ${stopGuard.unit === 'atr' ? '× ATR' : 'ticks'}`; return sig; }
   }
   // contracts from Risk per Trade
   const contracts = Math.max(0, Math.min(ts.risk.max_contracts, Math.floor((ts.risk.capital * ts.risk.pct) / 100 / (risk * PV))));
-  if (contracts < 1) { sig.refused = `stop loss too wide: 1 contract risks $${(risk * PV).toFixed(0)}, more than Risk per Trade`; return sig; }
+  if (contracts < 1) { sig.refused = `Stop Loss too wide: 1 contract risks $${(risk * PV).toFixed(0)}, more than Risk per Trade`; return sig; }
   const shares = splitContracts(contracts, ts.legs, ts.leftover);
   sig.legs = ts.legs.map((L, k) => ({ name: L.name, price: legPrice(ctx, L, entry, stop, long), contracts: shares[k] })).filter((l) => l.contracts > 0 && isFinite(l.price));
   const rrGuard = ts.signal_guards.find((g) => g.kind === 'min_rr');
@@ -1101,7 +1101,7 @@ function simulate(data: Data, setup: Setup, br: Branch, sig: Signal, base: Int32
   for (let k = fill; k < M.length; k++) {
     const b = M[k];
     if (b.di !== day || b.min >= flat && M[fill].min < flat) { open.filter((l) => !l.done).forEach((l) => exitLeg(l, b.o, k, 'Flat by time')); break; }
-    if (long ? b.l <= stop : b.h >= stop) { open.filter((l) => !l.done).forEach((l) => exitLeg(l, stop, k, stop === sig.stop ? 'stop' : res.stopMoves!.length && /break-even/.test(res.stopMoves![res.stopMoves!.length - 1].why) ? 'stop at break-even' : 'moved stop loss')); break; }
+    if (long ? b.l <= stop : b.h >= stop) { open.filter((l) => !l.done).forEach((l) => exitLeg(l, stop, k, stop === sig.stop ? 'stop' : res.stopMoves!.length && /break-even/.test(res.stopMoves![res.stopMoves!.length - 1].why) ? 'stop at break-even' : 'moved Stop Loss')); break; }
     open.forEach((l, li) => {
       if (!l.done && (long ? b.h >= l.price : b.l <= l.price)) {
         exitLeg(l, l.price, k, l.name); legsFilled++;

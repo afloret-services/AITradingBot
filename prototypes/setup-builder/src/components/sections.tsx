@@ -156,7 +156,7 @@ function IndicatorsHelp_({ setup }: { setup: Setup }) {
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   return (
     <HelpBox>
-      <div>An indicator is configured once by what it is: its kind, its settings and its timeframe (e.g. EMA 200 on 15m, MACD 12/26/9 on 15m, its signal line). Steps, the stop loss and the guards pick it from this list, and the same configuration serves both branches; change it here and every place that reads it changes. On a timeframe coarser than the Base bar, it is read from its last closed bar; finer ones are refused.</div>
+      <div>An indicator is configured once by what it is: its kind, its settings and its timeframe (e.g. EMA 200 on 15m, MACD 12/26/9 on 15m, its signal line). Steps, the Stop Loss and the guards pick it from this list, and the same configuration serves both branches; change it here and every place that reads it changes. On a timeframe coarser than the Base bar, it is read from its last closed bar; finer ones are refused.</div>
       <div>A <T>display label</T> ("the EMA 200") replaces the token in the Rule description and on the chart legend. Available: EMA, SMA, MACD (line, signal, histogram), ATR, ADX, RSI, average range and average body.</div>
       <div>Here: {B(`${setup.indicators.length} configured`)}{unused ? <>, {B(`${unused} unused`)}</> : ''}.{!setup.indicators.length ? ' This Setup reads no indicator; patterns and candle values need none.' : ''}</div>
     </HelpBox>
@@ -167,7 +167,7 @@ function PatternsHelp_({ setup }: { setup: Setup }) {
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   return (
     <HelpBox>
-      <div>A pattern is configured once with a <T>name</T>, a <T>kind</T>, a <T>timeframe</T> and its settings. A step then says "a bullish <span className="mono">fvg</span> forms", and later steps, the Entry and the stop loss read what it captured: <span className="mono">fvg.top</span>, <span className="mono">dbl.neckline</span>, <span className="mono">eng.low</span>… The configuration has no side: the step picks bullish or bearish, so both branches share it, and "duplicate as mirrored" just flips the side.</div>
+      <div>A pattern is configured once with a <T>name</T>, a <T>kind</T>, a <T>timeframe</T> and its settings. A step then says "a bullish <span className="mono">fvg</span> forms", and later steps, the Entry and the Stop Loss read what it captured: <span className="mono">fvg.top</span>, <span className="mono">dbl.neckline</span>, <span className="mono">eng.low</span>… The configuration has no side: the step picks bullish or bearish, so both branches share it, and "duplicate as mirrored" just flips the side.</div>
       <div>Three families. <T>ICT</T>: FVG, Displacement, Order block, Swing, MSS. <T>Chart patterns</T>: doubles (and Adam & Eve), triples, head and shoulders (and complex), triangles, wedges, flags, pennants, rectangles, channels, broadening formations and wedges, cup and handle, diamonds, rounding tops and bottoms, island and bump-and-run reversals, measured moves, parabolic turns and the Wyckoff schematics; they form on their breakout and most capture a measured-move target. <T>Candlesticks</T>: engulfing, hammer, stars, harami, piercing, soldiers, tweezers, inside bar, doji, marubozu; they form on the close of their last candle. Each one below shows its idea and real examples on MNQ with your settings.</div>
       <div>Here: {pats.length ? <>{pats.map((q, i) => <span key={q.name}>{i > 0 && ', '}{B(q.name)} ({q.tf} {PATTERN_KINDS[q.kind].title.replace(/ \(.*\)$/, '')})</span>)}.</> : B('none configured yet.')}</div>
     </HelpBox>
@@ -423,7 +423,7 @@ function BasicsHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'name' | '
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   if (what === 'intro') return (
     <HelpBox>
-      <div><T>A Setup</T> is one trading strategy written as Rule blocks: when to look (Trading window), what must happen in order (Signal steps), how to get in (Entry and stop loss) and how to manage the Trade (Trade settings). It names no instrument: the same Setup can run on MNQ, NQ, ES or MES, chosen when a <T>Run</T> is created.</div>
+      <div><T>A Setup</T> is one trading strategy written as Rule blocks: when to look (Trading window), what must happen in order (Signal steps), how to get in (Entry and Stop Loss) and how to manage the Trade (Trade settings). It names no instrument: the same Setup can run on MNQ, NQ, ES or MES, chosen when a <T>Run</T> is created.</div>
       <div>While you build, it is a <T>Draft</T>: it saves with warnings and you can keep changing it. <T>Freeze</T> makes a numbered, unchangeable version (v1, v2…) that Runs and backtests point to; it is refused while there are errors. You build it, check what it did on the MNQ bars, freeze it, then create a Run.</div>
     </HelpBox>
   );
@@ -441,7 +441,7 @@ function BasicsHelp_({ setup, what }: { setup: Setup; what: 'intro' | 'name' | '
 /** what the instrument changes, for one that is not a CME equity future */
 function instrumentHere(v: string): string {
   const t = parseInstrument(v).type;
-  if (t === 'stock') return 'is sized in shares: a 20-point stop loss risks $20 a share, so the Risk per Trade buys that many shares. It trades 09:30–16:00 New York.';
+  if (t === 'stock') return 'is sized in shares: a 20-point Stop Loss risks $20 a share, so the Risk per Trade buys that many shares. It trades 09:30–16:00 New York.';
   if (t === 'option') return 'is sized by the premium: one contract controls 100 shares and can lose at most what it cost. The Setup still reads the underlying\'s chart; the option\'s own price is not simulated here.';
   if (t === 'forex') return 'is sized in units, with no volume; a pip is its tick. The prototype has no bars for it.';
   return 'has its own tick and point value, and the prototype has no bars for it.';
@@ -461,20 +461,20 @@ function RunHelp_({ setup, what, instruments, overrides }: { setup: Setup; what:
     const budget = (setup.trade_settings.risk.capital * setup.trade_settings.risk.pct) / 100;
     const here = (instrument: string) => {
       const sp = SPECS[instrument];
-      return sp ? <>{B(instrument)} is {B(`$${sp.pt} a point`)}, tick {sp.tick}. With this Setup's {B(`$${budget.toFixed(0)}`)} Risk per Trade, a 20-point stop loss risks ${(20 * sp.pt).toFixed(0)} per contract, so {Math.floor(budget / (20 * sp.pt)) >= 1 ? <>it trades {B(`${Math.min(setup.trade_settings.risk.max_contracts, Math.floor(budget / (20 * sp.pt)))} contract(s)`)}</> : <>{B('every such Signal is refused')} ("stop loss too wide"): raise Risk per Trade in an override or pick the micro contract</>}.</>
+      return sp ? <>{B(instrument)} is {B(`$${sp.pt} a point`)}, tick {sp.tick}. With this Setup's {B(`$${budget.toFixed(0)}`)} Risk per Trade, a 20-point Stop Loss risks ${(20 * sp.pt).toFixed(0)} per contract, so {Math.floor(budget / (20 * sp.pt)) >= 1 ? <>it trades {B(`${Math.min(setup.trade_settings.risk.max_contracts, Math.floor(budget / (20 * sp.pt)))} contract(s)`)}</> : <>{B('every such Signal is refused')} ("Stop Loss too wide"): raise Risk per Trade in an override or pick the micro contract</>}.</>
         : <>{B(instrumentLabel(instrument))} {instrumentHere(instrument)}</>;
     };
     const list = instruments?.length ? instruments : ['MNQ'];
     return (
       <HelpBox>
-        <div>The Rule blocks name no instrument, so the same Setup can trade several. Pick one or more: the Run binds this Setup version once per instrument, each binding with the same risk overrides and its own results. The instrument sets the tick size and the dollars per point, so the same stop loss in points risks a different amount, and changes the number of contracts.</div>
+        <div>The Rule blocks name no instrument, so the same Setup can trade several. Pick one or more: the Run binds this Setup version once per instrument, each binding with the same risk overrides and its own results. The instrument sets the tick size and the dollars per point, so the same Stop Loss in points risks a different amount, and changes the number of contracts.</div>
         {list.length === 1 ? <div>Here: {here(list[0])}</div> : <ul className="list-disc space-y-0.5 pl-5">{list.map((i) => <li key={i}>{here(i)}</li>)}</ul>}
       </HelpBox>
     );
   }
   return (
     <HelpBox>
-      <div>A Run may replace <T>whole Trade-settings sections</T> (Risk per Trade, Stop loss, Take profits, Break-even, Entry deadline, Closing time, Signal guards): pick Override and the section's full editor opens, starting from the Setup default. It cannot change part of a section, and it cannot touch the Signal steps, the Entry order or the While-in-a-Trade rules: those are the Setup version itself.</div>
+      <div>A Run may replace <T>whole Trade-settings sections</T> (Risk per Trade, Stop Loss, Take profits, Break-even, Entry deadline, Closing time, Signal guards): pick Override and the section's full editor opens, starting from the Setup default. It cannot change part of a section, and it cannot touch the Signal steps, the Entry order or the While-in-a-Trade rules: those are the Setup version itself.</div>
       <div>Overrides make <T>no new version</T>, so a Promoted version stays promoted. When a section is overridden, the line below it shows the Run's value, and the comparison at the bottom re-runs the Setup on the MNQ bars with and without the overrides.{overrides ? <> Here: {B(`${overrides} section${overrides === 1 ? '' : 's'}`)} overridden.</> : <> Here: {B('no override')}; the Run trades the Setup defaults.</>}</div>
     </HelpBox>
   );
@@ -502,7 +502,7 @@ function ReviewHelp_({ setup, what, issues, result, versions }: { setup: Setup; 
     const e = (issues || []).filter((i) => i.level === 'error').length, w = (issues || []).length - e;
     return (
       <HelpBox>
-        <div><span className="text-red-300">✕ Errors</span> block Freeze: something the engine cannot run (no stop loss, a value read before a step captures it, a timeframe finer than the Base bar…). <span className="text-amber-300">! Warnings</span> do not: the Draft still saves and freezes, but have a look (an unused pattern, take-profit shares that do not add up to 100%…).</div>
+        <div><span className="text-red-300">✕ Errors</span> block Freeze: something the engine cannot run (no Stop Loss, a value read before a step captures it, a timeframe finer than the Base bar…). <span className="text-amber-300">! Warnings</span> do not: the Draft still saves and freezes, but have a look (an unused pattern, take-profit shares that do not add up to 100%…).</div>
         <div>Here: {e || w ? <>{B(`${e} error${e === 1 ? '' : 's'}`)} and {B(`${w} warning${w === 1 ? '' : 's'}`)}.</> : B('nothing to fix, ready to freeze.')}</div>
       </HelpBox>
     );
@@ -519,7 +519,7 @@ function ReviewHelp_({ setup, what, issues, result, versions }: { setup: Setup; 
   const wins = taken.filter((x) => (x.trade!.r || 0) > 0).length;
   return (
     <HelpBox>
-      <div><T>Signals</T>: every time the last step completed inside the Trading window. <T>Refused</T>: Signals a guard or the sizing turned down (the reason is in the Signal's panel). <T>Trades</T>: Signals that filled; a cancelled entry is not a Trade. <T>Win rate</T>: Trades that ended in profit. <T>Total</T>: the sum of the Trades' results in R, where 1R is what each Trade risked at its stop loss.</div>
+      <div><T>Signals</T>: every time the last step completed inside the Trading window. <T>Refused</T>: Signals a guard or the sizing turned down (the reason is in the Signal's panel). <T>Trades</T>: Signals that filled; a cancelled entry is not a Trade. <T>Win rate</T>: Trades that ended in profit. <T>Total</T>: the sum of the Trades' results in R, where 1R is what each Trade risked at its Stop Loss.</div>
       <div>Here: {B(`${sigs.length} Signal${sigs.length === 1 ? "" : "s"}`)}, {B(`${taken.length} Trade${taken.length === 1 ? "" : "s"}`)}, {taken.length ? <>{B(`${Math.round((wins / taken.length) * 100)}%`)} winners and </> : ''}{B(`${r >= 0 ? '+' : ''}${r.toFixed(2)}R`)} on 35 Trading days. Use the day arrows or "next Signal day", click a Signal to see its zones and its risk and reward, and ▶ Replay to step through it. This is a rough simulation on 1-minute bars; a backtest Run is the real measure.</div>
     </HelpBox>
   );
@@ -537,7 +537,7 @@ function SignalStepsHelp_({ setup, bi }: { setup: Setup; bi: number }) {
   const [title, text] = NEW_START[br?.on_new_start || 'start_another'];
   return (
     <HelpBox>
-      <div><T>How steps work.</T> A branch is a Sequence: step 1, then step 2, and so on. At every close of the {setup.settings.base_bar} Base bar the conditions are checked. When step 1 holds, a <T>Candidate</T> starts and waits for step 2; when the last step completes, the Candidate becomes a <T>Signal</T> and goes to the Entry. All the conditions inside a step must hold on the same bar. What a step captures (a pattern's top, the Draw on liquidity, a running low) can be read by the steps after it and by the Entry and stop loss.</div>
+      <div><T>How steps work.</T> A branch is a Sequence: step 1, then step 2, and so on. At every close of the {setup.settings.base_bar} Base bar the conditions are checked. When step 1 holds, a <T>Candidate</T> starts and waits for step 2; when the last step completes, the Candidate becomes a <T>Signal</T> and goes to the Entry. All the conditions inside a step must hold on the same bar. What a step captures (a pattern's top, the Draw on liquidity, a running low) can be read by the steps after it and by the Entry and Stop Loss.</div>
       <div><T>When a Candidate ends without a Signal:</T> a limit on the next step runs out (too many bars, past its clock time), its invalidation happens, or the Trading day ends at 18:00 NY. A Candidate that completes outside the Trading window gives no Signal.</div>
       <div><T>When a new setup appears before the last one finished (step 1 holds again while a Candidate waits): {title}.</T> {text}</div>
       <details className="text-[11px]"><summary className="cursor-pointer hover:text-foreground">compare the three, and how to read the counts</summary>
@@ -571,7 +571,7 @@ export function StepLimits({ step, onChange, isFirst, ctx, side, look }: { step:
           <li><b>may complete on the same bar</b>: off, the step waits at least one Base bar after the step before; on, both can happen on one bar (with "within 0 bars", only on that bar).</li>
           <li><b>within N bars</b>: the step must complete at most N Base bars after the step before, or the Candidate ends. Empty means no limit.</li>
           <li><b>until hh:mm</b>: the step must complete before this New York time, or the Candidate ends.</li>
-          <li><b>capture running</b>: keeps the lowest low (or highest high) from this step until the next one completes, under a name later steps and the stop loss can read, e.g. a pullback low.</li>
+          <li><b>capture running</b>: keeps the lowest low (or highest high) from this step until the next one completes, under a name later steps and the Stop Loss can read, e.g. a pullback low.</li>
           <li><b>invalidation</b>: a condition that, if it holds while the Candidate waits for this step, ends the Candidate.</li>
         </ul>
       </details>
@@ -626,9 +626,9 @@ function EntryHelp_({ setup, bi, result, data }: { setup: Setup; bi: number; res
   return (
     <HelpBox>
       <div><span className="font-medium text-foreground">Order.</span> {ORDER_HELP[e.order](long)}</div>
-      <div><span className="font-medium text-foreground">Stop loss.</span> Placed {long ? 'below' : 'above'} a level the Setup reads (a captured low or high, a pattern edge…) by an offset: in ticks (on MNQ a tick is 0.25 points) or in × ATR, so it widens when the market is more volatile. The distance from the entry to the stop loss is the risk, 1R: it sizes the contracts and sets R-multiple take profits. An Entry cannot be saved without a stop loss.</div>
-      <div>Here: {e.order === 'market' ? B('at market') : <>a {B(e.order === 'limit' ? 'limit' : 'stop entry')} at {B(phrase(e.price || '?', labels))}</>}, stop loss {B(stopPhrase(e.stop, long ? 'long' : 'short', (t) => phrase(t, labels)))}{e.stop.from === 'usd' ? ` (${(e.stop.offset / 2).toFixed(2)} points on MNQ)` : e.stop.unit === 'ticks' ? ` (${(e.stop.offset * 0.25).toFixed(2)} points)` : ''}.
-        {sig && data && <> On its latest Signal ({when.slice(5, 10)} {when.slice(11, 16)} NY): entry {B(sig.entry.toFixed(2))}, stop loss {B(sig.stop.toFixed(2))}, so {B(`${Math.abs(sig.entry - sig.stop).toFixed(2)} points`)} of risk and {B(`${contracts} contract${contracts === 1 ? '' : 's'}`)}.</>}
+      <div><span className="font-medium text-foreground">Stop Loss.</span> Placed {long ? 'below' : 'above'} a level the Setup reads (a captured low or high, a pattern edge…) by an offset: in ticks (on MNQ a tick is 0.25 points) or in × ATR, so it widens when the market is more volatile. The distance from the entry to the Stop Loss is the risk, 1R: it sizes the contracts and sets R-multiple take profits. An Entry cannot be saved without a Stop Loss.</div>
+      <div>Here: {e.order === 'market' ? B('at market') : <>a {B(e.order === 'limit' ? 'limit' : 'stop entry')} at {B(phrase(e.price || '?', labels))}</>}, Stop Loss {B(stopPhrase(e.stop, long ? 'long' : 'short', (t) => phrase(t, labels)))}{e.stop.from === 'usd' ? ` (${(e.stop.offset / 2).toFixed(2)} points on MNQ)` : e.stop.unit === 'ticks' ? ` (${(e.stop.offset * 0.25).toFixed(2)} points)` : ''}.
+        {sig && data && <> On its latest Signal ({when.slice(5, 10)} {when.slice(11, 16)} NY): entry {B(sig.entry.toFixed(2))}, Stop Loss {B(sig.stop.toFixed(2))}, so {B(`${Math.abs(sig.entry - sig.stop).toFixed(2)} points`)} of risk and {B(`${contracts} contract${contracts === 1 ? '' : 's'}`)}.</>}
         {!sig && result && <> No Signal of this branch was traded on these bars yet.</>}
       </div>
     </HelpBox>
@@ -636,16 +636,16 @@ function EntryHelp_({ setup, bi, result, data }: { setup: Setup; bi: number; res
 }
 export function StopEditor({ value, onChange, ctx, side = 'long' }: { value: Setup['branches'][0]['entry']['stop']; onChange: (v: Setup['branches'][0]['entry']['stop']) => void; ctx: TokenCtx; side?: 'long' | 'short' }) {
   return (
-    <Field label={<span className="flex items-center gap-2"><span className="text-base font-bold tracking-tight text-foreground">Stop loss</span><Badge tone={value.token || (value.from || 'level') !== 'level' ? 'warn' : 'error'} className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">{value.token || (value.from || 'level') !== 'level' ? '★ Required' : '★ Required: pick a level'}</Badge></span>}>
+    <Field label={<span className="flex items-center gap-2"><span className="text-base font-bold tracking-tight text-foreground">Stop Loss</span><Badge tone={value.token || (value.from || 'level') !== 'level' ? 'warn' : 'error'} className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">{value.token || (value.from || 'level') !== 'level' ? '★ Required' : '★ Required: pick a level'}</Badge></span>}>
       <span className="flex basis-full flex-wrap items-center gap-2 text-sm">Measured from
         <Select value={value.from || 'level'} onChange={(f) => onChange({ ...value, from: f as any, offset: f === 'usd' ? (value.from === 'usd' ? value.offset : 40) : value.from === 'usd' ? 2 : value.offset })} options={[['level', 'a level (a low, a pattern edge…)'], ['entry', 'the entry price'], ['usd', 'a fixed $ a contract from the entry']]} /></span>
-      <span className="text-sm">Place the stop loss</span>
+      <span className="text-sm">Place the Stop Loss</span>
       {value.from === 'usd' && <span className="text-sm">$</span>}
       <NumInput step={value.from === 'usd' ? 5 : 0.05} value={value.offset} onChange={(n) => onChange({ ...value, offset: n })} className="w-16" />
       {value.from === 'usd' ? <span className="text-sm">a contract</span> : <Select value={value.unit} onChange={(u) => onChange({ ...value, unit: u })} options={[['ticks', 'ticks'], ['atr', '× ATR']]} />}
       {value.from !== 'usd' && value.unit === 'atr' && <span className="text-sm text-muted-foreground">using</span>}{value.from !== 'usd' && value.unit === 'atr' && <TokenPicker value={value.atr || ''} ctx={ctx} compact onChange={(a) => onChange({ ...value, atr: a })} placeholder="which ATR" />}
-      <span className="text-sm" title="set by the branch: a long stop loss sits below, a short one above">{side === 'long' ? 'below' : 'above'}</span>
-      {(value.from || 'level') === 'level' ? <TokenPicker value={value.token} ctx={ctx} onChange={(t) => onChange({ ...value, token: t })} placeholder="pick the stop-loss level" /> : <span className="text-sm font-medium">the entry</span>}
+      <span className="text-sm" title="set by the branch: a long Stop Loss sits below, a short one above">{side === 'long' ? 'below' : 'above'}</span>
+      {(value.from || 'level') === 'level' ? <TokenPicker value={value.token} ctx={ctx} onChange={(t) => onChange({ ...value, token: t })} placeholder="pick the Stop Loss level" /> : <span className="text-sm font-medium">the entry</span>}
     </Field>
   );
 }
@@ -687,9 +687,9 @@ export function sectionSummary(s: Setup, k: SectionKey): string {
     case 'stop': return v.map((x: any, i: number) => stopPhrase(x, s.branches[i]?.side || 'long', (t) => shortName(t, {}) || '?')).join(' / ');
     case 'legs': return v.legs.map((l: Leg) => `${l.name} at ${l.rule === 'r' ? l.r + 'R' : l.rule === 'fraction' ? Math.round((l.fraction ?? 0) * 100) + '% to ' + shortName(l.level || '', {}) : (l.offset_ticks ? `${l.offset_ticks}t before ` : '') + shortName(l.level || '', {})}, close ${Math.round(l.share * 100)}%`).join('; ') + `; extra to ${v.leftover === 'first' ? (v.legs[0]?.name || 'TP1') : (v.legs[v.legs.length - 1]?.name || 'the last TP')}`;
     case 'break_even': return v.trigger === 'off' ? 'never' : `${v.trigger === 'after_leg' ? `after TP${v.k} fills` : `once +${v.r}R in profit`}${v.offset_ticks ? `, lock in ${v.offset_ticks} ticks` : ''}`;
-    case 'entry_deadline': return `${v.entry_deadline.kind === 'clock' ? 'wait until ' + v.entry_deadline.value : v.entry_deadline.kind === 'bars' ? 'wait ' + v.entry_deadline.value + ' Base bars' : v.entry_deadline.kind === 'end_of_hours' ? 'wait until the Trading window closes' : 'wait until the Trading day ends'}; ${v.cancel_if.length ? 'cancel if price reaches ' + v.cancel_if.map((c: string) => (c === 'first_leg' ? 'TP1' : c === 'stop' ? 'the stop loss' : 'the Draw')).join(' or ') + ' first' : 'no early cancel'}`;
+    case 'entry_deadline': return `${v.entry_deadline.kind === 'clock' ? 'wait until ' + v.entry_deadline.value : v.entry_deadline.kind === 'bars' ? 'wait ' + v.entry_deadline.value + ' Base bars' : v.entry_deadline.kind === 'end_of_hours' ? 'wait until the Trading window closes' : 'wait until the Trading day ends'}; ${v.cancel_if.length ? 'cancel if price reaches ' + v.cancel_if.map((c: string) => (c === 'first_leg' ? 'TP1' : c === 'stop' ? 'the Stop Loss' : 'the Draw')).join(' or ') + ' first' : 'no early cancel'}`;
     case 'expiry_and_flatten': return `${v.expiry ? 'close Trades at ' + v.expiry + ', ' : ''}flat by ${v.flatten_time}`;
-    case 'signal_guards': return v.map((g: Guard) => (g.kind === 'max_stop' ? `skip if stop loss > ${g.n} ${g.unit === 'atr' ? '× ATR' : 'ticks'}` : `skip if reward < ${g.n} × risk`)).join(', ') || 'none';
+    case 'signal_guards': return v.map((g: Guard) => (g.kind === 'max_stop' ? `skip if Stop Loss > ${g.n} ${g.unit === 'atr' ? '× ATR' : 'ticks'}` : `skip if reward < ${g.n} × risk`)).join(', ') || 'none';
   }
 }
 
@@ -745,7 +745,7 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
         <Select value={value.entry_deadline.kind} onChange={(kk) => onChange({ ...value, entry_deadline: { kind: kk, value: kk === 'clock' ? '11:00' : kk === 'bars' ? '3' : '' } })} options={[['clock', 'Wait until a set time (NY)'], ['bars', 'Wait N Base bars'], ['end_of_hours', 'Wait until the Trading window closes'], ['end_of_day', 'Wait until the Trading day ends']]} />
         {(value.entry_deadline.kind === 'clock' || value.entry_deadline.kind === 'bars') && <Input value={value.entry_deadline.value} onChange={(e) => onChange({ ...value, entry_deadline: { ...value.entry_deadline, value: e.target.value } })} className="w-16" />}
         <div className="flex basis-full flex-wrap items-center gap-x-3 gap-y-1 pt-1"><span className="text-sm font-medium text-muted-foreground">Cancel if price reaches first:</span>
-        {(['stop', 'first_leg', 'draw'] as const).map((c) => <label key={c} className={cn('flex h-9 cursor-pointer select-none items-center gap-2 rounded-md border px-3 text-sm transition-colors hover:bg-accent', value.cancel_if.includes(c) ? 'border-sky-500/50 bg-sky-500/10 text-sky-200' : 'border-input')}><input type="checkbox" style={{ width: 18, height: 18, accentColor: '#52b788' }} checked={value.cancel_if.includes(c)} onChange={(e) => onChange({ ...value, cancel_if: e.target.checked ? [...value.cancel_if, c] : value.cancel_if.filter((x: string) => x !== c) })} />{c === 'first_leg' ? 'TP1' : c === 'stop' ? 'the stop loss' : 'the Draw'}</label>)}</div>
+        {(['stop', 'first_leg', 'draw'] as const).map((c) => <label key={c} className={cn('flex h-9 cursor-pointer select-none items-center gap-2 rounded-md border px-3 text-sm transition-colors hover:bg-accent', value.cancel_if.includes(c) ? 'border-sky-500/50 bg-sky-500/10 text-sky-200' : 'border-input')}><input type="checkbox" style={{ width: 18, height: 18, accentColor: '#52b788' }} checked={value.cancel_if.includes(c)} onChange={(e) => onChange({ ...value, cancel_if: e.target.checked ? [...value.cancel_if, c] : value.cancel_if.filter((x: string) => x !== c) })} />{c === 'first_leg' ? 'TP1' : c === 'stop' ? 'the Stop Loss' : 'the Draw'}</label>)}</div>
       </div>
     );
     case 'expiry_and_flatten': return (
@@ -758,14 +758,14 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
       <div className="space-y-1.5 text-sm">
         {value.map((g: Guard, i: number) => (
           <div key={i} className="flex flex-wrap items-center gap-1.5 rounded-md border border-border/60 p-2 sm:border-0 sm:p-0">Skip if{' '}
-            {g.kind === 'max_stop' ? <>the stop loss is wider than <NumInput step={0.5} value={g.n} onChange={(n) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, n } : x)))} className="h-7 w-14" />
+            {g.kind === 'max_stop' ? <>the Stop Loss is wider than <NumInput step={0.5} value={g.n} onChange={(n) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, n } : x)))} className="h-7 w-14" />
               <Select value={g.unit || 'ticks'} onChange={(u) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, unit: u } : x)))} options={[['ticks', 'ticks'], ['atr', '× ATR']]} className="h-7" />
               {g.unit === 'atr' && <TokenPicker value={g.atr || ''} ctx={ctx} compact onChange={(a) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, atr: a } : x)))} />}</>
               : <>the reward is under <NumInput step={0.1} value={g.n} onChange={(n) => onChange(value.map((x: Guard, j: number) => (j === i ? { ...x, n } : x)))} className="h-7 w-14" /> × the risk</>}
             <button aria-label="remove this guard" title="remove" className="ml-auto sm:ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input text-lg leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" onClick={() => onChange(value.filter((_: Guard, j: number) => j !== i))}>×</button>
           </div>
         ))}
-        <div className="flex flex-wrap gap-1.5"><button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => onChange([...value, { kind: 'max_stop', n: 40, unit: 'ticks' }])}>+ Stop loss too wide</button><button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => onChange([...value, { kind: 'min_rr', n: 1 }])}>+ Reward too small</button></div>
+        <div className="flex flex-wrap gap-1.5"><button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => onChange([...value, { kind: 'max_stop', n: 40, unit: 'ticks' }])}>+ Stop Loss too wide</button><button type="button" className="flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/20" onClick={() => onChange([...value, { kind: 'min_rr', n: 1 }])}>+ Reward too small</button></div>
       </div>
     );
   }
@@ -774,14 +774,14 @@ export function SectionEditor({ k, value, onChange, setup, ctx }: { k: SectionKe
 const PV = 2; // MNQ $ per point: the preview instrument (the real one is chosen per Run)
 const SECTION_HELP: Record<SectionKey | 'in_position', string> = {
   losing_streak: "Counts this Setup's losing Trades in a row on one Trading day, across its long and short branches. When the count reaches N, the Setup opens no new Trade for the rest of that day (its Signals are logged as refused). The next Trading day it resumes at the reduced risk, a share of its usual contracts, and goes back to full risk after its first winning Trade. A Trade that ends flat does not break or extend the streak. The account-wide daily loss limit (Stand-down) still applies on top, for the whole Run.",
-  risk: "How many contracts a Signal trades. Contracts = Account size × Risk each Trade % ÷ (stop-loss distance × the instrument's $ per point), rounded down and capped at the contract limit. If even 1 contract would risk more than that, the Signal is refused (\"stop loss too wide\").",
-  stop: 'Where the protective stop loss sits: a value the Setup reads (a captured low, a pattern edge…) plus an offset in ticks or in × ATR, on the far side from the entry. Every Entry must have one.',
-  legs: "The Trade can be closed in parts, each part with its own take profit (TP1, TP2…). At a multiple of the risk (R): entry ± k × the stop-loss distance. Just before a level: a price the Setup reads, e.g. the Draw on liquidity, N ticks short so it fills before the level. Part of the way to a level: that % of the way from the entry to the level. Close %: the part of the contracts each take profit closes; extra contracts that don't divide evenly go to TP1 first or to the last TP.",
-  break_even: 'Moves the stop loss to the entry so the rest of the Trade can no longer lose; "lock in N ticks" puts it N ticks past the entry, toward profit. Never: the stop loss stays where it was placed. After TP k fills: once that take profit has filled. Once price is +X R in profit: once price first reaches X times the stop-loss distance in profit. The stop loss only ever moves toward profit.',
-  entry_deadline: "How long a limit or stop entry may wait for its fill; after that it is cancelled. A market entry fills at the next bar's open and ignores the deadline. \"Cancel if price reaches first\": if price touches the stop loss, TP1 or the Draw on liquidity before filling, the entry is cancelled, because the move already happened without you.",
-  expiry_and_flatten: 'Close open Trades at (optional): any Trade still open at this New York time is closed at market. Be flat by (required): the hard end of the day for this Setup; every position still open is closed at market, whatever its take profits and stop loss.',
-  signal_guards: "Last checks on a Signal before any order. A refused Signal is logged with its reason and opens no Trade. Skip if the stop loss is wider than N ticks or N × ATR (checked before sizing). Skip if the reward is under N × the risk: the take profits' average reward, weighted by contracts, divided by the risk.",
-  in_position: "Checked at every Base-bar close while a Trade is open. When a rule holds, its action runs at the next bar's open: Close the whole Trade, Close TP k now, Tighten the stop loss, or Cancel the waiting entry. Each rule belongs to a branch, and a Run cannot override them.",
+  risk: "How many contracts a Signal trades. Contracts = Account size × Risk each Trade % ÷ (Stop Loss distance × the instrument's $ per point), rounded down and capped at the contract limit. If even 1 contract would risk more than that, the Signal is refused (\"Stop Loss too wide\").",
+  stop: 'Where the protective Stop Loss sits: a value the Setup reads (a captured low, a pattern edge…) plus an offset in ticks or in × ATR, on the far side from the entry. Every Entry must have one.',
+  legs: "The Trade can be closed in parts, each part with its own take profit (TP1, TP2…). At a multiple of the risk (R): entry ± k × the Stop Loss distance. Just before a level: a price the Setup reads, e.g. the Draw on liquidity, N ticks short so it fills before the level. Part of the way to a level: that % of the way from the entry to the level. Close %: the part of the contracts each take profit closes; extra contracts that don't divide evenly go to TP1 first or to the last TP.",
+  break_even: 'Moves the Stop Loss to the entry so the rest of the Trade can no longer lose; "lock in N ticks" puts it N ticks past the entry, toward profit. Never: the Stop Loss stays where it was placed. After TP k fills: once that take profit has filled. Once price is +X R in profit: once price first reaches X times the Stop Loss distance in profit. The Stop Loss only ever moves toward profit.',
+  entry_deadline: "How long a limit or stop entry may wait for its fill; after that it is cancelled. A market entry fills at the next bar's open and ignores the deadline. \"Cancel if price reaches first\": if price touches the Stop Loss, TP1 or the Draw on liquidity before filling, the entry is cancelled, because the move already happened without you.",
+  expiry_and_flatten: 'Close open Trades at (optional): any Trade still open at this New York time is closed at market. Be flat by (required): the hard end of the day for this Setup; every position still open is closed at market, whatever its take profits and Stop Loss.',
+  signal_guards: "Last checks on a Signal before any order. A refused Signal is logged with its reason and opens no Trade. Skip if the Stop Loss is wider than N ticks or N × ATR (checked before sizing). Skip if the reward is under N × the risk: the take profits' average reward, weighted by contracts, divided by the risk.",
+  in_position: "Checked at every Base-bar close while a Trade is open. When a rule holds, its action runs at the next bar's open: Close the whole Trade, Close TP k now, Tighten the Stop Loss, or Cancel the waiting entry. Each rule belongs to a branch, and a Run cannot override them.",
 };
 function splitN(n: number, legs: Leg[], leftover: 'first' | 'last') {
   const out = legs.map((l) => Math.floor(n * l.share));
@@ -798,16 +798,16 @@ function sectionExample(setup: Setup, k: SectionKey | 'in_position'): React.Reac
   const B = (x: React.ReactNode) => <b className="text-foreground">{x}</b>;
   switch (k) {
     case 'losing_streak': return ts.losing_streak?.n ? <>Here: after {B(`${ts.losing_streak.n} losers in a row`)} the Setup stops for the day; the next day {B(`${contracts} contracts`)} become {B(`${Math.floor((contracts * ts.losing_streak.cut) / 100)}`)} until a winner.</> : <>Here: {B('off')}, the Setup keeps trading after any number of losers; only the Run's daily loss limit stops it.</>;
-    case 'risk': return <>Here: {B(`$${ts.risk.capital} × ${ts.risk.pct}% = $${budget.toFixed(0)}`)} per Trade. With a 20-point stop loss on MNQ ($2 a point), 1 contract risks $40, so the Signal trades {B(`${contracts} contract${contracts === 1 ? '' : 's'}`)}{raw > ts.risk.max_contracts ? ' (capped by Max contracts)' : ''}. A stop loss wider than {B(`${(budget / PV).toFixed(0)} points`)} is refused.</>;
+    case 'risk': return <>Here: {B(`$${ts.risk.capital} × ${ts.risk.pct}% = $${budget.toFixed(0)}`)} per Trade. With a 20-point Stop Loss on MNQ ($2 a point), 1 contract risks $40, so the Signal trades {B(`${contracts} contract${contracts === 1 ? '' : 's'}`)}{raw > ts.risk.max_contracts ? ' (capped by Max contracts)' : ''}. A Stop Loss wider than {B(`${(budget / PV).toFixed(0)} points`)} is refused.</>;
     case 'legs': {
       const n = contracts || 1, sp = splitN(n, ts.legs, ts.leftover);
-      return <>Here, with {B(n)} contract{n === 1 ? '' : 's'} (a 20-point stop loss): {ts.legs.map((l, i) => <span key={i}>{i > 0 && ', '}{B(`${l.name} ×${sp[i]}`)} {l.rule === 'r' ? `at ${l.r}R, ${((l.r || 0) * stopPts).toFixed(0)} points away` : l.rule === 'fraction' ? `${Math.round((l.fraction || 0) * 100)}% of the way to the level` : `${l.offset_ticks || 0} tick${(l.offset_ticks || 0) === 1 ? '' : 's'} before the level`}</span>)}.{sp.some((x) => x === 0) ? ' A take profit with 0 contracts is skipped.' : ''}</>;
+      return <>Here, with {B(n)} contract{n === 1 ? '' : 's'} (a 20-point Stop Loss): {ts.legs.map((l, i) => <span key={i}>{i > 0 && ', '}{B(`${l.name} ×${sp[i]}`)} {l.rule === 'r' ? `at ${l.r}R, ${((l.r || 0) * stopPts).toFixed(0)} points away` : l.rule === 'fraction' ? `${Math.round((l.fraction || 0) * 100)}% of the way to the level` : `${l.offset_ticks || 0} tick${(l.offset_ticks || 0) === 1 ? '' : 's'} before the level`}</span>)}.{sp.some((x) => x === 0) ? ' A take profit with 0 contracts is skipped.' : ''}</>;
     }
     case 'break_even': {
       const be = ts.break_even, off = be.offset_ticks ? `, locking in ${be.offset_ticks} ticks` : '';
-      if (be.trigger === 'off') return <>Here: {B('off')}; the stop loss stays where it was placed.</>;
-      if (be.trigger === 'after_leg') return <>Here: when {B(ts.legs[(be.k || 1) - 1]?.name || `TP${be.k}`)} fills, the stop loss moves to the entry{off}.</>;
-      return <>Here: once price is {B(`+${be.r}R`)} ({((be.r || 1) * stopPts).toFixed(0)} points with a 20-point stop loss), the stop loss moves to the entry{off}.</>;
+      if (be.trigger === 'off') return <>Here: {B('off')}; the Stop Loss stays where it was placed.</>;
+      if (be.trigger === 'after_leg') return <>Here: when {B(ts.legs[(be.k || 1) - 1]?.name || `TP${be.k}`)} fills, the Stop Loss moves to the entry{off}.</>;
+      return <>Here: once price is {B(`+${be.r}R`)} ({((be.r || 1) * stopPts).toFixed(0)} points with a 20-point Stop Loss), the Stop Loss moves to the entry{off}.</>;
     }
     case 'entry_deadline': {
       const d = ts.entry_deadline;
@@ -816,7 +816,7 @@ function sectionExample(setup: Setup, k: SectionKey | 'in_position'): React.Reac
     }
     case 'expiry_and_flatten': return <>Here: {ts.expiry ? <>Trades still open at {B(ts.expiry)} are closed, and </> : ''}everything is flat by {B(ts.flatten_time)} NY.</>;
     case 'signal_guards': return ts.signal_guards.length
-      ? <>Here: {ts.signal_guards.map((g, i) => <span key={i}>{i > 0 && '; '}{B(g.kind === 'max_stop' ? `skip if the stop loss is wider than ${g.n} ${g.unit === 'atr' ? '× ATR' : 'ticks'}` : `skip if the reward is under ${g.n} × the risk`)}{g.kind === 'max_stop' && g.unit !== 'atr' ? ` (${(g.n * 0.25).toFixed(2)} points)` : g.kind === 'min_rr' ? ` (a 20-point stop loss needs ${(g.n * stopPts).toFixed(0)} points of average reward)` : ''}</span>)}.</>
+      ? <>Here: {ts.signal_guards.map((g, i) => <span key={i}>{i > 0 && '; '}{B(g.kind === 'max_stop' ? `skip if the Stop Loss is wider than ${g.n} ${g.unit === 'atr' ? '× ATR' : 'ticks'}` : `skip if the reward is under ${g.n} × the risk`)}{g.kind === 'max_stop' && g.unit !== 'atr' ? ` (${(g.n * 0.25).toFixed(2)} points)` : g.kind === 'min_rr' ? ` (a 20-point Stop Loss needs ${(g.n * stopPts).toFixed(0)} points of average reward)` : ''}</span>)}.</>
       : <>Here: {B('no guards')}; every Signal that can be sized is traded.</>;
     case 'in_position': return <>Here: {B(`${setup.in_position_rules.length} rule${setup.in_position_rules.length === 1 ? '' : 's'}`)}.</>;
     default: return null;
@@ -848,7 +848,7 @@ export function InPositionRules({ setup, mutate, ctx, look }: { setup: Setup; mu
         <div key={r.id} className="space-y-1 rounded-md border p-2">
           <div className="flex flex-wrap items-center gap-1.5 text-sm"><span className="text-sm font-black tracking-wider text-sky-300">IF</span><span className="text-muted-foreground">this holds at a bar close</span>
             <span className="ml-auto flex w-full min-w-0 items-center gap-1 sm:w-auto"><span className="text-sm font-black tracking-wider text-sky-300">THEN</span>
-              <Select value={r.action} onChange={(a) => mutate((s) => { s.in_position_rules[i].action = a; })} options={[['close_trade', 'Close the whole Trade'], ['close_leg', 'Close TP k now'], ['move_stop', 'Tighten the stop loss'], ['cancel_entry', 'Cancel the waiting entry']]} className="h-7 min-w-0 flex-1" />
+              <Select value={r.action} onChange={(a) => mutate((s) => { s.in_position_rules[i].action = a; })} options={[['close_trade', 'Close the whole Trade'], ['close_leg', 'Close TP k now'], ['move_stop', 'Tighten the Stop Loss'], ['cancel_entry', 'Cancel the waiting entry']]} className="h-7 min-w-0 flex-1" />
               {r.action === 'close_leg' && <NumInput value={r.leg} onChange={(n) => mutate((s) => { s.in_position_rules[i].leg = n; })} className="h-7 !w-14 shrink-0" />}
               <button aria-label="remove this rule" title="remove" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-input text-xl leading-none text-muted-foreground transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-400" onClick={() => mutate((s) => { s.in_position_rules.splice(i, 1); })}>×</button></span>
           </div>
@@ -878,7 +878,7 @@ export function MirrorNote({ side, onHide }: { side: 'long' | 'short'; onHide: (
   return (
     <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/[0.06] px-3 py-2 text-sm text-amber-100">
       <span aria-hidden="true">⚠</span>
-      <span className="flex-1">Copied from the {side === 'short' ? 'long' : 'short'} branch and flipped: check each step (sizes like "stop loss wider than N" must not flip).</span>
+      <span className="flex-1">Copied from the {side === 'short' ? 'long' : 'short'} branch and flipped: check each step (sizes like "Stop Loss wider than N" must not flip).</span>
       <button type="button" onClick={onHide} className="shrink-0 rounded-full border border-amber-500/40 px-2 py-0.5 text-[11px] text-amber-200 hover:bg-amber-500/10">checked ×</button>
     </div>
   );

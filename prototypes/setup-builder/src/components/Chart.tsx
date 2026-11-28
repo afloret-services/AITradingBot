@@ -27,14 +27,14 @@ interface ReplayEvent { i: number; label: string; tone: 'step' | 'signal' | 'fil
 export function signalEvents(data: Data, setup: Setup, s: Signal): ReplayEvent[] {
   const br = setup.branches[s.branch];
   const ev: ReplayEvent[] = s.stepBars.map((i, k) => ({ i, label: `Step ${k + 1} completes · ${br?.steps[k]?.name || ''}`, tone: 'step', color: STEP_COLORS[k % STEP_COLORS.length] }));
-  ev.push({ i: s.i, label: s.refused ? `Signal refused: ${s.refused}` : `Signal · ${br?.entry.order} entry ${s.entry.toFixed(2)}, stop loss ${s.stop.toFixed(2)}${s.legs.map((l) => `, ${l.name} ${l.price.toFixed(2)}`).join('')}`, tone: 'signal', color: s.side === 'long' ? C.reward : C.risk });
+  ev.push({ i: s.i, label: s.refused ? `Signal refused: ${s.refused}` : `Signal · ${br?.entry.order} entry ${s.entry.toFixed(2)}, Stop Loss ${s.stop.toFixed(2)}${s.legs.map((l) => `, ${l.name} ${l.price.toFixed(2)}`).join('')}`, tone: 'signal', color: s.side === 'long' ? C.reward : C.risk });
   const t = s.trade;
   if (t?.fillI != null) ev.push({ i: t.fillI, label: `Filled at ${(t.fillPx ?? s.entry).toFixed(2)}`, tone: 'fill', color: C.entry });
   if (t?.cancelI != null) ev.push({ i: t.cancelI, label: t.outcome, tone: 'cancel', color: '#94a3b8' });
   // a move "at +X R" comes before a Take profit on the same bar (price passes +X R first); one "after TPk" comes after it
-  const moveEv = (m: { i: number; price: number; why: string }) => ev.push({ i: m.i, label: `Break-even · Stop loss moved to ${m.price.toFixed(2)} (${m.why})`, tone: 'exit', color: '#f59e0b' });
+  const moveEv = (m: { i: number; price: number; why: string }) => ev.push({ i: m.i, label: `Break-even · Stop Loss moved to ${m.price.toFixed(2)} (${m.why})`, tone: 'exit', color: '#f59e0b' });
   for (const m of t?.stopMoves || []) if (!/after/.test(m.why)) moveEv(m);
-  const word = (why: string) => /^TP\d/.test(why) ? `${why} reached` : why === 'stop' ? 'Stop loss hit' : why === 'stop at break-even' ? 'Break-even Stop loss hit' : why === 'moved stop loss' ? 'Moved Stop loss hit' : why;
+  const word = (why: string) => /^TP\d/.test(why) ? `${why} reached` : why === 'stop' ? 'Stop Loss hit' : why === 'stop at break-even' ? 'Break-even Stop Loss hit' : why === 'moved Stop Loss' ? 'Moved Stop Loss hit' : why;
   for (const x of dedupeExits(t?.exits || [])) ev.push({ i: x.i, label: `${word(x.why)} · ${x.price.toFixed(2)}`, tone: 'exit', color: /break-even/.test(x.why) ? '#f59e0b' : /stop/i.test(x.why) ? C.risk : /TP|leg/i.test(x.why) ? C.reward : '#fbbf24' });
   for (const m of t?.stopMoves || []) if (/after/.test(m.why)) moveEv(m);
   if (t?.exitI != null && t.r != null) { const last = t.exits[t.exits.length - 1]; ev.push({ i: t.exitI, label: `Exit · Trade closed at ${last.price.toFixed(2)} · ${t.r >= 0 ? '+' : ''}${t.r.toFixed(2)}R`, tone: 'exit', color: t.r > 0.05 ? C.reward : t.r < -0.05 ? C.risk : '#f59e0b' }); }
@@ -365,7 +365,7 @@ function SignalPanel({ data, s, events, replay, setReplay, playing, play, onClos
       {!s.refused && (
         <div className="mt-2 grid grid-cols-3 gap-3 sm:grid-cols-6">
           {stat('Entry', s.entry.toFixed(2))}
-          {stat('Stop loss', s.stop.toFixed(2), 'text-red-300')}
+          {stat('Stop Loss', s.stop.toFixed(2), 'text-red-300')}
           {stat('Risk', `${risk.toFixed(2)} pts`)}
           {s.legs.map((l) => stat(`${l.name} ×${l.contracts}`, l.price.toFixed(2), 'text-emerald-300'))}
           {s.caps.draw && stat('Draw', s.caps.draw.price.toFixed(2), 'text-violet-300')}

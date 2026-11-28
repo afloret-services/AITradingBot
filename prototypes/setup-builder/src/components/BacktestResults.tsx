@@ -1,6 +1,6 @@
 // PROTOTYPE: the results of the Draft backtest Run, one instrument at a time (replaces "What it did on MNQ", 2026-11-27).
 // Per instrument: Trades, average R, capital growth, and the drawdowns (average, largest, smallest); the chart kept to the
-// backtest period, where each Signal shows its steps, entry, Stop loss, Take profits and exits; and the list of Trades with
+// backtest period, where each Signal shows its steps, entry, Stop Loss, Take profits and exits; and the list of Trades with
 // the drawdown after each one. A click on a Trade shows it on the chart.
 // Drawdown: how far the account sits below its highest point so far, as a % of that high. A drawdown runs from a high until
 // the account makes a new high; the average, largest and smallest are over those drawdowns.
@@ -15,7 +15,7 @@ import { HelpBox } from './help';
 import { cn } from './ui';
 
 interface TradeRow { sig: Signal; n: number; day: number; usd: number; r: number; equity: number; growth: number; dd: number; ddUsd: number;
-  /** the Stop loss moved to break-even during the Trade; kind: how it ended */ be?: string; kind: 'won' | 'lost' | 'break-even'; exit?: { price: number; why: string } }
+  /** the Stop Loss moved to break-even during the Trade; kind: how it ended */ be?: string; kind: 'won' | 'lost' | 'break-even'; exit?: { price: number; why: string } }
 function analyse(row: Row, capital: number) {
   const sigs = row.res!.signals;
   const taken = sigs.filter((g) => !g.refused && g.trade?.fillI != null && g.trade?.r != null).sort((a, b) => a.trade!.fillI! - b.trade!.fillI!);
@@ -80,7 +80,7 @@ export function BacktestResults({ setup, data, bt, focus }: { setup: Setup; data
   return (
     <div className="space-y-3 [container-type:inline-size]">
       <HelpBox id="review:results">
-        <div><b className="text-foreground">BE</b> marks a Trade whose Stop loss moved to break-even; one that then closed there with nothing banked counts as break-even, neither won nor lost.</div>
+        <div><b className="text-foreground">BE</b> marks a Trade whose Stop Loss moved to break-even; one that then closed there with nothing banked counts as break-even, neither won nor lost.</div>
         <div>One instrument at a time: its Trades over the backtest period, what they did to the account, and each Trade on the chart. <b className="text-foreground">Capital</b> is this Setup's Risk per Trade account (${bt.capital}); growth and drawdowns are in % and in $ of it.</div>
         <div><b className="text-foreground">Drawdown</b>: how far the account sits below its highest point so far. One drawdown runs from a high until the account makes a new high; the average, largest and smallest are over those drawdowns.</div>
       </HelpBox>
@@ -114,7 +114,7 @@ export function BacktestResults({ setup, data, bt, focus }: { setup: Setup; data
             <div className="hidden max-h-96 overflow-auto rounded-md border [@container(min-width:44rem)]:block">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-card text-left text-xs uppercase tracking-wider text-muted-foreground">
-                  <tr>{['#', 'Date', 'Side', 'Contracts', 'Entry', 'Stop loss', 'Take profits', 'Exit', 'R', 'Result', 'Capital', 'Drawdown'].map((h) => <th key={h} className="whitespace-nowrap px-2 py-2 font-semibold">{h}</th>)}</tr>
+                  <tr>{['#', 'Date', 'Side', 'Contracts', 'Entry', 'Stop Loss', 'Take profits', 'Exit', 'R', 'Result', 'Capital', 'Drawdown'].map((h) => <th key={h} className="whitespace-nowrap px-2 py-2 font-semibold">{h}</th>)}</tr>
                 </thead>
                 <tbody>
                   {a.trades.map((t) => {
@@ -129,7 +129,7 @@ export function BacktestResults({ setup, data, bt, focus }: { setup: Setup; data
                         <td className="px-2 py-1.5 tabular-nums text-red-300">{g.stop.toFixed(2)}</td>
                         <td className="whitespace-nowrap px-2 py-1.5 tabular-nums text-emerald-300">{g.legs.map((l) => `${l.name} ${l.price.toFixed(2)}`).join(' · ')}</td>
                         <td className="px-2 py-1.5">{t.exit ? <span className="tabular-nums">{t.exit.price.toFixed(2)} <span className={cn('text-xs', /break-even/.test(t.exit.why) ? 'text-amber-300' : 'text-muted-foreground')}>{t.exit.why.replace('While in a Trade: ', '')}</span></span> : '–'}</td>
-                        <td className={cn('whitespace-nowrap px-2 py-1.5 font-semibold tabular-nums', t.kind === 'break-even' ? 'text-amber-300' : tone(t.r))}>{t.r > 0 ? '+' : ''}{t.r.toFixed(2)}R{t.be && <span title={`Stop loss moved: ${t.be}`} className="ml-1.5 rounded border border-amber-500/50 bg-amber-500/10 px-1 text-[10px] font-bold text-amber-300">BE</span>}</td>
+                        <td className={cn('whitespace-nowrap px-2 py-1.5 font-semibold tabular-nums', t.kind === 'break-even' ? 'text-amber-300' : tone(t.r))}>{t.r > 0 ? '+' : ''}{t.r.toFixed(2)}R{t.be && <span title={`Stop Loss moved: ${t.be}`} className="ml-1.5 rounded border border-amber-500/50 bg-amber-500/10 px-1 text-[10px] font-bold text-amber-300">BE</span>}</td>
                         <td className={cn('px-2 py-1.5 tabular-nums', tone(t.usd))}>{usd(t.usd)}</td>
                         <td className={cn('px-2 py-1.5 tabular-nums', tone(t.growth))}>{pct(t.growth)}</td>
                         <td className={cn('whitespace-nowrap px-2 py-1.5 tabular-nums', t.dd > 0 && 'text-red-300')}>{t.dd > 0 ? <>{pct(-t.dd, false)} <span className="text-xs opacity-80">{usd(-t.ddUsd)}</span></> : '0%'}</td>
@@ -144,8 +144,8 @@ export function BacktestResults({ setup, data, bt, focus }: { setup: Setup; data
                 const g = t.sig, on = selected === g;
                 return (
                   <button key={t.n} type="button" onClick={() => show(t)} className={cn('block w-full rounded-md border p-2 text-left text-xs hover:bg-accent', on && 'border-sky-500/60 bg-sky-500/10')}>
-                    <div className="flex items-baseline justify-between gap-2 text-sm"><span><span className="text-muted-foreground">#{t.n}</span> {dayLabel(data.m1[g.i].di)} {fmtT(data, g.trade!.fillI!)} <b className={g.side === 'long' ? 'text-cyan-300' : 'text-red-300'}>{g.side.toUpperCase()}</b> <span className="text-xs text-muted-foreground">× {g.legs.reduce((n, l) => n + l.contracts, 0)}</span></span><b className={t.kind === 'break-even' ? 'text-amber-300' : tone(t.r)}>{t.r > 0 ? '+' : ''}{t.r.toFixed(2)}R · {usd(t.usd)}{t.be && <span title={`Stop loss moved: ${t.be}`} className="ml-1.5 rounded border border-amber-500/50 bg-amber-500/10 px-1 text-[10px] font-bold text-amber-300">BE</span>}</b></div>
-                    <div className="mt-0.5 text-muted-foreground">Entry <span className="text-foreground">{g.entry.toFixed(2)}</span> · Stop loss <span className="text-red-300">{g.stop.toFixed(2)}</span> · {g.legs.map((l) => `${l.name} ${l.price.toFixed(2)}`).join(' · ')}</div>
+                    <div className="flex items-baseline justify-between gap-2 text-sm"><span><span className="text-muted-foreground">#{t.n}</span> {dayLabel(data.m1[g.i].di)} {fmtT(data, g.trade!.fillI!)} <b className={g.side === 'long' ? 'text-cyan-300' : 'text-red-300'}>{g.side.toUpperCase()}</b> <span className="text-xs text-muted-foreground">× {g.legs.reduce((n, l) => n + l.contracts, 0)}</span></span><b className={t.kind === 'break-even' ? 'text-amber-300' : tone(t.r)}>{t.r > 0 ? '+' : ''}{t.r.toFixed(2)}R · {usd(t.usd)}{t.be && <span title={`Stop Loss moved: ${t.be}`} className="ml-1.5 rounded border border-amber-500/50 bg-amber-500/10 px-1 text-[10px] font-bold text-amber-300">BE</span>}</b></div>
+                    <div className="mt-0.5 text-muted-foreground">Entry <span className="text-foreground">{g.entry.toFixed(2)}</span> · Stop Loss <span className="text-red-300">{g.stop.toFixed(2)}</span> · {g.legs.map((l) => `${l.name} ${l.price.toFixed(2)}`).join(' · ')}</div>
                     <div className="text-muted-foreground">Exit <span className="text-foreground">{t.exit ? `${t.exit.price.toFixed(2)} ${t.exit.why.replace('While in a Trade: ', '')}` : '–'}</span> · Capital <span className={tone(t.growth)}>{pct(t.growth)}</span> · Drawdown <span className={t.dd > 0 ? 'text-red-300' : 'text-foreground'}>{t.dd > 0 ? `${pct(-t.dd, false)} (${usd(-t.ddUsd)})` : '0%'}</span></div>
                   </button>
                 );
