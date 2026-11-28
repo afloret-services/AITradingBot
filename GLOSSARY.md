@@ -148,9 +148,21 @@ _Avoid_: Regime, Setup selection
 An entry order sent together with its Stop Loss and Take Profit orders, so the position is never open without both exits attached. A Trade with several Take Profits sends one Bracket order per Take Profit.
 _Avoid_: OCO (that names only the two exit legs)
 
+**Market Entry**:
+An entry that fills at the open of the next Base bar after the Signal, at whatever price the market gives.
+_Avoid_: Market order (alone), at-Market Entry
+
+**Limit Entry**:
+An entry that rests at a set price and fills only if price comes back to it (a long at or below it, a short at or above it): a better price, but it may never fill.
+_Avoid_: Limit (alone), limit order, resting order
+
+**Stop Entry**:
+An entry that rests at a set price and fills once price trades through it in the Trade's direction (a long at or above it, a short at or below it): it waits for the move, at a worse price.
+_Avoid_: Stop (alone: that is the Stop Loss), stop order, breakout order
+
 **Stop Loss**:
 The exit that caps a Trade's loss: a price on the far side of the entry from its targets, set by the Setup's Entry block (a set distance from a level, from the entry price, or a fixed $ a contract from the entry). Every Trade has one, attached in each of its Bracket orders; the distance from the entry to it is the Trade's 1R.
-_Avoid_: Stop (alone: a stop entry is an order type that fills on a break through a price), SL, protective stop, hard stop
+_Avoid_: Stop (alone: a Stop Entry is an order type that fills on a break through a price), SL, protective stop, hard stop
 
 **Take Profit**:
 One slice of a Trade's contracts with its own target, sent as its own Bracket order, numbered TP1, TP2…; a Trade's last Take Profit aims at its Setup's final target (for the Silver Bullet, the Draw on liquidity).
