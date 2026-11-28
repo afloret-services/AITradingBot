@@ -14,30 +14,34 @@ import { instrumentLabel } from './InstrumentSelect';
 import { HelpBox } from './help';
 import { cn } from './ui';
 
-interface TradeRow { sig: Signal; n: number; day: number; usd: number; r: number; equity: number; growth: number; dd: number; exit?: { price: number; why: string } }
+interface TradeRow { sig: Signal; n: number; day: number; usd: number; r: number; equity: number; growth: number; dd: number; ddUsd: number; exit?: { price: number; why: string } }
 function analyse(row: Row, capital: number) {
   const sigs = row.res!.signals;
   const taken = sigs.filter((g) => !g.refused && g.trade?.fillI != null && g.trade?.r != null).sort((a, b) => a.trade!.fillI! - b.trade!.fillI!);
-  let equity = capital, peak = capital, cur = 0;
-  const episodes: number[] = [];
+  let equity = capital, peak = capital, cur = 0, curUsd = 0;
+  const episodes: { pct: number; usd: number }[] = [];
   const trades: TradeRow[] = taken.map((g, k) => {
     const contracts = g.legs.reduce((a, l) => a + l.contracts, 0);
     const r = g.trade!.r!, usd = r * Math.abs(g.entry - g.stop) * row.pv! * contracts;
     equity += usd;
-    if (equity >= peak) { if (cur > 0) episodes.push(cur); cur = 0; peak = equity; }
+    if (equity >= peak) { if (cur > 0) episodes.push({ pct: cur, usd: curUsd }); cur = 0; curUsd = 0; peak = equity; }
     const dd = peak > 0 ? (100 * (peak - equity)) / peak : 0;
-    cur = Math.max(cur, dd);
+    const ddUsd = peak - equity;
+    if (dd > cur) { cur = dd; curUsd = ddUsd; }
     const ex = g.trade!.exits; const last = ex.length ? ex[ex.length - 1] : undefined;
-    return { sig: g, n: k + 1, day: 0, usd, r, equity, growth: (100 * (equity - capital)) / capital, dd, exit: last && { price: last.price, why: last.why } };
+    return { sig: g, n: k + 1, day: 0, usd, r, equity, growth: (100 * (equity - capital)) / capital, dd, ddUsd, exit: last && { price: last.price, why: last.why } };
   });
-  if (cur > 0) episodes.push(cur);
+  if (cur > 0) episodes.push({ pct: cur, usd: curUsd });
   const sumR = trades.reduce((a, t) => a + t.r, 0);
   return {
     trades, signals: sigs.length, refused: sigs.filter((g) => g.refused).length,
     avgR: trades.length ? sumR / trades.length : null, wins: trades.filter((t) => t.r > 0).length,
     growth: (100 * (equity - capital)) / capital, usd: equity - capital,
-    ddAvg: episodes.length ? episodes.reduce((a, b) => a + b, 0) / episodes.length : 0,
-    ddMax: episodes.length ? Math.max(...episodes) : 0, ddMin: episodes.length ? Math.min(...episodes) : 0, ddCount: episodes.length,
+    ddAvg: episodes.length ? episodes.reduce((a, b) => a + b.pct, 0) / episodes.length : 0,
+    ddAvgUsd: episodes.length ? episodes.reduce((a, b) => a + b.usd, 0) / episodes.length : 0,
+    ddMax: episodes.reduce((m, e) => (e.pct > m.pct ? e : m), { pct: 0, usd: 0 }),
+    ddMin: episodes.reduce<{ pct: number; usd: number } | null>((m, e) => (!m || e.pct < m.pct ? e : m), null) || { pct: 0, usd: 0 },
+    ddCount: episodes.length,
   };
 }
 const pct = (x: number, sign = true) => `${sign && x > 0 ? '+' : x < 0 ? '−' : ''}${Math.abs(x).toFixed(1)}%`;
@@ -71,7 +75,7 @@ export function BacktestResults({ setup, data, bt, focus }: { setup: Setup; data
   return (
     <div className="space-y-3 [container-type:inline-size]">
       <HelpBox id="review:results">
-        <div>One instrument at a time: its Trades over the backtest period, what they did to the account, and each Trade on the chart. <b className="text-foreground">Capital</b> is this Setup's Risk per Trade account (${bt.capital}); growth and drawdowns are in % of it.</div>
+        <div>One instrument at a time: its Trades over the backtest period, what they did to the account, and each Trade on the chart. <b className="text-foreground">Capital</b> is this Setup's Risk per Trade account (${bt.capital}); growth and drawdowns are in % and in $ of it.</div>
         <div><b className="text-foreground">Drawdown</b>: how far the account sits below its highest point so far. One drawdown runs from a high until the account makes a new high; the average, largest and smallest are over those drawdowns.</div>
       </HelpBox>
       <div className="flex flex-wrap items-center gap-1.5">
@@ -84,13 +88,14 @@ export function BacktestResults({ setup, data, bt, focus }: { setup: Setup; data
         <span className="text-xs text-muted-foreground">{dayLabel(from)} – {dayLabel(to)} · {to - from + 1} Trading days{bt.stale && <span className="text-amber-300"> · out of date: create a new backtest Run</span>}</span>
       </div>
       {!row || !a ? <div className="text-sm text-muted-foreground">None of the picked instruments has numbers in this prototype (only MNQ and NQ do).</div> : <>
-        <div className="grid grid-cols-2 gap-2 [@container(min-width:36rem)]:grid-cols-3 [@container(min-width:52rem)]:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2 [@container(min-width:36rem)]:grid-cols-4 [@container(min-width:60rem)]:grid-cols-7">
           {tile('Trades', a.trades.length, '', `${a.signals} Signals · ${a.refused} refused`)}
-          {tile('Average R', a.avgR == null ? '–' : `${a.avgR > 0 ? '+' : ''}${a.avgR.toFixed(2)}R`, tone(a.avgR || 0), a.trades.length ? `${Math.round((100 * a.wins) / a.trades.length)}% winners` : undefined)}
+          {tile('Win rate', a.trades.length ? `${Math.round((100 * a.wins) / a.trades.length)}%` : '–', '', a.trades.length ? `${a.wins} won · ${a.trades.length - a.wins} lost` : undefined)}
+          {tile('Average R', a.avgR == null ? '–' : `${a.avgR > 0 ? '+' : ''}${a.avgR.toFixed(2)}R`, tone(a.avgR || 0), 'per Trade')}
           {tile('Capital growth', pct(a.growth), tone(a.growth), `${usd(a.usd)} on $${bt.capital}`)}
-          {tile('Average drawdown', a.ddCount ? pct(-a.ddAvg, false) : '0%', a.ddCount ? 'text-red-300' : '', `${a.ddCount} drawdown${a.ddCount === 1 ? '' : 's'}`)}
-          {tile('Max drawdown', a.ddCount ? pct(-a.ddMax, false) : '0%', a.ddCount ? 'text-red-300' : '', 'the deepest')}
-          {tile('Min drawdown', a.ddCount ? pct(-a.ddMin, false) : '0%', a.ddCount ? 'text-red-300' : '', 'the shallowest')}
+          {tile('Average drawdown', a.ddCount ? pct(-a.ddAvg, false) : '0%', a.ddCount ? 'text-red-300' : '', a.ddCount ? `${usd(-a.ddAvgUsd)} · ${a.ddCount} drawdown${a.ddCount === 1 ? '' : 's'}` : 'none')}
+          {tile('Max drawdown', a.ddCount ? pct(-a.ddMax.pct, false) : '0%', a.ddCount ? 'text-red-300' : '', a.ddCount ? `${usd(-a.ddMax.usd)} · the deepest` : 'none')}
+          {tile('Min drawdown', a.ddCount ? pct(-a.ddMin.pct, false) : '0%', a.ddCount ? 'text-red-300' : '', a.ddCount ? `${usd(-a.ddMin.usd)} · the shallowest` : 'none')}
         </div>
         {(row.info || row.notes.length > 0) && <div className="text-xs">{row.info && <span className="text-muted-foreground">{row.info}. </span>}<span className="text-amber-300/90">{row.notes.join(' ')}</span></div>}
         <div ref={chartRef} className="scroll-mt-16">
@@ -120,7 +125,7 @@ export function BacktestResults({ setup, data, bt, focus }: { setup: Setup; data
                         <td className={cn('px-2 py-1.5 font-semibold tabular-nums', tone(t.r))}>{t.r > 0 ? '+' : ''}{t.r.toFixed(2)}R</td>
                         <td className={cn('px-2 py-1.5 tabular-nums', tone(t.usd))}>{usd(t.usd)}</td>
                         <td className={cn('px-2 py-1.5 tabular-nums', tone(t.growth))}>{pct(t.growth)}</td>
-                        <td className={cn('px-2 py-1.5 tabular-nums', t.dd > 0 && 'text-red-300')}>{t.dd > 0 ? pct(-t.dd, false) : '0%'}</td>
+                        <td className={cn('whitespace-nowrap px-2 py-1.5 tabular-nums', t.dd > 0 && 'text-red-300')}>{t.dd > 0 ? <>{pct(-t.dd, false)} <span className="text-xs opacity-80">{usd(-t.ddUsd)}</span></> : '0%'}</td>
                       </tr>
                     );
                   })}
@@ -134,7 +139,7 @@ export function BacktestResults({ setup, data, bt, focus }: { setup: Setup; data
                   <button key={t.n} type="button" onClick={() => show(t)} className={cn('block w-full rounded-md border p-2 text-left text-xs hover:bg-accent', on && 'border-sky-500/60 bg-sky-500/10')}>
                     <div className="flex items-baseline justify-between gap-2 text-sm"><span><span className="text-muted-foreground">#{t.n}</span> {dayLabel(data.m1[g.i].di)} {fmtT(data, g.trade!.fillI!)} <b className={g.side === 'long' ? 'text-cyan-300' : 'text-red-300'}>{g.side.toUpperCase()}</b></span><b className={tone(t.r)}>{t.r > 0 ? '+' : ''}{t.r.toFixed(2)}R · {usd(t.usd)}</b></div>
                     <div className="mt-0.5 text-muted-foreground">Entry <span className="text-foreground">{g.entry.toFixed(2)}</span> · Stop loss <span className="text-red-300">{g.stop.toFixed(2)}</span> · {g.legs.map((l) => `${l.name} ${l.price.toFixed(2)}`).join(' · ')}</div>
-                    <div className="text-muted-foreground">Exit <span className="text-foreground">{t.exit ? `${t.exit.price.toFixed(2)} ${t.exit.why.replace('While in a Trade: ', '')}` : '–'}</span> · Capital <span className={tone(t.growth)}>{pct(t.growth)}</span> · Drawdown <span className={t.dd > 0 ? 'text-red-300' : 'text-foreground'}>{t.dd > 0 ? pct(-t.dd, false) : '0%'}</span></div>
+                    <div className="text-muted-foreground">Exit <span className="text-foreground">{t.exit ? `${t.exit.price.toFixed(2)} ${t.exit.why.replace('While in a Trade: ', '')}` : '–'}</span> · Capital <span className={tone(t.growth)}>{pct(t.growth)}</span> · Drawdown <span className={t.dd > 0 ? 'text-red-300' : 'text-foreground'}>{t.dd > 0 ? `${pct(-t.dd, false)} (${usd(-t.ddUsd)})` : '0%'}</span></div>
                   </button>
                 );
               })}
