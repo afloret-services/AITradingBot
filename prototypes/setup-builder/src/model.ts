@@ -208,8 +208,8 @@ export interface Step {
   hold?: Cond;
   capture_running?: { name: string; field: 'low' | 'high' };
 }
-/** the entry order type in words: "Limit Entry" (the term), "stop entry", "market entry" */
-export const orderName = (o: string) => (o === 'limit' ? 'Limit Entry' : o === 'stop' ? 'stop entry' : 'market entry');
+/** the entry order type in words: "Limit Entry" (the term), "Stop Entry", "Market Entry" */
+export const orderName = (o: string) => (o === 'limit' ? 'Limit Entry' : o === 'stop' ? 'Stop Entry' : 'Market Entry');
 export interface Entry { order: 'market' | 'limit' | 'stop'; price?: string; stop: { token: string; offset: number; unit: 'ticks' | 'atr'; atr?: string; /** what the distance is measured from: a level (default), the entry price, or a fixed $ per contract from the entry */ from?: 'level' | 'entry' | 'usd' } }
 export interface Branch { id: string; side: 'long' | 'short'; steps: Step[]; entry: Entry; on_new_start: 'start_another' | 'replace' | 'ignore'; /** builder only: written by "Add a short branch", until the user dismisses the check note */ mirrored?: boolean }
 export interface Leg { name: string; rule: 'r' | 'level' | 'fraction'; r?: number; level?: string; fraction?: number; offset_ticks?: number; share: number }
@@ -475,7 +475,7 @@ export function validate(s: Setup): Issue[] {
     });
     if (!br.steps.length) out.push({ level: 'warning', where, text: 'No steps yet.' });
     if ((br.entry.stop.from || 'level') === 'level' && !br.entry.stop.token) out.push({ level: 'error', where: `${where}, Entry`, text: 'An Entry needs a Stop Loss.' });
-    if (br.entry.order !== 'market' && !br.entry.price) out.push({ level: 'error', where: `${where}, Entry`, text: 'A Limit Entry or stop entry needs a price.' });
+    if (br.entry.order !== 'market' && !br.entry.price) out.push({ level: 'error', where: `${where}, Entry`, text: 'A Limit Entry or Stop Entry needs a price.' });
     const readCap = (t?: string) => { if (!t) return; const p = parseToken(t); if (p.parts[0] === 'capture' && !caps.includes(p.parts[1].split('.')[0])) out.push({ level: 'error', where: `${where}, Entry`, text: `${t} is never captured by this branch.` }); };
     readCap(br.entry.price); readCap(br.entry.stop.token);
   });

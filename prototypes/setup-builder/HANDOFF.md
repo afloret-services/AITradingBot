@@ -29,7 +29,7 @@ Read this first in a new session. It replaces the long conversation history.
 - Green accent: Tailwind `sky-*` is remapped to the coolors greens (#d8f3dc … #081c15). Cyan = AND / LONG / valid; amber = OR / warnings; red = errors / short; fuchsia = pattern icons.
 - Standard button: `flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 hover:bg-sky-500/20`. Section headings: `text-base font-bold tracking-tight`.
 - Wizard/Inline and the Lanes inspector use the `.ctl-lg` CSS scope (bigger inputs/selects, `src/index.css`).
-- Words: **Stop Loss** (never bare "stop"; "stop entry" is the order type), **Take Profit** (TP1, TP2…), **Trading window**, **Market sessions**, **Trade overlap**, **Losing streak**, **Closing time**, **While in a Trade** (IF / THEN), "configure" (not "declare"), **backtest Run** (never "trial"), **Instrument** and **Instrument list** (not symbol, watchlist or saved list).
+- Words: **Stop Loss** (never bare "stop"; "Stop Entry" is an order type), **Limit Entry**, **Stop Entry**, **Market Entry** (the three entry order types), **Take Profit** (TP1, TP2…), **Trading window**, **Market sessions**, **Trade overlap**, **Losing streak**, **Closing time**, **While in a Trade** (IF / THEN), "configure" (not "declare"), **backtest Run** (never "trial"), **Instrument** and **Instrument list** (not symbol, watchlist or saved list).
 
 ## Decided while building (also in README "Decided so far")
 
@@ -38,7 +38,7 @@ Read this first in a new session. It replaces the long conversation history.
 - Stocks and options are in scope (map Notes). A Run binds the version once per picked instrument (glossary: Run, Instrument).
 - **Instrument search** (settled 2026-11-27, map Notes): one search across every category (symbol matches first, then names); tabs All / Futures / Forex / Stocks / Options with counts; Recent picks and **Instrument lists** (glossary) before typing, a list adding all its instruments; All shows 5 matches per category with "Show all N", a tab pages 25 rows grouped by sub-group; instruments without 5 years of history are greyed out with the reason and cannot be picked; tags collapse after 8 ("+N more"), "Clear all"; options stay underlying first, then expiry and strike per picked option. The 158 symbols (16 futures, 20 forex, 61 stocks/ETFs, options on those 61) are made up; the real list comes from the Market data module. Recent picks live in memory only.
 - Review & save has a **backtest Run on this Draft** (ADR 0007, ticket #88): build years only, listed with the Runs marked Draft, never promoted, never read by the gate. The prototype computes MNQ for real and NQ on MNQ bars at $20 a point; everything else shows "no numbers".
-- Engine: stop entries fill on a break through the price; a bar opening past a resting price fills at its open; `run(data, setup, { pointValue })`.
+- Engine: Stop Entries fill on a break through the price; a bar opening past a resting price fills at its open; `run(data, setup, { pointValue })`.
 
 ## Still open (do not answer for the user)
 
