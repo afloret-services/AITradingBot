@@ -18,7 +18,7 @@ const C = { up: '#26a69a', down: '#ef5350', zone: '#cbd5e1', draw: '#a78bfa', ri
 
 type Shape =
   | { k: 'rect'; t1: number; t2: number; p1: number; p2: number; fill: string; stroke?: string; dash?: boolean; label?: string; labelColor?: string; right?: boolean; /** label on the left side, away from the markers at the right end: mid-height, or just inside the p2 edge */ atFar?: 'mid' | 'edge' }
-  | { k: 'line'; t1: number; t2: number; p1: number; p2: number; stroke: string; dash?: boolean; label?: string; width?: number }
+  | { k: 'line'; t1: number; t2: number; p1: number; p2: number; stroke: string; dash?: boolean; label?: string; width?: number; /** label above the start of the line, away from the Signal-bar markers at its end */ labelStart?: boolean }
   | { k: 'band'; t1: number; t2: number; fill: string };
 
 interface LegendRow { label: string; color: string; value: string; onPrice?: boolean }
@@ -103,7 +103,8 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
           else if (sh.label) parts.push(sh.right ? `<text x="${b - 4}" y="${top + 11}" text-anchor="end" font-size="10" font-weight="600" fill="${sh.labelColor || '#cbd5e1'}">${sh.label}</text>` : `<text x="${a + 3}" y="${top + h + 11}" font-size="10" font-weight="600" fill="${sh.labelColor || sh.stroke || '#cbd5e1'}">${sh.label}</text>`);
         } else {
           parts.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${sh.stroke}" stroke-width="${sh.width || 1.5}" ${sh.dash ? 'stroke-dasharray="4 3"' : ''}/>`);
-          if (sh.label) parts.push(`<text x="${Math.max(x1, x2) + 4}" y="${(sh.p2 >= sh.p1 ? Math.min(y1, y2) : Math.max(y1, y2)) + 3}" font-size="10" font-weight="600" fill="${sh.stroke}">${sh.label}</text>`);
+          if (sh.label && sh.labelStart) parts.push(`<text x="${Math.min(x1, x2) + 14}" y="${(x1 <= x2 ? y1 : y2) - 5}" font-size="10" font-weight="600" fill="${sh.stroke}">${sh.label}</text>`);
+          else if (sh.label) parts.push(`<text x="${Math.max(x1, x2) + 4}" y="${(sh.p2 >= sh.p1 ? Math.min(y1, y2) : Math.max(y1, y2)) + 3}" font-size="10" font-weight="600" fill="${sh.stroke}">${sh.label}</text>`);
         }
       }
       const key = parts.join('');
@@ -251,7 +252,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
         else if (typeof v.level === 'number') sh.push({ k: 'line', t1: tOfMs(v.swing_time ?? startMs), t2: tOfMs(v.time ?? v.formed), p1: v.level, p2: v.level, stroke: '#fbbf24', dash: true, label: `${name} · MSS` });
         else if (typeof v.start === 'number' && v.start_time != null) { sh.push({ k: 'line', t1: tOfMs(v.start_time), t2: tOfMs(v.end_time), p1: v.start, p2: v.end, stroke: '#fbbf24', width: 2, label: `${name} · Swing` }); sh.push({ k: 'line', t1: tOfMs(v.end_time), t2: tEnd, p1: v.mid, p2: v.mid, stroke: 'rgba(251,191,36,0.5)', dash: true, label: '50%' }); }
         else if (typeof v.high === 'number' && v.time != null) sh.push({ k: 'rect', t1: tOfMs(v.time), t2: tOfMs(v.time), p1: v.high, p2: v.low, fill: 'rgba(251,191,36,0.15)', stroke: '#fbbf24', label: name });
-        else if (typeof v.low === 'number' || typeof v.high === 'number') { const pv = v.low ?? v.high; sh.push({ k: 'line', t1: tOf1m(sel.stepBars[0] ?? sel.i), t2: tSig, p1: pv, p2: pv, stroke: '#94a3b8', dash: true, label: name }); }
+        else if (typeof v.low === 'number' || typeof v.high === 'number') { const pv = v.low ?? v.high; sh.push({ k: 'line', t1: tOf1m(sel.stepBars[0] ?? sel.i), t2: tSig, p1: pv, p2: pv, stroke: '#94a3b8', dash: true, label: name, labelStart: true }); }
       }
       if (sel.caps.draw && (cutI == null || cutI >= sel.i)) sh.push({ k: 'line', t1: tSig, t2: tEnd, p1: sel.caps.draw.price, p2: sel.caps.draw.price, stroke: C.draw, dash: true, label: 'Draw on liquidity' });
       const showTrade = !sel.refused && (cutI == null || cutI >= sel.i);
