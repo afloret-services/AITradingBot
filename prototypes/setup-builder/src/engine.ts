@@ -862,7 +862,9 @@ function drawAt(ctx: Ctx, c: Extract<Cond, { t: 'draw' }>): Hit {
 // ---------- the Sequence runner ----------
 export interface StepHit { step: number; i: number }
 export interface Signal { branch: number; side: 'long' | 'short'; i: number; caps: Record<string, any>; entry: number; stop: number; legs: { name: string; price: number; contracts: number }[]; refused?: string; trade?: TradeResult; stepBars: number[] }
-export interface TradeResult { fillI?: number; exitI?: number; cancelI?: number; r?: number; outcome: string; exits: { i: number; price: number; why: string }[] }
+export interface TradeResult { fillI?: number; fillPx?: number; exitI?: number; cancelI?: number; r?: number; outcome: string; exits: { i: number; price: number; why: string }[];
+  /** each time the Stop loss moved (break-even), in order */
+  stopMoves?: { i: number; price: number; why: string }[] }
 export interface RunResult {
   base: Int32Array;
   stepHeld: number[][][]; // [branch][step] -> 1m indices where the step's condition held on its own
@@ -1060,7 +1062,7 @@ function simulate(data: Data, setup: Setup, br: Branch, sig: Signal, base: Int32
     if (d.kind === 'end_of_hours') return !inTradingHours(setup, M[i].min, M[i].t);
     return M[i].di !== day;
   };
-  const res: TradeResult = { outcome: '', exits: [] };
+  const res: TradeResult = { outcome: '', exits: [], stopMoves: [] };
   let i = sig.i + 1, fill = -1;
   const firstLeg = sig.legs[0]?.price;
   // the entry rests (limit or stop) or fills at the next bar's open (market).
@@ -1083,8 +1085,14 @@ function simulate(data: Data, setup: Setup, br: Branch, sig: Signal, base: Int32
   if (fill < 0) { res.outcome = 'no fill'; return res; }
   res.fillI = fill;
   const entry = br.entry.order === 'market' ? M[fill].o : fillPx;
+  res.fillPx = entry;
   const risk = Math.abs(entry - sig.stop);
   let stop = sig.stop;
+  const be0 = ts.break_even;
+  const moveStop = (ns: number, k: number, why: string) => {
+    const nx = long ? Math.max(stop, ns) : Math.min(stop, ns);
+    if (Math.abs(nx - stop) > 1e-9) { stop = nx; res.stopMoves!.push({ i: k, price: nx, why }); }
+  };
   const open = sig.legs.map((l) => ({ ...l, done: false }));
   const total = open.reduce((s, l) => s + l.contracts, 0);
   let r = 0, legsFilled = 0;
@@ -1093,16 +1101,16 @@ function simulate(data: Data, setup: Setup, br: Branch, sig: Signal, base: Int32
   for (let k = fill; k < M.length; k++) {
     const b = M[k];
     if (b.di !== day || b.min >= flat && M[fill].min < flat) { open.filter((l) => !l.done).forEach((l) => exitLeg(l, b.o, k, 'Flat by time')); break; }
-    if (long ? b.l <= stop : b.h >= stop) { open.filter((l) => !l.done).forEach((l) => exitLeg(l, stop, k, stop === sig.stop ? 'stop' : 'moved stop loss')); break; }
+    if (long ? b.l <= stop : b.h >= stop) { open.filter((l) => !l.done).forEach((l) => exitLeg(l, stop, k, stop === sig.stop ? 'stop' : res.stopMoves!.length && /break-even/.test(res.stopMoves![res.stopMoves!.length - 1].why) ? 'stop at break-even' : 'moved stop loss')); break; }
     open.forEach((l, li) => {
       if (!l.done && (long ? b.h >= l.price : b.l <= l.price)) {
         exitLeg(l, l.price, k, l.name); legsFilled++;
         const be = ts.break_even;
-        if (be.trigger === 'after_leg' && legsFilled === be.k) { const ns = entry + (long ? 1 : -1) * be.offset_ticks * TICK; stop = long ? Math.max(stop, ns) : Math.min(stop, ns); }
+        if (be.trigger === 'after_leg' && legsFilled === be.k) moveStop(entry + (long ? 1 : -1) * be.offset_ticks * TICK, k, `break-even after ${l.name}`);
         void li;
       }
     });
-    if (ts.break_even.trigger === 'at_r' && (long ? b.h - entry : entry - b.l) >= (ts.break_even.r || 1) * risk) { const ns = entry + (long ? 1 : -1) * ts.break_even.offset_ticks * TICK; stop = long ? Math.max(stop, ns) : Math.min(stop, ns); }
+    if (be0.trigger === 'at_r' && (long ? b.h - entry : entry - b.l) >= (be0.r || 1) * risk) moveStop(entry + (long ? 1 : -1) * be0.offset_ticks * TICK, k, `break-even at +${be0.r || 1}R`);
     if (open.every((l) => l.done)) break;
     // In-position rules at Base-bar closes
     while (pBase + 1 < base.length && base[pBase + 1] <= k) pBase++;

@@ -29,9 +29,10 @@ export function signalEvents(data: Data, setup: Setup, s: Signal): ReplayEvent[]
   const ev: ReplayEvent[] = s.stepBars.map((i, k) => ({ i, label: `Step ${k + 1} completes · ${br?.steps[k]?.name || ''}`, tone: 'step', color: STEP_COLORS[k % STEP_COLORS.length] }));
   ev.push({ i: s.i, label: s.refused ? `Signal refused: ${s.refused}` : `Signal · ${br?.entry.order} entry ${s.entry.toFixed(2)}, stop loss ${s.stop.toFixed(2)}`, tone: 'signal', color: s.side === 'long' ? C.reward : C.risk });
   const t = s.trade;
-  if (t?.fillI != null) ev.push({ i: t.fillI, label: `Filled at ${s.entry.toFixed(2)}`, tone: 'fill', color: C.entry });
+  if (t?.fillI != null) ev.push({ i: t.fillI, label: `Filled at ${(t.fillPx ?? s.entry).toFixed(2)}`, tone: 'fill', color: C.entry });
+  for (const m of t?.stopMoves || []) ev.push({ i: m.i, label: `Stop loss moved to ${m.price.toFixed(2)} · ${m.why}`, tone: 'exit', color: '#f59e0b' });
   if (t?.cancelI != null) ev.push({ i: t.cancelI, label: t.outcome, tone: 'cancel', color: '#94a3b8' });
-  for (const x of dedupeExits(t?.exits || [])) ev.push({ i: x.i, label: `${x.why}${x.n > 1 ? ` (${x.n} take profits)` : ''} · ${x.price.toFixed(2)}`, tone: 'exit', color: /stop/.test(x.why) ? C.risk : /TP|leg/i.test(x.why) ? C.reward : '#fbbf24' });
+  for (const x of dedupeExits(t?.exits || [])) ev.push({ i: x.i, label: `${x.why}${x.n > 1 ? ` (${x.n} take profits)` : ''} · ${x.price.toFixed(2)}`, tone: 'exit', color: /break-even/.test(x.why) ? '#f59e0b' : /stop/.test(x.why) ? C.risk : /TP|leg/i.test(x.why) ? C.reward : '#fbbf24' });
   return ev;
 }
 
@@ -204,7 +205,8 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
       sel.stepBars.forEach((i, k) => { const j = inSpan(i); if (j >= 0) marks.push({ time: T(j) as Time, position: sel.side === 'long' ? 'belowBar' : 'aboveBar', color: STEP_COLORS[k % STEP_COLORS.length], shape: 'circle', text: `${k + 1}` }); });
       const t = sel.trade;
       if (t?.fillI != null) { const j = inSpan(t.fillI); if (j >= 0) marks.push({ time: T(j) as Time, position: 'inBar', color: C.entry, shape: 'square', size: 0.6, text: 'fill' }); }
-      for (const x of dedupeExits(t?.exits || [])) { const j = inSpan(x.i); if (j >= 0) marks.push({ time: T(j) as Time, position: sel.side === 'long' ? 'aboveBar' : 'belowBar', color: /stop/.test(x.why) ? C.risk : C.reward, shape: 'circle', size: 0.6, text: x.why.replace('While in a Trade: ', '') }); }
+      for (const m of t?.stopMoves || []) { const j = inSpan(m.i); if (j >= 0) marks.push({ time: T(j) as Time, position: sel.side === 'long' ? 'belowBar' : 'aboveBar', color: '#f59e0b', shape: 'square', size: 0.7, text: /break-even/.test(m.why) ? 'BE' : 'stop moved' }); }
+      for (const x of dedupeExits(t?.exits || [])) { const j = inSpan(x.i); if (j >= 0) marks.push({ time: T(j) as Time, position: sel.side === 'long' ? 'aboveBar' : 'belowBar', color: /break-even/.test(x.why) ? '#f59e0b' : /stop/.test(x.why) ? C.risk : C.reward, shape: 'circle', size: 0.6, text: x.why.replace('While in a Trade: ', '') }); }
     }
     marks.sort((a, b) => (a.time as number) - (b.time as number));
     cs.setMarkers(marks);
@@ -249,7 +251,10 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
       const showTrade = !sel.refused && (cutI == null || cutI >= sel.i);
       if (showTrade && t?.fillI != null && (cutI == null || cutI >= t.fillI)) {
         const tf0 = tOf1m(t.fillI), far = sel.legs.length ? sel.legs[sel.legs.length - 1].price : sel.entry;
-        sh.push({ k: 'rect', t1: tf0, t2: tEnd, p1: sel.entry, p2: sel.stop, fill: 'rgba(239,68,68,0.16)', label: 'risk', labelColor: '#fca5a5', right: true });
+        const mv = (t.stopMoves || []).filter((m) => cutI == null || m.i <= cutI);
+        const tMove = mv.length ? tOf1m(mv[0].i) : tEnd;
+        sh.push({ k: 'rect', t1: tf0, t2: tMove, p1: t.fillPx ?? sel.entry, p2: sel.stop, fill: 'rgba(239,68,68,0.16)', label: 'risk', labelColor: '#fca5a5', right: true });
+        mv.forEach((m, k) => sh.push({ k: 'line', t1: tOf1m(m.i), t2: k + 1 < mv.length ? tOf1m(mv[k + 1].i) : tEnd, p1: m.price, p2: m.price, stroke: '#f59e0b', width: 2, dash: true, label: /break-even/.test(m.why) ? 'BE' : 'moved stop' }));
         sh.push({ k: 'rect', t1: tf0, t2: tEnd, p1: sel.entry, p2: far, fill: 'rgba(34,197,94,0.14)', label: 'reward', labelColor: '#86efac', right: true });
         for (const l of sel.legs) sh.push({ k: 'line', t1: tf0, t2: tEnd, p1: l.price, p2: l.price, stroke: 'rgba(134,239,172,0.8)', label: `${l.name} ×${l.contracts}` });
       } else if (showTrade) {
@@ -264,6 +269,7 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
     if (sel && !sel.refused) {
       const add = (price: number, color: string, title: string) => lines.push(cs.createPriceLine({ price, color, title, lineVisible: false, axisLabelVisible: true }));
       add(sel.entry, '#64748b', 'entry'); add(sel.stop, C.risk, 'stop');
+      const lm = sel.trade?.stopMoves?.[sel.trade.stopMoves.length - 1]; if (lm) add(lm.price, '#f59e0b', /break-even/.test(lm.why) ? 'BE' : 'moved');
       sel.legs.forEach((l) => add(l.price, '#16a34a', l.name));
     }
     (cs as any)._lines = lines;
