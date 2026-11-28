@@ -17,7 +17,7 @@ const LINE_COLORS = ['#95d5b2', '#d8f3dc', '#52b788', '#b7e4c7'];
 const C = { up: '#26a69a', down: '#ef5350', zone: '#cbd5e1', draw: '#a78bfa', risk: '#ef4444', reward: '#22c55e', entry: '#e2e8f0' };
 
 type Shape =
-  | { k: 'rect'; t1: number; t2: number; p1: number; p2: number; fill: string; stroke?: string; dash?: boolean; label?: string; labelColor?: string; right?: boolean }
+  | { k: 'rect'; t1: number; t2: number; p1: number; p2: number; fill: string; stroke?: string; dash?: boolean; label?: string; labelColor?: string; right?: boolean; /** label on the left side, away from the markers at the right end: mid-height, or just inside the p2 edge */ atFar?: 'mid' | 'edge' }
   | { k: 'line'; t1: number; t2: number; p1: number; p2: number; stroke: string; dash?: boolean; label?: string; width?: number }
   | { k: 'band'; t1: number; t2: number; fill: string };
 
@@ -99,7 +99,8 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
         if (sh.k === 'rect') {
           const top = Math.min(y1, y2), h = Math.max(1, Math.abs(y2 - y1));
           parts.push(`<rect x="${a}" y="${top}" width="${Math.max(2, b - a)}" height="${h}" fill="${sh.fill}" ${sh.stroke ? `stroke="${sh.stroke}" stroke-width="1" ${sh.dash ? 'stroke-dasharray="3 3"' : ''}` : ''} rx="1"/>`);
-          if (sh.label) parts.push(sh.right ? `<text x="${b - 4}" y="${top + 11}" text-anchor="end" font-size="10" font-weight="600" fill="${sh.labelColor || '#cbd5e1'}">${sh.label}</text>` : `<text x="${a + 3}" y="${top + h + 11}" font-size="10" font-weight="600" fill="${sh.labelColor || sh.stroke || '#cbd5e1'}">${sh.label}</text>`);
+          if (sh.label && sh.atFar) { if (b - a >= 34) { const yf = sh.atFar === 'mid' ? (y1 + y2) / 2 + 4 : y2 >= y1 ? y2 - 5 : y2 + 12; parts.push(`<text x="${a + 4}" y="${yf}" font-size="10" font-weight="600" fill="${sh.labelColor || '#cbd5e1'}">${sh.label}</text>`); } }
+          else if (sh.label) parts.push(sh.right ? `<text x="${b - 4}" y="${top + 11}" text-anchor="end" font-size="10" font-weight="600" fill="${sh.labelColor || '#cbd5e1'}">${sh.label}</text>` : `<text x="${a + 3}" y="${top + h + 11}" font-size="10" font-weight="600" fill="${sh.labelColor || sh.stroke || '#cbd5e1'}">${sh.label}</text>`);
         } else {
           parts.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${sh.stroke}" stroke-width="${sh.width || 1.5}" ${sh.dash ? 'stroke-dasharray="4 3"' : ''}/>`);
           if (sh.label) parts.push(`<text x="${Math.max(x1, x2) + 4}" y="${(sh.p2 >= sh.p1 ? Math.min(y1, y2) : Math.max(y1, y2)) + 3}" font-size="10" font-weight="600" fill="${sh.stroke}">${sh.label}</text>`);
@@ -210,8 +211,8 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
       sel.stepBars.forEach((i, k) => { const j = inSpan(i); if (j >= 0) marks.push({ time: T(j) as Time, position: sel.side === 'long' ? 'belowBar' : 'aboveBar', color: STEP_COLORS[k % STEP_COLORS.length], shape: 'circle', text: `${k + 1}` }); });
       const t = sel.trade;
       if (t?.fillI != null) { const j = inSpan(t.fillI); if (j >= 0) marks.push({ time: T(j) as Time, position: 'inBar', color: C.entry, shape: 'square', size: 0.6, text: 'fill' }); }
-      for (const m of t?.stopMoves || []) { const j = inSpan(m.i); if (j >= 0) marks.push({ time: T(j) as Time, position: sel.side === 'long' ? 'belowBar' : 'aboveBar', color: '#f59e0b', shape: 'square', size: 0.7, text: /break-even/.test(m.why) ? 'BE' : 'stop moved' }); }
-      for (const x of dedupeExits(t?.exits || [])) { const j = inSpan(x.i); if (j >= 0) marks.push({ time: T(j) as Time, position: sel.side === 'long' ? 'aboveBar' : 'belowBar', color: /break-even/.test(x.why) ? '#f59e0b' : /stop/.test(x.why) ? C.risk : C.reward, shape: 'circle', size: 0.6, text: x.why.replace('While in a Trade: ', '') }); }
+      for (const m of t?.stopMoves || []) { const j = inSpan(m.i); if (j >= 0) marks.push({ time: T(j) as Time, position: sel.side === 'long' ? 'belowBar' : 'aboveBar', color: '#f59e0b', shape: 'square', size: 0.7, text: /break-even/.test(m.why) ? '' : 'stop moved' }); }
+      for (const x of dedupeExits(t?.exits || [])) { const j = inSpan(x.i); if (j >= 0) marks.push({ time: T(j) as Time, position: sel.side === 'long' ? 'aboveBar' : 'belowBar', color: /break-even/.test(x.why) ? '#f59e0b' : /stop/.test(x.why) ? C.risk : C.reward, shape: 'circle', size: 0.6, text: x.why.replace('While in a Trade: ', '').replace('stop at break-even', 'BE stop') }); }
     }
     marks.sort((a, b) => (a.time as number) - (b.time as number));
     cs.setMarkers(marks);
@@ -258,9 +259,9 @@ export function Chart({ data, setup, result, day, setDay, focus, selected, setSe
         const tf0 = tOf1m(t.fillI), far = sel.legs.length ? sel.legs[sel.legs.length - 1].price : sel.entry;
         const mv = (t.stopMoves || []).filter((m) => cutI == null || m.i <= cutI);
         const tMove = mv.length ? tOf1m(mv[0].i) : tEnd;
-        sh.push({ k: 'rect', t1: tf0, t2: tMove, p1: t.fillPx ?? sel.entry, p2: sel.stop, fill: 'rgba(239,68,68,0.16)', label: 'risk', labelColor: '#fca5a5', right: true });
+        sh.push({ k: 'rect', t1: tf0, t2: tMove, p1: t.fillPx ?? sel.entry, p2: sel.stop, fill: 'rgba(239,68,68,0.16)', label: 'risk', labelColor: '#fca5a5', atFar: 'mid' });
         mv.forEach((m, k) => sh.push({ k: 'line', t1: tOf1m(m.i), t2: k + 1 < mv.length ? tOf1m(mv[k + 1].i) : tEnd, p1: m.price, p2: m.price, stroke: '#f59e0b', width: 2, dash: true, label: /break-even/.test(m.why) ? 'BE' : 'moved stop' }));
-        sh.push({ k: 'rect', t1: tf0, t2: tEnd, p1: sel.entry, p2: far, fill: 'rgba(34,197,94,0.14)', label: 'reward', labelColor: '#86efac', right: true });
+        sh.push({ k: 'rect', t1: tf0, t2: tEnd, p1: sel.entry, p2: far, fill: 'rgba(34,197,94,0.14)', label: 'reward', labelColor: '#86efac', atFar: 'edge' });
         for (const l of sel.legs) sh.push({ k: 'line', t1: tf0, t2: tEnd, p1: l.price, p2: l.price, stroke: 'rgba(134,239,172,0.8)', label: `${l.name} ×${l.contracts}` });
       } else if (showTrade) {
         sh.push({ k: 'line', t1: tSig, t2: tEnd, p1: sel.entry, p2: sel.entry, stroke: C.entry, dash: true, label: `${sel.side} entry` });
