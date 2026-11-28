@@ -44,18 +44,20 @@ function stats(r: RunResult, pv: number) {
   const refused = r.signals.filter((g) => g.refused);
   const why = Object.entries(refused.reduce<Record<string, number>>((a, g) => { const k = (g.refused || '').split(':')[0]; a[k] = (a[k] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1]);
   const trades = r.signals.filter((g) => !g.refused && g.trade?.fillI != null && g.trade?.r != null);
-  let cum = 0, peak = 0, dd = 0, usd = 0, ctr = 0;
+  let cum = 0, peak = 0, dd = 0, usd = 0, ctr = 0, cMin = Infinity, cMax = 0;
   for (const g of trades) {
     const R = g.trade!.r!, n = g.legs.reduce((a, l) => a + l.contracts, 0);
     cum += R; peak = Math.max(peak, cum); dd = Math.max(dd, peak - cum);
-    usd += R * Math.abs(g.entry - g.stop) * pv * n; ctr += n;
+    usd += R * Math.abs(g.entry - g.stop) * pv * n; ctr += n; cMin = Math.min(cMin, n); cMax = Math.max(cMax, n);
   }
   return {
     signals: r.signals.length, refused: refused.length, why: why[0] ? `${why[0][1]}× ${why[0][0]}` : '',
     trades: trades.length, win: trades.length ? Math.round((100 * trades.filter((g) => g.trade!.r! > 0).length) / trades.length) : null,
-    R: trades.reduce((a, g) => a + g.trade!.r!, 0), usd, dd, contracts: trades.length ? ctr / trades.length : null,
+    R: trades.reduce((a, g) => a + g.trade!.r!, 0), usd, dd, contracts: trades.length ? ctr / trades.length : null, cMin, cMax,
   };
 }
+/** a Trade's number of contracts: "2" when every Trade had 2, else the range and the average */
+const contractsText = (s: { contracts: number | null; cMin: number; cMax: number }) => (s.contracts == null ? '–' : s.cMin === s.cMax ? String(s.cMax) : `${s.cMin}–${s.cMax} (avg ${s.contracts.toFixed(1)})`);
 const fmtR = (x: number) => `${x > 0 ? '+' : ''}${x.toFixed(2)}R`;
 const fmtUsd = (x: number) => `${x < 0 ? '−' : x > 0 ? '+' : ''}$${Math.abs(x).toFixed(0)}`;
 
@@ -82,7 +84,7 @@ export function TrialBacktest({ setup, data, bt }: { setup: Setup; data: Data; b
           <div className="hidden overflow-x-auto rounded-md border [@container(min-width:40rem)]:block">
             <table className="w-full text-sm">
               <thead className="bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                <tr>{['Instrument', 'Signals', 'Refused', 'Trades', 'Win rate', 'Total', 'Result', 'Max drawdown', 'Contracts a Trade'].map((h) => <th key={h} className="whitespace-nowrap px-2.5 py-2 font-semibold">{h}</th>)}</tr>
+                <tr>{['Instrument', 'Signals', 'Refused', 'Trades', 'Win rate', 'Total', 'Result', 'Max drawdown', 'Number of contracts'].map((h) => <th key={h} className="whitespace-nowrap px-2.5 py-2 font-semibold">{h}</th>)}</tr>
               </thead>
               <tbody>
                 {rows.map((r) => {
@@ -99,7 +101,7 @@ export function TrialBacktest({ setup, data, bt }: { setup: Setup; data: Data; b
                           <td className={cn('px-2.5 py-2 font-semibold', s.R > 0 ? 'text-cyan-300' : s.R < 0 ? 'text-red-300' : '')}>{fmtR(s.R)}</td>
                           <td className={cn('px-2.5 py-2', s.usd > 0 ? 'text-cyan-300' : s.usd < 0 ? 'text-red-300' : '')}>{fmtUsd(s.usd)}</td>
                           <td className="px-2.5 py-2">{s.dd ? `−${s.dd.toFixed(2)}R` : '0R'}</td>
-                          <td className="px-2.5 py-2">{s.contracts == null ? '–' : s.contracts.toFixed(1)}</td>
+                          <td className="whitespace-nowrap px-2.5 py-2">{contractsText(s)}</td>
                         </> : <td colSpan={8} className="px-2.5 py-2 text-muted-foreground">no numbers</td>}
                       </tr>
                       {(r.info || r.notes.length > 0) && <tr><td colSpan={9} className="px-2.5 pb-2 text-xs">{r.info && <span className="text-muted-foreground">{r.info}. </span>}<span className="text-amber-300/90">{r.notes.join(' ')}</span></td></tr>}
@@ -118,14 +120,14 @@ export function TrialBacktest({ setup, data, bt }: { setup: Setup; data: Data; b
                   {s ? <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                     <span>Signals <b className="text-foreground">{s.signals}</b></span><span>Refused <b className="text-foreground">{s.refused}</b>{s.why && ` (${s.why})`}</span>
                     <span>Trades <b className="text-foreground">{s.trades}</b></span><span>Win rate <b className="text-foreground">{s.win == null ? '–' : `${s.win}%`}</b></span>
-                    <span>Max drawdown <b className="text-foreground">{s.dd ? `−${s.dd.toFixed(2)}R` : '0R'}</b></span><span>Contracts a Trade <b className="text-foreground">{s.contracts == null ? '–' : s.contracts.toFixed(1)}</b></span>
+                    <span>Max drawdown <b className="text-foreground">{s.dd ? `−${s.dd.toFixed(2)}R` : '0R'}</b></span><span>Number of contracts <b className="text-foreground">{contractsText(s)}</b></span>
                   </div> : <div className="mt-1 text-xs text-muted-foreground">no numbers</div>}
                   {r.info && <div className="mt-1 text-xs text-muted-foreground">{r.info}.</div>}{r.notes.length > 0 && <div className="mt-1 text-xs text-amber-300/90">{r.notes.join(' ')}</div>}
                 </div>
               );
             })}
           </div>
-          <div className="text-xs text-muted-foreground">R is what each Trade risked at its stop loss, so R totals compare across instruments; the $ result and the contracts show the sizing.</div>
+          <div className="text-xs text-muted-foreground">R is what each Trade risked at its stop loss, so R totals compare across instruments; the $ result and the number of contracts show the sizing.</div>
         </div>
       )}
     </div>

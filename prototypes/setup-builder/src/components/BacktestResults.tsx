@@ -114,7 +114,7 @@ export function BacktestResults({ setup, data, bt, focus }: { setup: Setup; data
             <div className="hidden max-h-96 overflow-auto rounded-md border [@container(min-width:44rem)]:block">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-card text-left text-xs uppercase tracking-wider text-muted-foreground">
-                  <tr>{['#', 'Date', 'Side', 'Entry', 'Stop loss', 'Take profits', 'Exit', 'R', 'Result', 'Capital', 'Drawdown'].map((h) => <th key={h} className="whitespace-nowrap px-2 py-2 font-semibold">{h}</th>)}</tr>
+                  <tr>{['#', 'Date', 'Side', 'Contracts', 'Entry', 'Stop loss', 'Take profits', 'Exit', 'R', 'Result', 'Capital', 'Drawdown'].map((h) => <th key={h} className="whitespace-nowrap px-2 py-2 font-semibold">{h}</th>)}</tr>
                 </thead>
                 <tbody>
                   {a.trades.map((t) => {
@@ -124,6 +124,7 @@ export function BacktestResults({ setup, data, bt, focus }: { setup: Setup; data
                         <td className="px-2 py-1.5 text-muted-foreground">{t.n}</td>
                         <td className="whitespace-nowrap px-2 py-1.5">{dayLabel(data.m1[g.i].di)} {fmtT(data, g.trade!.fillI!)}</td>
                         <td className={cn('px-2 py-1.5 font-semibold uppercase', g.side === 'long' ? 'text-cyan-300' : 'text-red-300')}>{g.side}</td>
+                        <td className="px-2 py-1.5 tabular-nums">{g.legs.reduce((n, l) => n + l.contracts, 0)}</td>
                         <td className="px-2 py-1.5 tabular-nums">{g.entry.toFixed(2)}</td>
                         <td className="px-2 py-1.5 tabular-nums text-red-300">{g.stop.toFixed(2)}</td>
                         <td className="whitespace-nowrap px-2 py-1.5 tabular-nums text-emerald-300">{g.legs.map((l) => `${l.name} ${l.price.toFixed(2)}`).join(' · ')}</td>
@@ -143,7 +144,7 @@ export function BacktestResults({ setup, data, bt, focus }: { setup: Setup; data
                 const g = t.sig, on = selected === g;
                 return (
                   <button key={t.n} type="button" onClick={() => show(t)} className={cn('block w-full rounded-md border p-2 text-left text-xs hover:bg-accent', on && 'border-sky-500/60 bg-sky-500/10')}>
-                    <div className="flex items-baseline justify-between gap-2 text-sm"><span><span className="text-muted-foreground">#{t.n}</span> {dayLabel(data.m1[g.i].di)} {fmtT(data, g.trade!.fillI!)} <b className={g.side === 'long' ? 'text-cyan-300' : 'text-red-300'}>{g.side.toUpperCase()}</b></span><b className={t.kind === 'break-even' ? 'text-amber-300' : tone(t.r)}>{t.r > 0 ? '+' : ''}{t.r.toFixed(2)}R · {usd(t.usd)}{t.be && <span title={`Stop loss moved: ${t.be}`} className="ml-1.5 rounded border border-amber-500/50 bg-amber-500/10 px-1 text-[10px] font-bold text-amber-300">BE</span>}</b></div>
+                    <div className="flex items-baseline justify-between gap-2 text-sm"><span><span className="text-muted-foreground">#{t.n}</span> {dayLabel(data.m1[g.i].di)} {fmtT(data, g.trade!.fillI!)} <b className={g.side === 'long' ? 'text-cyan-300' : 'text-red-300'}>{g.side.toUpperCase()}</b> <span className="text-xs text-muted-foreground">× {g.legs.reduce((n, l) => n + l.contracts, 0)}</span></span><b className={t.kind === 'break-even' ? 'text-amber-300' : tone(t.r)}>{t.r > 0 ? '+' : ''}{t.r.toFixed(2)}R · {usd(t.usd)}{t.be && <span title={`Stop loss moved: ${t.be}`} className="ml-1.5 rounded border border-amber-500/50 bg-amber-500/10 px-1 text-[10px] font-bold text-amber-300">BE</span>}</b></div>
                     <div className="mt-0.5 text-muted-foreground">Entry <span className="text-foreground">{g.entry.toFixed(2)}</span> · Stop loss <span className="text-red-300">{g.stop.toFixed(2)}</span> · {g.legs.map((l) => `${l.name} ${l.price.toFixed(2)}`).join(' · ')}</div>
                     <div className="text-muted-foreground">Exit <span className="text-foreground">{t.exit ? `${t.exit.price.toFixed(2)} ${t.exit.why.replace('While in a Trade: ', '')}` : '–'}</span> · Capital <span className={tone(t.growth)}>{pct(t.growth)}</span> · Drawdown <span className={t.dd > 0 ? 'text-red-300' : 'text-foreground'}>{t.dd > 0 ? `${pct(-t.dd, false)} (${usd(-t.ddUsd)})` : '0%'}</span></div>
                   </button>
