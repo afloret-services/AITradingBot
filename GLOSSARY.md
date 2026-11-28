@@ -145,23 +145,23 @@ _Avoid_: Regime, Setup selection
 ### Execution
 
 **Bracket order**:
-An entry order sent together with its Stop Loss and take-profit orders, so the position is never open without both exits attached. A Trade with several Take profits sends one Bracket order per Take profit.
+An entry order sent together with its Stop Loss and Take Profit orders, so the position is never open without both exits attached. A Trade with several Take Profits sends one Bracket order per Take Profit.
 _Avoid_: OCO (that names only the two exit legs)
 
 **Stop Loss**:
 The exit that caps a Trade's loss: a price on the far side of the entry from its targets, set by the Setup's Entry block (a set distance from a level, from the entry price, or a fixed $ a contract from the entry). Every Trade has one, attached in each of its Bracket orders; the distance from the entry to it is the Trade's 1R.
 _Avoid_: Stop (alone: a stop entry is an order type that fills on a break through a price), SL, protective stop, hard stop
 
-**Take profit**:
-One slice of a Trade's contracts with its own target, sent as its own Bracket order, numbered TP1, TP2…; a Trade's last Take profit aims at its Setup's final target (for the Silver Bullet, the Draw on liquidity).
-_Avoid_: Take-profit leg (the earlier name), leg, partial (alone), scale-out, tranche
+**Take Profit**:
+One slice of a Trade's contracts with its own target, sent as its own Bracket order, numbered TP1, TP2…; a Trade's last Take Profit aims at its Setup's final target (for the Silver Bullet, the Draw on liquidity).
+_Avoid_: Take Profit leg (the earlier name), leg, partial (alone), scale-out, tranche
 
 **Break-even**:
-Moving the Stop Loss of a Trade's open Take profits to its entry price (plus a set offset, "lock in N ticks") once a chosen Take profit has filled or price has gone a set number of R in its favour, so the rest of the Trade can no longer lose; it never loosens a Stop Loss already tighter than that.
+Moving the Stop Loss of a Trade's open Take Profits to its entry price (plus a set offset, "lock in N ticks") once a chosen Take Profit has filled or price has gone a set number of R in its favour, so the rest of the Trade can no longer lose; it never loosens a Stop Loss already tighter than that.
 _Avoid_: Scratch, risk-free
 
 **While-in-a-Trade rule**:
-A Rule block checked at each Base bar's close while a Trade or its resting entry is open, which may close the whole Trade, close one Take profit now, tighten the Stop Loss, or cancel the waiting entry.
+A Rule block checked at each Base bar's close while a Trade or its resting entry is open, which may close the whole Trade, close one Take Profit now, tighten the Stop Loss, or cancel the waiting entry.
 _Avoid_: In-position rule (the earlier name), exit rule (alone), management rule, trailing stop
 
 **Closing time**:
@@ -173,7 +173,7 @@ The life of one position, from entry fill to final exit fill, opened in response
 _Avoid_: Position (the current holding), order
 
 **Halt**:
-The bot stopping itself after something it cannot account for: it opens no new Trades, leaves existing Stop Loss and Take profit orders in place, and waits for a human to restart it.
+The bot stopping itself after something it cannot account for: it opens no new Trades, leaves existing Stop Loss and Take Profit orders in place, and waits for a human to restart it.
 _Avoid_: Kill switch, pause
 
 **Stand-down**:
