@@ -141,4 +141,14 @@ export const instrumentManagement = {
   instrument: (id: string): Instrument | undefined => BY_ID[id],
   /** the Instrument lists this user can pick from */
   lists: (): InstrumentList[] => LISTS,
+  /** what one contract costs to trade (made up for the prototype; who sets them is an open question on the map) */
+  costs: (id: string): InstrumentCosts | undefined => COSTS[id],
+};
+/** commission per contract per side, the tick and its $ value, and the slippage in ticks on fills that are not resting limits */
+export interface InstrumentCosts { commission: number; tick: number; tickValue: number; slipTicks: number }
+const COSTS: Record<string, InstrumentCosts> = {
+  MNQ: { commission: 0.62, tick: 0.25, tickValue: 0.5, slipTicks: 1 },
+  MES: { commission: 0.62, tick: 0.25, tickValue: 1.25, slipTicks: 1 },
+  NQ: { commission: 2.25, tick: 0.25, tickValue: 5, slipTicks: 1 },
+  ES: { commission: 2.25, tick: 0.25, tickValue: 12.5, slipTicks: 1 },
 };
