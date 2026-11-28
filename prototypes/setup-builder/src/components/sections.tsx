@@ -1,6 +1,6 @@
 // PROTOTYPE: editors for Setup settings and the Run-overridable Trade-settings sections, shared by the variants.
 import React from 'react';
-import { labelsOf, phrase, parseToken, stopPhrase } from '../model';
+import { labelsOf, phrase, parseToken, stopPhrase, orderName } from '../model';
 import { Setup, Step, TF, TFS, Leg, Guard, InPositionRule, Cond, uid, SECTION_NAMES, condPhrase, Pattern, PatternKind, PATTERN_KINDS, newPattern, patternUsage, patternSettingsPhrase, tfMinutes, patternPhrase } from '../model';
 import { TokenPicker, TokenCtx, shortName } from './TokenPicker';
 import { CondEditor, Look } from './CondEditor';
@@ -603,7 +603,7 @@ export function EntryEditor({ setup, mutate, bi, ctx, result, data }: { setup: S
     <div className="space-y-2">
       {data && <EntryHelp setup={setup} bi={bi} result={result} data={data} />}
       <Field label={<span className="text-base font-bold tracking-tight text-foreground">Order</span>}>
-        <Select value={e.order} onChange={(v) => set((x) => { x.order = v; })} options={[['market', "market (next Base bar's open)"], ['limit', 'limit'], ['stop', 'stop entry']]} />
+        <Select value={e.order} onChange={(v) => set((x) => { x.order = v; })} options={[['market', "market (next Base bar's open)"], ['limit', 'Limit Entry'], ['stop', 'stop entry']]} />
         {e.order !== 'market' && <><span className="text-xs text-muted-foreground">at</span><TokenPicker value={e.price || ''} ctx={ctx} onChange={(v) => set((x) => { x.price = v; })} /></>}
       </Field>
       <StopEditor value={e.stop} side={setup.branches[bi].side} onChange={(v) => set((x) => { x.stop = v; })} ctx={ctx} />
@@ -612,7 +612,7 @@ export function EntryEditor({ setup, mutate, bi, ctx, result, data }: { setup: S
 }
 const ORDER_HELP: Record<string, (long: boolean) => string> = {
   market: () => "Market: fills at the open of the next Base bar after the Signal. You are always in, at whatever price the market gives.",
-  limit: (long) => `Limit: rests at the price and fills only if price comes back to it (${long ? 'trades at or below it' : 'trades at or above it'}). A better price, but it may never fill; the Entry deadline in Trade settings decides how long it waits.`,
+  limit: (long) => `Limit Entry: rests at the price and fills only if price comes back to it (${long ? 'trades at or below it' : 'trades at or above it'}). A better price, but it may never fill; the Entry deadline in Trade settings decides how long it waits.`,
   stop: (long) => `Stop entry: fills once price trades through the price in the Trade's direction (${long ? 'at or above it' : 'at or below it'}). It waits for the move to confirm, at a worse price than a limit.`,
 };
 /** what the Entry block does, then this branch's numbers on its latest Signal */
@@ -627,7 +627,7 @@ function EntryHelp_({ setup, bi, result, data }: { setup: Setup; bi: number; res
     <HelpBox>
       <div><span className="font-medium text-foreground">Order.</span> {ORDER_HELP[e.order](long)}</div>
       <div><span className="font-medium text-foreground">Stop Loss.</span> Placed {long ? 'below' : 'above'} a level the Setup reads (a captured low or high, a pattern edge…) by an offset: in ticks (on MNQ a tick is 0.25 points) or in × ATR, so it widens when the market is more volatile. The distance from the entry to the Stop Loss is the risk, 1R: it sizes the contracts and sets R-multiple Take Profits. An Entry cannot be saved without a Stop Loss.</div>
-      <div>Here: {e.order === 'market' ? B('at market') : <>a {B(e.order === 'limit' ? 'limit' : 'stop entry')} at {B(phrase(e.price || '?', labels))}</>}, Stop Loss {B(stopPhrase(e.stop, long ? 'long' : 'short', (t) => phrase(t, labels)))}{e.stop.from === 'usd' ? ` (${(e.stop.offset / 2).toFixed(2)} points on MNQ)` : e.stop.unit === 'ticks' ? ` (${(e.stop.offset * 0.25).toFixed(2)} points)` : ''}.
+      <div>Here: {e.order === 'market' ? B('at market') : <>a {B(orderName(e.order))} at {B(phrase(e.price || '?', labels))}</>}, Stop Loss {B(stopPhrase(e.stop, long ? 'long' : 'short', (t) => phrase(t, labels)))}{e.stop.from === 'usd' ? ` (${(e.stop.offset / 2).toFixed(2)} points on MNQ)` : e.stop.unit === 'ticks' ? ` (${(e.stop.offset * 0.25).toFixed(2)} points)` : ''}.
         {sig && data && <> On its latest Signal ({when.slice(5, 10)} {when.slice(11, 16)} NY): entry {B(sig.entry.toFixed(2))}, Stop Loss {B(sig.stop.toFixed(2))}, so {B(`${Math.abs(sig.entry - sig.stop).toFixed(2)} points`)} of risk and {B(`${contracts} contract${contracts === 1 ? '' : 's'}`)}.</>}
         {!sig && result && <> No Signal of this branch was traded on these bars yet.</>}
       </div>
@@ -778,7 +778,7 @@ const SECTION_HELP: Record<SectionKey | 'in_position', string> = {
   stop: 'Where the protective Stop Loss sits: a value the Setup reads (a captured low, a pattern edge…) plus an offset in ticks or in × ATR, on the far side from the entry. Every Entry must have one.',
   legs: "The Trade can be closed in parts, each part with its own Take Profit (TP1, TP2…). At a multiple of the risk (R): entry ± k × the Stop Loss distance. Just before a level: a price the Setup reads, e.g. the Draw on liquidity, N ticks short so it fills before the level. Part of the way to a level: that % of the way from the entry to the level. Close %: the part of the contracts each Take Profit closes; extra contracts that don't divide evenly go to TP1 first or to the last TP.",
   break_even: 'Moves the Stop Loss to the entry so the rest of the Trade can no longer lose; "lock in N ticks" puts it N ticks past the entry, toward profit. Never: the Stop Loss stays where it was placed. After TP k fills: once that Take Profit has filled. Once price is +X R in profit: once price first reaches X times the Stop Loss distance in profit. The Stop Loss only ever moves toward profit.',
-  entry_deadline: "How long a limit or stop entry may wait for its fill; after that it is cancelled. A market entry fills at the next bar's open and ignores the deadline. \"Cancel if price reaches first\": if price touches the Stop Loss, TP1 or the Draw on liquidity before filling, the entry is cancelled, because the move already happened without you.",
+  entry_deadline: "How long a Limit Entry or stop entry may wait for its fill; after that it is cancelled. A market entry fills at the next bar's open and ignores the deadline. \"Cancel if price reaches first\": if price touches the Stop Loss, TP1 or the Draw on liquidity before filling, the entry is cancelled, because the move already happened without you.",
   expiry_and_flatten: 'Close open Trades at (optional): any Trade still open at this New York time is closed at market. Be flat by (required): the hard end of the day for this Setup; every position still open is closed at market, whatever its Take Profits and Stop Loss.',
   signal_guards: "Last checks on a Signal before any order. A refused Signal is logged with its reason and opens no Trade. Skip if the Stop Loss is wider than N ticks or N × ATR (checked before sizing). Skip if the reward is under N × the risk: the Take Profits' average reward, weighted by contracts, divided by the risk.",
   in_position: "Checked at every Base-bar close while a Trade is open. When a rule holds, its action runs at the next bar's open: Close the whole Trade, Close TP k now, Tighten the Stop Loss, or Cancel the waiting entry. Each rule belongs to a branch, and a Run cannot override them.",

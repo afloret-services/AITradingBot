@@ -4,7 +4,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createChart, IChartApi, ISeriesApi, LineStyle, SeriesMarker, Time, CrosshairMode } from 'lightweight-charts';
 import { Data, RunResult, bars, closedAt, chartTime, indicatorSeries, Signal, inTradingHours } from '../engine';
-import { Setup, TF, parseToken, tfMinutes, PATTERN_KINDS } from '../model';
+import { Setup, TF, parseToken, tfMinutes, PATTERN_KINDS, orderName } from '../model';
 import { STEP_COLORS, Button, Badge, cn } from './ui';
 
 const hmN = (x: string) => { const [h, m] = x.split(':').map(Number); return h * 60 + (m || 0); };
@@ -27,7 +27,7 @@ interface ReplayEvent { i: number; label: string; tone: 'step' | 'signal' | 'fil
 export function signalEvents(data: Data, setup: Setup, s: Signal): ReplayEvent[] {
   const br = setup.branches[s.branch];
   const ev: ReplayEvent[] = s.stepBars.map((i, k) => ({ i, label: `Step ${k + 1} completes · ${br?.steps[k]?.name || ''}`, tone: 'step', color: STEP_COLORS[k % STEP_COLORS.length] }));
-  ev.push({ i: s.i, label: s.refused ? `Signal refused: ${s.refused}` : `Signal · ${br?.entry.order} entry ${s.entry.toFixed(2)}, Stop Loss ${s.stop.toFixed(2)}${s.legs.map((l) => `, ${l.name} ${l.price.toFixed(2)}`).join('')}`, tone: 'signal', color: s.side === 'long' ? C.reward : C.risk });
+  ev.push({ i: s.i, label: s.refused ? `Signal refused: ${s.refused}` : `Signal · ${orderName(br?.entry.order || 'market')} ${s.entry.toFixed(2)}, Stop Loss ${s.stop.toFixed(2)}${s.legs.map((l) => `, ${l.name} ${l.price.toFixed(2)}`).join('')}`, tone: 'signal', color: s.side === 'long' ? C.reward : C.risk });
   const t = s.trade;
   if (t?.fillI != null) ev.push({ i: t.fillI, label: `Filled at ${(t.fillPx ?? s.entry).toFixed(2)}`, tone: 'fill', color: C.entry });
   if (t?.cancelI != null) ev.push({ i: t.cancelI, label: t.outcome, tone: 'cancel', color: '#94a3b8' });

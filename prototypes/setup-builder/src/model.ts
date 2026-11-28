@@ -208,6 +208,8 @@ export interface Step {
   hold?: Cond;
   capture_running?: { name: string; field: 'low' | 'high' };
 }
+/** the entry order type in words: "Limit Entry" (the term), "stop entry", "market entry" */
+export const orderName = (o: string) => (o === 'limit' ? 'Limit Entry' : o === 'stop' ? 'stop entry' : 'market entry');
 export interface Entry { order: 'market' | 'limit' | 'stop'; price?: string; stop: { token: string; offset: number; unit: 'ticks' | 'atr'; atr?: string; /** what the distance is measured from: a level (default), the entry price, or a fixed $ per contract from the entry */ from?: 'level' | 'entry' | 'usd' } }
 export interface Branch { id: string; side: 'long' | 'short'; steps: Step[]; entry: Entry; on_new_start: 'start_another' | 'replace' | 'ignore'; /** builder only: written by "Add a short branch", until the user dismisses the check note */ mirrored?: boolean }
 export interface Leg { name: string; rule: 'r' | 'level' | 'fraction'; r?: number; level?: string; fraction?: number; offset_ticks?: number; share: number }
@@ -346,7 +348,7 @@ export function ruleDescription(s: Setup): string {
       lines.push(`  ${k === 0 ? 'First' : 'Then'}${lim ? ` (${lim})` : ''}: ${condPhrase(st.cond, labels)}.`);
     });
     const e = br.entry;
-    lines.push(`  Enter ${e.order === 'market' ? "at market at the next bar's open" : `with a ${e.order} at ${phrase(e.price || '?', labels)}`}; Stop Loss ${stopPhrase(e.stop, br.side, (t) => phrase(t, labels))}.`);
+    lines.push(`  Enter ${e.order === 'market' ? "at market at the next bar's open" : `with a ${orderName(e.order)} at ${phrase(e.price || '?', labels)}`}; Stop Loss ${stopPhrase(e.stop, br.side, (t) => phrase(t, labels))}.`);
   }
   const ts = s.trade_settings;
   lines.push(`Take Profits: ${ts.legs.map((l) => `${l.name} ${l.rule === 'r' ? `at ${l.r}R` : l.rule === 'fraction' ? `${(l.fraction ?? 0) * 100}% of the way to ${phrase(l.level || '?')}` : `${l.offset_ticks ? `${l.offset_ticks} tick${l.offset_ticks === 1 ? "" : "s"} before ` : 'at '}${phrase(l.level || '?')}`} (${Math.round(l.share * 100)}%)`).join('; ')}.`);
@@ -473,7 +475,7 @@ export function validate(s: Setup): Issue[] {
     });
     if (!br.steps.length) out.push({ level: 'warning', where, text: 'No steps yet.' });
     if ((br.entry.stop.from || 'level') === 'level' && !br.entry.stop.token) out.push({ level: 'error', where: `${where}, Entry`, text: 'An Entry needs a Stop Loss.' });
-    if (br.entry.order !== 'market' && !br.entry.price) out.push({ level: 'error', where: `${where}, Entry`, text: 'A limit or stop entry needs a price.' });
+    if (br.entry.order !== 'market' && !br.entry.price) out.push({ level: 'error', where: `${where}, Entry`, text: 'A Limit Entry or stop entry needs a price.' });
     const readCap = (t?: string) => { if (!t) return; const p = parseToken(t); if (p.parts[0] === 'capture' && !caps.includes(p.parts[1].split('.')[0])) out.push({ level: 'error', where: `${where}, Entry`, text: `${t} is never captured by this branch.` }); };
     readCap(br.entry.price); readCap(br.entry.stop.token);
   });
@@ -625,7 +627,7 @@ export function emaMacd(): Setup {
   return s;
 }
 
-/** a demo of the chart patterns: a 5m double bottom, entered with a limit on the neckline retest after the break, target the measured move; mirrored for the double top */
+/** a demo of the chart patterns: a 5m double bottom, entered with a Limit Entry on the neckline retest after the break, target the measured move; mirrored for the double top */
 export function doubleBottom(): Setup {
   const s = blankSetup();
   s.setup_id = 'stp_double_bottom'; s.name = 'Double bottom breakout';
