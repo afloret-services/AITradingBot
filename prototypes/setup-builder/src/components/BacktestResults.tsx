@@ -1,6 +1,6 @@
 // PROTOTYPE: the results of the Draft backtest Run, one instrument at a time (replaces "What it did on MNQ", 2026-11-27).
 // Per instrument: Trades, average R, capital growth, and the drawdowns (average, largest, smallest); the chart kept to the
-// backtest period, where each Signal shows its steps, entry, Stop Loss, Take profits and exits; and the list of Trades with
+// backtest period, where each Signal shows its steps, entry, Stop Loss, Take Profits and exits; and the list of Trades with
 // the drawdown after each one. A click on a Trade shows it on the chart.
 // Drawdown: how far the account sits below its highest point so far, as a % of that high. A drawdown runs from a high until
 // the account makes a new high; the average, largest and smallest are over those drawdowns.
@@ -114,7 +114,7 @@ export function BacktestResults({ setup, data, bt, focus }: { setup: Setup; data
             <div className="hidden max-h-96 overflow-auto rounded-md border [@container(min-width:44rem)]:block">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-card text-left text-xs uppercase tracking-wider text-muted-foreground">
-                  <tr>{['#', 'Date', 'Side', 'Contracts', 'Entry', 'Stop Loss', 'Take profits', 'Exit', 'R', 'Result', 'Capital', 'Drawdown'].map((h) => <th key={h} className="whitespace-nowrap px-2 py-2 font-semibold">{h}</th>)}</tr>
+                  <tr>{['#', 'Date', 'Side', 'Contracts', 'Entry', 'Stop Loss', 'Take Profits', 'Exit', 'R', 'Result', 'Capital', 'Drawdown'].map((h) => <th key={h} className="whitespace-nowrap px-2 py-2 font-semibold">{h}</th>)}</tr>
                 </thead>
                 <tbody>
                   {a.trades.map((t) => {

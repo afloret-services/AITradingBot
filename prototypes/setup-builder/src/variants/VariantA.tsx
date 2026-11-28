@@ -40,7 +40,7 @@ export function VariantA(p: VariantProps & { inline?: boolean }) {
   const [bi, setBi] = useState(0);
   const [open, setOpen] = useState(0);
   const issues = validate(setup);
-  const stageIssues = (k: number) => issues.filter((i) => (k === 3 ? /step|branch$|Signals/.test(i.where) : k === 4 ? /Entry/.test(i.where) : k === 5 ? /legs|take profit|Flatten|deadline|Trade settings/i.test(i.where) : false));
+  const stageIssues = (k: number) => issues.filter((i) => (k === 3 ? /step|branch$|Signals/.test(i.where) : k === 4 ? /Entry/.test(i.where) : k === 5 ? /legs|Take Profit|Flatten|deadline|Trade settings/i.test(i.where) : false));
   const br = setup.branches[bi] || setup.branches[0];
   const runD = useRunDraft(data, setup);
   const chartResult = stage === 7 && runD.result ? runD.result : result;

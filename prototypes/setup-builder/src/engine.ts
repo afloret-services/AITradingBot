@@ -1147,7 +1147,7 @@ function applyLosingStreak(data: Data, setup: Setup, sigs: Signal[]) {
     if (d !== day) { if (stoppedDay === day && day >= 0) reduced = true; day = d; streak = 0; stopped = false; }
     if (stopped) { s.refused = `losing streak: ${ls.n} losing Trades in a row today, the Setup stopped for the day`; s.trade = undefined; continue; }
     if (reduced) {
-      // cut the total, never below 1 contract, taken from the first Take profits
+      // cut the total, never below 1 contract, taken from the first Take Profits
       const tot = s.legs.reduce((a, l) => a + l.contracts, 0);
       let left = Math.max(1, Math.floor((tot * ls.cut) / 100));
       s.legs = s.legs.map((l) => { const c = Math.min(l.contracts, left); left -= c; return { ...l, contracts: c }; }).filter((l) => l.contracts > 0);

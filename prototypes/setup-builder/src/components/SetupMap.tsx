@@ -134,7 +134,7 @@ export function SetupMap({ setup, result, data, focus, onStep, onDeclared, compa
               <Arrow lines={['fill']} />
               <Node title="Trade" tone="muted" compact={compact} wide>
                 <Line k="risk" icon="risk" v={sectionSummary(setup, 'risk')} />
-                <Line k="take profits" icon="legs" v={sectionSummary(setup, 'legs')} />
+                <Line k="Take Profits" icon="legs" v={sectionSummary(setup, 'legs')} />
                 <Line k="break-even" icon="break_even" v={sectionSummary(setup, 'break_even')} />
                 {!compact && <Line k="deadline" icon="entry_deadline" v={sectionSummary(setup, 'entry_deadline')} />}
                 <Line k="flat by" icon="expiry_and_flatten" v={ts.flatten_time} />

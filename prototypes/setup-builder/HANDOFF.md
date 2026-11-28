@@ -29,7 +29,7 @@ Read this first in a new session. It replaces the long conversation history.
 - Green accent: Tailwind `sky-*` is remapped to the coolors greens (#d8f3dc … #081c15). Cyan = AND / LONG / valid; amber = OR / warnings; red = errors / short; fuchsia = pattern icons.
 - Standard button: `flex h-8 items-center gap-1 rounded-md border border-sky-500/50 bg-sky-500/10 px-3 text-xs font-bold uppercase tracking-wider text-sky-300 hover:bg-sky-500/20`. Section headings: `text-base font-bold tracking-tight`.
 - Wizard/Inline and the Lanes inspector use the `.ctl-lg` CSS scope (bigger inputs/selects, `src/index.css`).
-- Words: **Stop Loss** (never bare "stop"; "stop entry" is the order type), **Take profit** (TP1, TP2…), **Trading window**, **Market sessions**, **Trade overlap**, **Losing streak**, **Closing time**, **While in a Trade** (IF / THEN), "configure" (not "declare"), **backtest Run** (never "trial"), **Instrument** and **Instrument list** (not symbol, watchlist or saved list).
+- Words: **Stop Loss** (never bare "stop"; "stop entry" is the order type), **Take Profit** (TP1, TP2…), **Trading window**, **Market sessions**, **Trade overlap**, **Losing streak**, **Closing time**, **While in a Trade** (IF / THEN), "configure" (not "declare"), **backtest Run** (never "trial"), **Instrument** and **Instrument list** (not symbol, watchlist or saved list).
 
 ## Decided while building (also in README "Decided so far")
 

@@ -31,7 +31,7 @@ export function signalEvents(data: Data, setup: Setup, s: Signal): ReplayEvent[]
   const t = s.trade;
   if (t?.fillI != null) ev.push({ i: t.fillI, label: `Filled at ${(t.fillPx ?? s.entry).toFixed(2)}`, tone: 'fill', color: C.entry });
   if (t?.cancelI != null) ev.push({ i: t.cancelI, label: t.outcome, tone: 'cancel', color: '#94a3b8' });
-  // a move "at +X R" comes before a Take profit on the same bar (price passes +X R first); one "after TPk" comes after it
+  // a move "at +X R" comes before a Take Profit on the same bar (price passes +X R first); one "after TPk" comes after it
   const moveEv = (m: { i: number; price: number; why: string }) => ev.push({ i: m.i, label: `Break-even · Stop Loss moved to ${m.price.toFixed(2)} (${m.why})`, tone: 'exit', color: '#f59e0b' });
   for (const m of t?.stopMoves || []) if (!/after/.test(m.why)) moveEv(m);
   const word = (why: string) => /^TP\d/.test(why) ? `${why} reached` : why === 'stop' ? 'Stop Loss hit' : why === 'stop at break-even' ? 'Break-even Stop Loss hit' : why === 'moved Stop Loss' ? 'Moved Stop Loss hit' : why;

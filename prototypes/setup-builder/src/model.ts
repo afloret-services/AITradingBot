@@ -246,7 +246,7 @@ export interface Setup {
   in_position_rules: InPositionRule[];
 }
 export const SECTION_NAMES: Record<string, string> = {
-  risk: 'Risk per Trade', losing_streak: 'Losing streak', stop: 'Stop Loss', legs: 'Take profits', break_even: 'Break-even', entry_deadline: 'Entry deadline', expiry_and_flatten: 'Closing time', signal_guards: 'Signal guards',
+  risk: 'Risk per Trade', losing_streak: 'Losing streak', stop: 'Stop Loss', legs: 'Take Profits', break_even: 'Break-even', entry_deadline: 'Entry deadline', expiry_and_flatten: 'Closing time', signal_guards: 'Signal guards',
 };
 
 let seq = 1;
@@ -303,7 +303,7 @@ export function phrase(tok: string, labels: Record<string, string> = {}): string
     case 'trend': return `the ${a} Trend`;
     case 'draw': return 'the Draw on liquidity';
     case 'entry': return 'the entry';
-    case 'trade': return `the Trade's ${({ legs_filled: 'take profits filled', open_r: 'open profit in R', max_favourable_r: 'best open profit in R', bars_open: 'bars open' } as Record<string, string>)[a] || a.replace(/_/g, ' ')}`;
+    case 'trade': return `the Trade's ${({ legs_filled: 'Take Profits filled', open_r: 'open profit in R', max_favourable_r: 'best open profit in R', bars_open: 'bars open' } as Record<string, string>)[a] || a.replace(/_/g, ' ')}`;
   }
   return tok;
 }
@@ -349,7 +349,7 @@ export function ruleDescription(s: Setup): string {
     lines.push(`  Enter ${e.order === 'market' ? "at market at the next bar's open" : `with a ${e.order} at ${phrase(e.price || '?', labels)}`}; Stop Loss ${stopPhrase(e.stop, br.side, (t) => phrase(t, labels))}.`);
   }
   const ts = s.trade_settings;
-  lines.push(`Take profits: ${ts.legs.map((l) => `${l.name} ${l.rule === 'r' ? `at ${l.r}R` : l.rule === 'fraction' ? `${(l.fraction ?? 0) * 100}% of the way to ${phrase(l.level || '?')}` : `${l.offset_ticks ? `${l.offset_ticks} tick${l.offset_ticks === 1 ? "" : "s"} before ` : 'at '}${phrase(l.level || '?')}`} (${Math.round(l.share * 100)}%)`).join('; ')}.`);
+  lines.push(`Take Profits: ${ts.legs.map((l) => `${l.name} ${l.rule === 'r' ? `at ${l.r}R` : l.rule === 'fraction' ? `${(l.fraction ?? 0) * 100}% of the way to ${phrase(l.level || '?')}` : `${l.offset_ticks ? `${l.offset_ticks} tick${l.offset_ticks === 1 ? "" : "s"} before ` : 'at '}${phrase(l.level || '?')}`} (${Math.round(l.share * 100)}%)`).join('; ')}.`);
   for (const r of s.in_position_rules) lines.push(`While in a Trade: if ${condPhrase(r.when, labels)}, ${r.action === 'close_trade' ? 'close the whole Trade' : r.action === 'close_leg' ? `close TP${r.leg} now` : r.action.replace('_', ' ')}.`);
   return lines.join('\n');
 }
@@ -478,9 +478,9 @@ export function validate(s: Setup): Issue[] {
     readCap(br.entry.price); readCap(br.entry.stop.token);
   });
   const ts = s.trade_settings;
-  if (!ts.legs.length) out.push({ level: 'error', where: 'Trade settings', text: 'At least one take profit is needed.' });
+  if (!ts.legs.length) out.push({ level: 'error', where: 'Trade settings', text: 'At least one Take Profit is needed.' });
   const share = ts.legs.reduce((a, l) => a + l.share, 0);
-  if (ts.legs.length && Math.abs(share - 1) > 0.001) out.push({ level: 'warning', where: 'Take profits', text: `Take-profit shares add up to ${Math.round(share * 100)}%; extra contracts go to ${ts.leftover === 'first' ? (ts.legs[0]?.name || 'TP1') : (ts.legs[ts.legs.length - 1]?.name || 'the last TP')} first.` });
+  if (ts.legs.length && Math.abs(share - 1) > 0.001) out.push({ level: 'warning', where: 'Take Profits', text: `Take Profit shares add up to ${Math.round(share * 100)}%; extra contracts go to ${ts.leftover === 'first' ? (ts.legs[0]?.name || 'TP1') : (ts.legs[ts.legs.length - 1]?.name || 'the last TP')} first.` });
   if (!ts.flatten_time) out.push({ level: 'error', where: 'Closing time', text: 'A "Be flat by" time is required.' });
   if (!ts.entry_deadline.value && ts.entry_deadline.kind !== 'end_of_day' && ts.entry_deadline.kind !== 'end_of_hours') out.push({ level: 'error', where: 'Entry deadline', text: 'The entry deadline is mandatory.' });
   return out;
@@ -645,7 +645,7 @@ export function doubleBottom(): Setup {
   addMirror(s);
   return s;
 }
-/** PROTOTYPE demo: EMA 200 + MACD sized on a bigger account, with two Take profits and break-even after TP1, so a backtest
+/** PROTOTYPE demo: EMA 200 + MACD sized on a bigger account, with two Take Profits and break-even after TP1, so a backtest
  *  shows a Trade through every step (TP1 reached, break-even, then TP2 or the break-even stop, then the exit): Sep 18 and Oct 5. */
 export function fullTradeDemo(): Setup {
   const s = emaMacd();

@@ -100,7 +100,7 @@ const SEC_GLYPHS: Record<string, React.ReactNode> = {
   risk: <><circle cx={12} cy={12} r={9} fill="none" stroke={PR} strokeWidth={1.6} /><path d="M12 12 L12 3 A9 9 0 0 1 20.5 9 Z" fill={AM} /><text x={12} y={17.5} fontSize={7} textAnchor="middle" fill={WH} fontFamily="Inter, sans-serif" fontWeight={700}>%</text></>,
   // price falling onto the red stop line
   stop: <><L d="M2 4 L7 8 L10 6 L15 13 L18 17" color={PR} w={1.5} /><L d="M1 18 H23" color={RD} w={2.2} /><path d="M17.5 14.5 l3 3 m0 -3 l-3 3" stroke={RD} strokeWidth={1.6} strokeLinecap="round" /></>,
-  // the entry, then two take-profit levels above it
+  // the entry, then two Take Profit levels above it
   legs: <><L d="M1 20 H23" color={WH} w={1.4} dash /><L d="M1 12 H23" color={G_} w={1.6} /><L d="M1 4 H23" color={G_} w={1.6} /><path d="M18 12 v-5 l4 1.6 -4 1.6" fill={G_} stroke={G_} strokeWidth={0.8} /><path d="M10 4 v-3.5 l3.5 1.4 -3.5 1.4" fill={G_} stroke={G_} strokeWidth={0.8} /><L d="M4 20 L8 12" color={PR} w={1.2} /></>,
   // the stop moving up to the entry
   break_even: <><L d="M1 20 H23" color={RD} w={1.4} dash /><L d="M1 9 H23" color={WH} w={1.8} /><L d="M12 18 V12" color={AM} w={1.8} /><path d="M9 13 L12 10 L15 13" fill="none" stroke={AM} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" /></>,
